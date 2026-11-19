@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    actor User as User
+    participant Frontend as Brand Studio / Calendar
+    participant Worker as Cloud Function Publish Worker
+    participant Secrets as Secret Manager (AES-256 Key)
+    participant Meta as Meta Graph API v19.0 (Instagram/FB)
+    participant DB as Cloud Firestore
+
+    User->>Frontend: Schedules 4:5 Carousel Post for Instagram
+    Frontend->>Worker: Enqueues Cloud Task with execution timestamp
+    Note over Worker: Cloud Task wakes worker at scheduled time
+    Worker->>Secrets: Retrieves Master Decryption Key
+    Worker->>DB: Fetches encrypted Instagram Page Access Token
+    Worker->>Worker: Decrypts token via AES-256-GCM
+    Worker->>Meta: POST /v19.0/{ig_user_id}/media (Image URLs + Caption)
+    Meta-->>Worker: Returns creation_id container
+    Worker->>Meta: POST /v19.0/{ig_user_id}/media_publish (creation_id)
+    Meta-->>Worker: Returns live platform post_id & permalink
+    Worker->>DB: Updates `scheduledPosts` document (Status: PUBLISHED, URL: permalink)
+    Worker-->>Frontend: Real-time update displays published checkmark

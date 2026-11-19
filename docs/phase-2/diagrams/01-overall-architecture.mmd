@@ -1,0 +1,77 @@
+flowchart TD
+    subgraph Clients["1. Client Layer (Web & Mobile Responsive)"]
+        Browser[Next.js 16 / React 19 Frontend App]
+        PWA[Progressive Web App Shell]
+    end
+
+    subgraph Edge["2. Edge, CDN & App Hosting"]
+        Hosting[Firebase App Hosting / Cloudflare CDN]
+        WAF[Google Cloud Armor DDoS Protection]
+    end
+
+    subgraph Compute["3. Serverless Compute Layer (asia-south1)"]
+        Gateway[API Gateway / Router]
+        AuthSvc[Auth & Tenancy Service]
+        BrainSvc[Business Brain Engine]
+        AiSvc[AI Orchestrator & Dispatcher]
+        ResearchSvc[Research & Competitor Worker]
+        BillingSvc[Credit Wallet & Cashfree Engine]
+        SocialSvc[Publishing & OAuth Worker]
+    end
+
+    subgraph Queues["4. Asynchronous Queues & Schedulers"]
+        CloudTasks[Google Cloud Tasks Queue]
+        CloudScheduler[Google Cloud Scheduler Cron]
+    end
+
+    subgraph Data["5. Persistent Data & Secrets"]
+        Firestore[(Cloud Firestore NoSQL)]
+        GCS[(Google Cloud Storage)]
+        SecretMgr[Google Cloud Secret Manager]
+    end
+
+    subgraph External["6. Third-Party Sanctioned APIs"]
+        Gemini[Google Gemini 2.5 Flash / Pro]
+        Imagen[Google Imagen 3 - Static Only]
+        Tavily[Tavily Search API]
+        Cashfree[Cashfree PG Webhooks]
+        SocialMeta[Meta Graph & LinkedIn APIs]
+        Resend[Resend Transactional Email]
+    end
+
+    Browser --> WAF
+    PWA --> WAF
+    WAF --> Hosting
+    Hosting --> Gateway
+
+    Gateway --> AuthSvc
+    Gateway --> BrainSvc
+    Gateway --> AiSvc
+    Gateway --> ResearchSvc
+    Gateway --> BillingSvc
+    Gateway --> SocialSvc
+
+    AiSvc --> CloudTasks
+    SocialSvc --> CloudTasks
+    CloudScheduler --> BillingSvc
+    CloudScheduler --> ResearchSvc
+
+    AuthSvc --> Firestore
+    BrainSvc --> Firestore
+    AiSvc --> Firestore
+    ResearchSvc --> Firestore
+    BillingSvc --> Firestore
+    SocialSvc --> Firestore
+
+    BrainSvc --> GCS
+    AiSvc --> GCS
+    AuthSvc --> SecretMgr
+    BillingSvc --> SecretMgr
+    SocialSvc --> SecretMgr
+
+    AiSvc --> Gemini
+    AiSvc --> Imagen
+    ResearchSvc --> Tavily
+    BillingSvc --> Cashfree
+    SocialSvc --> SocialMeta
+    AuthSvc --> Resend

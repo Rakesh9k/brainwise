@@ -1,0 +1,16 @@
+sequenceDiagram
+    autonumber
+    actor User as User / Scheduled Cron
+    participant Intel as Competitive Intelligence Service
+    participant Search as Tavily Search API
+    participant AI as Gemini 2.5 Flash
+    participant DB as Cloud Firestore
+
+    User->>Intel: Request Competitor Teardown: "roasteryhouse.com"
+    Intel->>Search: Queries public domain text & meta content
+    Search-->>Intel: Returns clean markdown & text excerpts
+    Intel->>AI: Prompts Gemini with CompetitorSchema + Brain products
+    AI-->>Intel: Extracts pricing tiers, claimed USPs, and positioning coordinates (X, Y)
+    Intel->>DB: Stores snapshot in `competitors/{id}/snapshots`
+    Intel->>DB: Updates 2D positioning map & feature comparison matrix
+    Intel-->>User: Returns updated competitor teardown & strategic counter-moves

@@ -1,0 +1,7 @@
+flowchart TD
+    SocialAPIs[Meta & LinkedIn Insights API] --> IngestWorker[Cloud Tasks Sync Worker]
+    StripeShopify[Stripe & Shopify Webhooks] --> IngestWorker
+    IngestWorker --> AggregateDB[(Firestore analyticsSnapshots)]
+    AggregateDB --> Dashboard[Recharts Performance Dashboard]
+    AggregateDB --> GeminiReport[Gemini 2.5 Flash Narrative Generator]
+    GeminiReport --> ExecutiveMemo[Print-Ready Executive PDF Memo]

@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> Available: Monthly Quota Allocation / Top-Up Pack
+    
+    Available --> Reserved: Feature Request Initiated (Firestore Transaction Lock)
+    
+    Reserved --> Settled: Generation Succeeded & Truth Check Passed (Permanent Debit)
+    Reserved --> Available: Timeout (>120s) / Upstream Failure / Truth Violation (Auto-Refund)
+    
+    Settled --> [*]

@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor User as User Browser
+    participant React as React 19 Frontend
+    participant Token as Firebase Auth Client SDK
+    participant API as Cloud Functions Gateway
+    participant RBAC as Tenant Security Middleware
+    participant Service as Business Domain Service
+    participant DB as Cloud Firestore
+
+    User->>React: Clicks "Generate Brand Collateral"
+    React->>Token: Obtains fresh Firebase ID Token (JWT)
+    React->>API: HTTPS POST /api/v1/brand/generate-collateral<br/>Headers: Authorization, X-Workspace-Id, X-Idempotency-Key
+    API->>API: Validates JWT signature & expiration
+    API->>RBAC: Verifies user belongs to X-Workspace-Id with role != Viewer
+    alt Unauthorized Role
+        RBAC-->>React: 403 Forbidden (Insufficient permissions)
+    else Authorized Tenant
+        RBAC->>Service: Dispatches request to BrandCollateralService
+        Service->>DB: Checks credit balance & reserves 5 credits
+        Service->>Service: Generates SVG & runs Truth Check
+        Service->>DB: Commits credits & writes asset record
+        Service-->>React: 200 OK + Asset JSON & SVG Markup
+        React-->>User: Renders verified collateral preview on artboard
+    end

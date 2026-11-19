@@ -1,0 +1,14 @@
+erDiagram
+    users ||--o{ workspaceMembers : joins
+    workspaces ||--o{ workspaceMembers : contains
+    workspaces ||--|| businessBrain : owns
+    workspaces ||--o{ products : catalogs
+    workspaces ||--o{ personas : targets
+    workspaces ||--o{ contentItems : generates
+    workspaces ||--o{ marketingTasks : tracks
+    workspaces ||--o{ competitors : monitors
+    workspaces ||--o{ researchReports : validates
+    workspaces ||--|| creditWallet : holds
+    creditWallet ||--o{ creditTransactions : records
+    workspaces ||--|| subscriptions : bills
+    subscriptions ||--o{ paymentOrders : invoices

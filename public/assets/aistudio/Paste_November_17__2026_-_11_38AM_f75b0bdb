@@ -1,0 +1,1729 @@
+Complete Premium SaaS UI/UX Design, Application Structure and Interactive Prototype
+
+Act as a world-class SaaS product designer, principal UX architect, design systems engineer, product strategist and senior frontend developer.
+
+Your task is to design and build a complete, high-fidelity, interactive frontend prototype for a premium SaaS application called BrainWise.
+
+This is a UI/UX DESIGN AND PRODUCT EXPERIENCE PROJECT FIRST.
+
+Do not begin by building complex backend systems, autonomous AI agents, real integrations, payment infrastructure or production AI functionality.
+
+The immediate objective is to create the entire product experience visually and functionally so that the product owner can inspect, navigate, test and finalise every screen, feature, workflow, interaction and design decision before actual backend development.
+
+Do not create just a landing page or a dashboard mockup.
+
+Build a cohesive, multi-page SaaS application with a complete navigation system and connected user journeys.
+
+1. PRODUCT VISION
+
+Product name: BrainWise
+
+Product positioning:
+
+BrainWise — Your AI Business Intelligence & Growth Partner.
+
+Core promise:
+
+BrainWise helps entrepreneurs, founders, startups and growing businesses understand their market, validate ideas, research competitors, build distinctive brands, monitor market developments and consistently execute strategies to grow their businesses.
+
+BrainWise should feel like having an intelligent business strategy department, research department, brand studio and growth team in one platform.
+
+It is NOT:
+
+Just an AI chatbot.
+
+Just an AI logo generator.
+
+Just an AI social media content generator.
+
+Just a business-plan generator.
+
+Just a project management tool.
+
+Just a competitor monitoring dashboard.
+
+It is an interconnected AI-powered business intelligence and growth operating system.
+
+The product must communicate intelligence, trust, clarity, sophistication and control.
+
+2. DESIGN PHILOSOPHY
+
+Create an ultra-premium, minimalistic, sophisticated SaaS interface.
+
+Visual references for design quality and product polish:
+
+Linear: clean navigation, exceptional spacing and minimal UI.
+
+Stripe: premium product presentation and refined typography.
+
+Notion: organised workspace architecture.
+
+Framer: sophisticated visual presentation.
+
+Raycast: polished interactions and compact controls.
+
+Apple: restrained design, clarity and attention to detail.
+
+These are quality references only. Do not copy their interfaces.
+
+The BrainWise identity must remain original.
+
+Core colour palette
+
+Use the following initial design tokens:
+
+Primary background: #FFFFFF
+Secondary background: #F8F8F6
+Subtle section background: #F2F2EF
+Primary text: #242424
+Secondary text: #747474
+Muted text: #999999
+Primary orange: #EE7542
+Orange hover: #DB6334
+Orange light: #FFF0E8
+Border: #EAEAE7
+Dark surface: #252525
+Dark surface secondary: #303030
+Success: muted green
+Warning: muted amber
+Error: muted red
+
+Orange should be an accent, not the dominant colour.
+
+Use orange for:
+
+Primary actions.
+
+Selected navigation states.
+
+Important metrics.
+
+Active workflow steps.
+
+Important highlights.
+
+Subtle visual emphasis.
+
+Selected illustrations and data visualisations.
+
+Introduce a very subtle warm orange ambient glow in selected hero sections and important empty states.
+
+Do not use large orange backgrounds throughout the application.
+
+Typography
+
+Explore and implement a refined typography system.
+
+Initially use:
+
+Manrope for headings.
+
+Inter for interface text and body content.
+
+Use clear typographic hierarchy:
+
+Large, confident page headings.
+
+Medium-weight section titles.
+
+Highly readable body text.
+
+Small muted metadata.
+
+Tabular numerals for financial metrics.
+
+Typography must feel premium, modern and editorial.
+
+Visual rules
+
+Generous whitespace.
+
+Precise alignment.
+
+Thin borders instead of heavy outlines.
+
+Rounded corners, preferably 10–14px.
+
+Very restrained shadows.
+
+Avoid unnecessary cards.
+
+Avoid excessive gradients.
+
+Avoid neon purple and blue.
+
+Avoid glassmorphism.
+
+Avoid oversized illustrations.
+
+Avoid cluttered dashboards.
+
+Avoid unnecessary icons.
+
+Use consistent Lucide-style icons.
+
+Use subtle hover transitions.
+
+Keep the interface visually calm even when displaying complex information.
+
+The product should look like an expensive professional SaaS product, not a generic AI-generated dashboard.
+
+3. APPLICATION ARCHITECTURE
+
+Create a complete authenticated SaaS application.
+
+The application should have the following overall structure:
+
+A. Public website
+B. Authentication
+C. First-time onboarding
+D. Main application workspace
+E. Individual department workspaces
+F. Research and report detail pages
+G. Business settings and account management
+
+Create a consistent application shell.
+
+Main application shell
+
+Desktop layout:
+
+Fixed or collapsible left sidebar.
+
+Main content workspace.
+
+Optional contextual right-side panel when required.
+
+Top navigation/header.
+
+Global search.
+
+Notification centre.
+
+Help access.
+
+User profile menu.
+
+Sidebar should be elegant and compact.
+
+BrainWise logo and wordmark at the top.
+
+Navigation:
+
+OVERVIEW
+
+Dashboard
+
+INTELLIGENCE
+
+Business Brain
+
+Idea Intelligence
+
+Competitive Intelligence
+
+Market Watch
+
+CREATION
+
+Brand Studio
+
+Asset Library
+
+EXECUTION
+
+Growth Director
+
+Tasks & Experiments
+
+ANALYTICS
+
+Business Performance
+
+Reports
+
+BOTTOM NAVIGATION
+
+Settings
+
+Help & Support
+
+User profile
+
+Use collapsible navigation groups.
+
+Clearly indicate the active page.
+
+The sidebar must be consistent throughout the application.
+
+Do not create a different navigation structure for every department.
+
+4. PUBLIC WEBSITE AND AUTHENTICATION
+
+Design the following pages:
+
+Landing page
+
+Create a sophisticated homepage with:
+
+Hero:
+"Build smarter. Grow stronger."
+
+Subheading:
+"Your AI business intelligence and growth partner. Understand your market, build your brand and turn insights into action."
+
+Primary CTA: Get Started
+Secondary CTA: Explore BrainWise
+
+Include:
+
+Hero product dashboard preview.
+
+Product capability overview.
+
+Five department introductions.
+
+How BrainWise works.
+
+Use cases for startups and growing businesses.
+
+Product differentiation.
+
+Pricing preview.
+
+FAQ.
+
+Footer.
+
+The homepage must look premium and minimal.
+
+Authentication
+
+Create:
+
+Sign up.
+
+Login.
+
+Forgot password.
+
+Reset password.
+
+Include Google sign-in as a visual option.
+
+First-time onboarding
+
+Create a short conversational onboarding experience.
+
+Step 1: What describes you?
+
+Aspiring founder.
+
+Startup founder.
+
+Small business owner.
+
+Established business.
+
+Marketing professional.
+
+Step 2: What do you want to achieve?
+
+Validate a business idea.
+
+Research a market.
+
+Build a brand.
+
+Understand competitors.
+
+Grow an existing business.
+
+Step 3: Business information.
+
+Collect:
+
+Business name or proposed name.
+
+Industry.
+
+Business stage.
+
+Location.
+
+Products or services.
+
+Website, if available.
+
+Target customers.
+
+Allow users to skip optional questions.
+
+Do not overwhelm users with long forms.
+
+After onboarding, take the user to the main dashboard.
+
+5. DASHBOARD — CENTRAL BUSINESS COMMAND CENTRE
+
+This is one of the most important screens.
+
+Create a sophisticated dashboard that feels like the command centre of a business.
+
+Header:
+"Good morning, [First Name]."
+
+Supporting message:
+"Here's what is happening with your business."
+
+Dashboard sections:
+
+A. Business Overview
+
+Business name.
+
+Industry.
+
+Business stage.
+
+Business health indicator.
+
+Current business objectives.
+
+B. Business Snapshot
+
+Market position.
+
+Competitor count.
+
+Active growth experiments.
+
+Pending tasks.
+
+Research reports.
+
+Brand assets.
+
+C. Today's Priorities
+
+Display the three most important actions BrainWise recommends.
+
+Each task should show:
+
+Task title.
+
+Why it matters.
+
+Priority.
+
+Estimated time.
+
+Related department.
+
+Completion status.
+
+D. Market Intelligence
+
+Show:
+
+Important competitor changes.
+
+Market trends.
+
+New opportunities.
+
+Relevant alerts.
+
+E. Growth Progress
+
+Display:
+
+Current goals.
+
+Goal progress.
+
+Completed experiments.
+
+Pending actions.
+
+F. Quick Actions
+
+Research a business idea.
+
+Discover competitors.
+
+Create brand identity.
+
+Monitor a competitor.
+
+Create a growth plan.
+
+G. Recent Activity
+
+Display the latest business research, creative work, competitor updates and completed tasks.
+
+The dashboard should be informative without becoming cluttered.
+
+Use a balanced two-column layout where appropriate.
+
+6. BUSINESS BRAIN
+
+This is the central knowledge system powering all departments.
+
+Create a dedicated Business Brain workspace.
+
+Sections:
+
+Business Overview
+
+Business Profile
+
+Products & Services
+
+Target Audience
+
+Customer Personas
+
+Brand Positioning
+
+Business Model
+
+Revenue Model
+
+Business Goals
+
+Business Documents
+
+Research Repository
+
+Strategic Decisions
+
+Business History
+
+Allow users to:
+
+Edit business information.
+
+Upload documents.
+
+Add products and services.
+
+Define customer segments.
+
+Update business goals.
+
+Review information used by AI.
+
+Identify missing information.
+
+View the last updated date.
+
+Include a clear Business Knowledge Completeness indicator.
+
+Create a polished empty state for users who have not completed their Business Brain.
+
+Important: Every other department must visually connect to this shared business context.
+
+7. IDEA INTELLIGENCE
+
+Purpose:
+
+Help founders discover, research, validate and evaluate business opportunities.
+
+Create the following screens:
+
+A. Idea Intelligence home
+
+Include:
+
+Enter your business idea.
+
+Discover new business ideas.
+
+Research an industry.
+
+Validate an existing concept.
+
+Previous research projects.
+
+B. New Research Workflow
+
+Create a clean, guided workflow:
+
+Step 1: Describe the idea.
+Step 2: Select the industry.
+Step 3: Define the target market.
+Step 4: Select geography.
+Step 5: Choose research depth.
+Step 6: Review research scope.
+Step 7: Start research.
+
+Keep this conversational and progressive.
+
+C. Research Workspace
+
+Create a premium research progress experience.
+
+Display research stages:
+
+Understanding the idea.
+
+Investigating market demand.
+
+Analysing customers.
+
+Identifying competitors.
+
+Researching pricing.
+
+Identifying market gaps.
+
+Evaluating risks.
+
+Preparing the final report.
+
+Use progress indicators and meaningful status updates.
+
+D. Research Report
+
+This is a major deliverable.
+
+Create a comprehensive report interface containing:
+
+Executive Summary.
+
+Market Overview.
+
+TAM, SAM and SOM.
+
+Market Demand.
+
+Customer Segments.
+
+Customer Pain Points.
+
+Competitor Landscape.
+
+Pricing Analysis.
+
+Market Opportunities.
+
+Business Model Options.
+
+Revenue Potential.
+
+Startup Cost Estimates.
+
+Risks and Challenges.
+
+Validation Experiments.
+
+Final Recommendation.
+
+Include:
+
+Source references.
+
+Research dates.
+
+Confidence indicators.
+
+Verified facts versus estimates.
+
+Editable assumptions.
+
+Export PDF button.
+
+Save to Business Brain button.
+
+Convert findings into growth tasks button.
+
+Make reports easy to read, navigate and compare.
+
+Do not use fake precision in market sizing.
+
+8. COMPETITIVE INTELLIGENCE
+
+Purpose:
+
+Help businesses understand competitors and identify strategic advantages.
+
+Create:
+
+A. Competitive Intelligence home
+
+Display:
+
+Tracked competitors.
+
+Recently discovered competitors.
+
+Industry overview.
+
+Competitor research history.
+
+Add competitor button.
+
+B. Competitor Discovery
+
+Include:
+
+Business name.
+
+Website.
+
+Industry.
+
+Geography.
+
+Discovery method.
+
+Show discovered competitors in a clean list or table.
+
+Each competitor should have:
+
+Name.
+
+Website.
+
+Category.
+
+Positioning.
+
+Price range.
+
+Research status.
+
+Last researched date.
+
+C. Competitor Profile
+
+Create individual competitor detail pages.
+
+Tabs:
+
+Overview.
+
+Products and Services.
+
+Pricing.
+
+Brand Positioning.
+
+Website.
+
+Marketing Strategy.
+
+Customer Reviews.
+
+Strengths and Weaknesses.
+
+Historical Changes.
+
+D. Competitor Comparison
+
+Create comparison tables and visual positioning maps.
+
+Compare:
+
+Pricing.
+
+Product offering.
+
+Customer segment.
+
+Brand positioning.
+
+Value proposition.
+
+Differentiation.
+
+Digital presence.
+
+E. Strategic Gap Analysis
+
+This should be an especially polished screen.
+
+Show:
+
+Competitor weaknesses.
+
+Underserved customers.
+
+Pricing opportunities.
+
+Positioning opportunities.
+
+Product opportunities.
+
+Distribution opportunities.
+
+F. Competitive Strategy
+
+Generate a strategic recommendation:
+
+Where should we compete?
+
+Where should we differentiate?
+
+What should we avoid?
+
+Which customer segment should we target?
+
+What could become our moat?
+
+What should we do next?
+
+Include actions:
+
+Save strategy.
+
+Add to growth roadmap.
+
+Create experiment.
+
+Monitor competitor.
+
+9. BRAND STUDIO
+
+Purpose:
+
+Build a complete, differentiated and consistent brand identity.
+
+Create a visually impressive design workspace.
+
+A. Brand Studio Home
+
+Show:
+
+Brand identity status.
+
+Current logo.
+
+Brand colours.
+
+Typography.
+
+Brand guidelines.
+
+Recent assets.
+
+Create new asset button.
+
+B. Brand Identity Builder
+
+Workflow:
+
+Brand name.
+
+Industry.
+
+Brand positioning.
+
+Target audience.
+
+Brand personality.
+
+Brand attributes.
+
+Visual direction.
+
+Logo exploration.
+
+Colour palette.
+
+Typography.
+
+Brand guidelines.
+
+Allow exploration of multiple creative directions.
+
+C. Logo Studio
+
+Create a dedicated logo workspace.
+
+Features:
+
+Multiple logo concepts.
+
+Icon and wordmark variations.
+
+Colour variations.
+
+Light and dark versions.
+
+Preview on business cards and packaging.
+
+Regenerate concept.
+
+Save approved logo.
+
+D. Brand Guidelines
+
+Display:
+
+Logo usage.
+
+Colours.
+
+Typography.
+
+Spacing.
+
+Visual style.
+
+Brand voice.
+
+Brand messaging.
+
+E. Marketing Collateral Studio
+
+Create asset categories:
+
+Business cards.
+
+Letterheads.
+
+Flyers.
+
+Brochures.
+
+Posters.
+
+Banners.
+
+Packaging.
+
+Labels.
+
+Stickers.
+
+Menus.
+
+Presentations.
+
+F. Social Media Studio
+
+Create:
+
+Instagram posts.
+
+Carousel posts.
+
+Facebook creatives.
+
+Educational posts.
+
+Promotional campaigns.
+
+Brand storytelling.
+
+Quote creatives.
+
+Include:
+
+Platform selection.
+
+Format selection.
+
+Design direction.
+
+Brand consistency controls.
+
+Editable text.
+
+Image generation placeholder.
+
+Preview.
+
+Save and export.
+
+G. Asset Library
+
+Show all generated assets in a searchable gallery.
+
+Allow:
+
+Filtering.
+
+Sorting.
+
+Preview.
+
+Rename.
+
+Download.
+
+Archive.
+
+Organise into folders.
+
+Important:
+
+All creative outputs should inherit the approved brand identity.
+
+Brand Studio should use competitive research and positioning information when suggesting creative directions.
+
+10. MARKET WATCH
+
+Purpose:
+
+Continuously monitor competitors, the industry and relevant market developments.
+
+Create:
+
+A. Market Watch Overview
+
+Show:
+
+Tracked competitors.
+
+Active monitoring items.
+
+Recent changes.
+
+Important alerts.
+
+Emerging trends.
+
+Weekly intelligence summary.
+
+B. Competitor Watchlist
+
+Allow users to:
+
+Add competitors.
+
+Add website URLs.
+
+Select what to monitor.
+
+Set monitoring frequency.
+
+Pause monitoring.
+
+Remove competitors.
+
+C. Monitoring Categories
+
+Website changes.
+
+Pricing changes.
+
+Product launches.
+
+Offers and promotions.
+
+Public social media activity.
+
+Customer reviews.
+
+Search visibility.
+
+Industry news.
+
+Market trends.
+
+Business expansion announcements.
+
+D. Intelligence Feed
+
+Create a chronological feed of market events.
+
+Every event should contain:
+
+Competitor or source.
+
+What changed.
+
+When it changed.
+
+Source reference.
+
+Importance.
+
+Potential business impact.
+
+Suggested action.
+
+E. Alert Details
+
+Show a detailed explanation of a market event and why it matters.
+
+F. Scheduled Reports
+
+Allow users to configure:
+
+Daily digest.
+
+Weekly intelligence report.
+
+Monthly market review.
+
+The interface should clearly distinguish actual detected changes from AI-generated interpretations.
+
+11. GROWTH DIRECTOR
+
+Purpose:
+
+Turn business intelligence into consistent execution.
+
+This department should feel like an intelligent strategic operating workspace.
+
+A. Growth Overview
+
+Display:
+
+Current growth objectives.
+
+Active strategies.
+
+Today's priorities.
+
+Weekly plan.
+
+Pending tasks.
+
+Completed actions.
+
+Active experiments.
+
+B. Business Goals
+
+Allow users to define:
+
+Revenue targets.
+
+Customer acquisition targets.
+
+Brand awareness goals.
+
+Product launch goals.
+
+Marketing objectives.
+
+Customer retention objectives.
+
+Each goal should have:
+
+Target.
+
+Current value.
+
+Deadline.
+
+Progress.
+
+Supporting tasks.
+
+C. Daily Action Plan
+
+Create a polished daily task interface.
+
+Each task must show:
+
+Title.
+
+Description.
+
+Why it matters.
+
+Expected outcome.
+
+Priority.
+
+Estimated time.
+
+Due date.
+
+Related department.
+
+Completion status.
+
+Allow:
+
+Mark complete.
+
+Reschedule.
+
+Edit.
+
+Skip.
+
+Add notes.
+
+D. Weekly Growth Plan
+
+Display:
+
+Weekly objectives.
+
+Priorities.
+
+Planned experiments.
+
+Tasks.
+
+Expected outcomes.
+
+E. Growth Experiments
+
+Allow users to create and track experiments.
+
+Each experiment should include:
+
+Hypothesis.
+
+Objective.
+
+Target audience.
+
+Action.
+
+Success metric.
+
+Budget.
+
+Start date.
+
+End date.
+
+Results.
+
+Learnings.
+
+F. Growth Roadmap
+
+Create a visual roadmap with:
+
+Immediate priorities.
+
+30-day objectives.
+
+60-day objectives.
+
+90-day objectives.
+
+G. Strategy Recommendations
+
+Every recommendation should include:
+
+What to do.
+
+Why to do it.
+
+Supporting research.
+
+Expected benefit.
+
+Difficulty.
+
+Estimated cost.
+
+Priority.
+
+Allow users to accept, reject or modify recommendations.
+
+12. BUSINESS PERFORMANCE & ANALYTICS
+
+Purpose:
+
+Help users measure actual business progress.
+
+Create:
+
+A. Performance Overview
+
+Display:
+
+Revenue.
+
+Customers.
+
+Leads.
+
+Conversion rate.
+
+Marketing performance.
+
+Growth against targets.
+
+B. Marketing Analytics
+
+Campaign performance.
+
+Content performance.
+
+Engagement.
+
+Leads generated.
+
+Customer acquisition.
+
+C. Growth Analytics
+
+Goal completion.
+
+Experiment performance.
+
+Growth trends.
+
+Strategy effectiveness.
+
+D. Reports
+
+Weekly business report.
+
+Monthly growth report.
+
+Marketing performance report.
+
+Competitive intelligence report.
+
+Use sophisticated charts with restrained colours.
+
+Show empty states when data is unavailable.
+
+Never invent actual business performance figures.
+
+Use clearly labelled demonstration data for prototype purposes.
+
+13. GLOBAL SEARCH AND NOTIFICATIONS
+
+Create a global search experience.
+
+Search across:
+
+Business information.
+
+Research reports.
+
+Competitors.
+
+Brand assets.
+
+Tasks.
+
+Growth experiments.
+
+Market intelligence.
+
+Create a notification centre for:
+
+Competitor alerts.
+
+Research completion.
+
+Important opportunities.
+
+Daily tasks.
+
+Upcoming deadlines.
+
+Weekly reports.
+
+Create notification preferences.
+
+14. SETTINGS
+
+Create a complete settings area.
+
+Sections:
+
+Personal Profile.
+
+Business Profile.
+
+Team and Members.
+
+Workspace Preferences.
+
+Notification Settings.
+
+AI Preferences.
+
+Data and Privacy.
+
+Subscription and Billing.
+
+Usage and Credits.
+
+Integrations.
+
+Help and Support.
+
+These should be separate, navigable pages.
+
+15. COMPLETE USER JOURNEY
+
+The most important requirement is that all pages connect into one coherent journey.
+
+Implement the following primary journey:
+
+LANDING PAGE
+→ SIGN UP
+→ ONBOARDING
+→ CREATE BUSINESS PROFILE
+→ BUSINESS BRAIN INITIALISATION
+→ MAIN DASHBOARD
+→ IDEA INTELLIGENCE
+→ MARKET RESEARCH
+→ RESEARCH REPORT
+→ COMPETITIVE INTELLIGENCE
+→ COMPETITOR DISCOVERY
+→ COMPETITOR ANALYSIS
+→ GAP ANALYSIS
+→ DIFFERENTIATION STRATEGY
+→ BRAND STUDIO
+→ BRAND IDENTITY CREATION
+→ LOGO AND BRAND GUIDELINES
+→ MARKETING COLLATERAL
+→ GROWTH DIRECTOR
+→ SET BUSINESS GOALS
+→ GENERATE 30-DAY GROWTH PLAN
+→ DAILY TASKS
+→ GROWTH EXPERIMENTS
+→ MARKET WATCH
+→ COMPETITOR MONITORING
+→ INTELLIGENCE ALERTS
+→ PERFORMANCE ANALYTICS
+→ STRATEGY REVIEW.
+
+Every relevant page should provide contextual links to the next logical action.
+
+Examples:
+
+From Idea Intelligence:
+"Analyse these competitors."
+
+From Competitive Intelligence:
+"Create a differentiation strategy."
+
+From Competitive Strategy:
+"Build this positioning into my brand."
+
+From Brand Studio:
+"Create a launch campaign."
+
+From Market Watch:
+"Turn this opportunity into an experiment."
+
+From Growth Director:
+"Review the results."
+
+From Performance Analytics:
+"Update my growth strategy."
+
+Do not leave any department isolated.
+
+16. INTERACTION AND PROTOTYPE REQUIREMENTS
+
+The prototype must be genuinely interactive.
+
+Implement:
+
+Functional sidebar navigation.
+
+Working buttons.
+
+Working dropdowns.
+
+Tabs.
+
+Search.
+
+Filters.
+
+Sorting.
+
+Forms.
+
+Modal dialogs.
+
+Confirmation dialogs.
+
+Expandable sections.
+
+Progress indicators.
+
+Editable fields.
+
+Checkboxes.
+
+Task completion.
+
+Date selectors.
+
+Report navigation.
+
+Competitor detail navigation.
+
+Asset previews.
+
+Contextual action menus.
+
+Use local mock data and local frontend state where necessary.
+
+Simulate AI workflows using clearly labelled demonstration results.
+
+For example:
+When the user clicks "Research My Idea", display a realistic research progress interface and then show a sample research report.
+
+When the user clicks "Create Brand Identity", display a multi-step interactive workflow.
+
+When the user adds a competitor, show that competitor in the watchlist using prototype data.
+
+When the user completes a task, update the visible progress indicator.
+
+All prototype interactions must work without a real backend.
+
+Do not present simulated functionality as a real AI integration.
+
+17. DESIGN ALL UI STATES
+
+For every major page, create:
+
+Default state.
+
+Empty state.
+
+Loading state.
+
+Success state.
+
+Error state.
+
+Selected state.
+
+Hover state.
+
+Disabled state where appropriate.
+
+Pay special attention to empty states.
+
+They should be elegant and guide the user towards the next action.
+
+Avoid generic empty-state messages.
+
+18. RESPONSIVE DESIGN
+
+Desktop is the primary design target.
+
+Design for:
+
+1440px desktop.
+
+1280px laptop.
+
+1024px tablet.
+
+768px tablet.
+
+390px mobile.
+
+Ensure:
+
+Responsive sidebar.
+
+Mobile navigation.
+
+Responsive tables.
+
+Adaptive cards.
+
+Readable reports.
+
+Mobile-friendly forms.
+
+No horizontal overflow.
+
+Do not simply shrink the desktop layout.
+
+Design appropriate mobile experiences.
+
+19. COMPONENT AND DESIGN SYSTEM ARCHITECTURE
+
+Create reusable components:
+
+ApplicationShell.
+
+Sidebar.
+
+Header.
+
+Breadcrumbs.
+
+PageHeader.
+
+SectionHeader.
+
+MetricCard.
+
+DataTable.
+
+SearchInput.
+
+FilterBar.
+
+Tabs.
+
+StatusBadge.
+
+PriorityBadge.
+
+EmptyState.
+
+LoadingState.
+
+Modal.
+
+Drawer.
+
+ConfirmationDialog.
+
+ProgressBar.
+
+Timeline.
+
+TaskCard.
+
+CompetitorCard.
+
+ResearchReportSection.
+
+AssetCard.
+
+ChartContainer.
+
+NotificationPanel.
+
+Create a consistent spacing, colour, radius, shadow and typography system.
+
+Do not duplicate UI components across departments.
+
+Maintain a clean and scalable frontend architecture.
+
+20. TECHNICAL SCOPE
+
+Use a modern frontend stack supported by Google AI Studio Build mode.
+
+Preferred:
+
+React.
+
+TypeScript.
+
+Tailwind CSS.
+
+Reusable components.
+
+Lucide icons.
+
+Responsive layouts.
+
+For this design stage:
+
+DO NOT:
+
+Build Firebase authentication.
+
+Connect real databases.
+
+Configure production API keys.
+
+Implement real AI agents.
+
+Build real competitor scraping.
+
+Implement actual payment gateways.
+
+Create real scheduled jobs.
+
+Build production integrations.
+
+Use local demonstration data and frontend state.
+
+Do not create fake backend connections.
+
+Keep the frontend structured so real backend functionality can be added later.
+
+21. QUALITY AND DESIGN REVIEW
+
+Before considering the prototype complete, inspect every page.
+
+Evaluate:
+
+Does the application feel like one cohesive product?
+
+Is the visual design genuinely premium?
+
+Is the navigation intuitive?
+
+Can users understand what each department does?
+
+Are the workflows connected?
+
+Are the pages visually balanced?
+
+Is there unnecessary information?
+
+Are important actions easy to find?
+
+Are reports readable?
+
+Are dashboards informative without clutter?
+
+Are all buttons and navigation elements functional?
+
+Does the mobile layout work?
+
+Avoid producing a generic AI SaaS dashboard.
+
+Use realistic business examples and carefully written demonstration content.
+
+The design should feel intentionally art-directed.
+
+22. EXECUTION INSTRUCTIONS
+
+Work in the following order:
+
+PHASE A — Establish the design system.
+Create typography, colours, spacing, components, icons, buttons and layout rules.
+
+PHASE B — Build the complete application shell.
+Create the sidebar, top navigation, page containers and routing architecture.
+
+PHASE C — Build all major department pages.
+Implement every department and its key screens.
+
+PHASE D — Connect the user journeys.
+Ensure all relevant pages, actions and workflows are navigable.
+
+PHASE E — Add prototype interactions.
+Implement forms, tabs, dialogs, tasks, mock AI workflows and state changes.
+
+PHASE F — Review the complete product.
+Inspect every route and refine inconsistencies.
+
+IMPORTANT:
+
+Do not stop after creating the landing page or dashboard.
+
+Do not replace complex pages with placeholder cards.
+
+Do not omit departments because the application is large.
+
+Prioritise a working, complete navigation system and all major page containers before polishing minor details.
+
+If the application is too large to implement in one generation, build it incrementally while preserving the same design system, routing architecture and shared components.
+
+Keep a visible list of completed and remaining screens.
+
+FINAL DELIVERABLE:
+
+A complete, navigable, responsive, high-fidelity BrainWise SaaS frontend prototype.
+
+The product owner must be able to log in using a demo flow, explore every department, navigate every major page, experience the entire user journey, test the principal interactions and evaluate the visual design before approving the final UI/UX.
+
+The ultimate design objective:
+
+BrainWise should look and feel like a premium business intelligence platform built for serious founders — minimal, intelligent, beautifully organised and exceptionally easy to use.

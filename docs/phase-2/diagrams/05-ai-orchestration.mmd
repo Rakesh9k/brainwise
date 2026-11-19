@@ -1,0 +1,9 @@
+flowchart LR
+    A[Feature Request] --> B[Credit Reservation: Hold N Credits]
+    B --> C[Retrieve Business Brain Context & Anti-Fatigue Rules]
+    C --> D[Hydrate Prompt Template & Model Selection]
+    D --> E[Execute Gemini / Imagen API Call]
+    E --> F[Zod JSON Schema Validation]
+    F --> G[Deterministic Truth Check Pass]
+    G -->|Pass| H[Settle Credits & Store Asset in Firestore/GCS]
+    G -->|Fail| I[Auto-Refund Credits & Emit Safeguard Notice]

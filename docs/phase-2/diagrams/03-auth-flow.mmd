@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    actor User as User
+    participant AuthUI as AuthPages (/login, /signup)
+    participant FBAuth as Firebase Authentication
+    participant CloudFn as Auth Cloud Function
+    participant DB as Cloud Firestore (users & workspaces)
+
+    User->>AuthUI: Submits email + password (or Google SSO)
+    AuthUI->>FBAuth: signInWithPassword / signInWithPopup
+    FBAuth-->>AuthUI: Returns ID Token & Refresh Token
+    AuthUI->>CloudFn: POST /api/v1/auth/session-init
+    CloudFn->>DB: Queries `users/{uid}` and `workspaceMembers/{uid_wsId}`
+    alt First Time User
+        CloudFn->>DB: Creates user profile & provisions default workspace
+        CloudFn->>FBAuth: Sets custom claim `workspaceId = defaultWsId`
+    else Existing User
+        CloudFn->>DB: Resolves active workspace & membership role
+    end
+    CloudFn-->>AuthUI: Returns User Profile, Workspaces list & Active Role
+    AuthUI-->>User: Transitions to Onboarding or Dashboard

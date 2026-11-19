@@ -1,0 +1,230 @@
+{
+  "timestamp": "2026-11-19T08:20:36.736Z",
+  "results": [
+    {
+      "screen": "Marketing Landing Page",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "overflowDetails": "None",
+      "screenshot": "landing-desktop-1440.png"
+    },
+    {
+      "screen": "Marketing Landing Page",
+      "viewport": "desktop-1920",
+      "dimensions": "1920x1080",
+      "hasOverflow": false,
+      "overflowDetails": "None",
+      "screenshot": "landing-desktop-1920.png"
+    },
+    {
+      "screen": "Marketing Landing Page",
+      "viewport": "laptop-1366",
+      "dimensions": "1366x768",
+      "hasOverflow": false,
+      "overflowDetails": "None",
+      "screenshot": "landing-laptop-1366.png"
+    },
+    {
+      "screen": "Marketing Landing Page",
+      "viewport": "tablet-landscape-1024",
+      "dimensions": "1024x768",
+      "hasOverflow": false,
+      "overflowDetails": "None",
+      "screenshot": "landing-tablet-landscape-1024.png"
+    },
+    {
+      "screen": "Marketing Landing Page",
+      "viewport": "tablet-portrait-768",
+      "dimensions": "768x1024",
+      "hasOverflow": false,
+      "overflowDetails": "None",
+      "screenshot": "landing-tablet-portrait-768.png"
+    },
+    {
+      "screen": "Marketing Landing Page",
+      "viewport": "mobile-iphone14-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "overflowDetails": "None",
+      "screenshot": "landing-mobile-iphone14-390.png"
+    },
+    {
+      "screen": "Marketing Landing Page",
+      "viewport": "mobile-iphone-se-375",
+      "dimensions": "375x812",
+      "hasOverflow": false,
+      "overflowDetails": "None",
+      "screenshot": "landing-mobile-iphone-se-375.png"
+    },
+    {
+      "screen": "Dashboard",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-dashboard-desktop-1440.png"
+    },
+    {
+      "screen": "Dashboard",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-dashboard-mobile-390.png"
+    },
+    {
+      "screen": "Business Brain",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-business-brain-desktop-1440.png"
+    },
+    {
+      "screen": "Business Brain",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-business-brain-mobile-390.png"
+    },
+    {
+      "screen": "Idea Intelligence",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-idea-intelligence-desktop-1440.png"
+    },
+    {
+      "screen": "Idea Intelligence",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-idea-intelligence-mobile-390.png"
+    },
+    {
+      "screen": "Competitive Intelligence",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-competitive-intelligence-desktop-1440.png"
+    },
+    {
+      "screen": "Competitive Intelligence",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-competitive-intelligence-mobile-390.png"
+    },
+    {
+      "screen": "Market Watch",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-market-watch-desktop-1440.png"
+    },
+    {
+      "screen": "Market Watch",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-market-watch-mobile-390.png"
+    },
+    {
+      "screen": "Brand Studio",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-brand-studio-desktop-1440.png"
+    },
+    {
+      "screen": "Brand Studio",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-brand-studio-mobile-390.png"
+    },
+    {
+      "screen": "Asset Library",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-asset-library-desktop-1440.png"
+    },
+    {
+      "screen": "Asset Library",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-asset-library-mobile-390.png"
+    },
+    {
+      "screen": "Growth Planner",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-growth-director-desktop-1440.png"
+    },
+    {
+      "screen": "Growth Planner",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-growth-director-mobile-390.png"
+    },
+    {
+      "screen": "Analytics",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-business-performance-desktop-1440.png"
+    },
+    {
+      "screen": "Analytics",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-business-performance-mobile-390.png"
+    },
+    {
+      "screen": "Executive Reports",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-reports-desktop-1440.png"
+    },
+    {
+      "screen": "Executive Reports",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-reports-mobile-390.png"
+    },
+    {
+      "screen": "Settings",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-settings-desktop-1440.png"
+    },
+    {
+      "screen": "Settings",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-settings-mobile-390.png"
+    },
+    {
+      "screen": "Help & Support",
+      "viewport": "desktop-1440",
+      "dimensions": "1440x900",
+      "hasOverflow": false,
+      "screenshot": "dept-help-support-desktop-1440.png"
+    },
+    {
+      "screen": "Help & Support",
+      "viewport": "mobile-390",
+      "dimensions": "390x844",
+      "hasOverflow": false,
+      "screenshot": "dept-help-support-mobile-390.png"
+    }
+  ],
+  "consoleErrors": []
+}

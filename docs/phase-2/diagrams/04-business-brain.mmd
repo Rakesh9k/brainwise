@@ -1,0 +1,24 @@
+flowchart TD
+    subgraph Ingestion["1. Document & Founder Ingestion"]
+        Doc[Pitch Deck / Catalog PDF Upload] --> GCS[Cloud Storage Temp Upload]
+        Manual[Founder Manual Fact Entries] --> ConfirmedTag[Tag: USER_CONFIRMED]
+    end
+
+    subgraph Extraction["2. AI Multimodal Fact Parsing"]
+        GCS --> GeminiExtract[Gemini 2.5 Flash Document Parser]
+        GeminiExtract --> ExtractedFacts[Structured JSON Facts]
+        ExtractedFacts --> DocTag[Tag: DERIVED_FROM_DOC]
+    end
+
+    subgraph Conflict["3. Conflict Resolution & Review"]
+        DocTag --> Resolver{Conflict Resolver}
+        ConfirmedTag --> Resolver
+        Resolver -->|USER_CONFIRMED strictly overrides DOC| CanonicalBrain[Approved Business Brain Store]
+    end
+
+    subgraph Distribution["4. Downstream Grounding Context"]
+        CanonicalBrain --> TruthEngine[Deterministic Truth Engine]
+        CanonicalBrain --> BrandStudio[AI Brand Studio Context]
+        CanonicalBrain --> Strategy[Growth Director Context]
+        CanonicalBrain --> Research[Idea Intelligence Context]
+    end

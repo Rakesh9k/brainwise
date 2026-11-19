@@ -1,0 +1,8 @@
+{
+  "name": "BrainWise",
+  "description": "BrainWise — Your AI Business Intelligence & Growth Partner. Understand your market, research competitors, build distinctive brands, and execute growth strategies.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

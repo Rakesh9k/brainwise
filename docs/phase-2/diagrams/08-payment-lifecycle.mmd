@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    actor Founder as Workspace Owner
+    participant Frontend as BrainWise Web
+    participant Server as Billing Cloud Function
+    participant Cashfree as Cashfree Payment Gateway
+    participant DB as Firestore (Subscriptions & Wallet)
+
+    Founder->>Frontend: Selects "Growth Pro ($149 / mo)"
+    Frontend->>Server: POST /api/v1/billing/create-order
+    Server->>Cashfree: Calls /pg/orders (Amount, Customer Details, ReturnURL)
+    Cashfree-->>Server: Returns orderId & paymentSessionId
+    Server->>DB: Records `paymentOrders` document (PENDING)
+    Server-->>Frontend: Returns paymentSessionId
+    Frontend->>Founder: Renders Cashfree Checkout Modal (UPI/Card/Netbanking)
+    Founder->>Cashfree: Authorizes payment
+    Cashfree->>Server: Server-to-Server Webhook (HMAC-SHA256 Signed)
+    Server->>Server: Verifies webhook signature with Secret Key
+    Server->>DB: Atomic Transaction: Set Order=SUCCESS, Subscription=ACTIVE, Grant 800 Credits
+    Server-->>Cashfree: 200 OK
+    DB-->>Frontend: Real-time listener updates credit balance on screen

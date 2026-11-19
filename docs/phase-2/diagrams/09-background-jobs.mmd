@@ -1,0 +1,9 @@
+flowchart TD
+    ScheduleRequest[User Schedules Post for Friday 10:00 AM] --> CloudTaskAPI[Cloud Tasks Enqueue]
+    CloudTaskAPI --> TaskQueue[Queue: social-publishing-queue]
+    TaskQueue -->|Delayed Execution| TaskWorker[Cloud Functions Publish Worker]
+    TaskWorker --> VerifyToken[Verify Decrypted Meta/LinkedIn Token]
+    VerifyToken --> CallAPI[Call Official Social Media API]
+    CallAPI -->|Success| MarkPublished[Update Post Status: PUBLISHED]
+    CallAPI -->|Transient Failure| RetryTask[Retry with Exponential Backoff: Max 3x]
+    CallAPI -->|Permanent Failure| MoveDLQ[Move to Dead Letter Queue & Alert User]
