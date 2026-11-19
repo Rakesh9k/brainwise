@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { INITIAL_BRAINWISE_STATE } from '../data/mockData';
 import { recordStrategicAngle, ensureStrategicMemory } from '../utils/strategicMemory';
 import type {
@@ -259,31 +267,33 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setDepartmentResetNonce((n) => n + 1);
   };
 
-  const navigate: BrainWiseContextValue['navigate'] = (route, options) => {
-    const shouldReset =
-      state.currentRoute === route &&
-      !options?.settingsTab &&
-      !options?.competitorId &&
-      !options?.reportId;
+  const navigate: BrainWiseContextValue['navigate'] = useCallback((route, options) => {
     setBreadcrumbTrail([]);
-    if (shouldReset) {
-      setDepartmentResetNonce((n) => n + 1);
-    }
-    if (options?.competitorId) {
-      setPendingCompetitorProfile(true);
-    }
-    if (options?.reportId) {
-      setPendingReportOpen(true);
-    }
-    setState((prev) => ({
-      ...prev,
-      currentRoute: route,
-      settingsTab: options?.settingsTab ?? prev.settingsTab,
-      selectedCompetitorId: options?.competitorId ?? prev.selectedCompetitorId,
-      activeReportId: options?.reportId ?? prev.activeReportId,
-    }));
+    setState((prev) => {
+      const shouldReset =
+        prev.currentRoute === route &&
+        !options?.settingsTab &&
+        !options?.competitorId &&
+        !options?.reportId;
+      if (shouldReset) {
+        setDepartmentResetNonce((n) => n + 1);
+      }
+      if (options?.competitorId) {
+        setPendingCompetitorProfile(true);
+      }
+      if (options?.reportId) {
+        setPendingReportOpen(true);
+      }
+      return {
+        ...prev,
+        currentRoute: route,
+        settingsTab: options?.settingsTab ?? prev.settingsTab,
+        selectedCompetitorId: options?.competitorId ?? prev.selectedCompetitorId,
+        activeReportId: options?.reportId ?? prev.activeReportId,
+      };
+    });
     window.scrollTo({ top: 0, behavior: 'auto' });
-  };
+  }, []);
 
   useEffect(() => {
     const onRemoteNav = (e: Event) => {
@@ -1218,6 +1228,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       },
       consumeCreativeRemix: () => setPendingCreativeRemix(null),
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Action callbacks close over setState within provider; memoization invalidation is governed by state and modal flags.
     [
       state,
       toast,

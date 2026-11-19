@@ -158,7 +158,7 @@ export const IdeaIntelligencePage: React.FC = () => {
     if (state.activeReportId && state.activeReportId !== selectedReportId) {
       setSelectedReportId(state.activeReportId);
     }
-  }, [state.activeReportId]);
+  }, [state.activeReportId, selectedReportId]);
 
   useEffect(() => {
     if (pendingReportOpen && state.activeReportId) {
@@ -215,7 +215,17 @@ export const IdeaIntelligencePage: React.FC = () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [view, synthesisAttempt]);
+  }, [
+    view,
+    synthesisAttempt,
+    addReport,
+    depth,
+    geography,
+    ideaPrompt,
+    industry,
+    state.brain,
+    targetMarket,
+  ]);
 
   const handleUseLocalTemplateFallback = () => {
     const created = buildDynamicDossier({

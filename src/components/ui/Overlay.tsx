@@ -373,7 +373,15 @@ export const GlobalSearchModal: React.FC = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [globalSearchOpen, selectedIndex, totalCount, quickActions, hits]);
+  }, [
+    globalSearchOpen,
+    selectedIndex,
+    totalCount,
+    quickActions,
+    hits,
+    navigate,
+    setGlobalSearchOpen,
+  ]);
 
   return (
     <Dialog

@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
+import type { AnyRoute } from '../../types/brainwise';
 import { BW_EASE } from '../motion/LiquidMotion';
 import { TopoGridOverlay } from './TopoGridOverlay';
 import {
@@ -134,7 +135,7 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
   const handleViewDetails = () => {
     if (!activeCard) return;
     if (activeCard.route) {
-      navigate(activeCard.route as any);
+      navigate(activeCard.route as AnyRoute);
       showToast(`Navigated to ${activeCard.title} view.`);
     } else {
       showToast(`Inspecting ${activeCard.title} telemetry.`);

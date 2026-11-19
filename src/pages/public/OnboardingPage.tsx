@@ -85,7 +85,21 @@ export const OnboardingPage: React.FC = () => {
       }, 1350),
     ];
     return () => timers.forEach(clearTimeout);
-  }, [step]);
+  }, [
+    step,
+    businessName,
+    competitors,
+    completeOnboarding,
+    goals,
+    industry,
+    location,
+    productSummary,
+    role,
+    stage,
+    startFreshEmpty,
+    targetCustomers,
+    website,
+  ]);
 
   const toggleGoal = (g: string) => {
     setGoals((prev) => (prev.includes(g) ? prev.filter((item) => item !== g) : [...prev, g]));

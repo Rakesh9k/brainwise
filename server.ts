@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = Number(process.env.PORT) || 3000;
-const GEMINI_MODEL = 'gemini-4-hydrogen';
+const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash';
 
 function resolveApiKey(): string | null {
   const raw = process.env.GEMINI_API_KEY?.trim() || '';

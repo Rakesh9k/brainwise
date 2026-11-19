@@ -21,7 +21,7 @@ This document consolidates the **12 authoritative architectural diagrams** for t
 ```mermaid
 flowchart TD
     subgraph Clients["1. Client Layer (Web & Mobile Responsive)"]
-        Browser[Next.js 16 / React 19 Frontend App]
+        Browser[React 19 / Vite 8 SPA Shell]
         PWA[Progressive Web App Shell]
     end
 
