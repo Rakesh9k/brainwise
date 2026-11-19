@@ -115,10 +115,7 @@ export function DataTable<T>({
       {/* Responsive Mobile Card Adaptation */}
       <div className="md:hidden divide-y divide-[#E6E6E2]">
         {sorted.map((row) => (
-          <div
-            key={keyExtractor(row)}
-            className="p-4 space-y-2.5 bg-[#FFFFFF]"
-          >
+          <div key={keyExtractor(row)} className="p-4 space-y-2.5 bg-[#FFFFFF]">
             {columns.map((col) => (
               <div key={col.key} className="flex items-start justify-between gap-3">
                 <span className="text-xs text-[#686864] shrink-0">{col.header}</span>

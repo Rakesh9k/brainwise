@@ -244,7 +244,11 @@ export const DashboardFeedSkeleton: React.FC = () => (
             <div key={idx} className="py-5 space-y-3">
               <div className="flex items-center justify-between">
                 <Skeleton shape="pill" className="h-3 w-44" />
-                <Skeleton variant={idx === 0 ? 'accent' : 'default'} shape="pill" className="h-3 w-20" />
+                <Skeleton
+                  variant={idx === 0 ? 'accent' : 'default'}
+                  shape="pill"
+                  className="h-3 w-20"
+                />
               </div>
               <Skeleton shape="rect" radius="sm" className="h-4 w-11/12" />
               <Skeleton shape="pill" className="h-3 w-3/4" />
@@ -274,7 +278,11 @@ export const DashboardFeedSkeleton: React.FC = () => (
               <Skeleton shape="circle" className="w-5 h-5 shrink-0 mt-0.5" />
               <div className="flex-1 space-y-2">
                 <Skeleton shape="rect" radius="sm" className="h-4 w-5/6" />
-                <Skeleton variant={idx === 0 ? 'accent' : 'default'} shape="pill" className="h-2.5 w-20" />
+                <Skeleton
+                  variant={idx === 0 ? 'accent' : 'default'}
+                  shape="pill"
+                  className="h-2.5 w-20"
+                />
                 <Skeleton shape="pill" className="h-2.5 w-44" />
               </div>
             </div>

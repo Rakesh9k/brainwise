@@ -6,13 +6,7 @@ import { useBrainWise } from '../../context/BrainWiseContext';
 import { filterGlobalSearch } from '../../utils/logic';
 import { BW_EASE } from '../motion/LiquidMotion';
 import { typeClass } from '../../theme/typography';
-import {
-  Dialog,
-  DialogBody,
-  DialogFooter,
-  DialogHeader,
-  type DialogProps,
-} from './Dialog';
+import { Dialog, DialogBody, DialogFooter, DialogHeader, type DialogProps } from './Dialog';
 import type { DialogSize } from './dialogUtils';
 
 export { Dialog, DialogBody, DialogFooter, DialogHeader };
@@ -100,7 +94,9 @@ export const Drawer: React.FC<{
             <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-[#EFEFEB] bg-[#FFFFFF]/60">
               <div>
                 <h3 className={`${typeClass.h4} text-[#171717]`}>{title}</h3>
-                {subtitle && <p className={`${typeClass.bodySm} text-[#5C5C58] mt-1`}>{subtitle}</p>}
+                {subtitle && (
+                  <p className={`${typeClass.bodySm} text-[#5C5C58] mt-1`}>{subtitle}</p>
+                )}
               </div>
               <button
                 type="button"
@@ -160,9 +156,7 @@ export const ConfirmationDialog: React.FC<{
             onClose();
           }}
           className={`px-5 py-2 text-xs sm:text-sm font-medium text-white rounded-full transition-colors focus-ring cursor-pointer ${
-            destructive
-              ? 'bg-[#BC3E3E] hover:bg-[#A13232]'
-              : 'bg-[#171717] hover:bg-[#2A2A28]'
+            destructive ? 'bg-[#BC3E3E] hover:bg-[#A13232]' : 'bg-[#171717] hover:bg-[#2A2A28]'
           }`}
         >
           {confirmLabel}
@@ -412,115 +406,115 @@ export const GlobalSearchModal: React.FC = () => {
         </button>
       </div>
 
-            <div className="max-h-[58vh] overflow-y-auto divide-y divide-[#EFEFEB]">
-              {quickActions.length > 0 && (
-                <div className="py-1.5">
-                  <div className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#858585]">
-                    Quick Commands
+      <div className="max-h-[58vh] overflow-y-auto divide-y divide-[#EFEFEB]">
+        {quickActions.length > 0 && (
+          <div className="py-1.5">
+            <div className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#858585]">
+              Quick Commands
+            </div>
+            {quickActions.map((cmd, idx) => {
+              const active = selectedIndex === idx;
+              return (
+                <button
+                  key={cmd.id}
+                  type="button"
+                  onMouseEnter={() => setSelectedIndex(idx)}
+                  onClick={() => {
+                    cmd.run();
+                    setGlobalSearchOpen(false);
+                  }}
+                  className={`w-full px-4 py-2.5 flex items-center justify-between gap-3 text-left transition-colors focus-ring-inset cursor-pointer ${
+                    active ? 'bg-[#FFF0E5]/70' : 'hover:bg-[#FAFAF9]'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-[#252525] truncate">{cmd.title}</div>
+                    <div className="text-xs text-[#5C5C58] truncate">{cmd.subtitle}</div>
                   </div>
-                  {quickActions.map((cmd, idx) => {
-                    const active = selectedIndex === idx;
-                    return (
-                      <button
-                        key={cmd.id}
-                        type="button"
-                        onMouseEnter={() => setSelectedIndex(idx)}
-                        onClick={() => {
-                          cmd.run();
-                          setGlobalSearchOpen(false);
-                        }}
-                        className={`w-full px-4 py-2.5 flex items-center justify-between gap-3 text-left transition-colors focus-ring-inset cursor-pointer ${
-                          active ? 'bg-[#FFF0E5]/70' : 'hover:bg-[#FAFAF9]'
+                  <span className="text-[11px] font-mono-num text-[#C44D00] shrink-0">Jump →</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {hits.length === 0 && quickActions.length === 0 ? (
+          <div className="py-10 text-center text-sm text-[#5C5C58]">
+            No matches found for "{query}". Try searching a competitor, task, or asset.
+          </div>
+        ) : (
+          hits.length > 0 && (
+            <div className="py-1.5">
+              <div className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#858585]">
+                Workspace Records
+              </div>
+              {hits.map((hit, idx) => {
+                const rowIndex = quickActions.length + idx;
+                const active = selectedIndex === rowIndex;
+                const taskRecord =
+                  hit.category === 'Task' && hit.itemId
+                    ? state.tasks.find((t) => t.id === hit.itemId)
+                    : undefined;
+                const isTaskDone = taskRecord?.status === 'completed';
+
+                return (
+                  <div
+                    key={hit.id}
+                    onMouseEnter={() => setSelectedIndex(rowIndex)}
+                    className={`w-full px-4 py-2.5 flex items-center justify-between gap-3 transition-colors ${
+                      active ? 'bg-[#FFF0E5]/70' : 'hover:bg-[#FAFAF9]'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (hit.route === 'competitive-intelligence' && hit.itemId) {
+                          navigate('competitive-intelligence', { competitorId: hit.itemId });
+                        } else if (hit.route === 'idea-intelligence' && hit.itemId) {
+                          navigate('idea-intelligence', { reportId: hit.itemId });
+                        } else {
+                          navigate(hit.route);
+                        }
+                        setGlobalSearchOpen(false);
+                      }}
+                      className="flex-1 min-w-0 text-left rounded-[6px] focus-ring-inset cursor-pointer"
+                    >
+                      <div className="text-[11px] font-medium text-[#C44D00]">{hit.category}</div>
+                      <div
+                        className={`text-sm font-medium truncate ${
+                          isTaskDone ? 'line-through text-[#858585]' : 'text-[#252525]'
                         }`}
                       >
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium text-[#252525] truncate">{cmd.title}</div>
-                          <div className="text-xs text-[#5C5C58] truncate">{cmd.subtitle}</div>
-                        </div>
-                        <span className="text-[11px] font-mono-num text-[#C44D00] shrink-0">Jump →</span>
+                        {hit.title}
+                      </div>
+                      <div className="text-xs text-[#5C5C58] truncate">{hit.subtitle}</div>
+                    </button>
+
+                    {taskRecord ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleTaskStatus(taskRecord.id);
+                        }}
+                        className={`px-2.5 py-1 text-[11px] font-semibold rounded-[6px] border shrink-0 focus-ring cursor-pointer ${
+                          isTaskDone
+                            ? 'bg-[#ECF7F1] text-[#24724E] border-[#CEE8DA]'
+                            : 'bg-white text-[#252525] border-[#E6E6E2] hover:border-[#FF7417]'
+                        }`}
+                      >
+                        {isTaskDone ? 'Done ✓' : 'Mark Done'}
                       </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {hits.length === 0 && quickActions.length === 0 ? (
-                <div className="py-10 text-center text-sm text-[#5C5C58]">
-                  No matches found for "{query}". Try searching a competitor, task, or asset.
-                </div>
-              ) : (
-                hits.length > 0 && (
-                  <div className="py-1.5">
-                    <div className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#858585]">
-                      Workspace Records
-                    </div>
-                    {hits.map((hit, idx) => {
-                      const rowIndex = quickActions.length + idx;
-                      const active = selectedIndex === rowIndex;
-                      const taskRecord =
-                        hit.category === 'Task' && hit.itemId
-                          ? state.tasks.find((t) => t.id === hit.itemId)
-                          : undefined;
-                      const isTaskDone = taskRecord?.status === 'completed';
-
-                      return (
-                        <div
-                          key={hit.id}
-                          onMouseEnter={() => setSelectedIndex(rowIndex)}
-                          className={`w-full px-4 py-2.5 flex items-center justify-between gap-3 transition-colors ${
-                            active ? 'bg-[#FFF0E5]/70' : 'hover:bg-[#FAFAF9]'
-                          }`}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (hit.route === 'competitive-intelligence' && hit.itemId) {
-                                navigate('competitive-intelligence', { competitorId: hit.itemId });
-                              } else if (hit.route === 'idea-intelligence' && hit.itemId) {
-                                navigate('idea-intelligence', { reportId: hit.itemId });
-                              } else {
-                                navigate(hit.route);
-                              }
-                              setGlobalSearchOpen(false);
-                            }}
-                            className="flex-1 min-w-0 text-left rounded-[6px] focus-ring-inset cursor-pointer"
-                          >
-                            <div className="text-[11px] font-medium text-[#C44D00]">{hit.category}</div>
-                            <div
-                              className={`text-sm font-medium truncate ${
-                                isTaskDone ? 'line-through text-[#858585]' : 'text-[#252525]'
-                              }`}
-                            >
-                              {hit.title}
-                            </div>
-                            <div className="text-xs text-[#5C5C58] truncate">{hit.subtitle}</div>
-                          </button>
-
-                          {taskRecord ? (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleTaskStatus(taskRecord.id);
-                              }}
-                              className={`px-2.5 py-1 text-[11px] font-semibold rounded-[6px] border shrink-0 focus-ring cursor-pointer ${
-                                isTaskDone
-                                  ? 'bg-[#ECF7F1] text-[#24724E] border-[#CEE8DA]'
-                                  : 'bg-white text-[#252525] border-[#E6E6E2] hover:border-[#FF7417]'
-                              }`}
-                            >
-                              {isTaskDone ? 'Done ✓' : 'Mark Done'}
-                            </button>
-                          ) : (
-                            <ArrowRight className="w-4 h-4 text-[#858585] shrink-0" />
-                          )}
-                        </div>
-                      );
-                    })}
+                    ) : (
+                      <ArrowRight className="w-4 h-4 text-[#858585] shrink-0" />
+                    )}
                   </div>
-                )
-              )}
+                );
+              })}
             </div>
+          )
+        )}
+      </div>
 
       <div className="px-5 py-2.5 bg-[#FAFAF9]/90 border-t border-[#EFEFEB] flex items-center justify-between text-[11px] text-[#686864]">
         <span>↑↓ Navigate · Enter Select · Esc Close</span>

@@ -35,13 +35,21 @@ test('resolveTopoGridClassName builds non-interactive persistent overlay classes
 });
 
 test('buildTopoGridStyle produces feathered mask, optional density override, and calibrated opacity', () => {
-  const edgesDefault = buildTopoGridStyle({ fade: 'edges', density: 'default', intensity: 'subtle' });
+  const edgesDefault = buildTopoGridStyle({
+    fade: 'edges',
+    density: 'default',
+    intensity: 'subtle',
+  });
   assert.equal(edgesDefault.opacity, TOPO_GRID_INTENSITY_OPACITY.subtle);
   assert.equal(edgesDefault.backgroundSize, undefined);
   assert.equal(edgesDefault.maskImage, TOPO_GRID_FADE_MASKS.edges);
   assert.equal(edgesDefault.WebkitMaskImage, TOPO_GRID_FADE_MASKS.edges);
 
-  const uniformCompact = buildTopoGridStyle({ fade: 'none', density: 'compact', intensity: 'crisp' });
+  const uniformCompact = buildTopoGridStyle({
+    fade: 'none',
+    density: 'compact',
+    intensity: 'crisp',
+  });
   assert.equal(uniformCompact.opacity, 1);
   assert.equal(uniformCompact.backgroundSize, '24px 24px');
   assert.equal(uniformCompact.maskImage, undefined);

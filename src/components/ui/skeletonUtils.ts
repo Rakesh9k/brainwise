@@ -49,9 +49,7 @@ export function resolveSkeletonRadiusClass(
 /**
  * Normalizes numeric pixel values or CSS strings for inline width/height styles.
  */
-export function normalizeSkeletonDimension(
-  value?: number | string
-): string | undefined {
+export function normalizeSkeletonDimension(value?: number | string): string | undefined {
   if (value === undefined || value === null) return undefined;
   return typeof value === 'number' ? `${value}px` : value;
 }

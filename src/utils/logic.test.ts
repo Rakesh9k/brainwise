@@ -159,7 +159,13 @@ test('buildShellBreadcrumbs builds root and deep department hierarchy accurately
   assert.equal(deepTrail.length, 5);
   assert.deepEqual(
     deepTrail.map((i) => i.label),
-    ['BrainWise', 'Intelligence', 'Idea Intelligence', 'Research Reports', 'Solstice Cold Brew Expansion']
+    [
+      'BrainWise',
+      'Intelligence',
+      'Idea Intelligence',
+      'Research Reports',
+      'Solstice Cold Brew Expansion',
+    ]
   );
   assert.equal(deepTrail[2].isCurrent, false);
   deepTrail[2].onClick?.();
@@ -327,10 +333,17 @@ test('buildWeeklyGrowthPlan, buildRoadmapPhases, buildExecutiveReportNarrative, 
   assert.equal(phases.length, 4);
   assert.ok(phases.some((p) => p.highlighted));
 
-  const narrative = buildExecutiveReportNarrative('Competitive Intelligence Report', INITIAL_BRAINWISE_STATE);
+  const narrative = buildExecutiveReportNarrative(
+    'Competitive Intelligence Report',
+    INITIAL_BRAINWISE_STATE
+  );
   assert.ok(narrative.takeaway.includes(INITIAL_BRAINWISE_STATE.competitors[0].name));
 
-  const svg = buildAssetSvgMarkup(INITIAL_BRAINWISE_STATE.assets[0], 'Solstice Craft Coffee', 'geometric');
+  const svg = buildAssetSvgMarkup(
+    INITIAL_BRAINWISE_STATE.assets[0],
+    'Solstice Craft Coffee',
+    'geometric'
+  );
   assert.ok(svg.startsWith('<svg '));
   assert.ok(svg.includes('Solstice Craft Coffee'));
 });
@@ -380,7 +393,13 @@ test('buildLocalLogoConcepts, buildLocalBrandAssetVariations, buildLocalSocialCr
   assert.equal(carousel.slides.length, 5);
   assert.ok(carousel.hashtags.length >= 4);
 
-  const slideSvg = buildCarouselSlideSvgMarkup(carousel.slides[0], 'Solstice Craft Coffee', '#FF7417', true, '4:5');
+  const slideSvg = buildCarouselSlideSvgMarkup(
+    carousel.slides[0],
+    'Solstice Craft Coffee',
+    '#FF7417',
+    true,
+    '4:5'
+  );
   assert.ok(slideSvg.includes('width="1080" height="1350"'));
   assert.ok(slideSvg.includes('SLIDE 01'));
 });

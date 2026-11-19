@@ -8,9 +8,7 @@ import { BW_EASE } from '../motion/LiquidMotion';
 export const Breadcrumbs: React.FC = () => {
   const { state, breadcrumbTrail, navigate, triggerDepartmentReset } = useBrainWise();
   const reduced = useReducedMotion();
-  const route = (state.currentRoute in ROUTE_TITLES
-    ? state.currentRoute
-    : 'dashboard') as AppRoute;
+  const route = (state.currentRoute in ROUTE_TITLES ? state.currentRoute : 'dashboard') as AppRoute;
   const meta = ROUTE_TITLES[route];
 
   const items = buildShellBreadcrumbs({
@@ -78,10 +76,7 @@ export const Breadcrumbs: React.FC = () => {
                   <span className="truncate">{item.label}</span>
                 </button>
               ) : (
-                <span
-                  title={item.label}
-                  className="text-[#858585] truncate max-w-[120px]"
-                >
+                <span title={item.label} className="text-[#858585] truncate max-w-[120px]">
                   {item.label}
                 </span>
               )}
@@ -102,7 +97,9 @@ export const Breadcrumbs: React.FC = () => {
             >
               {mobileParent.label}
             </button>
-            <span className="text-[#D2D2CC] font-light select-none shrink-0" aria-hidden="true">/</span>
+            <span className="text-[#D2D2CC] font-light select-none shrink-0" aria-hidden="true">
+              /
+            </span>
           </>
         ) : (
           <>

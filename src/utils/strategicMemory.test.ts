@@ -9,7 +9,6 @@ import {
   calculateFatiguedThemes,
   buildAntiFatiguePromptDirectives,
   recordStrategicAngle,
-  FATIGUE_THRESHOLD,
 } from './strategicMemory';
 import type { StrategicMemory, StrategicAngleRecord } from '../types/brainwise';
 

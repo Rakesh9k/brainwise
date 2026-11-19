@@ -88,9 +88,7 @@ export const OnboardingPage: React.FC = () => {
   }, [step]);
 
   const toggleGoal = (g: string) => {
-    setGoals((prev) =>
-      prev.includes(g) ? prev.filter((item) => item !== g) : [...prev, g]
-    );
+    setGoals((prev) => (prev.includes(g) ? prev.filter((item) => item !== g) : [...prev, g]));
   };
 
   const addCompetitorTag = (raw: string) => {
@@ -278,7 +276,8 @@ export const OnboardingPage: React.FC = () => {
                 Tell us about your business &amp; industry
               </h1>
               <p className={`${typeClass.bodySm} text-[#686864] mt-1`}>
-                Leave fields blank if you want to explore with our pre-loaded Solstice Craft Coffee workspace.
+                Leave fields blank if you want to explore with our pre-loaded Solstice Craft Coffee
+                workspace.
               </p>
             </div>
 
@@ -298,7 +297,10 @@ export const OnboardingPage: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="ob-industry" className="block text-xs font-medium text-[#242424] mb-1">
+                <label
+                  htmlFor="ob-industry"
+                  className="block text-xs font-medium text-[#242424] mb-1"
+                >
                   Industry
                 </label>
                 <input
@@ -330,7 +332,10 @@ export const OnboardingPage: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="ob-location" className="block text-xs font-medium text-[#242424] mb-1">
+                <label
+                  htmlFor="ob-location"
+                  className="block text-xs font-medium text-[#242424] mb-1"
+                >
                   Location / Geography (Optional)
                 </label>
                 <input
@@ -345,7 +350,10 @@ export const OnboardingPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="ob-products" className="block text-xs font-medium text-[#242424] mb-1">
+              <label
+                htmlFor="ob-products"
+                className="block text-xs font-medium text-[#242424] mb-1"
+              >
                 Products or Services (Optional)
               </label>
               <input
@@ -360,7 +368,10 @@ export const OnboardingPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="ob-customers" className="block text-xs font-medium text-[#242424] mb-1">
+                <label
+                  htmlFor="ob-customers"
+                  className="block text-xs font-medium text-[#242424] mb-1"
+                >
                   Target Customers (Optional)
                 </label>
                 <input
@@ -374,7 +385,10 @@ export const OnboardingPage: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="ob-website" className="block text-xs font-medium text-[#242424] mb-1">
+                <label
+                  htmlFor="ob-website"
+                  className="block text-xs font-medium text-[#242424] mb-1"
+                >
                   Website (Optional)
                 </label>
                 <input
@@ -416,7 +430,8 @@ export const OnboardingPage: React.FC = () => {
                 Who are your closest competitors?
               </h1>
               <p className={`${typeClass.bodySm} text-[#686864] mt-1`}>
-                Seed Competitive Intelligence &amp; Market Watch now so BrainWise maps your differentiation immediately.
+                Seed Competitive Intelligence &amp; Market Watch now so BrainWise maps your
+                differentiation immediately.
               </p>
             </div>
 
@@ -512,9 +527,12 @@ export const OnboardingPage: React.FC = () => {
                   className="mt-0.5 accent-[#FF7417]"
                 />
                 <span>
-                  <strong className="font-semibold">Start clean guided workspace (without Solstice demo fixtures)</strong>
+                  <strong className="font-semibold">
+                    Start clean guided workspace (without Solstice demo fixtures)
+                  </strong>
                   <span className="block text-[#686864] mt-0.5">
-                    Initializes empty departments (plus any competitors added above) with step-by-step recommended next actions.
+                    Initializes empty departments (plus any competitors added above) with
+                    step-by-step recommended next actions.
                   </span>
                 </span>
               </label>

@@ -33,7 +33,10 @@ export interface ToastPayload {
 
 interface BrainWiseContextValue {
   state: BrainWiseState;
-  navigate: (route: AnyRoute, options?: { settingsTab?: SettingsTabId; competitorId?: string; reportId?: string }) => void;
+  navigate: (
+    route: AnyRoute,
+    options?: { settingsTab?: SettingsTabId; competitorId?: string; reportId?: string }
+  ) => void;
   loginDemo: (firstName?: string, email?: string) => void;
   launchWorkspaceWithIdea: (ideaPrompt: string) => void;
   prefilledIdeaPrompt: string;
@@ -68,7 +71,10 @@ interface BrainWiseContextValue {
   updateReportAssumption: (reportId: string, assumptionId: string, newValue: number) => void;
   addCompetitor: (comp: Omit<CompetitorProfileData, 'id'>) => void;
   toggleCompetitorMonitoring: (compId: string) => void;
-  updateCompetitorFrequency: (compId: string, freq: CompetitorProfileData['monitoringFrequency']) => void;
+  updateCompetitorFrequency: (
+    compId: string,
+    freq: CompetitorProfileData['monitoringFrequency']
+  ) => void;
   removeCompetitor: (compId: string) => void;
   updateOwnPosition: (x: number, y: number) => void;
   saveCompetitiveStrategyToBrain: () => void;
@@ -83,7 +89,11 @@ interface BrainWiseContextValue {
   addGoal: (goal: Omit<GrowthGoal, 'id'>) => void;
   updateGoalProgress: (goalId: string, currentValue: number) => void;
   addExperiment: (exp: Omit<GrowthExperiment, 'id'>) => void;
-  updateExperimentStatus: (expId: string, status: GrowthExperiment['status'], results?: string) => void;
+  updateExperimentStatus: (
+    expId: string,
+    status: GrowthExperiment['status'],
+    results?: string
+  ) => void;
   convertEventToExperiment: (eventId: string) => void;
   dismissMarketEvent: (eventId: string) => void;
   markMarketEventRead: (eventId: string) => void;
@@ -118,8 +128,16 @@ interface BrainWiseContextValue {
   consumeCompetitorProfile: () => void;
   pendingReportOpen: boolean;
   consumeReportOpen: () => void;
-  pendingCreativeRemix: { mode: 'logos' | 'collateral' | 'social'; prompt: string; category?: BrandAsset['category'] } | null;
-  launchCreativeRemix: (remix: { mode: 'logos' | 'collateral' | 'social'; prompt: string; category?: BrandAsset['category'] }) => void;
+  pendingCreativeRemix: {
+    mode: 'logos' | 'collateral' | 'social';
+    prompt: string;
+    category?: BrandAsset['category'];
+  } | null;
+  launchCreativeRemix: (remix: {
+    mode: 'logos' | 'collateral' | 'social';
+    prompt: string;
+    category?: BrandAsset['category'];
+  }) => void;
   consumeCreativeRemix: () => void;
 }
 
@@ -287,7 +305,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         ...prev.user,
         firstName: firstName?.trim() || prev.user.firstName,
         email: email?.trim() || prev.user.email,
-        avatarInitials: (firstName?.trim()?.[0] || prev.user.firstName[0] || 'V').toUpperCase() + (prev.user.lastName[0] || 'K'),
+        avatarInitials:
+          (firstName?.trim()?.[0] || prev.user.firstName[0] || 'V').toUpperCase() +
+          (prev.user.lastName[0] || 'K'),
       },
     }));
     showToast('Welcome back to your BrainWise command centre.');
@@ -307,7 +327,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       currentRoute: 'idea-intelligence',
     }));
     window.scrollTo({ top: 0, behavior: 'auto' });
-    showToast(`Draft loaded into Idea Intelligence: "${clean.slice(0, 42)}${clean.length > 42 ? '…' : ''}"`);
+    showToast(
+      `Draft loaded into Idea Intelligence: "${clean.slice(0, 42)}${clean.length > 42 ? '…' : ''}"`
+    );
   };
 
   const completeOnboarding: BrainWiseContextValue['completeOnboarding'] = (payload) => {
@@ -347,20 +369,20 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             lastUpdated: new Date().toISOString().slice(0, 10),
           }
         : useCustom
-        ? {
-            ...prev.brain,
-            businessName: customName,
-            industry: payload.industry.trim() || prev.brain.industry,
-            stage: payload.stage || prev.brain.stage,
-            location: payload.location.trim() || prev.brain.location,
-            website: payload.website.trim() || '',
-            targetAudience: payload.targetCustomers.trim() || prev.brain.targetAudience,
-            overviewSummary: payload.productSummary.trim()
-              ? `${customName} operates in ${payload.industry || 'its target market'}, delivering ${payload.productSummary.trim()} for ${payload.targetCustomers || 'modern customers'}.`
-              : prev.brain.overviewSummary,
-            lastUpdated: new Date().toISOString().slice(0, 10),
-          }
-        : prev.brain;
+          ? {
+              ...prev.brain,
+              businessName: customName,
+              industry: payload.industry.trim() || prev.brain.industry,
+              stage: payload.stage || prev.brain.stage,
+              location: payload.location.trim() || prev.brain.location,
+              website: payload.website.trim() || '',
+              targetAudience: payload.targetCustomers.trim() || prev.brain.targetAudience,
+              overviewSummary: payload.productSummary.trim()
+                ? `${customName} operates in ${payload.industry || 'its target market'}, delivering ${payload.productSummary.trim()} for ${payload.targetCustomers || 'modern customers'}.`
+                : prev.brain.overviewSummary,
+              lastUpdated: new Date().toISOString().slice(0, 10),
+            }
+          : prev.brain;
 
       const seededCompetitors: CompetitorProfileData[] = (payload.initialCompetitors ?? [])
         .map((c) => c.trim())
@@ -382,10 +404,29 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           yDiffScore: 40 + ((idx * 19) % 35),
           overview: `${compName} added during Business Brain onboarding for continuous pricing, messaging, and review benchmarking.`,
           productsAndServices: [],
-          pricingModel: { summary: 'Awaiting first pricing scan', entryPrice: 'TBD', flagshipPrice: 'TBD', discounts: 'None recorded' },
-          brandPositioningDetail: { archetype: 'Category Incumbent', tagline: 'Pending scan', targetBuyer: baseBrain.targetAudience || 'Core segment', visualTone: 'Pending visual audit' },
-          websiteAnalysis: { clarityScore: 'Pending', primaryCTA: 'Pending', speedNote: 'Queued', conversionGaps: [] },
-          marketingStrategy: { channels: ['Instagram', 'Search'], contentCadence: 'Monitoring enabled', paidSignals: 'Queued' },
+          pricingModel: {
+            summary: 'Awaiting first pricing scan',
+            entryPrice: 'TBD',
+            flagshipPrice: 'TBD',
+            discounts: 'None recorded',
+          },
+          brandPositioningDetail: {
+            archetype: 'Category Incumbent',
+            tagline: 'Pending scan',
+            targetBuyer: baseBrain.targetAudience || 'Core segment',
+            visualTone: 'Pending visual audit',
+          },
+          websiteAnalysis: {
+            clarityScore: 'Pending',
+            primaryCTA: 'Pending',
+            speedNote: 'Queued',
+            conversionGaps: [],
+          },
+          marketingStrategy: {
+            channels: ['Instagram', 'Search'],
+            contentCadence: 'Monitoring enabled',
+            paidSignals: 'Queued',
+          },
           customerReviews: { averageRating: '—', reviewCount: '0', praisedFor: [], complaints: [] },
           strengths: ['Established category awareness'],
           weaknesses: ['Awaiting 3-star review cluster analysis'],
@@ -428,7 +469,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       const mergedCompetitors =
-        seededCompetitors.length > 0 ? [...seededCompetitors, ...prev.competitors] : prev.competitors;
+        seededCompetitors.length > 0
+          ? [...seededCompetitors, ...prev.competitors]
+          : prev.competitors;
 
       return {
         ...prev,
@@ -597,21 +640,22 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         reports: prev.reports.map((r) =>
           r.id === reportId ? { ...r, savedToBrain: nextSaved } : r
         ),
-        brain: nextSaved && target
-          ? {
-              ...prev.brain,
-              history: [
-                {
-                  id: `hist-${Date.now()}`,
-                  date: new Date().toISOString().slice(0, 10),
-                  event: `Saved research dossier "${target.title}" to Business Brain`,
-                  department: 'Idea Intelligence',
-                },
-                ...prev.brain.history,
-              ],
-              lastUpdated: new Date().toISOString().slice(0, 10),
-            }
-          : prev.brain,
+        brain:
+          nextSaved && target
+            ? {
+                ...prev.brain,
+                history: [
+                  {
+                    id: `hist-${Date.now()}`,
+                    date: new Date().toISOString().slice(0, 10),
+                    event: `Saved research dossier "${target.title}" to Business Brain`,
+                    department: 'Idea Intelligence',
+                  },
+                  ...prev.brain.history,
+                ],
+                lastUpdated: new Date().toISOString().slice(0, 10),
+              }
+            : prev.brain,
       };
     });
     showToast('Business Brain repository updated.');
@@ -678,7 +722,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         ...prev,
         competitors: remaining,
         selectedCompetitorId:
-          prev.selectedCompetitorId === compId ? remaining[0]?.id ?? '' : prev.selectedCompetitorId,
+          prev.selectedCompetitorId === compId
+            ? (remaining[0]?.id ?? '')
+            : prev.selectedCompetitorId,
       };
     });
     showToast(`Removed ${target.name} from watchlist.`, {
@@ -814,8 +860,8 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       nextStatus === 'completed'
         ? `Completed "${target.title}"`
         : nextStatus === 'skipped'
-        ? `Skipped "${target.title}"`
-        : `Reopened "${target.title}"`;
+          ? `Skipped "${target.title}"`
+          : `Reopened "${target.title}"`;
     showToast(label, {
       undoLabel: 'Undo',
       onUndo: () => {
@@ -931,20 +977,18 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const markMarketEventRead = (eventId: string) => {
     setState((prev) => ({
       ...prev,
-      marketEvents: prev.marketEvents.map((e) =>
-        e.id === eventId ? { ...e, isRead: true } : e
-      ),
+      marketEvents: prev.marketEvents.map((e) => (e.id === eventId ? { ...e, isRead: true } : e)),
     }));
   };
 
   const updateRecommendationStatus = (recId: string, status: 'accepted' | 'rejected') => {
     setState((prev) => ({
       ...prev,
-      recommendations: prev.recommendations.map((r) =>
-        r.id === recId ? { ...r, status } : r
-      ),
+      recommendations: prev.recommendations.map((r) => (r.id === recId ? { ...r, status } : r)),
     }));
-    showToast(status === 'accepted' ? 'Strategy recommendation accepted.' : 'Recommendation dismissed.');
+    showToast(
+      status === 'accepted' ? 'Strategy recommendation accepted.' : 'Recommendation dismissed.'
+    );
   };
 
   const addRecommendations = (items: Omit<StrategyRecommendation, 'id' | 'status'>[]) => {
@@ -1078,16 +1122,18 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setState((prev) => {
       const current = prev.pinnedWidgetIds ?? [];
       const isPinned = current.includes(widgetId);
-      const next = isPinned
-        ? current.filter((id) => id !== widgetId)
-        : [...current, widgetId];
+      const next = isPinned ? current.filter((id) => id !== widgetId) : [...current, widgetId];
       return {
         ...prev,
         pinnedWidgetIds: next,
       };
     });
     const currentlyPinned = (state.pinnedWidgetIds ?? []).includes(widgetId);
-    showToast(currentlyPinned ? 'Widget unpinned from Executive Command Strip.' : 'Widget pinned to Executive Command Strip.');
+    showToast(
+      currentlyPinned
+        ? 'Widget unpinned from Executive Command Strip.'
+        : 'Widget pinned to Executive Command Strip.'
+    );
   };
 
   const isWidgetPinned = (widgetId: string) => {
@@ -1196,10 +1242,7 @@ export function useBrainWise() {
   return ctx;
 }
 
-export function useWorkspaceBreadcrumbs(
-  segments: BreadcrumbSegment[],
-  deps: React.DependencyList
-) {
+export function useWorkspaceBreadcrumbs(segments: BreadcrumbSegment[], deps: React.DependencyList) {
   const { setBreadcrumbTrail } = useBrainWise();
 
   useEffect(() => {

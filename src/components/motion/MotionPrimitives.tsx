@@ -155,14 +155,7 @@ export const MagneticButton: React.FC<{
   type?: 'button' | 'submit';
   className?: string;
   ariaLabel?: string;
-}> = ({
-  children,
-  onClick,
-  variant = 'primary',
-  type = 'button',
-  className = '',
-  ariaLabel,
-}) => {
+}> = ({ children, onClick, variant = 'primary', type = 'button', className = '', ariaLabel }) => {
   const reduced = useReducedMotion();
   const ref = useRef<HTMLButtonElement>(null);
   const rawX = useMotionValue(0);
@@ -188,8 +181,8 @@ export const MagneticButton: React.FC<{
     variant === 'primary'
       ? 'bg-[#FF7417] hover:bg-[#E55F08] text-white shadow-[0_6px_20px_-6px_rgba(255,116,23,0.42)] hover:shadow-[0_12px_28px_-8px_rgba(229,95,8,0.48)]'
       : variant === 'dark'
-      ? 'bg-[#171717] hover:bg-[#242424] text-white shadow-[0_6px_20px_-8px_rgba(23,23,23,0.35)]'
-      : 'bg-[#FFFFFF] hover:bg-[#FAFAF9] text-[#242424] border border-[#E8E8E4] bw-tactile-pill';
+        ? 'bg-[#171717] hover:bg-[#242424] text-white shadow-[0_6px_20px_-8px_rgba(23,23,23,0.35)]'
+        : 'bg-[#FFFFFF] hover:bg-[#FAFAF9] text-[#242424] border border-[#E8E8E4] bw-tactile-pill';
 
   return (
     <motion.button
@@ -220,13 +213,7 @@ export const SelfDrawingSvg: React.FC<{
   const inView = useInView(ref, { once: true, amount: 0.35 });
 
   return (
-    <svg
-      ref={ref}
-      viewBox="0 0 24 24"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg ref={ref} viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       {fillPath && (
         <motion.path
           d={fillPath}
@@ -246,9 +233,7 @@ export const SelfDrawingSvg: React.FC<{
           strokeLinejoin="round"
           initial={reduced ? false : { pathLength: 0.2, opacity: 0.6 }}
           animate={
-            reduced || inView
-              ? { pathLength: 1, opacity: 1 }
-              : { pathLength: 0.2, opacity: 0.6 }
+            reduced || inView ? { pathLength: 1, opacity: 1 } : { pathLength: 0.2, opacity: 0.6 }
           }
           transition={{
             duration: 0.7,

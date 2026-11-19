@@ -68,7 +68,11 @@ export const AddCompetitorModal: React.FC<{
       yDiffScore: 58,
       overview: `${cleanName} competes in ${category.trim() || state.brain.industry} across ${geography.trim() || state.brain.location}.`,
       productsAndServices: [
-        { name: 'Core Flagship Offer', price: 'See pricing model', notes: 'Initial baseline entry' },
+        {
+          name: 'Core Flagship Offer',
+          price: 'See pricing model',
+          notes: 'Initial baseline entry',
+        },
       ],
       pricingModel: {
         summary: 'Standard direct pricing structure.',

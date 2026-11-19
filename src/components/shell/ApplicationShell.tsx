@@ -64,10 +64,7 @@ export const ApplicationShell: React.FC<{
         </div>
       </div>
 
-      <NotificationPanel
-        open={notificationsOpen}
-        onClose={() => setNotificationsOpen(false)}
-      />
+      <NotificationPanel open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
 
       <GlobalSearchModal />
 

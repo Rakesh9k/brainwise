@@ -52,5 +52,8 @@ test('index.css implements tactile lift, border opacity, and trace animation for
   assert.match(css, /\.bw-trace-card\.bw-trace-dark/);
 
   // Must respect prefers-reduced-motion
-  assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.bw-trace-card[\s\S]*?transform:\s*none\s*!important;/);
+  assert.match(
+    css,
+    /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.bw-trace-card[\s\S]*?transform:\s*none\s*!important;/
+  );
 });

@@ -40,12 +40,7 @@ export function resolveTopoGridClassName(options: {
   rounded?: boolean;
   className?: string;
 }): string {
-  const {
-    tone = 'light',
-    placement = 'absolute',
-    rounded = true,
-    className = '',
-  } = options;
+  const { tone = 'light', placement = 'absolute', rounded = true, className = '' } = options;
 
   const classes = [
     'pointer-events-none',
@@ -66,12 +61,7 @@ export function buildTopoGridStyle(options: {
   intensity?: TopoGridIntensity;
   style?: CSSProperties;
 }): CSSProperties {
-  const {
-    fade = 'edges',
-    density = 'default',
-    intensity = 'subtle',
-    style,
-  } = options;
+  const { fade = 'edges', density = 'default', intensity = 'subtle', style } = options;
 
   const mask = TOPO_GRID_FADE_MASKS[fade];
   const size = TOPO_GRID_DENSITY_SIZES[density];

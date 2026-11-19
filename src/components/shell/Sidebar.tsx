@@ -37,7 +37,11 @@ const NAV_GROUPS: {
     id: 'intelligence',
     label: 'Intelligence',
     items: [
-      { id: 'idea-intelligence', label: 'Idea Intelligence', icon: <Lightbulb className="w-4 h-4" /> },
+      {
+        id: 'idea-intelligence',
+        label: 'Idea Intelligence',
+        icon: <Lightbulb className="w-4 h-4" />,
+      },
       {
         id: 'competitive-intelligence',
         label: 'Competitive Intelligence',
@@ -171,7 +175,10 @@ export const Sidebar: React.FC<{
         )}
 
         {/* Calm Minimalist Navigation Rail */}
-        <nav aria-label="Main workspace navigation" className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+        <nav
+          aria-label="Main workspace navigation"
+          className="flex-1 overflow-y-auto px-3 py-4 space-y-5"
+        >
           {NAV_GROUPS.map((group) => (
             <div key={group.id} className="space-y-0.5">
               {!isCompact && (
@@ -205,7 +212,9 @@ export const Sidebar: React.FC<{
                         className="absolute inset-0 rounded-full bg-[#FFFFFF]/95 border border-[#E6E6E2] bw-ceramic-control"
                       />
                     )}
-                    <span className={`relative z-10 ${active ? 'text-[#171717]' : 'text-[#858585]'}`}>
+                    <span
+                      className={`relative z-10 ${active ? 'text-[#171717]' : 'text-[#858585]'}`}
+                    >
                       {item.icon}
                     </span>
                     {!isCompact && (

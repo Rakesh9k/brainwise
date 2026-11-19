@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
@@ -14,7 +7,6 @@ import {
   Copy,
   Download,
   FileSpreadsheet,
-  FileText,
   MoreHorizontal,
   Pin,
   PinOff,
@@ -24,7 +16,6 @@ import {
 } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import { BW_EASE } from '../motion/LiquidMotion';
-import { typeClass } from '../../theme/typography';
 import { TopoGridOverlay } from './TopoGridOverlay';
 import {
   type ContextualCardData,
@@ -36,13 +27,18 @@ import {
 } from './contextualLedgerUtils';
 
 interface ContextualActionLedgerContextValue {
-  openLedger: (event: React.MouseEvent | { clientX: number; clientY: number }, card: ContextualCardData) => void;
+  openLedger: (
+    event: React.MouseEvent | { clientX: number; clientY: number },
+    card: ContextualCardData
+  ) => void;
   closeLedger: () => void;
   isOpen: boolean;
   activeCard: ContextualCardData | null;
 }
 
-const ContextualActionLedgerContext = createContext<ContextualActionLedgerContextValue | null>(null);
+const ContextualActionLedgerContext = createContext<ContextualActionLedgerContextValue | null>(
+  null
+);
 
 export function useContextualLedger() {
   const ctx = useContext(ContextualActionLedgerContext);
@@ -186,10 +182,7 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
         createPortal(
           <AnimatePresence>
             {activeCard && (
-              <div
-                className="fixed inset-0 z-50 pointer-events-none"
-                aria-hidden="false"
-              >
+              <div className="fixed inset-0 z-50 pointer-events-none" aria-hidden="false">
                 {/* Click-away backdrop */}
                 <div
                   className="fixed inset-0 pointer-events-auto"
@@ -263,7 +256,9 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
                           <Download className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-medium text-[#171717] leading-tight">Export Data</div>
+                          <div className="font-medium text-[#171717] leading-tight">
+                            Export Data
+                          </div>
                           <div className="text-[10px] text-[#858585] truncate leading-tight">
                             Download JSON telemetry
                           </div>
@@ -286,7 +281,9 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
                           <FileSpreadsheet className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-medium text-[#171717] leading-tight">Export Spreadsheet</div>
+                          <div className="font-medium text-[#171717] leading-tight">
+                            Export Spreadsheet
+                          </div>
                           <div className="text-[10px] text-[#858585] truncate leading-tight">
                             Tabular CSV format
                           </div>
@@ -312,7 +309,11 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
                               : 'bg-[#F5F5F4] group-hover:bg-[#FFFFFF] border-[#EFEFEB] text-[#5C5C58] group-hover:text-[#FF7417]'
                           }`}
                         >
-                          {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                          {isPinned ? (
+                            <PinOff className="w-3.5 h-3.5" />
+                          ) : (
+                            <Pin className="w-3.5 h-3.5" />
+                          )}
                         </div>
                         <div className="min-w-0">
                           <div className="font-medium text-[#171717] leading-tight">
@@ -340,7 +341,9 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
                           <ArrowUpRight className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-medium text-[#171717] leading-tight">View Details</div>
+                          <div className="font-medium text-[#171717] leading-tight">
+                            View Details
+                          </div>
                           <div className="text-[10px] text-[#858585] truncate leading-tight">
                             {activeCard.route ? `Open ${activeCard.route}` : 'Full breakdown'}
                           </div>
@@ -363,10 +366,16 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-7 h-7 rounded-[8px] bg-[#F5F5F4] group-hover:bg-[#FFFFFF] border border-[#EFEFEB] flex items-center justify-center text-[#5C5C58] group-hover:text-[#FF7417] shrink-0 transition-colors">
-                          {copied ? <Check className="w-3.5 h-3.5 text-[#24724E]" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copied ? (
+                            <Check className="w-3.5 h-3.5 text-[#24724E]" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-medium text-[#171717] leading-tight">Copy Summary</div>
+                          <div className="font-medium text-[#171717] leading-tight">
+                            Copy Summary
+                          </div>
                           <div className="text-[10px] text-[#858585] truncate leading-tight">
                             {copied ? 'Copied!' : 'Clipboard snapshot'}
                           </div>
@@ -387,10 +396,14 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-7 h-7 rounded-[8px] bg-[#F5F5F4] group-hover:bg-[#FFFFFF] border border-[#EFEFEB] flex items-center justify-center text-[#5C5C58] group-hover:text-[#FF7417] shrink-0 transition-colors">
-                          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#FF7417]' : ''}`} />
+                          <RefreshCw
+                            className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#FF7417]' : ''}`}
+                          />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-medium text-[#171717] leading-tight">Refresh Telemetry</div>
+                          <div className="font-medium text-[#171717] leading-tight">
+                            Refresh Telemetry
+                          </div>
                           <div className="text-[10px] text-[#858585] truncate leading-tight">
                             Sync live indicators
                           </div>
@@ -462,14 +475,17 @@ export const ContextualCard: React.FC<{
     e.stopPropagation();
     if (triggerButtonRef.current) {
       const rect = triggerButtonRef.current.getBoundingClientRect();
-      openLedger({ clientX: rect.right, clientY: rect.bottom + 4 }, {
-        id: cardId,
-        title,
-        subtitle,
-        category,
-        route,
-        data,
-      });
+      openLedger(
+        { clientX: rect.right, clientY: rect.bottom + 4 },
+        {
+          id: cardId,
+          title,
+          subtitle,
+          category,
+          route,
+          data,
+        }
+      );
     } else {
       openLedger(e, { id: cardId, title, subtitle, category, route, data });
     }

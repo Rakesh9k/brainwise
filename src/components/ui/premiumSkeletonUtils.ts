@@ -7,13 +7,7 @@ import {
   type TypographyTokenName,
 } from '../../theme/typography';
 
-export type PremiumSkeletonVariant =
-  | 'metric'
-  | 'insight'
-  | 'pulse'
-  | 'ledger'
-  | 'feed'
-  | 'chart';
+export type PremiumSkeletonVariant = 'metric' | 'insight' | 'pulse' | 'ledger' | 'feed' | 'chart';
 
 export type PremiumSkeletonWaveTone = 'light' | 'accent' | 'dark';
 

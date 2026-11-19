@@ -67,13 +67,9 @@ export const DialogHeader: React.FC<{
     className={`flex items-start justify-between gap-4 px-6 sm:px-7 py-5 border-b border-[#EFEFEB] bg-[#FFFFFF]/60 ${className}`}
   >
     <div className="min-w-0 space-y-1">
-      {eyebrow && (
-        <div className={`${typeClass.overline} text-[#858585]`}>{eyebrow}</div>
-      )}
+      {eyebrow && <div className={`${typeClass.overline} text-[#858585]`}>{eyebrow}</div>}
       <h3 id={titleId} className={`${typeClass.h4} text-[#171717]`}>
-        {mutedPrefix && (
-          <span className="font-normal text-[#858585] mr-1.5">{mutedPrefix}</span>
-        )}
+        {mutedPrefix && <span className="font-normal text-[#858585] mr-1.5">{mutedPrefix}</span>}
         <span>{title}</span>
       </h3>
       {subtitle && (
@@ -99,9 +95,7 @@ export const DialogBody: React.FC<{
   className?: string;
   children: React.ReactNode;
 }> = ({ className = '', children }) => (
-  <div className={`px-6 sm:px-7 py-6 overflow-y-auto flex-1 ${className}`}>
-    {children}
-  </div>
+  <div className={`px-6 sm:px-7 py-6 overflow-y-auto flex-1 ${className}`}>{children}</div>
 );
 
 export const DialogFooter: React.FC<{
@@ -207,7 +201,10 @@ export const Dialog: React.FC<DialogProps> = ({
         }
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
-        if (e.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
+        if (
+          e.shiftKey &&
+          (document.activeElement === first || document.activeElement === panelRef.current)
+        ) {
           e.preventDefault();
           last.focus();
         } else if (!e.shiftKey && document.activeElement === last) {
@@ -270,11 +267,7 @@ export const Dialog: React.FC<DialogProps> = ({
               />
             )}
 
-            {hideHeader ? (
-              children
-            ) : (
-              <DialogBody className={bodyClassName}>{children}</DialogBody>
-            )}
+            {hideHeader ? children : <DialogBody className={bodyClassName}>{children}</DialogBody>}
 
             {footer && <DialogFooter>{footer}</DialogFooter>}
           </motion.div>

@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react';
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from 'motion/react';
 import { ArrowRight, Brain, Check, Menu, Minus, Plus, Sparkles, X } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import { BrandLogoMark } from '../../components/ui/DesignSystem';
@@ -43,7 +49,8 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
       'M10 22h4',
       'M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14',
     ],
-    fillPath: 'M12 2a6 6 0 0 0-6 6c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14h6.18c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8a6 6 0 0 0-6-6Z',
+    fillPath:
+      'M12 2a6 6 0 0 0-6 6c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14h6.18c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8a6 6 0 0 0-6-6Z',
   },
   {
     id: '02',
@@ -53,10 +60,7 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     summary:
       'Dissect competitor pricing ladders, review complaints, and channel playbooks on a live positioning map to isolate where your offer wins cleanly.',
     outcome: 'Shapes creative direction inside Brand Studio',
-    paths: [
-      'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-      'M9 12l2 2 4-4',
-    ],
+    paths: ['M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', 'M9 12l2 2 4-4'],
     fillPath: 'M12 2L4 5v7c0 6 8 10 8 10s8-4 8-10V5l-8-3z',
   },
   {
@@ -299,7 +303,12 @@ export const LandingPage: React.FC = () => {
       {/* Slide-Over Mobile & Tablet Navigation Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex justify-end" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+          <div
+            className="fixed inset-0 z-50 lg:hidden flex justify-end"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
+          >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -431,8 +440,7 @@ export const LandingPage: React.FC = () => {
 
               <h1 className={`${typeClass.display} text-[#171717] text-balance`}>
                 Strategy that speaks{' '}
-                <span className="italic font-semibold text-[#969690]">volumes</span>{' '}
-                with clarity
+                <span className="italic font-semibold text-[#969690]">volumes</span> with clarity
                 <span
                   aria-hidden="true"
                   className="inline-block w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-[#FF7417] ml-1.5 align-baseline"
@@ -440,7 +448,9 @@ export const LandingPage: React.FC = () => {
               </h1>
 
               <p className={`mt-6 ${typeClass.lead} text-[#5C5C58] max-w-xl`}>
-                One connected workspace anchored by your Business Brain. Size markets with honest range bands, map competitor white space, lock cohesive brand rules, and execute daily growth priorities.
+                One connected workspace anchored by your Business Brain. Size markets with honest
+                range bands, map competitor white space, lock cohesive brand rules, and execute
+                daily growth priorities.
               </p>
 
               {/* Sleek Pill Concept Validation Bar */}
@@ -521,18 +531,14 @@ export const LandingPage: React.FC = () => {
                   <div className={`${typeClass.body} font-semibold text-[#171717]`}>
                     {metric.label}
                   </div>
-                  <p className={`mt-1 ${typeClass.bodySm} text-[#686864]`}>
-                    {metric.context}
-                  </p>
+                  <p className={`mt-1 ${typeClass.bodySm} text-[#686864]`}>{metric.context}</p>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="max-w-2xl mb-14">
-            <p className={`${typeClass.overline} text-[#C44D00]`}>
-              Interactive Operating Flow
-            </p>
+            <p className={`${typeClass.overline} text-[#C44D00]`}>Interactive Operating Flow</p>
             <h2 className={`mt-2.5 ${typeClass.h1} text-[#171717] text-balance`}>
               Select any stage to inspect the{' '}
               <span className="italic font-semibold text-[#858585]">live workspace</span> in motion.
@@ -596,10 +602,10 @@ export const LandingPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <p className={`mt-3.5 ${typeClass.bodySm} text-[#5C5C58]`}>
-                      {step.summary}
-                    </p>
-                    <div className={`mt-4 pt-3 border-t border-[#EFEFEB] ${typeClass.bodySm} font-medium text-[#252525]`}>
+                    <p className={`mt-3.5 ${typeClass.bodySm} text-[#5C5C58]`}>{step.summary}</p>
+                    <div
+                      className={`mt-4 pt-3 border-t border-[#EFEFEB] ${typeClass.bodySm} font-medium text-[#252525]`}
+                    >
                       {step.outcome}
                     </div>
                   </button>
@@ -620,10 +626,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Connected Department Architecture & Honest Sample Scenario Walkthrough */}
-      <section
-        id="departments"
-        className="py-24 sm:py-28 bg-[#FAFAF9] border-b border-[#EFEFEB]"
-      >
+      <section id="departments" className="py-24 sm:py-28 bg-[#FAFAF9] border-b border-[#EFEFEB]">
         <div className="max-w-[1240px] mx-auto px-5 sm:px-8 space-y-14">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="max-w-2xl">
@@ -631,7 +634,8 @@ export const LandingPage: React.FC = () => {
                 CONNECTED DEPARTMENT ARCHITECTURE
               </p>
               <h2 className={`mt-2.5 ${typeClass.h1} text-[#171717] text-balance`}>
-                Every module passes structured memory forward—so execution never drifts from strategy.
+                Every module passes structured memory forward—so execution never drifts from
+                strategy.
               </h2>
             </div>
             <button
@@ -677,7 +681,9 @@ export const LandingPage: React.FC = () => {
                   <div>
                     <div className="flex items-center justify-between text-[11px] font-mono-num text-[#858585]">
                       <span>STAGE {item.num}</span>
-                      {item.num === '01' && <span className="text-[#FF7417] font-semibold">CORE</span>}
+                      {item.num === '01' && (
+                        <span className="text-[#FF7417] font-semibold">CORE</span>
+                      )}
                     </div>
                     <h3 className="mt-2 font-heading text-base font-bold text-[#171717]">
                       {item.dept}
@@ -685,12 +691,20 @@ export const LandingPage: React.FC = () => {
                   </div>
                   <div className="space-y-3 text-xs pt-4 border-t border-[#F1F1EF]">
                     <div>
-                      <span className="block text-[10px] uppercase tracking-wider text-[#858585]">Reads</span>
-                      <span className="text-[#252525] leading-relaxed block mt-1">{item.reads}</span>
+                      <span className="block text-[10px] uppercase tracking-wider text-[#858585]">
+                        Reads
+                      </span>
+                      <span className="text-[#252525] leading-relaxed block mt-1">
+                        {item.reads}
+                      </span>
                     </div>
                     <div>
-                      <span className="block text-[10px] uppercase tracking-wider text-[#C44D00]">Outputs</span>
-                      <span className="text-[#5C5C58] leading-relaxed block mt-1">{item.emits}</span>
+                      <span className="block text-[10px] uppercase tracking-wider text-[#C44D00]">
+                        Outputs
+                      </span>
+                      <span className="text-[#5C5C58] leading-relaxed block mt-1">
+                        {item.emits}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -708,17 +722,15 @@ export const LandingPage: React.FC = () => {
                 <div className={`${typeClass.overline} text-[#9A9A94]`}>
                   CENTRAL KNOWLEDGE LAYER
                 </div>
-                <h3 className={`mt-2 ${typeClass.h3} font-bold text-white`}>
-                  Business Brain
-                </h3>
+                <h3 className={`mt-2 ${typeClass.h3} font-bold text-white`}>Business Brain</h3>
                 <p className={`mt-3 ${typeClass.bodySm} text-[#C8C8C2]`}>
-                  Products, buyer personas, pricing guardrails, strategic decisions, and positioning briefs live in one structured record—eliminating repetitive re-prompting across tools.
+                  Products, buyer personas, pricing guardrails, strategic decisions, and positioning
+                  briefs live in one structured record—eliminating repetitive re-prompting across
+                  tools.
                 </p>
               </div>
               <div className="mt-7 pt-5 border-t border-white/[0.08] flex items-center justify-between text-xs">
-                <span className="text-[#FF8A36] font-medium">
-                  Shared across 5 active modules
-                </span>
+                <span className="text-[#FF8A36] font-medium">Shared across 5 active modules</span>
                 <button
                   type="button"
                   onClick={handleOpenDemo}
@@ -734,9 +746,7 @@ export const LandingPage: React.FC = () => {
               <div className="sm:col-span-7 p-8 flex flex-col justify-between">
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs text-[#858585]">
-                      Sample · Solstice Craft Coffee
-                    </span>
+                    <span className="text-xs text-[#858585]">Sample · Solstice Craft Coffee</span>
                     <div className="inline-flex p-0.5 rounded-full bg-[#F1F1EF]">
                       {(['before', 'after'] as const).map((mode) => (
                         <button
@@ -762,16 +772,21 @@ export const LandingPage: React.FC = () => {
                         Disconnected tabs, unlinked market sizing, and inconsistent campaign briefs.
                       </h3>
                       <p className={`mt-3 ${typeClass.bodySm} text-[#5C5C58]`}>
-                        Market estimates sat in spreadsheets, competitor pricing moved unnoticed, and launch copy had to re-explain core product differentiators every time.
+                        Market estimates sat in spreadsheets, competitor pricing moved unnoticed,
+                        and launch copy had to re-explain core product differentiators every time.
                       </p>
                       <div className="mt-5 grid grid-cols-2 gap-4 pt-4 border-t border-[#F1F1EF] text-xs">
                         <div>
                           <div className="text-[#858585]">Context Storage</div>
-                          <div className="font-mono-num font-semibold text-[#171717] mt-1">Isolated docs</div>
+                          <div className="font-mono-num font-semibold text-[#171717] mt-1">
+                            Isolated docs
+                          </div>
                         </div>
                         <div>
                           <div className="text-[#858585]">Rival Signals</div>
-                          <div className="font-mono-num font-semibold text-[#BC3E3E] mt-1">Manual checks</div>
+                          <div className="font-mono-num font-semibold text-[#BC3E3E] mt-1">
+                            Manual checks
+                          </div>
                         </div>
                       </div>
                     </>
@@ -781,25 +796,29 @@ export const LandingPage: React.FC = () => {
                         One coherent chain from validation dossier to brand kit and daily sprint.
                       </h3>
                       <p className={`mt-3 ${typeClass.bodySm} text-[#5C5C58]`}>
-                        Competitive pricing gaps feed straight into Brand Studio copy and turn into prioritized tasks inside Growth Planner inside the same demonstration workspace.
+                        Competitive pricing gaps feed straight into Brand Studio copy and turn into
+                        prioritized tasks inside Growth Planner inside the same demonstration
+                        workspace.
                       </p>
                       <div className="mt-5 grid grid-cols-2 gap-4 pt-4 border-t border-[#F1F1EF] text-xs">
                         <div>
                           <div className="text-[#C44D00]">Sample Artifacts</div>
-                          <div className="font-mono-num font-semibold text-[#171717] mt-1">2 dossiers · 6 assets</div>
+                          <div className="font-mono-num font-semibold text-[#171717] mt-1">
+                            2 dossiers · 6 assets
+                          </div>
                         </div>
                         <div>
                           <div className="text-[#24724E]">Context Status</div>
-                          <div className="font-mono-num font-semibold text-[#171717] mt-1">Synced Business Brain</div>
+                          <div className="font-mono-num font-semibold text-[#171717] mt-1">
+                            Synced Business Brain
+                          </div>
                         </div>
                       </div>
                     </>
                   )}
                 </div>
                 <div className="mt-6 pt-4 border-t border-[#F1F1EF] flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="text-[#858585]">
-                    Included via Explore Live Demo
-                  </span>
+                  <span className="text-[#858585]">Included via Explore Live Demo</span>
                   <button
                     type="button"
                     onClick={handleOpenDemo}
@@ -853,15 +872,15 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-[1240px] mx-auto px-5 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             <div className="lg:col-span-5">
-              <p className={`${typeClass.overline} text-[#C44D00]`}>
-                ABOUT BRAINWISE
-              </p>
+              <p className={`${typeClass.overline} text-[#C44D00]`}>ABOUT BRAINWISE</p>
               <h2 className={`mt-2.5 ${typeClass.h1} text-[#171717] text-balance`}>
                 Strategy and execution belong in the{' '}
                 <span className="italic font-semibold text-[#858585]">same memory</span>.
               </h2>
               <p className={`mt-4 ${typeClass.body} text-[#5C5C58]`}>
-                Founders lose momentum switching between isolated spreadsheets, ad-hoc AI chats, static brand PDFs, and disconnected task trackers. BrainWise unifies intelligence, AI creative direction, and weekly growth execution into one calm operating system.
+                Founders lose momentum switching between isolated spreadsheets, ad-hoc AI chats,
+                static brand PDFs, and disconnected task trackers. BrainWise unifies intelligence,
+                AI creative direction, and weekly growth execution into one calm operating system.
               </p>
             </div>
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -894,9 +913,7 @@ export const LandingPage: React.FC = () => {
                   <div className={`${typeClass.overline} text-[#C44D00]`}>
                     PRINCIPLE {pillar.num}
                   </div>
-                  <h3 className={`${typeClass.h4} font-bold text-[#171717]`}>
-                    {pillar.title}
-                  </h3>
+                  <h3 className={`${typeClass.h4} font-bold text-[#171717]`}>{pillar.title}</h3>
                   <p className={`${typeClass.bodySm} text-[#5C5C58]`}>{pillar.body}</p>
                 </div>
               ))}
@@ -910,9 +927,7 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-[1240px] mx-auto px-5 sm:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 max-w-5xl mx-auto">
             <div>
-              <p className={`${typeClass.overline} text-[#C44D00]`}>
-                Transparent Plans
-              </p>
+              <p className={`${typeClass.overline} text-[#C44D00]`}>Transparent Plans</p>
               <h2 className={`mt-2.5 ${typeClass.h1} text-[#171717]`}>
                 Built for solo founders and{' '}
                 <span className="italic font-semibold text-[#858585]">scaling teams</span>.
@@ -1008,9 +1023,7 @@ export const LandingPage: React.FC = () => {
                     </div>
                     <h3 className={`mt-1.5 ${typeClass.h4} font-bold`}>{plan.name}</h3>
                     <div className="mt-5 flex items-baseline gap-1">
-                      <span className={`${typeClass.displaySm} tabular-nums`}>
-                        ${price}
-                      </span>
+                      <span className={`${typeClass.displaySm} tabular-nums`}>${price}</span>
                       <span
                         className={`${typeClass.monoMeta} ${
                           plan.featured ? 'text-[#A8A8A2]' : 'text-[#858585]'
@@ -1058,13 +1071,13 @@ export const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
             <div className="lg:col-span-4 space-y-3">
               <h2 className={`${typeClass.h1} text-[#171717]`}>
-                Frequently{' '}
-                <span className="text-[#858585] font-semibold">asked</span>
+                Frequently <span className="text-[#858585] font-semibold">asked</span>
                 <br />
                 questions
               </h2>
               <p className={`${typeClass.bodySm} text-[#5C5C58] max-w-xs`}>
-                Clear answers about the shared Business Brain, evidence standards, and exploring the workspace.
+                Clear answers about the shared Business Brain, evidence standards, and exploring the
+                workspace.
               </p>
             </div>
 
@@ -1093,7 +1106,11 @@ export const LandingPage: React.FC = () => {
                             : 'bg-[#FFFFFF] border border-[#ECECE8] text-[#858585]'
                         }`}
                       >
-                        {isOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                        {isOpen ? (
+                          <Minus className="w-3.5 h-3.5" />
+                        ) : (
+                          <Plus className="w-3.5 h-3.5" />
+                        )}
                       </span>
                       <span className="flex-1">{item.q}</span>
                     </button>

@@ -1,0 +1,50 @@
+name: BrainWise Continuous Integration (CI)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Code Quality & Automated Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Security Vulnerability Audit
+        run: npm audit --audit-level=high
+
+      - name: TypeScript Static Typecheck
+        run: npm run typecheck
+
+      - name: ESLint Code Quality Verification
+        run: npm run lint
+
+      - name: Prettier Formatting Check
+        run: npm run format:check
+
+      - name: Execute Automated Unit & Integration Tests
+        run: npm test
+
+      - name: Verify Production Client Build
+        run: npm run build
+        env:
+          NODE_ENV: production

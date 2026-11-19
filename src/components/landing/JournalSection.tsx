@@ -201,7 +201,9 @@ export const JournalSection: React.FC<{
                   isExpanded ? 'border-[#242424]/30 md:col-span-2' : 'border-[#E6E6E2]'
                 }`}
               >
-                <div className={isExpanded && article.image ? 'grid grid-cols-1 lg:grid-cols-12' : ''}>
+                <div
+                  className={isExpanded && article.image ? 'grid grid-cols-1 lg:grid-cols-12' : ''}
+                >
                   {article.image && (
                     <div
                       className={`overflow-hidden bg-[#F5F5F4] ${
@@ -232,12 +234,8 @@ export const JournalSection: React.FC<{
                         <span>{article.publishedAt}</span>
                       </div>
 
-                      <h3 className={`mt-2.5 ${typeClass.h3} text-[#171717]`}>
-                        {article.title}
-                      </h3>
-                      <p className={`mt-2 ${typeClass.bodySm} text-[#5C5C58]`}>
-                        {article.excerpt}
-                      </p>
+                      <h3 className={`mt-2.5 ${typeClass.h3} text-[#171717]`}>{article.title}</h3>
+                      <p className={`mt-2 ${typeClass.bodySm} text-[#5C5C58]`}>{article.excerpt}</p>
                     </div>
 
                     <div className="mt-5 flex items-center justify-between gap-4 pt-4 border-t border-[#E6E6E2]">
@@ -357,7 +355,9 @@ export const JournalSection: React.FC<{
                                     <div className="p-3.5 rounded-[12px] bg-white border border-[#ECECE8] text-xs text-[#252524] leading-relaxed flex flex-col sm:flex-row sm:items-center justify-between gap-3 bw-surface-raised">
                                       <div className="space-y-1">
                                         <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#C44D00]">
-                                          {synthesis.source === 'ai' ? 'Live AI Synthesis' : 'Local Framework Preview'}
+                                          {synthesis.source === 'ai'
+                                            ? 'Live AI Synthesis'
+                                            : 'Local Framework Preview'}
                                         </span>
                                         <span>{synthesis.text}</span>
                                       </div>

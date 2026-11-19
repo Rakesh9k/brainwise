@@ -14,15 +14,7 @@ export const FONT_FAMILIES = {
 } as const;
 
 export type ModularStepKey =
-  | 'step-2'
-  | 'step-1'
-  | 'step0'
-  | 'step1'
-  | 'step2'
-  | 'step3'
-  | 'step4'
-  | 'step5'
-  | 'step6';
+  'step-2' | 'step-1' | 'step0' | 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6';
 
 export interface ModularScaleStep {
   key: ModularStepKey;
@@ -70,13 +62,13 @@ function buildStep(key: ModularStepKey, step: number, cssVar: string): ModularSc
 export const TYPOGRAPHY_STEPS: Record<ModularStepKey, ModularScaleStep> = {
   'step-2': buildStep('step-2', -2, '--bw-text-step-n2'), // 0.64rem       / 10.24px
   'step-1': buildStep('step-1', -1, '--bw-text-step-n1'), // 0.8rem        / 12.8px
-  step0: buildStep('step0', 0, '--bw-text-step-0'),       // 1rem          / 16px
-  step1: buildStep('step1', 1, '--bw-text-step-1'),       // 1.25rem       / 20px
-  step2: buildStep('step2', 2, '--bw-text-step-2'),       // 1.5625rem     / 25px
-  step3: buildStep('step3', 3, '--bw-text-step-3'),       // 1.953125rem   / 31.25px
-  step4: buildStep('step4', 4, '--bw-text-step-4'),       // 2.441406rem   / 39.06px
-  step5: buildStep('step5', 5, '--bw-text-step-5'),       // 3.051758rem   / 48.83px
-  step6: buildStep('step6', 6, '--bw-text-step-6'),       // 3.814697rem   / 61.04px
+  step0: buildStep('step0', 0, '--bw-text-step-0'), // 1rem          / 16px
+  step1: buildStep('step1', 1, '--bw-text-step-1'), // 1.25rem       / 20px
+  step2: buildStep('step2', 2, '--bw-text-step-2'), // 1.5625rem     / 25px
+  step3: buildStep('step3', 3, '--bw-text-step-3'), // 1.953125rem   / 31.25px
+  step4: buildStep('step4', 4, '--bw-text-step-4'), // 2.441406rem   / 39.06px
+  step5: buildStep('step5', 5, '--bw-text-step-5'), // 3.051758rem   / 48.83px
+  step6: buildStep('step6', 6, '--bw-text-step-6'), // 3.814697rem   / 61.04px
 };
 
 export const ORDERED_TYPOGRAPHY_STEPS: readonly ModularScaleStep[] = [

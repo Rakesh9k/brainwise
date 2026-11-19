@@ -109,10 +109,7 @@ export interface BusinessHistoryEvent {
 }
 
 export type ProvenanceSource =
-  | 'USER_CONFIRMED'
-  | 'AI_INFERRED'
-  | 'DERIVED_FROM_DOC'
-  | 'SYSTEM_DEFAULT';
+  'USER_CONFIRMED' | 'AI_INFERRED' | 'DERIVED_FROM_DOC' | 'SYSTEM_DEFAULT';
 
 export interface FactProvenanceItem {
   fieldKey: string;
@@ -262,7 +259,12 @@ export interface ResearchReport {
     verdict: string;
     nextSteps: string[];
   };
-  sources: { title: string; publisher: string; date: string; reliability: 'Primary' | 'Industry Report' | 'Market Estimate' }[];
+  sources: {
+    title: string;
+    publisher: string;
+    date: string;
+    reliability: 'Primary' | 'Industry Report' | 'Market Estimate';
+  }[];
   truthCheck?: TruthCheckResult;
 }
 
@@ -280,7 +282,7 @@ export interface CompetitorProfileData {
   threatLevel: PriorityLevel;
   marketShareBand: string;
   xValueScore: number; // 0-100 (e.g. Price accessibility -> Premium)
-  yDiffScore: number;  // 0-100 (e.g. Traditional -> Specialized/Modern)
+  yDiffScore: number; // 0-100 (e.g. Traditional -> Specialized/Modern)
   overview: string;
   productsAndServices: { name: string; price: string; notes: string }[];
   pricingModel: {

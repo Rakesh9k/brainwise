@@ -11,7 +11,10 @@ export const AnalyticsSkeleton: React.FC<{ label?: string }> = ({
   <div className="space-y-6" data-testid="analytics-skeleton">
     <div className="flex items-center justify-between gap-3 px-1">
       <div className="flex items-center gap-2.5 text-xs font-medium text-[#5C5C58]">
-        <span className="relative inline-flex w-2 h-2 items-center justify-center shrink-0" aria-hidden="true">
+        <span
+          className="relative inline-flex w-2 h-2 items-center justify-center shrink-0"
+          aria-hidden="true"
+        >
           <span className="absolute inset-0 rounded-full bg-[#FF7417]/35 bw-orb-halo" />
           <span className="relative w-1.5 h-1.5 rounded-full bg-[#FF7417]" />
         </span>
@@ -29,8 +32,16 @@ export const AnalyticsSkeleton: React.FC<{ label?: string }> = ({
             accent ? 'border-[#FFD3B3]' : 'border-[#ECECE8]'
           }`}
         >
-          <LiquidSkeletonBlock tone={accent ? 'accent' : 'light'} radius="full" className="h-3 w-28" />
-          <LiquidSkeletonBlock tone={accent ? 'accent' : 'light'} radius="md" className="h-8 w-20" />
+          <LiquidSkeletonBlock
+            tone={accent ? 'accent' : 'light'}
+            radius="full"
+            className="h-3 w-28"
+          />
+          <LiquidSkeletonBlock
+            tone={accent ? 'accent' : 'light'}
+            radius="md"
+            className="h-8 w-20"
+          />
           <LiquidSkeletonBlock radius="full" className="h-3 w-32" />
         </div>
       ))}
@@ -132,7 +143,11 @@ export const LogoConceptSkeletonGrid: React.FC = () => (
           {idx === 0 && <LiquidSkeletonBlock tone="accent" radius="full" className="h-4 w-20" />}
         </div>
         <div className="w-full h-28 rounded-[14px] bg-[#FAFAF9] border border-[#EFEFEB] flex items-center justify-center gap-3 px-4">
-          <LiquidSkeletonBlock tone={idx === 0 ? 'accent' : 'light'} radius="lg" className="w-12 h-12 shrink-0" />
+          <LiquidSkeletonBlock
+            tone={idx === 0 ? 'accent' : 'light'}
+            radius="lg"
+            className="w-12 h-12 shrink-0"
+          />
           <LiquidSkeletonBlock radius="full" className="h-5 w-24" />
         </div>
         <div className="space-y-2">
@@ -141,7 +156,11 @@ export const LogoConceptSkeletonGrid: React.FC = () => (
         </div>
         <div className="flex items-center justify-between pt-3 border-t border-[#EFEFEB]">
           <LiquidSkeletonBlock radius="full" className="h-3.5 w-24" />
-          <LiquidSkeletonBlock tone={idx === 0 ? 'accent' : 'light'} radius="full" className="h-8 w-28" />
+          <LiquidSkeletonBlock
+            tone={idx === 0 ? 'accent' : 'light'}
+            radius="full"
+            className="h-8 w-28"
+          />
         </div>
       </div>
     ))}
@@ -181,25 +200,61 @@ export const SocialCreativeSkeleton: React.FC<{
           }`}
         >
           <div className="flex items-center justify-between">
-            <LiquidSkeletonBlock tone={dark ? 'dark' : 'accent'} radius="full" className="h-3 w-24" />
-            <LiquidSkeletonBlock tone={dark ? 'dark' : 'light'} radius="full" className="h-3 w-16" />
+            <LiquidSkeletonBlock
+              tone={dark ? 'dark' : 'accent'}
+              radius="full"
+              className="h-3 w-24"
+            />
+            <LiquidSkeletonBlock
+              tone={dark ? 'dark' : 'light'}
+              radius="full"
+              className="h-3 w-16"
+            />
           </div>
 
           <div className="my-auto py-4 space-y-4">
-            <LiquidSkeletonBlock tone={dark ? 'dark' : 'accent'} radius="md" className="h-10 w-28" />
+            <LiquidSkeletonBlock
+              tone={dark ? 'dark' : 'accent'}
+              radius="md"
+              className="h-10 w-28"
+            />
             <div className="space-y-2.5">
-              <LiquidSkeletonBlock tone={dark ? 'dark' : 'light'} radius="md" className="h-6 w-11/12" />
-              <LiquidSkeletonBlock tone={dark ? 'dark' : 'light'} radius="md" className="h-6 w-3/4" />
+              <LiquidSkeletonBlock
+                tone={dark ? 'dark' : 'light'}
+                radius="md"
+                className="h-6 w-11/12"
+              />
+              <LiquidSkeletonBlock
+                tone={dark ? 'dark' : 'light'}
+                radius="md"
+                className="h-6 w-3/4"
+              />
             </div>
             <div className="space-y-2">
-              <LiquidSkeletonBlock tone={dark ? 'dark' : 'light'} radius="full" className="h-3 w-full" />
-              <LiquidSkeletonBlock tone={dark ? 'dark' : 'light'} radius="full" className="h-3 w-5/6" />
+              <LiquidSkeletonBlock
+                tone={dark ? 'dark' : 'light'}
+                radius="full"
+                className="h-3 w-full"
+              />
+              <LiquidSkeletonBlock
+                tone={dark ? 'dark' : 'light'}
+                radius="full"
+                className="h-3 w-5/6"
+              />
             </div>
-            <LiquidSkeletonBlock tone={dark ? 'dark' : 'accent'} radius="full" className="h-4 w-36" />
+            <LiquidSkeletonBlock
+              tone={dark ? 'dark' : 'accent'}
+              radius="full"
+              className="h-4 w-36"
+            />
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <LiquidSkeletonBlock tone={dark ? 'dark' : 'light'} radius="full" className="h-3 w-28" />
+            <LiquidSkeletonBlock
+              tone={dark ? 'dark' : 'light'}
+              radius="full"
+              className="h-3 w-28"
+            />
             <div className="flex items-center gap-1.5">
               {[0, 1, 2, 3].map((dot) => (
                 <LiquidSkeletonBlock
@@ -240,7 +295,11 @@ export const BrandCollateralSkeleton: React.FC = () => (
             idx === 0 ? 'border-[#FFD3B3] bg-[#FFFFFF]' : 'border-[#ECECE8] bg-[#FAFAF9]'
           }`}
         >
-          <LiquidSkeletonBlock tone={idx === 0 ? 'accent' : 'light'} radius="full" className="h-2.5 w-24" />
+          <LiquidSkeletonBlock
+            tone={idx === 0 ? 'accent' : 'light'}
+            radius="full"
+            className="h-2.5 w-24"
+          />
           <LiquidSkeletonBlock radius="full" className="h-3.5 w-32" />
         </div>
       ))}
@@ -316,7 +375,9 @@ export const DossierPreviewSkeleton: React.FC = () => (
           className="rounded-[14px] border border-[#262626] bg-[#1A1A1A] p-4 space-y-2.5"
         >
           <div className="flex items-center justify-between">
-            <span className="font-mono-num text-[10px] uppercase tracking-wider text-[#858585]">{label}</span>
+            <span className="font-mono-num text-[10px] uppercase tracking-wider text-[#858585]">
+              {label}
+            </span>
             <LiquidSkeletonBlock tone="dark" radius="full" className="h-2.5 w-10" />
           </div>
           <LiquidSkeletonBlock

@@ -143,10 +143,10 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
           { label: selectedTask.title },
         ]
       : tab !== defaultTab
-      ? [{ label: GROWTH_TAB_LABELS[tab] }]
-      : selectedTask
-      ? [{ label: selectedTask.title }]
-      : [],
+        ? [{ label: GROWTH_TAB_LABELS[tab] }]
+        : selectedTask
+          ? [{ label: selectedTask.title }]
+          : [],
     [tab, defaultTab, selectedTask?.id, selectedTask?.title]
   );
 
@@ -173,7 +173,9 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
   const weeklyPlan = buildWeeklyGrowthPlan(state);
   const roadmapPhases = buildRoadmapPhases(state);
   const totalSprintSeconds = sprintDurationMins * 60;
-  const sprintElapsedPct = Math.round(((totalSprintSeconds - secondsLeft) / totalSprintSeconds) * 100);
+  const sprintElapsedPct = Math.round(
+    ((totalSprintSeconds - secondsLeft) / totalSprintSeconds) * 100
+  );
   const displayedTasks =
     taskFilter === 'today'
       ? state.tasks.filter((t) => t.isTodayPriority || t.priority === 'high')
@@ -187,7 +189,9 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
       whyItMatters: primaryGoal
         ? `Directly accelerates "${primaryGoal.title}" (${primaryGoal.currentValue}/${primaryGoal.targetValue} ${primaryGoal.unit}).`
         : `Converts ${state.brain.targetAudience} into early trials.`,
-      expectedOutcome: primaryGoal ? `Progress toward ${primaryGoal.targetValue} ${primaryGoal.unit}` : '5+ qualified leads per week.',
+      expectedOutcome: primaryGoal
+        ? `Progress toward ${primaryGoal.targetValue} ${primaryGoal.unit}`
+        : '5+ qualified leads per week.',
       priority: 'high',
       estimatedMinutes: 45,
       dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
@@ -206,9 +210,7 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
       addRecommendations(recommendations);
     } catch (err) {
       setRecsError(
-        err instanceof Error
-          ? err.message
-          : 'Unable to reach BrainWise AI recommendation service.'
+        err instanceof Error ? err.message : 'Unable to reach BrainWise AI recommendation service.'
       );
     } finally {
       setRecsLoading(false);
@@ -267,12 +269,15 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
             <DarkSurfacePanel className="p-5 sm:p-6 space-y-5">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#2F2F2F]">
                 <div>
-                  <div className={`inline-flex items-center gap-2 ${typeClass.overline} text-[#FF8A36]`}>
+                  <div
+                    className={`inline-flex items-center gap-2 ${typeClass.overline} text-[#FF8A36]`}
+                  >
                     <IntelligenceOrb size="xs" state={timerRunning ? 'thinking' : 'active'} />
                     <span>Today’s Focus Sprint</span>
                   </div>
                   <h2 className={`${typeClass.h4} font-bold text-white mt-1`}>
-                    Top {Math.min(3, selectFocusSprintTasks(state.tasks, 3).length)} Pending Priorities
+                    Top {Math.min(3, selectFocusSprintTasks(state.tasks, 3).length)} Pending
+                    Priorities
                   </h2>
                 </div>
 
@@ -305,12 +310,12 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                     {formatCountdownSeconds(secondsLeft)}
                   </div>
 
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => setTimerRunning((r) => !r)}
-                  >
-                    {timerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                  <Button variant="primary" size="sm" onClick={() => setTimerRunning((r) => !r)}>
+                    {timerRunning ? (
+                      <Pause className="w-3.5 h-3.5" />
+                    ) : (
+                      <Play className="w-3.5 h-3.5" />
+                    )}
                     {timerRunning ? 'Pause' : 'Start'}
                   </Button>
                   <button
@@ -347,8 +352,12 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                         <span className="font-mono-num text-[#FF8A36]">FOCUS 0{idx + 1}</span>
                         <span>{task.estimatedMinutes}m est.</span>
                       </div>
-                      <div className="font-heading text-sm font-bold text-white mt-1.5">{task.title}</div>
-                      <p className="text-xs text-[#C8C8C2] mt-1 line-clamp-2">{task.whyItMatters}</p>
+                      <div className="font-heading text-sm font-bold text-white mt-1.5">
+                        {task.title}
+                      </div>
+                      <p className="text-xs text-[#C8C8C2] mt-1 line-clamp-2">
+                        {task.whyItMatters}
+                      </p>
                     </div>
                     <button
                       type="button"
@@ -362,7 +371,8 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                 ))}
                 {selectFocusSprintTasks(state.tasks, 3).length === 0 && (
                   <div className="md:col-span-3 p-4 rounded-[10px] bg-[#252525] border border-[#323232] text-xs text-[#C8C8C2]">
-                    All pending sprint tasks are completed! Generate a new 30-day batch or add a custom task.
+                    All pending sprint tasks are completed! Generate a new 30-day batch or add a
+                    custom task.
                   </div>
                 )}
               </div>
@@ -387,7 +397,9 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
               <div className="font-heading text-xl font-bold text-[#252525] tabular-nums">
                 {taskStats.pending}
               </div>
-              <div className="text-[11px] text-[#5C5C58]">{taskStats.remainingMinutes} mins remaining</div>
+              <div className="text-[11px] text-[#5C5C58]">
+                {taskStats.remainingMinutes} mins remaining
+              </div>
             </div>
             <button
               type="button"
@@ -730,8 +742,8 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                           exp.status === 'Active'
                             ? 'accent'
                             : exp.status === 'Completed'
-                            ? 'success'
-                            : 'neutral'
+                              ? 'success'
+                              : 'neutral'
                         }
                       />
                       {exp.status !== 'Completed' && (
@@ -819,7 +831,11 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
             loading={recsLoading}
             contentKey={`recs-${state.recommendations.length}`}
             statusLabel="Synthesizing AI strategy recommendations"
-            skeleton={<RecommendationSkeletonList count={Math.max(2, Math.min(3, state.recommendations.length || 2))} />}
+            skeleton={
+              <RecommendationSkeletonList
+                count={Math.max(2, Math.min(3, state.recommendations.length || 2))}
+              />
+            }
           >
             {state.recommendations.length === 0 ? (
               <GuidedActionEmptyCard
@@ -832,77 +848,77 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
             ) : (
               <div className="space-y-3">
                 {state.recommendations.map((rec, idx) => (
-                <ProgressiveResultReveal key={rec.id} index={idx}>
-                <RecommendationActionSurface
-                  className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <PriorityBadge priority={rec.priority} />
-                      <span className="text-xs text-[#686864]">
-                        Difficulty: {rec.difficulty} · Cost: {rec.estimatedCost}
-                      </span>
-                    </div>
-                    <StatusBadge
-                      status={
-                        rec.status === 'accepted'
-                          ? 'Accepted'
-                          : rec.status === 'rejected'
-                          ? 'Dismissed'
-                          : 'Pending Review'
-                      }
-                      tone={
-                        rec.status === 'accepted'
-                          ? 'success'
-                          : rec.status === 'rejected'
-                          ? 'neutral'
-                          : 'warning'
-                      }
-                    />
-                  </div>
-                  <h3 className="font-heading text-base font-bold text-[#242424]">{rec.whatToDo}</h3>
-                  <p className="text-xs text-[#686864] leading-relaxed">{rec.whyToDoIt}</p>
-                  <div className="text-xs text-[#242424] bg-[#F5F5F4] border border-[#ECECE9] p-3 rounded-[8px]">
-                    <strong>Supporting Research:</strong> {rec.supportingResearch} ·{' '}
-                    <strong className="text-[#24724E]">Expected Benefit:</strong>{' '}
-                    {rec.expectedBenefit}
-                  </div>
-                  {rec.status === 'pending' && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => {
-                          updateRecommendationStatus(rec.id, 'accepted');
-                          addTask({
-                            title: rec.whatToDo,
-                            description: rec.whyToDoIt,
-                            whyItMatters: rec.expectedBenefit,
-                            expectedOutcome: rec.expectedBenefit,
-                            priority: rec.priority,
-                            estimatedMinutes: 30,
-                            dueDate: new Date().toISOString().slice(0, 10),
-                            department: 'Growth Director',
-                            status: 'pending',
-                            isTodayPriority: true,
-                          });
-                        }}
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        Accept &amp; Add Task
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => updateRecommendationStatus(rec.id, 'rejected')}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        Dismiss
-                      </Button>
-                    </div>
-                  )}
-                </RecommendationActionSurface>
-                </ProgressiveResultReveal>
+                  <ProgressiveResultReveal key={rec.id} index={idx}>
+                    <RecommendationActionSurface className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <PriorityBadge priority={rec.priority} />
+                          <span className="text-xs text-[#686864]">
+                            Difficulty: {rec.difficulty} · Cost: {rec.estimatedCost}
+                          </span>
+                        </div>
+                        <StatusBadge
+                          status={
+                            rec.status === 'accepted'
+                              ? 'Accepted'
+                              : rec.status === 'rejected'
+                                ? 'Dismissed'
+                                : 'Pending Review'
+                          }
+                          tone={
+                            rec.status === 'accepted'
+                              ? 'success'
+                              : rec.status === 'rejected'
+                                ? 'neutral'
+                                : 'warning'
+                          }
+                        />
+                      </div>
+                      <h3 className="font-heading text-base font-bold text-[#242424]">
+                        {rec.whatToDo}
+                      </h3>
+                      <p className="text-xs text-[#686864] leading-relaxed">{rec.whyToDoIt}</p>
+                      <div className="text-xs text-[#242424] bg-[#F5F5F4] border border-[#ECECE9] p-3 rounded-[8px]">
+                        <strong>Supporting Research:</strong> {rec.supportingResearch} ·{' '}
+                        <strong className="text-[#24724E]">Expected Benefit:</strong>{' '}
+                        {rec.expectedBenefit}
+                      </div>
+                      {rec.status === 'pending' && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => {
+                              updateRecommendationStatus(rec.id, 'accepted');
+                              addTask({
+                                title: rec.whatToDo,
+                                description: rec.whyToDoIt,
+                                whyItMatters: rec.expectedBenefit,
+                                expectedOutcome: rec.expectedBenefit,
+                                priority: rec.priority,
+                                estimatedMinutes: 30,
+                                dueDate: new Date().toISOString().slice(0, 10),
+                                department: 'Growth Director',
+                                status: 'pending',
+                                isTodayPriority: true,
+                              });
+                            }}
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            Accept &amp; Add Task
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => updateRecommendationStatus(rec.id, 'rejected')}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            Dismiss
+                          </Button>
+                        </div>
+                      )}
+                    </RecommendationActionSurface>
+                  </ProgressiveResultReveal>
                 ))}
               </div>
             )}
@@ -916,7 +932,9 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
         onClose={() => setSelectedTask(null)}
         title={selectedTask?.title ?? 'Task Detail'}
         subtitle={
-          selectedTask ? `${selectedTask.department} · ${selectedTask.estimatedMinutes} mins` : undefined
+          selectedTask
+            ? `${selectedTask.department} · ${selectedTask.estimatedMinutes} mins`
+            : undefined
         }
       >
         {selectedTask && (
@@ -970,7 +988,11 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
       </Drawer>
 
       {/* Modals */}
-      <Modal open={goalModalOpen} onClose={() => setGoalModalOpen(false)} title="Set New Business Goal">
+      <Modal
+        open={goalModalOpen}
+        onClose={() => setGoalModalOpen(false)}
+        title="Set New Business Goal"
+      >
         <form
           onSubmit={(e) => {
             e.preventDefault();

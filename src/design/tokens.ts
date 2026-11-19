@@ -72,16 +72,56 @@ export const BW_SPACING = {
   unitPx: 4,
   scale: [
     { token: '--bw-space-1', px: '4px', value: 4, usage: 'Micro inline icon gaps' },
-    { token: '--bw-space-2', px: '8px', value: 8, usage: 'Compact control gaps & button internal vertical padding' },
+    {
+      token: '--bw-space-2',
+      px: '8px',
+      value: 8,
+      usage: 'Compact control gaps & button internal vertical padding',
+    },
     { token: '--bw-space-3', px: '12px', value: 12, usage: 'Form field rhythm & tight list items' },
-    { token: '--bw-space-4', px: '16px', value: 16, usage: 'Minimum card outer padding & toolbar spacing' },
-    { token: '--bw-space-5', px: '20px', value: 20, usage: 'Card inner spacing & medium component gaps' },
-    { token: '--bw-space-6', px: '24px', value: 24, usage: 'Standard panel padding & section grid gutters' },
-    { token: '--bw-space-8', px: '32px', value: 32, usage: 'Primary workspace vertical section cadence' },
-    { token: '--bw-space-10', px: '40px', value: 40, usage: 'Large component separation & hero margins' },
+    {
+      token: '--bw-space-4',
+      px: '16px',
+      value: 16,
+      usage: 'Minimum card outer padding & toolbar spacing',
+    },
+    {
+      token: '--bw-space-5',
+      px: '20px',
+      value: 20,
+      usage: 'Card inner spacing & medium component gaps',
+    },
+    {
+      token: '--bw-space-6',
+      px: '24px',
+      value: 24,
+      usage: 'Standard panel padding & section grid gutters',
+    },
+    {
+      token: '--bw-space-8',
+      px: '32px',
+      value: 32,
+      usage: 'Primary workspace vertical section cadence',
+    },
+    {
+      token: '--bw-space-10',
+      px: '40px',
+      value: 40,
+      usage: 'Large component separation & hero margins',
+    },
     { token: '--bw-space-12', px: '48px', value: 48, usage: 'Major department section padding' },
-    { token: '--bw-space-16', px: '64px', value: 64, usage: 'Landing page section vertical separation' },
-    { token: '--bw-space-20', px: '80px', value: 80, usage: 'Executive display and hero vertical breathing room' },
+    {
+      token: '--bw-space-16',
+      px: '64px',
+      value: 64,
+      usage: 'Landing page section vertical separation',
+    },
+    {
+      token: '--bw-space-20',
+      px: '80px',
+      value: 80,
+      usage: 'Executive display and hero vertical breathing room',
+    },
   ],
   values: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80] as const,
 } as const;
@@ -161,13 +201,34 @@ export const BW_MOTION = {
     slow: 360,
   },
   primitives: [
-    { name: 'DepartmentTransition', role: 'Cross-fade + 6px vertical settle on workspace navigation' },
-    { name: 'AiRequestPulse', role: 'Restrained orange ambient orb & sweep during live AI synthesis' },
-    { name: 'LiquidSkeletonReveal', role: 'Shape-matched liquid shimmer skeleton that morphs smoothly into fetched content' },
-    { name: 'ProgressiveResultReveal', role: 'Staggered 45ms reveal for generated dossiers, logos, and slides' },
-    { name: 'InsightSavedBeacon', role: 'Crisp emerald confirmation pill-free status on Brain sync' },
-    { name: 'RecommendationActionSurface', role: 'Tactile focus surface for high-leverage AI actions' },
-    { name: 'TaskCompleteRowTransition', role: 'Micro-settle completion state for sprint checklists' },
+    {
+      name: 'DepartmentTransition',
+      role: 'Cross-fade + 6px vertical settle on workspace navigation',
+    },
+    {
+      name: 'AiRequestPulse',
+      role: 'Restrained orange ambient orb & sweep during live AI synthesis',
+    },
+    {
+      name: 'LiquidSkeletonReveal',
+      role: 'Shape-matched liquid shimmer skeleton that morphs smoothly into fetched content',
+    },
+    {
+      name: 'ProgressiveResultReveal',
+      role: 'Staggered 45ms reveal for generated dossiers, logos, and slides',
+    },
+    {
+      name: 'InsightSavedBeacon',
+      role: 'Crisp emerald confirmation pill-free status on Brain sync',
+    },
+    {
+      name: 'RecommendationActionSurface',
+      role: 'Tactile focus surface for high-leverage AI actions',
+    },
+    {
+      name: 'TaskCompleteRowTransition',
+      role: 'Micro-settle completion state for sprint checklists',
+    },
     { name: 'ActionFeedbackBanner', role: 'Inline alert/success surface for errors and recovery' },
   ],
 } as const;

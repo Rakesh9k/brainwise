@@ -27,7 +27,9 @@ export function calculateBrainCompleteness(brain: BusinessBrainData): BrainCompl
   const checks: { section: string; ok: boolean; prompt: string }[] = [
     {
       section: 'Business Profile',
-      ok: Boolean(brain.businessName.trim() && brain.industry.trim() && brain.overviewSummary.trim()),
+      ok: Boolean(
+        brain.businessName.trim() && brain.industry.trim() && brain.overviewSummary.trim()
+      ),
       prompt: 'Add your business name, industry, and core summary.',
     },
     {
@@ -99,7 +101,8 @@ export function calculateTaskCompletionStats(tasks: GrowthTask[]): TaskCompletio
   const pendingTasks = tasks.filter((t) => t.status === 'pending');
   const pending = pendingTasks.length;
   const activeDenominator = Math.max(1, total - skipped);
-  const completionRate = total === 0 ? 0 : Math.min(100, Math.round((completed / activeDenominator) * 100));
+  const completionRate =
+    total === 0 ? 0 : Math.min(100, Math.round((completed / activeDenominator) * 100));
   const remainingMinutes = pendingTasks.reduce((sum, t) => sum + t.estimatedMinutes, 0);
   const highPriorityPending = pendingTasks.filter((t) => t.priority === 'high').length;
 
@@ -315,13 +318,15 @@ export function getNextJourneyStep(current: AppRoute): JourneyStepHint | null {
     dashboard: {
       nextRoute: 'idea-intelligence',
       label: 'Next in Founder Journey',
-      description: 'Validate a new product line or market expansion concept with structured research.',
+      description:
+        'Validate a new product line or market expansion concept with structured research.',
       cta: 'Open Idea Intelligence',
     },
     'business-brain': {
       nextRoute: 'idea-intelligence',
       label: 'Connected Workflow',
-      description: 'Put your Business Brain context to work in market validation and opportunity sizing.',
+      description:
+        'Put your Business Brain context to work in market validation and opportunity sizing.',
       cta: 'Validate an Idea',
     },
     'idea-intelligence': {
@@ -333,43 +338,50 @@ export function getNextJourneyStep(current: AppRoute): JourneyStepHint | null {
     'competitive-intelligence': {
       nextRoute: 'brand-studio',
       label: 'Next in Founder Journey',
-      description: 'Translate your differentiation strategy into visual identity, voice, and collateral.',
+      description:
+        'Translate your differentiation strategy into visual identity, voice, and collateral.',
       cta: 'Build this positioning into my brand',
     },
     'brand-studio': {
       nextRoute: 'growth-director',
       label: 'Next in Founder Journey',
-      description: 'Turn your new brand assets into a 30-day launch plan, daily tasks, and experiments.',
+      description:
+        'Turn your new brand assets into a 30-day launch plan, daily tasks, and experiments.',
       cta: 'Create a launch campaign',
     },
     'asset-library': {
       nextRoute: 'growth-director',
       label: 'Put Assets Into Market',
-      description: 'Schedule your approved creative deliverables inside your 30-day growth roadmap.',
+      description:
+        'Schedule your approved creative deliverables inside your 30-day growth roadmap.',
       cta: 'Open Growth Planner',
     },
     'growth-director': {
       nextRoute: 'market-watch',
       label: 'Next in Founder Journey',
-      description: 'Keep watch on competitor pricing shifts, launches, and review sentiment while you execute.',
+      description:
+        'Keep watch on competitor pricing shifts, launches, and review sentiment while you execute.',
       cta: 'Monitor Market Watch',
     },
     'tasks-experiments': {
       nextRoute: 'business-performance',
       label: 'Measure Execution',
-      description: 'Review how completed tasks and active experiments are influencing acquisition and revenue.',
+      description:
+        'Review how completed tasks and active experiments are influencing acquisition and revenue.',
       cta: 'Review performance results',
     },
     'market-watch': {
       nextRoute: 'tasks-experiments',
       label: 'Turn Signal Into Action',
-      description: 'Convert competitor movements and emerging trends into structured growth experiments.',
+      description:
+        'Convert competitor movements and emerging trends into structured growth experiments.',
       cta: 'Turn opportunity into experiment',
     },
     'business-performance': {
       nextRoute: 'growth-director',
       label: 'Strategy Review Loop',
-      description: 'Adjust your 30/60/90-day growth priorities based on observed conversion and retention trends.',
+      description:
+        'Adjust your 30/60/90-day growth priorities based on observed conversion and retention trends.',
       cta: 'Update my growth strategy',
     },
     reports: {
@@ -460,10 +472,7 @@ export function filterJournalArticles(
   return articles.filter((article) => article.category === category);
 }
 
-export function synthesizePlaybookPrompt(
-  article: JournalArticle,
-  question: string
-): string {
+export function synthesizePlaybookPrompt(article: JournalArticle, question: string): string {
   const clean = question.trim();
   const focus = clean.length > 0 ? clean : article.defaultPrompt;
   switch (article.category) {
@@ -479,8 +488,18 @@ export function synthesizePlaybookPrompt(
 }
 
 export interface ScenarioComparisonResult {
-  scenarioA: MarketScenarioPreset & { tamBand: string; samBand: string; somBand: string; somMidpointMillion: number };
-  scenarioB: MarketScenarioPreset & { tamBand: string; samBand: string; somBand: string; somMidpointMillion: number };
+  scenarioA: MarketScenarioPreset & {
+    tamBand: string;
+    samBand: string;
+    somBand: string;
+    somMidpointMillion: number;
+  };
+  scenarioB: MarketScenarioPreset & {
+    tamBand: string;
+    samBand: string;
+    somBand: string;
+    somMidpointMillion: number;
+  };
   breakEvenDeltaMonths: number;
   somUpsideRatio: number;
 }
@@ -575,13 +594,29 @@ export interface ReviewComplaintRow {
 
 export function classifyComplaintTopic(text: string): Exclude<ComplaintClusterTopic, 'All'> {
   const lower = text.toLowerCase();
-  if (lower.includes('roast') || lower.includes('stale') || lower.includes('fresh') || lower.includes('variety') || lower.includes('extraction')) {
+  if (
+    lower.includes('roast') ||
+    lower.includes('stale') ||
+    lower.includes('fresh') ||
+    lower.includes('variety') ||
+    lower.includes('extraction')
+  ) {
     return 'Freshness';
   }
-  if (lower.includes('price') || lower.includes('cost') || lower.includes('subscription') || lower.includes('renewal')) {
+  if (
+    lower.includes('price') ||
+    lower.includes('cost') ||
+    lower.includes('subscription') ||
+    lower.includes('renewal')
+  ) {
     return 'Pricing';
   }
-  if (lower.includes('ship') || lower.includes('deliver') || lower.includes('wait') || lower.includes('stockout')) {
+  if (
+    lower.includes('ship') ||
+    lower.includes('deliver') ||
+    lower.includes('wait') ||
+    lower.includes('stockout')
+  ) {
     return 'Delivery';
   }
   return 'Onboarding';
@@ -614,7 +649,10 @@ export function formatBrandCssVariables(brand: BrandIdentityState): string {
     brand.concepts.find((c) => c.id === brand.selectedConceptId) ?? brand.concepts[0];
   const paletteVars = brand.palette
     .map((p) => {
-      const slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const slug = p.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
       return `  --brand-${slug}: ${p.hex};`;
     })
     .join('\n');
@@ -706,12 +744,15 @@ export function computeDashboardMetrics(state: BrainWiseState): DashboardCompute
     state.goals.length === 0 &&
     state.tasks.length === 0;
 
-  let trajectoryLabel = 'Needs Baseline';
-  let trajectoryTone: DashboardComputedMetrics['trajectoryTone'] = 'neutral';
+  let trajectoryLabel: string;
+  let trajectoryTone: DashboardComputedMetrics['trajectoryTone'];
   if (isFreshWorkspace) {
     trajectoryLabel = 'Setup in Progress';
     trajectoryTone = 'accent';
-  } else if (brainComp.percentage >= 75 && (goalsAvgPercentage >= 40 || taskStats.completionRate >= 30)) {
+  } else if (
+    brainComp.percentage >= 75 &&
+    (goalsAvgPercentage >= 40 || taskStats.completionRate >= 30)
+  ) {
     trajectoryLabel = 'Healthy Trajectory';
     trajectoryTone = 'success';
   } else if (brainComp.percentage >= 40 || state.tasks.length > 0) {
@@ -758,12 +799,16 @@ export function buildDynamicDossier(params: {
   const cleanMarket =
     params.targetMarket.trim() || params.brain.targetAudience || 'Early-adopter urban buyers';
   const cleanGeo = params.geography.trim() || params.brain.location || 'Target Regional Markets';
-  const tamBillion = params.depth === 'Deep Market Dossier' ? 6.4 : params.depth === 'Standard Validation' ? 4.2 : 2.8;
+  const tamBillion =
+    params.depth === 'Deep Market Dossier'
+      ? 6.4
+      : params.depth === 'Standard Validation'
+        ? 4.2
+        : 2.8;
   const samSharePct = 14;
   const somSharePct = 1.2;
   const sizing = estimateMarketSizing(tamBillion, samSharePct, somSharePct);
-  const titleText =
-    cleanIdea.length > 72 ? `${cleanIdea.slice(0, 69).trim()}…` : cleanIdea;
+  const titleText = cleanIdea.length > 72 ? `${cleanIdea.slice(0, 69).trim()}…` : cleanIdea;
 
   const report: ResearchReport = {
     id: `rep-${Date.now()}`,
@@ -794,16 +839,48 @@ export function buildDynamicDossier(params: {
       somLabel: sizing.somBand,
       somBasis: `${somSharePct}% realistic 24-month capture inside priority launch neighborhoods/accounts.`,
       assumptions: [
-        { id: 'tam', label: 'Category Annual Spend ($B)', value: tamBillion, unit: '$B', min: 0.5, max: 30, step: 0.5 },
-        { id: 'sam', label: 'Serviceable Target Share (%)', value: samSharePct, unit: '%', min: 2, max: 40, step: 1 },
-        { id: 'som', label: '24-Month Target Capture (%)', value: somSharePct, unit: '%', min: 0.2, max: 10, step: 0.2 },
+        {
+          id: 'tam',
+          label: 'Category Annual Spend ($B)',
+          value: tamBillion,
+          unit: '$B',
+          min: 0.5,
+          max: 30,
+          step: 0.5,
+        },
+        {
+          id: 'sam',
+          label: 'Serviceable Target Share (%)',
+          value: samSharePct,
+          unit: '%',
+          min: 2,
+          max: 40,
+          step: 1,
+        },
+        {
+          id: 'som',
+          label: '24-Month Target Capture (%)',
+          value: somSharePct,
+          unit: '%',
+          min: 0.2,
+          max: 10,
+          step: 0.2,
+        },
       ],
     },
     marketDemand: {
       summary: `Strong willingness to test specialized offers among ${cleanMarket} when initial commitment friction stays low.`,
       signals: [
-        { label: `Search & discovery demand in ${cleanGeo}`, trend: '+22% YoY modelled growth', factType: 'estimate' },
-        { label: 'Incumbent switching trigger (onboarding/transparency)', trend: 'High urgency wedge', factType: 'estimate' },
+        {
+          label: `Search & discovery demand in ${cleanGeo}`,
+          trend: '+22% YoY modelled growth',
+          factType: 'estimate',
+        },
+        {
+          label: 'Incumbent switching trigger (onboarding/transparency)',
+          trend: 'High urgency wedge',
+          factType: 'estimate',
+        },
       ],
     },
     customerSegments: [
@@ -841,11 +918,24 @@ export function buildDynamicDossier(params: {
     competitorLandscapeSummary: `Incumbents in ${cleanIndustry} skew toward broad awareness messaging while leaving a clear gap in high-clarity starter experiences and fast feedback loops.`,
     pricingAnalysis: {
       tiers: [
-        { tier: 'Starter / Trial Offer', range: '$19 – $39', positioning: 'Zero-friction first conversion hook' },
-        { tier: 'Core Recurring Plan', range: '$49 – $129 / mo', positioning: 'Predictable retention anchor' },
-        { tier: 'Team / Studio Tier', range: '$240 – $480 / mo', positioning: 'High-LTV group expansion' },
+        {
+          tier: 'Starter / Trial Offer',
+          range: '$19 – $39',
+          positioning: 'Zero-friction first conversion hook',
+        },
+        {
+          tier: 'Core Recurring Plan',
+          range: '$49 – $129 / mo',
+          positioning: 'Predictable retention anchor',
+        },
+        {
+          tier: 'Team / Studio Tier',
+          range: '$240 – $480 / mo',
+          positioning: 'High-LTV group expansion',
+        },
       ],
-      recommendation: 'Lead with a low-risk starter package that credits toward the Core Recurring Plan within 14 days.',
+      recommendation:
+        'Lead with a low-risk starter package that credits toward the Core Recurring Plan within 14 days.',
     },
     marketOpportunities: [
       `Claim an unmistakable positioning wedge tailored specifically to ${cleanMarket} in ${cleanGeo}.`,
@@ -873,9 +963,21 @@ export function buildDynamicDossier(params: {
       factType: 'estimate',
     },
     startupCostEstimates: [
-      { category: 'Initial Offer & Fulfillment Pilot', range: '$1,500 – $3,500', note: 'MVP inventory / delivery setup' },
-      { category: 'Brand Identity & Landing Page', range: '$600 – $1,400', note: 'Built inside BrainWise Brand Studio' },
-      { category: '30-Day Acquisition Test Budget', range: '$500 – $1,200', note: 'Measured across 2–3 channel experiments' },
+      {
+        category: 'Initial Offer & Fulfillment Pilot',
+        range: '$1,500 – $3,500',
+        note: 'MVP inventory / delivery setup',
+      },
+      {
+        category: 'Brand Identity & Landing Page',
+        range: '$600 – $1,400',
+        note: 'Built inside BrainWise Brand Studio',
+      },
+      {
+        category: '30-Day Acquisition Test Budget',
+        range: '$500 – $1,200',
+        note: 'Measured across 2–3 channel experiments',
+      },
     ],
     risksAndChallenges: [
       {
@@ -973,8 +1075,8 @@ export function buildWeeklyGrowthPlan(state: BrainWiseState): DynamicWeeklyPlan[
         plannedExps.length > 0
           ? plannedExps.map((e) => e.title)
           : activeExps.length > 0
-          ? [`Evaluate Week 1 results on ${activeExps[0].title}`]
-          : ['Queue next validation experiment from Market Watch'],
+            ? [`Evaluate Week 1 results on ${activeExps[0].title}`]
+            : ['Queue next validation experiment from Market Watch'],
       outcome: state.goals[1]
         ? `Progress "${state.goals[1].title}" toward ${state.goals[1].targetValue} ${state.goals[1].unit}`
         : 'Close feedback loop across Brand Studio & Analytics',
@@ -1036,7 +1138,7 @@ export function buildRoadmapPhases(state: BrainWiseState): RoadmapPhaseColumn[] 
       title: 'Scale Proven Channels',
       highlighted: false,
       items: [
-        ...(goals.slice(2, 4).map((g) => `${g.title} by ${g.deadline}`)),
+        ...goals.slice(2, 4).map((g) => `${g.title} by ${g.deadline}`),
         `Keep Business Brain (${calculateBrainCompleteness(state.brain).percentage}% complete) synced across all ${state.assets.filter((a) => a.status !== 'Archived').length} active brand assets`,
       ],
     },
@@ -1107,8 +1209,8 @@ export function buildAssetSvgMarkup(
     markStyle === 'emblem'
       ? `<circle cx="72" cy="72" r="22" stroke="${fg}" stroke-width="2.5" fill="none"/><circle cx="72" cy="72" r="7" fill="${asset.accentHex}"/>`
       : markStyle === 'monogram'
-      ? `<rect x="52" y="52" width="40" height="40" rx="10" stroke="${fg}" stroke-width="2.5" fill="none"/><path d="M64 80 L72 64 L80 80" stroke="${asset.accentHex}" stroke-width="3" fill="none" stroke-linecap="round"/>`
-      : `<path d="M52 84 H92" stroke="${fg}" stroke-width="2.5" stroke-linecap="round"/><path d="M58 84 C58 70 64 62 72 62 C80 62 86 70 86 84" stroke="${asset.accentHex}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+        ? `<rect x="52" y="52" width="40" height="40" rx="10" stroke="${fg}" stroke-width="2.5" fill="none"/><path d="M64 80 L72 64 L80 80" stroke="${asset.accentHex}" stroke-width="3" fill="none" stroke-linecap="round"/>`
+        : `<path d="M52 84 H92" stroke="${fg}" stroke-width="2.5" stroke-linecap="round"/><path d="M58 84 C58 70 64 62 72 62 C80 62 86 70 86 84" stroke="${asset.accentHex}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
   <rect width="800" height="500" rx="24" fill="${bg}"/>
@@ -1126,7 +1228,10 @@ export function buildAssetSvgMarkup(
  * Sanitizes AI-generated inline SVG strings before rendering in the DOM.
  * Strips scripts, foreignObject, external hrefs, inline event handlers, and javascript: URIs.
  */
-export function sanitizeAiSvgMarkup(rawSvg: string | undefined, fallbackViewBox = '0 0 64 64'): string {
+export function sanitizeAiSvgMarkup(
+  rawSvg: string | undefined,
+  fallbackViewBox = '0 0 64 64'
+): string {
   if (!rawSvg || typeof rawSvg !== 'string') return '';
   const match = rawSvg.match(/<svg[\s\S]*?<\/svg>/i);
   if (!match) return '';
@@ -1275,7 +1380,8 @@ export function buildLocalBrandAssetVariations(params: {
       headlineText: `Why ${params.brandName.split(' ')[0]} sets the new standard`,
       subtext: `${focus} — backed by transparent sourcing and consistent visual craft.`,
       footerNote: `Approved Brand System · ${params.category}`,
-      artDirectionNote: 'Oversized display heading balanced with generous negative space and one focused geometric brand cue.',
+      artDirectionNote:
+        'Oversized display heading balanced with generous negative space and one focused geometric brand cue.',
       darkVariant: !dark2,
       svgMotif: `<svg viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 36L40 12L68 36L96 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="96" cy="12" r="5" fill="${accent}"/></svg>`,
     },
@@ -1317,7 +1423,8 @@ export function buildLocalSocialCreative(params: {
       layout: 'split-stat',
       statCallout: '48h vs 4+ wks',
       svgMotif: `<svg viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="28" width="22" height="12" rx="3" fill="currentColor" fill-opacity="0.25"/><rect x="44" y="18" width="22" height="22" rx="3" fill="currentColor" fill-opacity="0.45"/><rect x="78" y="8" width="22" height="32" rx="3" fill="${accent}"/></svg>`,
-      artDirectionPrompt: 'Clean editorial side-by-side comparison visual with subtle hairline grid and warm shadow depth.',
+      artDirectionPrompt:
+        'Clean editorial side-by-side comparison visual with subtle hairline grid and warm shadow depth.',
     },
     {
       slideNumber: 3,
@@ -1338,7 +1445,8 @@ export function buildLocalSocialCreative(params: {
       layout: 'checklist',
       statCallout: '100% Traceable',
       svgMotif: `<svg viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="10" width="96" height="28" rx="8" stroke="currentColor" stroke-width="1.8"/><path d="M48 24L56 31L74 17" stroke="${accent}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      artDirectionPrompt: 'Architectural checklist layout over soft alabaster or matte obsidian surface with crisp spacing.',
+      artDirectionPrompt:
+        'Architectural checklist layout over soft alabaster or matte obsidian surface with crisp spacing.',
     },
     {
       slideNumber: 5,
@@ -1370,7 +1478,8 @@ export function buildLocalSocialCreative(params: {
       layout: 'product-spotlight',
       statCallout: 'Save + Share',
       svgMotif: `<svg viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="38" y="8" width="44" height="32" rx="8" stroke="${accent}" stroke-width="2.4"/><circle cx="60" cy="24" r="5" fill="currentColor"/></svg>`,
-      artDirectionPrompt: 'High-contrast closing CTA slide with brand lockup and clear directional cue.',
+      artDirectionPrompt:
+        'High-contrast closing CTA slide with brand lockup and clear directional cue.',
     },
   ];
 
@@ -1425,10 +1534,10 @@ export function buildCarouselSlideSvgMarkup(
     aspectRatio === '1:1'
       ? { w: 1080, h: 1080 }
       : aspectRatio === '9:16'
-      ? { w: 1080, h: 1920 }
-      : aspectRatio === '1.91:1'
-      ? { w: 1200, h: 628 }
-      : { w: 1080, h: 1350 };
+        ? { w: 1080, h: 1920 }
+        : aspectRatio === '1.91:1'
+          ? { w: 1200, h: 628 }
+          : { w: 1080, h: 1350 };
   const bg = darkVariant ? '#171717' : '#FFFFFF';
   const fg = darkVariant ? '#FFFFFF' : '#171717';
   const sub = darkVariant ? '#CCCCCC' : '#5C5C58';
@@ -1449,5 +1558,3 @@ export function buildCarouselSlideSvgMarkup(
   <text x="${dims.w - 96}" y="${dims.h - 104}" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="22" fill="${sub}">SLIDE 0${slide.slideNumber}</text>
 </svg>`;
 }
-
-

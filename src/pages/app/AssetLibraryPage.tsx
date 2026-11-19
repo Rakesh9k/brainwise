@@ -63,16 +63,24 @@ export const AssetLibraryPage: React.FC = () => {
           {
             label: previewAsset.status === 'Archived' ? 'Archived Assets' : previewAsset.folder,
             onClick: () => {
-              setFolderFilter(previewAsset.status === 'Archived' ? 'archived' : previewAsset.folder);
+              setFolderFilter(
+                previewAsset.status === 'Archived' ? 'archived' : previewAsset.folder
+              );
               setPreviewAsset(null);
             },
           },
           { label: previewAsset.title },
         ]
       : folderFilter !== 'all'
-      ? [{ label: folderFilter === 'archived' ? 'Archived Assets' : folderFilter }]
-      : [],
-    [folderFilter, previewAsset?.id, previewAsset?.title, previewAsset?.folder, previewAsset?.status]
+        ? [{ label: folderFilter === 'archived' ? 'Archived Assets' : folderFilter }]
+        : [],
+    [
+      folderFilter,
+      previewAsset?.id,
+      previewAsset?.title,
+      previewAsset?.folder,
+      previewAsset?.status,
+    ]
   );
 
   const filtered = useMemo(() => {
@@ -119,11 +127,7 @@ export const AssetLibraryPage: React.FC = () => {
           Boolean(asset.darkVariant),
           asset.category === 'Instagram Post' ? '1:1' : '4:5'
         )
-      : buildAssetSvgMarkup(
-          asset,
-          state.brand.brandName,
-          activeConcept?.markStyle ?? 'geometric'
-        );
+      : buildAssetSvgMarkup(asset, state.brand.brandName, activeConcept?.markStyle ?? 'geometric');
     const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -155,8 +159,8 @@ export const AssetLibraryPage: React.FC = () => {
       asset.category === 'Logo'
         ? 'logos'
         : asset.folder === 'Social Media' || asset.folder === 'Campaigns'
-        ? 'social'
-        : 'collateral';
+          ? 'social'
+          : 'collateral';
     setPreviewAsset(null);
     launchCreativeRemix({
       mode,
@@ -322,7 +326,9 @@ export const AssetLibraryPage: React.FC = () => {
                     type="button"
                     disabled={previewSlideIdx === previewAsset.slides.length - 1}
                     onClick={() =>
-                      setPreviewSlideIdx((i) => Math.min((previewAsset.slides?.length ?? 1) - 1, i + 1))
+                      setPreviewSlideIdx((i) =>
+                        Math.min((previewAsset.slides?.length ?? 1) - 1, i + 1)
+                      )
                     }
                     className="inline-flex items-center gap-1 text-xs font-medium disabled:opacity-35 cursor-pointer"
                   >
@@ -343,7 +349,9 @@ export const AssetLibraryPage: React.FC = () => {
             {previewAsset.caption && (
               <div className="p-3.5 rounded-[9px] bg-[#FAFAF9] border border-[#E6E6E2] space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[#252525]">Social Caption &amp; Hashtags</span>
+                  <span className="font-semibold text-[#252525]">
+                    Social Caption &amp; Hashtags
+                  </span>
                   <button
                     type="button"
                     onClick={() => {
@@ -359,7 +367,9 @@ export const AssetLibraryPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-[#5C5C58] whitespace-pre-line">{previewAsset.caption}</p>
                 {previewAsset.hashtags && previewAsset.hashtags.length > 0 && (
-                  <div className="text-[11px] text-[#C44D00]">{previewAsset.hashtags.join(' ')}</div>
+                  <div className="text-[11px] text-[#C44D00]">
+                    {previewAsset.hashtags.join(' ')}
+                  </div>
                 )}
               </div>
             )}
@@ -410,19 +420,35 @@ export const AssetLibraryPage: React.FC = () => {
                 {previewAsset.status === 'Archived' ? 'Restore Asset' : 'Archive Asset'}
               </Button>
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="secondary" size="sm" onClick={() => handleRemixWithAi(previewAsset)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleRemixWithAi(previewAsset)}
+                >
                   <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
                   Remix in AI Studio
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => handleUseInCampaign(previewAsset)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleUseInCampaign(previewAsset)}
+                >
                   <Compass className="w-3.5 h-3.5 text-[#FF7417]" />
                   Use in Campaign
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => handleDownloadSvg(previewAsset)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleDownloadSvg(previewAsset)}
+                >
                   <Download className="w-3.5 h-3.5" />
                   Export SVG
                 </Button>
-                <Button variant="primary" size="sm" onClick={() => handleDownloadSpec(previewAsset)}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleDownloadSpec(previewAsset)}
+                >
                   <Download className="w-3.5 h-3.5" />
                   Spec JSON
                 </Button>

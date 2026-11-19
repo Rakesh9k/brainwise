@@ -15,7 +15,6 @@ import {
   findNearestCompetitors,
   type ComplaintClusterTopic,
 } from '../../utils/logic';
-import type { CompetitorProfileData } from '../../types/brainwise';
 import { DataTable } from '../../components/ui/DataTable';
 import {
   IntelligenceOrb,
@@ -40,7 +39,15 @@ import { MarketWatchPage } from './MarketWatchPage';
 import { typeClass } from '../../theme/typography';
 
 const PROFILE_SUBTAB_LABELS: Record<
-  'overview' | 'products' | 'pricing' | 'positioning' | 'website' | 'marketing' | 'reviews' | 'swot' | 'changes',
+  | 'overview'
+  | 'products'
+  | 'pricing'
+  | 'positioning'
+  | 'website'
+  | 'marketing'
+  | 'reviews'
+  | 'swot'
+  | 'changes',
   string
 > = {
   overview: 'Overview',
@@ -84,7 +91,8 @@ const PROFILE_SECTION_GROUPS: Array<{
   },
 ];
 
-export type CompetitiveTabId = 'overview' | 'profile' | 'comparison' | 'gaps' | 'strategy' | 'watch';
+export type CompetitiveTabId =
+  'overview' | 'profile' | 'comparison' | 'gaps' | 'strategy' | 'watch';
 
 export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTabId }> = ({
   initialTab = 'overview',
@@ -105,9 +113,19 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
 
   const [sectionTab, setSectionTab] = useState<CompetitiveTabId>(initialTab);
   const [profileSubTab, setProfileSubTab] = useState<
-    'overview' | 'products' | 'pricing' | 'positioning' | 'website' | 'marketing' | 'reviews' | 'swot' | 'changes'
+    | 'overview'
+    | 'products'
+    | 'pricing'
+    | 'positioning'
+    | 'website'
+    | 'marketing'
+    | 'reviews'
+    | 'swot'
+    | 'changes'
   >('overview');
-  const [selectedId, setSelectedId] = useState(state.selectedCompetitorId || state.competitors[0]?.id);
+  const [selectedId, setSelectedId] = useState(
+    state.selectedCompetitorId || state.competitors[0]?.id
+  );
   const [search, setSearch] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [complaintTopic, setComplaintTopic] = useState<ComplaintClusterTopic>('All');
@@ -127,8 +145,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
     }
   }, [pendingCompetitorProfile, state.selectedCompetitorId, consumeCompetitorProfile]);
 
-  const activeComp =
-    state.competitors.find((c) => c.id === selectedId) ?? state.competitors[0];
+  const activeComp = state.competitors.find((c) => c.id === selectedId) ?? state.competitors[0];
   const ownPos = state.ownPositionScore ?? { x: 58, y: 80 };
   const proximity = findNearestCompetitors(ownPos.x, ownPos.y, state.competitors);
   const complaintRows = filterReviewComplaints(state.competitors, complaintTopic);
@@ -159,17 +176,19 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
             label: activeComp?.name || 'Competitor',
             onClick: profileSubTab !== 'overview' ? () => setProfileSubTab('overview') : undefined,
           },
-          ...(profileSubTab !== 'overview' ? [{ label: PROFILE_SUBTAB_LABELS[profileSubTab] }] : []),
+          ...(profileSubTab !== 'overview'
+            ? [{ label: PROFILE_SUBTAB_LABELS[profileSubTab] }]
+            : []),
         ]
       : sectionTab === 'comparison'
-      ? [{ label: 'Comparison & Map' }]
-      : sectionTab === 'gaps'
-      ? [{ label: 'Strategic Gap Analysis' }]
-      : sectionTab === 'strategy'
-      ? [{ label: 'Competitive Strategy' }]
-      : sectionTab === 'watch'
-      ? [{ label: 'Market Watch' }]
-      : [],
+        ? [{ label: 'Comparison & Map' }]
+        : sectionTab === 'gaps'
+          ? [{ label: 'Strategic Gap Analysis' }]
+          : sectionTab === 'strategy'
+            ? [{ label: 'Competitive Strategy' }]
+            : sectionTab === 'watch'
+              ? [{ label: 'Market Watch' }]
+              : [],
     [sectionTab, profileSubTab, activeComp?.id, activeComp?.name]
   );
 
@@ -274,9 +293,13 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                 <Radar className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs sm:text-sm font-semibold text-[#171717]">Continuous Market Surveillance Active</div>
+                <div className="text-xs sm:text-sm font-semibold text-[#171717]">
+                  Continuous Market Surveillance Active
+                </div>
                 <div className="text-xs text-[#5C5C58]">
-                  {state.competitors.filter((c) => c.monitoringEnabled).length} of {state.competitors.length} competitors monitored · {unreadAlertsCount} unread signal alerts
+                  {state.competitors.filter((c) => c.monitoringEnabled).length} of{' '}
+                  {state.competitors.length} competitors monitored · {unreadAlertsCount} unread
+                  signal alerts
                 </div>
               </div>
             </div>
@@ -304,7 +327,9 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                 render: (c) => (
                   <div>
                     <div className="font-semibold text-[#242424]">{c.name}</div>
-                    <div className="text-xs text-[#686864]">{c.website.replace('https://', '')}</div>
+                    <div className="text-xs text-[#686864]">
+                      {c.website.replace('https://', '')}
+                    </div>
                   </div>
                 ),
               },
@@ -317,7 +342,11 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
               {
                 key: 'positioning',
                 header: 'Positioning',
-                render: (c) => <span className="text-xs text-[#686864] line-clamp-2 max-w-xs">{c.positioning}</span>,
+                render: (c) => (
+                  <span className="text-xs text-[#686864] line-clamp-2 max-w-xs">
+                    {c.positioning}
+                  </span>
+                ),
               },
               {
                 key: 'price',
@@ -340,7 +369,9 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                 header: 'Last Researched',
                 align: 'right',
                 sortValue: (c) => c.lastResearched,
-                render: (c) => <span className="font-mono-num text-xs text-[#686864]">{c.lastResearched}</span>,
+                render: (c) => (
+                  <span className="font-mono-num text-xs text-[#686864]">{c.lastResearched}</span>
+                ),
               },
             ]}
           />
@@ -379,7 +410,8 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
             <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[#E6E6E2]">
               <div>
                 <div className="text-xs text-[#686864]">
-                  {activeComp.category} · {activeComp.geography} · Discovered via {activeComp.discoveryMethod}
+                  {activeComp.category} · {activeComp.geography} · Discovered via{' '}
+                  {activeComp.discoveryMethod}
                 </div>
                 <h2 className={`${typeClass.h3} font-bold text-[#171717] mt-1`}>
                   {activeComp.name}
@@ -455,156 +487,195 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
               </nav>
 
               <div className="md:col-span-8 text-sm text-[#242424] leading-relaxed">
-              {profileSubTab === 'overview' && (
-                <div className="space-y-4">
-                  <p>{activeComp.overview}</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] text-xs">
-                      <div className="text-[#686864]">Estimated Share Band</div>
-                      <div className="font-semibold mt-0.5">{activeComp.marketShareBand}</div>
-                    </div>
-                    <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] text-xs">
-                      <div className="text-[#686864]">Retail Price Range</div>
-                      <div className="font-mono-num font-semibold mt-0.5">{activeComp.priceRange}</div>
+                {profileSubTab === 'overview' && (
+                  <div className="space-y-4">
+                    <p>{activeComp.overview}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] text-xs">
+                        <div className="text-[#686864]">Estimated Share Band</div>
+                        <div className="font-semibold mt-0.5">{activeComp.marketShareBand}</div>
+                      </div>
+                      <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] text-xs">
+                        <div className="text-[#686864]">Retail Price Range</div>
+                        <div className="font-mono-num font-semibold mt-0.5">
+                          {activeComp.priceRange}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {profileSubTab === 'products' && (
-                <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
-                  {activeComp.productsAndServices.map((p) => (
-                    <div key={p.name} className="p-3.5 flex items-center justify-between gap-3">
+                {profileSubTab === 'products' && (
+                  <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
+                    {activeComp.productsAndServices.map((p) => (
+                      <div key={p.name} className="p-3.5 flex items-center justify-between gap-3">
+                        <div>
+                          <div className="font-semibold text-sm">{p.name}</div>
+                          <div className="text-xs text-[#686864]">{p.notes}</div>
+                        </div>
+                        <span className="font-mono-num text-xs font-semibold">{p.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {profileSubTab === 'pricing' && (
+                  <div className="space-y-3">
+                    <p>{activeComp.pricingModel.summary}</p>
+                    <div className="grid grid-cols-3 gap-3 text-xs">
+                      <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
+                        <div className="text-[#686864]">Entry Price</div>
+                        <div className="font-mono-num font-semibold mt-1">
+                          {activeComp.pricingModel.entryPrice}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
+                        <div className="text-[#686864]">Flagship Price</div>
+                        <div className="font-mono-num font-semibold mt-1">
+                          {activeComp.pricingModel.flagshipPrice}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
+                        <div className="text-[#686864]">Discounts</div>
+                        <div className="font-medium mt-1">{activeComp.pricingModel.discounts}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {profileSubTab === 'positioning' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
+                      <div className="text-[#686864]">Archetype</div>
+                      <div className="font-semibold text-sm mt-0.5">
+                        {activeComp.brandPositioningDetail.archetype}
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
+                      <div className="text-[#686864]">Core Tagline</div>
+                      <div className="font-semibold text-sm mt-0.5">
+                        {activeComp.brandPositioningDetail.tagline}
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
+                      <div className="text-[#686864]">Target Buyer</div>
+                      <div className="mt-0.5">{activeComp.brandPositioningDetail.targetBuyer}</div>
+                    </div>
+                    <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
+                      <div className="text-[#686864]">Visual Tone</div>
+                      <div className="mt-0.5">{activeComp.brandPositioningDetail.visualTone}</div>
+                    </div>
+                  </div>
+                )}
+
+                {profileSubTab === 'website' && (
+                  <div className="space-y-3 text-xs">
+                    <div className="flex flex-wrap gap-4 p-3.5 rounded-[10px] bg-[#F5F5F4]">
                       <div>
-                        <div className="font-semibold text-sm">{p.name}</div>
-                        <div className="text-xs text-[#686864]">{p.notes}</div>
+                        <span className="text-[#686864]">Clarity:</span>{' '}
+                        <strong>{activeComp.websiteAnalysis.clarityScore}</strong>
                       </div>
-                      <span className="font-mono-num text-xs font-semibold">{p.price}</span>
+                      <div>
+                        <span className="text-[#686864]">Primary CTA:</span>{' '}
+                        <strong>{activeComp.websiteAnalysis.primaryCTA}</strong>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {profileSubTab === 'pricing' && (
-                <div className="space-y-3">
-                  <p>{activeComp.pricingModel.summary}</p>
-                  <div className="grid grid-cols-3 gap-3 text-xs">
-                    <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
-                      <div className="text-[#686864]">Entry Price</div>
-                      <div className="font-mono-num font-semibold mt-1">{activeComp.pricingModel.entryPrice}</div>
-                    </div>
-                    <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
-                      <div className="text-[#686864]">Flagship Price</div>
-                      <div className="font-mono-num font-semibold mt-1">{activeComp.pricingModel.flagshipPrice}</div>
-                    </div>
-                    <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
-                      <div className="text-[#686864]">Discounts</div>
-                      <div className="font-medium mt-1">{activeComp.pricingModel.discounts}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {profileSubTab === 'positioning' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
-                    <div className="text-[#686864]">Archetype</div>
-                    <div className="font-semibold text-sm mt-0.5">{activeComp.brandPositioningDetail.archetype}</div>
-                  </div>
-                  <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
-                    <div className="text-[#686864]">Core Tagline</div>
-                    <div className="font-semibold text-sm mt-0.5">{activeComp.brandPositioningDetail.tagline}</div>
-                  </div>
-                  <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
-                    <div className="text-[#686864]">Target Buyer</div>
-                    <div className="mt-0.5">{activeComp.brandPositioningDetail.targetBuyer}</div>
-                  </div>
-                  <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
-                    <div className="text-[#686864]">Visual Tone</div>
-                    <div className="mt-0.5">{activeComp.brandPositioningDetail.visualTone}</div>
-                  </div>
-                </div>
-              )}
-
-              {profileSubTab === 'website' && (
-                <div className="space-y-3 text-xs">
-                  <div className="flex flex-wrap gap-4 p-3.5 rounded-[10px] bg-[#F5F5F4]">
-                    <div><span className="text-[#686864]">Clarity:</span> <strong>{activeComp.websiteAnalysis.clarityScore}</strong></div>
-                    <div><span className="text-[#686864]">Primary CTA:</span> <strong>{activeComp.websiteAnalysis.primaryCTA}</strong></div>
-                  </div>
-                  <p className="text-sm">{activeComp.websiteAnalysis.speedNote}</p>
-                  <div>
-                    <div className="font-semibold mb-1.5">Observed Conversion Gaps</div>
-                    <ul className="space-y-1 text-[#686864]">
-                      {activeComp.websiteAnalysis.conversionGaps.map((g) => (
-                        <li key={g}>• {g}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {profileSubTab === 'marketing' && (
-                <div className="space-y-3 text-xs">
-                  <div><span className="text-[#686864]">Primary Channels:</span> <strong>{activeComp.marketingStrategy.channels.join(', ')}</strong></div>
-                  <div><span className="text-[#686864]">Content Cadence:</span> <strong>{activeComp.marketingStrategy.contentCadence}</strong></div>
-                  <div><span className="text-[#686864]">Paid Signals:</span> <strong>{activeComp.marketingStrategy.paidSignals}</strong></div>
-                </div>
-              )}
-
-              {profileSubTab === 'reviews' && (
-                <div className="space-y-4 text-xs">
-                  <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] flex items-center gap-4">
-                    <span className="text-lg font-bold font-mono-num">{activeComp.customerReviews.averageRating}</span>
-                    <span className="text-[#686864]">{activeComp.customerReviews.reviewCount}</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <p className="text-sm">{activeComp.websiteAnalysis.speedNote}</p>
                     <div>
-                      <div className="font-semibold text-[#24724E] mb-1.5">Praised For</div>
+                      <div className="font-semibold mb-1.5">Observed Conversion Gaps</div>
                       <ul className="space-y-1 text-[#686864]">
-                        {activeComp.customerReviews.praisedFor.map((p) => <li key={p}>• {p}</li>)}
-                      </ul>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-[#BC3E3E] mb-1.5">Common Complaints</div>
-                      <ul className="space-y-1 text-[#686864]">
-                        {activeComp.customerReviews.complaints.map((c) => <li key={c}>• {c}</li>)}
+                        {activeComp.websiteAnalysis.conversionGaps.map((g) => (
+                          <li key={g}>• {g}</li>
+                        ))}
                       </ul>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {profileSubTab === 'swot' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="p-4 rounded-[10px] border border-[#E6E6E2]">
-                    <div className="font-semibold text-[#24724E] mb-2">Strengths</div>
-                    <ul className="space-y-1.5 text-[#242424]">
-                      {activeComp.strengths.map((s) => <li key={s}>• {s}</li>)}
-                    </ul>
-                  </div>
-                  <div className="p-4 rounded-[10px] border border-[#E6E6E2]">
-                    <div className="font-semibold text-[#C44D00] mb-2">Exploitable Weaknesses</div>
-                    <ul className="space-y-1.5 text-[#242424]">
-                      {activeComp.weaknesses.map((w) => <li key={w}>• {w}</li>)}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {profileSubTab === 'changes' && (
-                <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
-                  {activeComp.historicalChanges.map((hc, i) => (
-                    <div key={i} className="p-3.5 text-xs">
-                      <div className="flex items-center justify-between text-[#686864]">
-                        <span className="font-mono-num">{hc.date}</span>
-                        <span>{hc.source}</span>
-                      </div>
-                      <div className="text-sm text-[#242424] mt-1">{hc.change}</div>
+                {profileSubTab === 'marketing' && (
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <span className="text-[#686864]">Primary Channels:</span>{' '}
+                      <strong>{activeComp.marketingStrategy.channels.join(', ')}</strong>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div>
+                      <span className="text-[#686864]">Content Cadence:</span>{' '}
+                      <strong>{activeComp.marketingStrategy.contentCadence}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[#686864]">Paid Signals:</span>{' '}
+                      <strong>{activeComp.marketingStrategy.paidSignals}</strong>
+                    </div>
+                  </div>
+                )}
+
+                {profileSubTab === 'reviews' && (
+                  <div className="space-y-4 text-xs">
+                    <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] flex items-center gap-4">
+                      <span className="text-lg font-bold font-mono-num">
+                        {activeComp.customerReviews.averageRating}
+                      </span>
+                      <span className="text-[#686864]">
+                        {activeComp.customerReviews.reviewCount}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <div className="font-semibold text-[#24724E] mb-1.5">Praised For</div>
+                        <ul className="space-y-1 text-[#686864]">
+                          {activeComp.customerReviews.praisedFor.map((p) => (
+                            <li key={p}>• {p}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[#BC3E3E] mb-1.5">Common Complaints</div>
+                        <ul className="space-y-1 text-[#686864]">
+                          {activeComp.customerReviews.complaints.map((c) => (
+                            <li key={c}>• {c}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {profileSubTab === 'swot' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div className="p-4 rounded-[10px] border border-[#E6E6E2]">
+                      <div className="font-semibold text-[#24724E] mb-2">Strengths</div>
+                      <ul className="space-y-1.5 text-[#242424]">
+                        {activeComp.strengths.map((s) => (
+                          <li key={s}>• {s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="p-4 rounded-[10px] border border-[#E6E6E2]">
+                      <div className="font-semibold text-[#C44D00] mb-2">
+                        Exploitable Weaknesses
+                      </div>
+                      <ul className="space-y-1.5 text-[#242424]">
+                        {activeComp.weaknesses.map((w) => (
+                          <li key={w}>• {w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {profileSubTab === 'changes' && (
+                  <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
+                    {activeComp.historicalChanges.map((hc, i) => (
+                      <div key={i} className="p-3.5 text-xs">
+                        <div className="flex items-center justify-between text-[#686864]">
+                          <span className="font-mono-num">{hc.date}</span>
+                          <span>{hc.source}</span>
+                        </div>
+                        <div className="text-sm text-[#242424] mt-1">{hc.change}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -742,7 +813,9 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                   </div>
                   <div className="p-2.5 rounded-[8px] bg-white border border-[#E6E6E2] text-xs">
                     <div className="text-[#686864]">Active Quadrant</div>
-                    <div className="font-semibold text-[#242424] mt-0.5">{proximity.ownQuadrant}</div>
+                    <div className="font-semibold text-[#242424] mt-0.5">
+                      {proximity.ownQuadrant}
+                    </div>
                   </div>
                 </div>
 
@@ -753,12 +826,18 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                       key={item.competitor.id}
                       className="flex items-center justify-between text-xs bg-white px-3 py-2 rounded-[8px] border border-[#E6E6E2]"
                     >
-                      <span className="truncate font-medium text-[#242424]">{item.competitor.name}</span>
-                      <span className="font-mono-num text-[#686864] shrink-0">{item.distance}u</span>
+                      <span className="truncate font-medium text-[#242424]">
+                        {item.competitor.name}
+                      </span>
+                      <span className="font-mono-num text-[#686864] shrink-0">
+                        {item.distance}u
+                      </span>
                     </div>
                   ))}
                   {proximity.nearest.length === 0 && (
-                    <div className="text-xs text-[#686864]">Add competitors to measure proximity.</div>
+                    <div className="text-xs text-[#686864]">
+                      Add competitors to measure proximity.
+                    </div>
                   )}
                 </div>
               </div>
@@ -772,7 +851,9 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                   <th className="p-3.5 font-semibold text-[#686864]">Dimension</th>
                   <th className="p-3.5 font-semibold text-[#C44D00]">{state.brain.businessName}</th>
                   {state.competitors.slice(0, 3).map((c) => (
-                    <th key={c.id} className="p-3.5 font-semibold text-[#242424]">{c.name}</th>
+                    <th key={c.id} className="p-3.5 font-semibold text-[#242424]">
+                      {c.name}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -780,22 +861,38 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                 <tr>
                   <td className="p-3.5 font-medium text-[#686864]">Pricing</td>
                   <td className="p-3.5 font-semibold">$15 Flight / $18 mo</td>
-                  {state.competitors.slice(0, 3).map((c) => <td key={c.id} className="p-3.5 font-mono-num">{c.priceRange}</td>)}
+                  {state.competitors.slice(0, 3).map((c) => (
+                    <td key={c.id} className="p-3.5 font-mono-num">
+                      {c.priceRange}
+                    </td>
+                  ))}
                 </tr>
                 <tr>
                   <td className="p-3.5 font-medium text-[#686864]">Core Offering</td>
                   <td className="p-3.5">48h Tuesday Roast Subscription</td>
-                  {state.competitors.slice(0, 3).map((c) => <td key={c.id} className="p-3.5">{c.category}</td>)}
+                  {state.competitors.slice(0, 3).map((c) => (
+                    <td key={c.id} className="p-3.5">
+                      {c.category}
+                    </td>
+                  ))}
                 </tr>
                 <tr>
                   <td className="p-3.5 font-medium text-[#686864]">Digital Experience</td>
                   <td className="p-3.5">Grind-calibrated QR + 1-click pause</td>
-                  {state.competitors.slice(0, 3).map((c) => <td key={c.id} className="p-3.5">{c.websiteAnalysis.clarityScore}</td>)}
+                  {state.competitors.slice(0, 3).map((c) => (
+                    <td key={c.id} className="p-3.5">
+                      {c.websiteAnalysis.clarityScore}
+                    </td>
+                  ))}
                 </tr>
                 <tr>
                   <td className="p-3.5 font-medium text-[#686864]">Differentiation</td>
                   <td className="p-3.5">Warm architectural clarity + 48h stamp</td>
-                  {state.competitors.slice(0, 3).map((c) => <td key={c.id} className="p-3.5">{c.brandPositioningDetail.archetype}</td>)}
+                  {state.competitors.slice(0, 3).map((c) => (
+                    <td key={c.id} className="p-3.5">
+                      {c.brandPositioningDetail.archetype}
+                    </td>
+                  ))}
                 </tr>
               </tbody>
             </table>
@@ -809,20 +906,22 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                 description="Filter verified customer friction clusters across tracked competitors to sharpen your wedge"
               />
               <div className="flex flex-wrap items-center gap-1.5">
-                {(['All', 'Freshness', 'Pricing', 'Onboarding', 'Delivery'] as const).map((topic) => (
-                  <button
-                    key={topic}
-                    type="button"
-                    onClick={() => setComplaintTopic(topic)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-[8px] border cursor-pointer transition-colors ${
-                      complaintTopic === topic
-                        ? 'bg-[#171717] text-white border-[#171717]'
-                        : 'bg-[#F5F5F4] text-[#242424] border-[#E6E6E2] hover:border-[#D0D0C8]'
-                    }`}
-                  >
-                    {topic}
-                  </button>
-                ))}
+                {(['All', 'Freshness', 'Pricing', 'Onboarding', 'Delivery'] as const).map(
+                  (topic) => (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => setComplaintTopic(topic)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-[8px] border cursor-pointer transition-colors ${
+                        complaintTopic === topic
+                          ? 'bg-[#171717] text-white border-[#171717]'
+                          : 'bg-[#F5F5F4] text-[#242424] border-[#E6E6E2] hover:border-[#D0D0C8]'
+                      }`}
+                    >
+                      {topic}
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
@@ -862,7 +961,10 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {state.gapAnalysis.map((gap) => (
-              <div key={gap.id} className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised">
+              <div
+                key={gap.id}
+                className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold text-[#C44D00]">{gap.dimension}</span>
                   <PriorityBadge priority={gap.impact} />
@@ -904,19 +1006,42 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                 </h2>
               </div>
               <StatusBadge
-                status={state.competitiveStrategy.savedToBrain ? 'Synced to Business Brain' : 'Draft Strategy'}
+                status={
+                  state.competitiveStrategy.savedToBrain
+                    ? 'Synced to Business Brain'
+                    : 'Draft Strategy'
+                }
                 tone="success"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { label: 'Where should we compete?', text: state.competitiveStrategy.whereToCompete, icon: <Target className="w-4 h-4 text-[#FF8A36]" /> },
-                { label: 'Where should we differentiate?', text: state.competitiveStrategy.whereToDifferentiate, icon: <Sparkles className="w-4 h-4 text-[#FF8A36]" /> },
-                { label: 'What should we avoid?', text: state.competitiveStrategy.whatToAvoid, icon: <ShieldAlert className="w-4 h-4 text-[#FF8A36]" /> },
-                { label: 'Which customer segment should we target?', text: state.competitiveStrategy.targetSegment, icon: <CheckCircle2 className="w-4 h-4 text-[#FF8A36]" /> },
+                {
+                  label: 'Where should we compete?',
+                  text: state.competitiveStrategy.whereToCompete,
+                  icon: <Target className="w-4 h-4 text-[#FF8A36]" />,
+                },
+                {
+                  label: 'Where should we differentiate?',
+                  text: state.competitiveStrategy.whereToDifferentiate,
+                  icon: <Sparkles className="w-4 h-4 text-[#FF8A36]" />,
+                },
+                {
+                  label: 'What should we avoid?',
+                  text: state.competitiveStrategy.whatToAvoid,
+                  icon: <ShieldAlert className="w-4 h-4 text-[#FF8A36]" />,
+                },
+                {
+                  label: 'Which customer segment should we target?',
+                  text: state.competitiveStrategy.targetSegment,
+                  icon: <CheckCircle2 className="w-4 h-4 text-[#FF8A36]" />,
+                },
               ].map((item) => (
-                <div key={item.label} className="p-4 rounded-[12px] bg-[#242424] border border-[#323232]">
+                <div
+                  key={item.label}
+                  className="p-4 rounded-[12px] bg-[#242424] border border-[#323232]"
+                >
                   <div className="flex items-center gap-2 text-xs font-semibold text-[#FF8A36]">
                     {item.icon}
                     <span>{item.label}</span>
@@ -928,7 +1053,9 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
 
             <div className="p-4 rounded-[12px] bg-[#242424] border border-[#FF7417]/40">
               <div className="text-xs font-semibold text-[#FF8A36]">Defensible Moat</div>
-              <p className="mt-1 text-sm text-white leading-relaxed">{state.competitiveStrategy.potentialMoat}</p>
+              <p className="mt-1 text-sm text-white leading-relaxed">
+                {state.competitiveStrategy.potentialMoat}
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
@@ -1003,7 +1130,9 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
         title="Add Competitor & Enable Watchlist"
       />
 
-      <JourneyNextStep currentRoute={sectionTab === 'watch' ? 'market-watch' : 'competitive-intelligence'} />
+      <JourneyNextStep
+        currentRoute={sectionTab === 'watch' ? 'market-watch' : 'competitive-intelligence'}
+      />
     </div>
   );
 };

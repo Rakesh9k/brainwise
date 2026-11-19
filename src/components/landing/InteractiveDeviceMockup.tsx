@@ -15,10 +15,35 @@ const DEVICE_TABS: { id: ShowcaseStepId; label: string; dept: string }[] = [
 ];
 
 const COMPETITOR_DOTS = [
-  { id: 'roastery', name: 'Roastery House', x: 34, y: 38, note: 'Café-first loyalty · Weak D2C urgency' },
-  { id: 'coffeeco', name: 'The Coffee Co.', x: 56, y: 42, note: 'Wide catalog · Stale marketplace stock' },
-  { id: 'monolith', name: 'Monolith Labs', x: 78, y: 26, note: 'Ultra-niche purist · High jargon barrier' },
-  { id: 'solstice', name: 'Solstice Craft', x: 80, y: 78, note: '48h roast dispatch + warm precision', active: true },
+  {
+    id: 'roastery',
+    name: 'Roastery House',
+    x: 34,
+    y: 38,
+    note: 'Café-first loyalty · Weak D2C urgency',
+  },
+  {
+    id: 'coffeeco',
+    name: 'The Coffee Co.',
+    x: 56,
+    y: 42,
+    note: 'Wide catalog · Stale marketplace stock',
+  },
+  {
+    id: 'monolith',
+    name: 'Monolith Labs',
+    x: 78,
+    y: 26,
+    note: 'Ultra-niche purist · High jargon barrier',
+  },
+  {
+    id: 'solstice',
+    name: 'Solstice Craft',
+    x: 80,
+    y: 78,
+    note: '48h roast dispatch + warm precision',
+    active: true,
+  },
 ];
 
 export const InteractiveDeviceMockup: React.FC<{
@@ -42,9 +67,7 @@ export const InteractiveDeviceMockup: React.FC<{
   const completedCount = previewTasks.filter((t) => t.done).length;
 
   const togglePreviewTask = (id: string) => {
-    setPreviewTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
-    );
+    setPreviewTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
   };
 
   return (
@@ -165,9 +188,7 @@ export const InteractiveDeviceMockup: React.FC<{
                         </div>
                       </div>
                       <div className="p-3.5 rounded-[10px] bg-white border border-[#E6E6E2]">
-                        <div className="text-[11px] text-[#686864]">
-                          SAM ({samPct}% Specialty)
-                        </div>
+                        <div className="text-[11px] text-[#686864]">SAM ({samPct}% Specialty)</div>
                         <div className="text-base font-bold font-mono-num mt-0.5 text-[#242424]">
                           {sizing.samBand}
                         </div>
@@ -252,8 +273,8 @@ export const InteractiveDeviceMockup: React.FC<{
                               dot.active
                                 ? 'bg-[#FF7417] text-white shadow-sm'
                                 : isSelected
-                                ? 'bg-[#171717] text-white'
-                                : 'bg-[#F5F5F4] text-[#242424] border border-[#E6E6E2] hover:border-[#FF7417]'
+                                  ? 'bg-[#171717] text-white'
+                                  : 'bg-[#F5F5F4] text-[#242424] border border-[#E6E6E2] hover:border-[#FF7417]'
                             }`}
                           >
                             {dot.name}
@@ -342,9 +363,7 @@ export const InteractiveDeviceMockup: React.FC<{
                                 className="w-7 h-7 mx-auto rounded-[7px] border border-[#E6E6E2]"
                                 style={{ backgroundColor: hex }}
                               />
-                              <div className="text-[9px] font-mono-num text-[#686864]">
-                                {hex}
-                              </div>
+                              <div className="text-[9px] font-mono-num text-[#686864]">{hex}</div>
                             </div>
                           ))}
                         </div>
@@ -399,9 +418,7 @@ export const InteractiveDeviceMockup: React.FC<{
                             </span>
                             <span
                               className={`text-xs font-medium truncate ${
-                                task.done
-                                  ? 'line-through text-[#8E8E88]'
-                                  : 'text-[#242424]'
+                                task.done ? 'line-through text-[#8E8E88]' : 'text-[#242424]'
                               }`}
                             >
                               {task.label}
@@ -420,7 +437,8 @@ export const InteractiveDeviceMockup: React.FC<{
               {/* Persistent Mobile/Small Shortcut */}
               <div className="pt-4 mt-5 border-t border-[#E6E6E2] xl:pr-64 flex items-center justify-between gap-3 text-xs">
                 <span className="text-[#686864]">
-                  Synced to <strong className="text-[#242424]">Solstice Craft Coffee</strong> Business Brain
+                  Synced to <strong className="text-[#242424]">Solstice Craft Coffee</strong>{' '}
+                  Business Brain
                 </span>
                 <button
                   type="button"
@@ -467,9 +485,7 @@ export const InteractiveDeviceMockup: React.FC<{
                 <div className="font-heading text-base font-bold text-white">
                   {selectedRival.name}
                 </div>
-                <p className="text-[11px] text-[#B8B8A2] leading-snug">
-                  {selectedRival.note}
-                </p>
+                <p className="text-[11px] text-[#B8B8A2] leading-snug">{selectedRival.note}</p>
               </>
             )}
             {activeStep === '03' && (

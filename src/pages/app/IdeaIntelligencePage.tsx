@@ -75,7 +75,9 @@ export const IdeaIntelligencePage: React.FC = () => {
   } = useBrainWise();
 
   const [view, setView] = useState<'home' | 'wizard' | 'progress' | 'report'>('home');
-  const [selectedReportId, setSelectedReportId] = useState(state.activeReportId || state.reports[0]?.id);
+  const [selectedReportId, setSelectedReportId] = useState(
+    state.activeReportId || state.reports[0]?.id
+  );
   const [scenarioChoiceB, setScenarioChoiceB] = useState<'regional' | 'custom'>(
     state.customScenarioB ? 'custom' : 'regional'
   );
@@ -116,8 +118,7 @@ export const IdeaIntelligencePage: React.FC = () => {
     setExpandedSections(nextState);
   };
 
-  const activeReport =
-    state.reports.find((r) => r.id === selectedReportId) ?? state.reports[0];
+  const activeReport = state.reports.find((r) => r.id === selectedReportId) ?? state.reports[0];
 
   useEffect(() => {
     if (prefilledIdeaPrompt.trim()) {
@@ -143,13 +144,13 @@ export const IdeaIntelligencePage: React.FC = () => {
           { label: `Step ${wizardStep} of 7` },
         ]
       : view === 'progress'
-      ? [{ label: 'Research Pipeline' }, { label: 'Synthesizing Dossier' }]
-      : view === 'report' && activeReport
-      ? [
-          { label: 'Research Reports', onClick: () => setView('home') },
-          { label: activeReport.title },
-        ]
-      : [],
+        ? [{ label: 'Research Pipeline' }, { label: 'Synthesizing Dossier' }]
+        : view === 'report' && activeReport
+          ? [
+              { label: 'Research Reports', onClick: () => setView('home') },
+              { label: activeReport.title },
+            ]
+          : [],
     [view, wizardStep, activeReport?.id, activeReport?.title]
   );
 
@@ -205,7 +206,8 @@ export const IdeaIntelligencePage: React.FC = () => {
       .catch((err) => {
         if (cancelled) return;
         window.clearInterval(interval);
-        const msg = err instanceof Error ? err.message : 'Unable to reach BrainWise AI synthesis endpoint.';
+        const msg =
+          err instanceof Error ? err.message : 'Unable to reach BrainWise AI synthesis endpoint.';
         setSynthesisError(msg);
       });
 
@@ -258,7 +260,10 @@ export const IdeaIntelligencePage: React.FC = () => {
   if (view === 'wizard') {
     return (
       <div className="space-y-6">
-        <BusinessBrainContextBanner departmentLabel="Idea Intelligence" contextKey="ideaIntelligence" />
+        <BusinessBrainContextBanner
+          departmentLabel="Idea Intelligence"
+          contextKey="ideaIntelligence"
+        />
         <div className="max-w-2xl mx-auto rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 sm:p-8 space-y-6 bw-surface-raised">
           <div className="flex items-center justify-between">
             <button
@@ -323,7 +328,12 @@ export const IdeaIntelligencePage: React.FC = () => {
                 className="w-full h-10 px-3.5 text-sm border border-[#E6E6E2] rounded-[10px] bw-surface-inset focus:outline-none focus:border-[#FF7417]"
               />
               <div className="flex flex-wrap gap-2">
-                {['Specialty Food & Beverage', 'B2B SaaS & Productivity', 'Consumer Health', 'Boutique Hospitality'].map((preset) => (
+                {[
+                  'Specialty Food & Beverage',
+                  'B2B SaaS & Productivity',
+                  'Consumer Health',
+                  'Boutique Hospitality',
+                ].map((preset) => (
                   <button
                     key={preset}
                     type="button"
@@ -367,7 +377,12 @@ export const IdeaIntelligencePage: React.FC = () => {
                 className="w-full h-10 px-3.5 text-sm border border-[#E6E6E2] rounded-[10px] bw-surface-inset focus:outline-none focus:border-[#FF7417]"
               />
               <div className="flex flex-wrap gap-2">
-                {['India (Tier-1 Metros)', 'North America', 'United Kingdom & Europe', 'Global Remote'].map((g) => (
+                {[
+                  'India (Tier-1 Metros)',
+                  'North America',
+                  'United Kingdom & Europe',
+                  'Global Remote',
+                ].map((g) => (
                   <button
                     key={g}
                     type="button"
@@ -394,8 +409,14 @@ export const IdeaIntelligencePage: React.FC = () => {
                 {(
                   [
                     { id: 'Rapid Pulse', desc: 'Fast demand check & top 3 risks' },
-                    { id: 'Standard Validation', desc: 'Market sizing bands, segments & pricing ladder' },
-                    { id: 'Deep Market Dossier', desc: 'Full 15-section commercial validation + startup costs + experiments' },
+                    {
+                      id: 'Standard Validation',
+                      desc: 'Market sizing bands, segments & pricing ladder',
+                    },
+                    {
+                      id: 'Deep Market Dossier',
+                      desc: 'Full 15-section commercial validation + startup costs + experiments',
+                    },
                   ] as const
                 ).map((d) => (
                   <button
@@ -403,7 +424,9 @@ export const IdeaIntelligencePage: React.FC = () => {
                     type="button"
                     onClick={() => setDepth(d.id)}
                     className={`w-full text-left p-4 rounded-[10px] border cursor-pointer transition-colors ${
-                      depth === d.id ? 'border-[#FF7417] bg-[#FFF0E5]/55' : 'border-[#E6E6E2] hover:bg-[#F5F5F4]'
+                      depth === d.id
+                        ? 'border-[#FF7417] bg-[#FFF0E5]/55'
+                        : 'border-[#E6E6E2] hover:bg-[#F5F5F4]'
                     }`}
                   >
                     <div className="text-sm font-semibold text-[#242424]">{d.id}</div>
@@ -420,14 +443,32 @@ export const IdeaIntelligencePage: React.FC = () => {
                 6. Review research scope
               </h2>
               <div className="rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2] p-4 space-y-2.5 text-xs">
-                <div><span className="text-[#686864]">Concept:</span> <strong className="text-[#242424]">{ideaPrompt || 'Using Business Brain concept'}</strong></div>
-                <div><span className="text-[#686864]">Industry:</span> <strong className="text-[#242424]">{industry}</strong></div>
-                <div><span className="text-[#686864]">Target Market:</span> <strong className="text-[#242424]">{targetMarket}</strong></div>
-                <div><span className="text-[#686864]">Geography:</span> <strong className="text-[#242424]">{geography}</strong></div>
-                <div><span className="text-[#686864]">Depth:</span> <strong className="text-[#C44D00]">{depth}</strong></div>
+                <div>
+                  <span className="text-[#686864]">Concept:</span>{' '}
+                  <strong className="text-[#242424]">
+                    {ideaPrompt || 'Using Business Brain concept'}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-[#686864]">Industry:</span>{' '}
+                  <strong className="text-[#242424]">{industry}</strong>
+                </div>
+                <div>
+                  <span className="text-[#686864]">Target Market:</span>{' '}
+                  <strong className="text-[#242424]">{targetMarket}</strong>
+                </div>
+                <div>
+                  <span className="text-[#686864]">Geography:</span>{' '}
+                  <strong className="text-[#242424]">{geography}</strong>
+                </div>
+                <div>
+                  <span className="text-[#686864]">Depth:</span>{' '}
+                  <strong className="text-[#C44D00]">{depth}</strong>
+                </div>
               </div>
               <p className="text-xs text-[#686864]">
-                Generates a structured commercial research dossier grounded in your Business Brain context with transparent estimates and editable assumptions.
+                Generates a structured commercial research dossier grounded in your Business Brain
+                context with transparent estimates and editable assumptions.
               </p>
             </div>
           )}
@@ -438,7 +479,8 @@ export const IdeaIntelligencePage: React.FC = () => {
                 7. Ready to launch Idea Intelligence
               </h2>
               <p className={`${typeClass.bodySm} text-[#686864]`}>
-                Click Start Research to run the 8-stage market synthesis and compile your 15-section deliverable.
+                Click Start Research to run the 8-stage market synthesis and compile your 15-section
+                deliverable.
               </p>
             </div>
           )}
@@ -457,7 +499,9 @@ export const IdeaIntelligencePage: React.FC = () => {
                 type="button"
                 onClick={() => {
                   if (wizardStep === 1 && !ideaPrompt.trim()) {
-                    setWizardError('Describe your concept above, or click "Use Business Brain concept" to prefill.');
+                    setWizardError(
+                      'Describe your concept above, or click "Use Business Brain concept" to prefill.'
+                    );
                     return;
                   }
                   setWizardError(null);
@@ -488,11 +532,11 @@ export const IdeaIntelligencePage: React.FC = () => {
     const pct = Math.round(((progressStageIdx + 1) / RESEARCH_STAGES.length) * 100);
     return (
       <div className="space-y-6">
-        <BusinessBrainContextBanner departmentLabel="Idea Intelligence" contextKey="ideaIntelligence" />
-        <IntelligenceSurface
-          variant="dark"
-          className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6"
-        >
+        <BusinessBrainContextBanner
+          departmentLabel="Idea Intelligence"
+          contextKey="ideaIntelligence"
+        />
+        <IntelligenceSurface variant="dark" className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3.5">
               <IntelligenceOrb size="md" state="thinking" />
@@ -572,8 +616,8 @@ export const IdeaIntelligencePage: React.FC = () => {
                     current
                       ? 'border-[#FF7417]/70 bg-[#252525] text-white font-semibold'
                       : done
-                      ? 'border-[#252525] bg-[#1C1C1C] text-[#4FA87B]'
-                      : 'border-[#222222] bg-[#171717] text-[#858585]'
+                        ? 'border-[#252525] bg-[#1C1C1C] text-[#4FA87B]'
+                        : 'border-[#222222] bg-[#171717] text-[#858585]'
                   }`}
                 >
                   <span className="truncate">{stage}</span>
@@ -602,7 +646,10 @@ export const IdeaIntelligencePage: React.FC = () => {
         skeleton={<DossierPreviewSkeleton />}
         className="space-y-6"
       >
-        <BusinessBrainContextBanner departmentLabel="Idea Intelligence" contextKey="ideaIntelligence" />
+        <BusinessBrainContextBanner
+          departmentLabel="Idea Intelligence"
+          contextKey="ideaIntelligence"
+        />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button
@@ -696,7 +743,9 @@ export const IdeaIntelligencePage: React.FC = () => {
                   onClick={() => {
                     setExpandedSections((prev) => ({ ...prev, [num]: true }));
                     window.requestAnimationFrame(() => {
-                      document.getElementById(`section-${num}`)?.scrollIntoView({ behavior: 'smooth' });
+                      document
+                        .getElementById(`section-${num}`)
+                        ?.scrollIntoView({ behavior: 'smooth' });
                     });
                   }}
                   className={`w-full text-left px-2 py-1.5 rounded-[7px] transition-colors flex items-center gap-2 cursor-pointer ${
@@ -712,518 +761,569 @@ export const IdeaIntelligencePage: React.FC = () => {
             </nav>
           </aside>
 
-        <div className="flex-1 min-w-0 w-full rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 sm:p-8 bw-surface-raised">
-          <div className="pb-6 border-b border-[#E6E6E2]">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-[#686864] mb-2">
-              <span className="font-medium text-[#C44D00]">{activeReport.depth}</span>
-              <span aria-hidden="true">·</span>
-              <span>{activeReport.industry}</span>
-              <span aria-hidden="true">·</span>
-              <span>{activeReport.geography}</span>
-              <span aria-hidden="true">·</span>
-              <span className="font-mono-num">Researched {activeReport.createdAt}</span>
-            </div>
-            <h1 className={`${typeClass.h2} text-[#171717]`}>
-              {activeReport.title}
-            </h1>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5">
-              <div className="flex flex-wrap items-center gap-3">
-                <StatusBadge status={`Confidence: ${activeReport.overallConfidence}`} tone="success" />
-                <StatusBadge status={`Signal: ${activeReport.viabilitySignal}`} tone="accent" />
-                {activeReport.truthCheck && (
-                  <span
-                    title={`Truth Engine verification score: ${activeReport.truthCheck.truthScore}% grounded against confirmed Business Brain facts`}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                      activeReport.truthCheck.status === 'VERIFIED'
-                        ? 'bg-[#EAF5EF] text-[#24724E] border-[#CDE5D7]'
-                        : activeReport.truthCheck.status === 'REMEDIATED'
-                        ? 'bg-[#FFF4E5] text-[#A85E16] border-[#FBE0C2]'
-                        : 'bg-[#FDF2F2] text-[#BC3E3E] border-[#F8D7D7]'
-                    }`}
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    Truth Score: {activeReport.truthCheck.truthScore}%
+          <div className="flex-1 min-w-0 w-full rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 sm:p-8 bw-surface-raised">
+            <div className="pb-6 border-b border-[#E6E6E2]">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[#686864] mb-2">
+                <span className="font-medium text-[#C44D00]">{activeReport.depth}</span>
+                <span aria-hidden="true">·</span>
+                <span>{activeReport.industry}</span>
+                <span aria-hidden="true">·</span>
+                <span>{activeReport.geography}</span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono-num">Researched {activeReport.createdAt}</span>
+              </div>
+              <h1 className={`${typeClass.h2} text-[#171717]`}>{activeReport.title}</h1>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <StatusBadge
+                    status={`Confidence: ${activeReport.overallConfidence}`}
+                    tone="success"
+                  />
+                  <StatusBadge status={`Signal: ${activeReport.viabilitySignal}`} tone="accent" />
+                  {activeReport.truthCheck && (
+                    <span
+                      title={`Truth Engine verification score: ${activeReport.truthCheck.truthScore}% grounded against confirmed Business Brain facts`}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                        activeReport.truthCheck.status === 'VERIFIED'
+                          ? 'bg-[#EAF5EF] text-[#24724E] border-[#CDE5D7]'
+                          : activeReport.truthCheck.status === 'REMEDIATED'
+                            ? 'bg-[#FFF4E5] text-[#A85E16] border-[#FBE0C2]'
+                            : 'bg-[#FDF2F2] text-[#BC3E3E] border-[#F8D7D7]'
+                      }`}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      Truth Score: {activeReport.truthCheck.truthScore}%
+                    </span>
+                  )}
+                  <span className="text-xs text-[#686864]">
+                    Demo Deliverable · Verified references and modelled estimates separated
                   </span>
-                )}
-                <span className="text-xs text-[#686864]">
-                  Demo Deliverable · Verified references and modelled estimates separated
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={toggleAllReportSections}
-                className="text-xs font-medium text-[#52524E] hover:text-[#171717] px-3 py-1 rounded-full bw-ceramic-control transition-colors cursor-pointer no-print"
-              >
-                {allReportSectionsExpanded ? 'Collapse sections' : 'Expand all 15 sections'}
-              </button>
-            </div>
-          </div>
-
-          <ResearchReportSection
-            id="section-01"
-            number="01"
-            title="Executive Summary"
-            factType="mixed"
-            collapsible
-            expanded={Boolean(expandedSections['01'])}
-            onToggle={() => toggleReportSection('01')}
-          >
-            <p>{activeReport.executiveSummary}</p>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-02"
-            number="02"
-            title="Market Overview"
-            factType={activeReport.marketOverview.factType}
-            collapsible
-            expanded={Boolean(expandedSections['02'])}
-            onToggle={() => toggleReportSection('02')}
-          >
-            <p>{activeReport.marketOverview.text}</p>
-            <div className="mt-2 text-xs text-[#686864]">
-              Sources: {activeReport.marketOverview.sources.join(' · ')}
-            </div>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-03"
-            number="03"
-            title="TAM, SAM and SOM (Range Bands & Editable Assumptions)"
-            factType="estimate"
-            collapsible
-            expanded={Boolean(expandedSections['03'])}
-            onToggle={() => toggleReportSection('03')}
-          >
-            <p className="text-xs text-[#686864] mb-4">
-              BrainWise uses realistic range bands rather than false single-point precision. Adjust assumptions below to test sensitivity.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-              <div className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]">
-                <div className="text-xs text-[#686864]">TAM (Total Addressable)</div>
-                <div className="text-xl font-bold font-mono-num text-[#242424] mt-1">{dynamicBands.tamBand}</div>
-                <div className="text-xs text-[#686864] mt-1.5">{activeReport.tamSamSom.tamBasis}</div>
-              </div>
-              <div className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]">
-                <div className="text-xs text-[#686864]">SAM (Serviceable Available)</div>
-                <div className="text-xl font-bold font-mono-num text-[#242424] mt-1">{dynamicBands.samBand}</div>
-                <div className="text-xs text-[#686864] mt-1.5">{activeReport.tamSamSom.samBasis}</div>
-              </div>
-              <div className="p-4 rounded-[10px] bg-[#FFF0E5]/70 border border-[#FFD3B3]">
-                <div className="text-xs text-[#C44D00] font-medium">SOM (3-Year Target)</div>
-                <div className="text-xl font-bold font-mono-num text-[#242424] mt-1">{dynamicBands.somBand}</div>
-                <div className="text-xs text-[#686864] mt-1.5">{activeReport.tamSamSom.somBasis}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleAllReportSections}
+                  className="text-xs font-medium text-[#52524E] hover:text-[#171717] px-3 py-1 rounded-full bw-ceramic-control transition-colors cursor-pointer no-print"
+                >
+                  {allReportSectionsExpanded ? 'Collapse sections' : 'Expand all 15 sections'}
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-[10px] border border-[#E6E6E2] bg-[#FFFFFF]">
-              {activeReport.tamSamSom.assumptions.map((a) => (
-                <div key={a.id} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#686864]">{a.label}</span>
-                    <span className="font-mono-num font-semibold text-[#C44D00]">
-                      {a.value} {a.unit}
+            <ResearchReportSection
+              id="section-01"
+              number="01"
+              title="Executive Summary"
+              factType="mixed"
+              collapsible
+              expanded={Boolean(expandedSections['01'])}
+              onToggle={() => toggleReportSection('01')}
+            >
+              <p>{activeReport.executiveSummary}</p>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-02"
+              number="02"
+              title="Market Overview"
+              factType={activeReport.marketOverview.factType}
+              collapsible
+              expanded={Boolean(expandedSections['02'])}
+              onToggle={() => toggleReportSection('02')}
+            >
+              <p>{activeReport.marketOverview.text}</p>
+              <div className="mt-2 text-xs text-[#686864]">
+                Sources: {activeReport.marketOverview.sources.join(' · ')}
+              </div>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-03"
+              number="03"
+              title="TAM, SAM and SOM (Range Bands & Editable Assumptions)"
+              factType="estimate"
+              collapsible
+              expanded={Boolean(expandedSections['03'])}
+              onToggle={() => toggleReportSection('03')}
+            >
+              <p className="text-xs text-[#686864] mb-4">
+                BrainWise uses realistic range bands rather than false single-point precision.
+                Adjust assumptions below to test sensitivity.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                <div className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]">
+                  <div className="text-xs text-[#686864]">TAM (Total Addressable)</div>
+                  <div className="text-xl font-bold font-mono-num text-[#242424] mt-1">
+                    {dynamicBands.tamBand}
+                  </div>
+                  <div className="text-xs text-[#686864] mt-1.5">
+                    {activeReport.tamSamSom.tamBasis}
+                  </div>
+                </div>
+                <div className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]">
+                  <div className="text-xs text-[#686864]">SAM (Serviceable Available)</div>
+                  <div className="text-xl font-bold font-mono-num text-[#242424] mt-1">
+                    {dynamicBands.samBand}
+                  </div>
+                  <div className="text-xs text-[#686864] mt-1.5">
+                    {activeReport.tamSamSom.samBasis}
+                  </div>
+                </div>
+                <div className="p-4 rounded-[10px] bg-[#FFF0E5]/70 border border-[#FFD3B3]">
+                  <div className="text-xs text-[#C44D00] font-medium">SOM (3-Year Target)</div>
+                  <div className="text-xl font-bold font-mono-num text-[#242424] mt-1">
+                    {dynamicBands.somBand}
+                  </div>
+                  <div className="text-xs text-[#686864] mt-1.5">
+                    {activeReport.tamSamSom.somBasis}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-[10px] border border-[#E6E6E2] bg-[#FFFFFF]">
+                {activeReport.tamSamSom.assumptions.map((a) => (
+                  <div key={a.id} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#686864]">{a.label}</span>
+                      <span className="font-mono-num font-semibold text-[#C44D00]">
+                        {a.value} {a.unit}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={a.min}
+                      max={a.max}
+                      step={a.step}
+                      value={a.value}
+                      aria-label={a.label}
+                      onChange={(e) =>
+                        updateReportAssumption(activeReport.id, a.id, parseFloat(e.target.value))
+                      }
+                      className="w-full accent-[#FF7417] cursor-pointer"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {(() => {
+                const baseScenario: MarketScenarioPreset = {
+                  id: 'conservative',
+                  name: 'Conservative Metro Pilot (Current Sliders)',
+                  tamBillion: tamVal,
+                  samSharePct: samVal,
+                  somSharePct: somVal,
+                  targetArpuUsd: 20,
+                  breakEvenMonths: 7,
+                };
+                const regionalPreset: MarketScenarioPreset = {
+                  id: 'regional',
+                  name: 'Regional Expansion (4-City Rollout)',
+                  tamBillion: Number((tamVal * 1.35).toFixed(1)),
+                  samSharePct: Math.min(35, Math.round(samVal * 1.4)),
+                  somSharePct: Math.min(8, Number((somVal * 1.5).toFixed(1))),
+                  targetArpuUsd: 24,
+                  breakEvenMonths: 11,
+                };
+                const scenarioB =
+                  scenarioChoiceB === 'custom' && customScenarioB
+                    ? customScenarioB
+                    : regionalPreset;
+                const comparison = compareMarketScenarios(baseScenario, scenarioB);
+
+                return (
+                  <div className="mt-5 rounded-[12px] border border-[#E6E6E2] bg-[#F5F5F4] p-4 sm:p-5 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-xs font-semibold text-[#242424]">
+                          Side-by-Side Scenario Comparison
+                        </div>
+                        <p className="text-[11px] text-[#686864]">
+                          Benchmark your current slider assumptions against a regional rollout or
+                          saved custom target.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 no-print">
+                        <button
+                          type="button"
+                          onClick={() => setScenarioChoiceB('regional')}
+                          className={`px-2.5 py-1 text-[11px] font-medium rounded-[6px] border cursor-pointer ${
+                            scenarioChoiceB === 'regional'
+                              ? 'bg-[#171717] text-white border-[#171717]'
+                              : 'bg-white text-[#686864] border-[#E6E6E2]'
+                          }`}
+                        >
+                          Regional Expansion
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCustomScenarioB({
+                              id: 'custom',
+                              name: 'Saved Custom Snapshot',
+                              tamBillion: tamVal,
+                              samSharePct: samVal,
+                              somSharePct: somVal,
+                              targetArpuUsd: 22,
+                              breakEvenMonths: 9,
+                            });
+                            setScenarioChoiceB('custom');
+                            showToast('Saved current slider assumptions as Scenario B.');
+                          }}
+                          className={`px-2.5 py-1 text-[11px] font-medium rounded-[6px] border cursor-pointer ${
+                            scenarioChoiceB === 'custom'
+                              ? 'bg-[#FF7417] text-white border-[#FF7417]'
+                              : 'bg-white text-[#242424] border-[#E6E6E2] hover:border-[#FF7417]'
+                          }`}
+                        >
+                          Save Current Sliders as Scenario B
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      <div className="p-3.5 rounded-[10px] bg-white border border-[#E6E6E2] space-y-1.5">
+                        <div className="font-semibold text-[#242424]">
+                          {comparison.scenarioA.name}
+                        </div>
+                        <div className="flex justify-between text-[#686864]">
+                          <span>3-Year SOM Band</span>
+                          <strong className="font-mono-num text-[#242424]">
+                            {comparison.scenarioA.somBand}
+                          </strong>
+                        </div>
+                        <div className="flex justify-between text-[#686864]">
+                          <span>SOM Midpoint · ARPU</span>
+                          <strong className="font-mono-num text-[#242424]">
+                            ${comparison.scenarioA.somMidpointMillion}M · $
+                            {comparison.scenarioA.targetArpuUsd}/mo
+                          </strong>
+                        </div>
+                        <div className="flex justify-between text-[#686864]">
+                          <span>Estimated Break-Even</span>
+                          <strong className="font-mono-num text-[#242424]">
+                            {comparison.scenarioA.breakEvenMonths} months
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-[10px] bg-white border border-[#FFD3B3] space-y-1.5">
+                        <div className="font-semibold text-[#C44D00]">
+                          {comparison.scenarioB.name}
+                        </div>
+                        <div className="flex justify-between text-[#686864]">
+                          <span>3-Year SOM Band</span>
+                          <strong className="font-mono-num text-[#242424]">
+                            {comparison.scenarioB.somBand}
+                          </strong>
+                        </div>
+                        <div className="flex justify-between text-[#686864]">
+                          <span>SOM Midpoint · ARPU</span>
+                          <strong className="font-mono-num text-[#C44D00]">
+                            ${comparison.scenarioB.somMidpointMillion}M · $
+                            {comparison.scenarioB.targetArpuUsd}/mo
+                          </strong>
+                        </div>
+                        <div className="flex justify-between text-[#686864]">
+                          <span>Break-Even Delta vs Pilot</span>
+                          <strong className="font-mono-num text-[#242424]">
+                            {comparison.breakEvenDeltaMonths >= 0
+                              ? `+${comparison.breakEvenDeltaMonths}`
+                              : comparison.breakEvenDeltaMonths}{' '}
+                            mo ({comparison.somUpsideRatio}× SOM)
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-04"
+              number="04"
+              title="Market Demand"
+              factType="mixed"
+              collapsible
+              expanded={Boolean(expandedSections['04'])}
+              onToggle={() => toggleReportSection('04')}
+            >
+              <p className="mb-3">{activeReport.marketDemand.summary}</p>
+              <div className="space-y-2">
+                {activeReport.marketDemand.signals.map((sig) => (
+                  <div
+                    key={sig.label}
+                    className="p-3 rounded-[8px] bg-[#F5F5F4] flex flex-wrap items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="font-medium text-[#242424]">{sig.label}</span>
+                    <span className="text-[#24724E] font-medium">
+                      {sig.trend} · {sig.factType === 'verified' ? 'Verified' : 'Estimate'}
                     </span>
                   </div>
-                  <input
-                    type="range"
-                    min={a.min}
-                    max={a.max}
-                    step={a.step}
-                    value={a.value}
-                    aria-label={a.label}
-                    onChange={(e) =>
-                      updateReportAssumption(activeReport.id, a.id, parseFloat(e.target.value))
-                    }
-                    className="w-full accent-[#FF7417] cursor-pointer"
-                  />
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ResearchReportSection>
 
-            {(() => {
-              const baseScenario: MarketScenarioPreset = {
-                id: 'conservative',
-                name: 'Conservative Metro Pilot (Current Sliders)',
-                tamBillion: tamVal,
-                samSharePct: samVal,
-                somSharePct: somVal,
-                targetArpuUsd: 20,
-                breakEvenMonths: 7,
-              };
-              const regionalPreset: MarketScenarioPreset = {
-                id: 'regional',
-                name: 'Regional Expansion (4-City Rollout)',
-                tamBillion: Number((tamVal * 1.35).toFixed(1)),
-                samSharePct: Math.min(35, Math.round(samVal * 1.4)),
-                somSharePct: Math.min(8, Number((somVal * 1.5).toFixed(1))),
-                targetArpuUsd: 24,
-                breakEvenMonths: 11,
-              };
-              const scenarioB =
-                scenarioChoiceB === 'custom' && customScenarioB ? customScenarioB : regionalPreset;
-              const comparison = compareMarketScenarios(baseScenario, scenarioB);
-
-              return (
-                <div className="mt-5 rounded-[12px] border border-[#E6E6E2] bg-[#F5F5F4] p-4 sm:p-5 space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <div className="text-xs font-semibold text-[#242424]">
-                        Side-by-Side Scenario Comparison
-                      </div>
-                      <p className="text-[11px] text-[#686864]">
-                        Benchmark your current slider assumptions against a regional rollout or saved custom target.
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 no-print">
-                      <button
-                        type="button"
-                        onClick={() => setScenarioChoiceB('regional')}
-                        className={`px-2.5 py-1 text-[11px] font-medium rounded-[6px] border cursor-pointer ${
-                          scenarioChoiceB === 'regional'
-                            ? 'bg-[#171717] text-white border-[#171717]'
-                            : 'bg-white text-[#686864] border-[#E6E6E2]'
-                        }`}
-                      >
-                        Regional Expansion
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCustomScenarioB({
-                            id: 'custom',
-                            name: 'Saved Custom Snapshot',
-                            tamBillion: tamVal,
-                            samSharePct: samVal,
-                            somSharePct: somVal,
-                            targetArpuUsd: 22,
-                            breakEvenMonths: 9,
-                          });
-                          setScenarioChoiceB('custom');
-                          showToast('Saved current slider assumptions as Scenario B.');
-                        }}
-                        className={`px-2.5 py-1 text-[11px] font-medium rounded-[6px] border cursor-pointer ${
-                          scenarioChoiceB === 'custom'
-                            ? 'bg-[#FF7417] text-white border-[#FF7417]'
-                            : 'bg-white text-[#242424] border-[#E6E6E2] hover:border-[#FF7417]'
-                        }`}
-                      >
-                        Save Current Sliders as Scenario B
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                    <div className="p-3.5 rounded-[10px] bg-white border border-[#E6E6E2] space-y-1.5">
-                      <div className="font-semibold text-[#242424]">{comparison.scenarioA.name}</div>
-                      <div className="flex justify-between text-[#686864]">
-                        <span>3-Year SOM Band</span>
-                        <strong className="font-mono-num text-[#242424]">{comparison.scenarioA.somBand}</strong>
-                      </div>
-                      <div className="flex justify-between text-[#686864]">
-                        <span>SOM Midpoint · ARPU</span>
-                        <strong className="font-mono-num text-[#242424]">
-                          ${comparison.scenarioA.somMidpointMillion}M · ${comparison.scenarioA.targetArpuUsd}/mo
-                        </strong>
-                      </div>
-                      <div className="flex justify-between text-[#686864]">
-                        <span>Estimated Break-Even</span>
-                        <strong className="font-mono-num text-[#242424]">
-                          {comparison.scenarioA.breakEvenMonths} months
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div className="p-3.5 rounded-[10px] bg-white border border-[#FFD3B3] space-y-1.5">
-                      <div className="font-semibold text-[#C44D00]">{comparison.scenarioB.name}</div>
-                      <div className="flex justify-between text-[#686864]">
-                        <span>3-Year SOM Band</span>
-                        <strong className="font-mono-num text-[#242424]">{comparison.scenarioB.somBand}</strong>
-                      </div>
-                      <div className="flex justify-between text-[#686864]">
-                        <span>SOM Midpoint · ARPU</span>
-                        <strong className="font-mono-num text-[#C44D00]">
-                          ${comparison.scenarioB.somMidpointMillion}M · ${comparison.scenarioB.targetArpuUsd}/mo
-                        </strong>
-                      </div>
-                      <div className="flex justify-between text-[#686864]">
-                        <span>Break-Even Delta vs Pilot</span>
-                        <strong className="font-mono-num text-[#242424]">
-                          {comparison.breakEvenDeltaMonths >= 0 ? `+${comparison.breakEvenDeltaMonths}` : comparison.breakEvenDeltaMonths} mo ({comparison.somUpsideRatio}× SOM)
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-04"
-            number="04"
-            title="Market Demand"
-            factType="mixed"
-            collapsible
-            expanded={Boolean(expandedSections['04'])}
-            onToggle={() => toggleReportSection('04')}
-          >
-            <p className="mb-3">{activeReport.marketDemand.summary}</p>
-            <div className="space-y-2">
-              {activeReport.marketDemand.signals.map((sig) => (
-                <div key={sig.label} className="p-3 rounded-[8px] bg-[#F5F5F4] flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-medium text-[#242424]">{sig.label}</span>
-                  <span className="text-[#24724E] font-medium">
-                    {sig.trend} · {sig.factType === 'verified' ? 'Verified' : 'Estimate'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-05"
-            number="05"
-            title="Customer Segments"
-            factType="estimate"
-            collapsible
-            expanded={Boolean(expandedSections['05'])}
-            onToggle={() => toggleReportSection('05')}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {activeReport.customerSegments.map((seg) => (
-                <div key={seg.name} className="p-4 rounded-[10px] border border-[#E6E6E2]">
-                  <div className="text-xs font-mono-num text-[#C44D00]">{seg.share}</div>
-                  <div className="font-semibold text-[#242424] mt-1">{seg.name}</div>
-                  <p className="text-xs text-[#686864] mt-1.5">{seg.need}</p>
-                  <div className="text-[11px] text-[#242424] mt-2 pt-2 border-t border-[#E6E6E2]">
-                    Urgency: {seg.urgency}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-06"
-            number="06"
-            title="Customer Pain Points"
-            factType="verified"
-            collapsible
-            expanded={Boolean(expandedSections['06'])}
-            onToggle={() => toggleReportSection('06')}
-          >
-            <div className="space-y-2.5">
-              {activeReport.customerPainPoints.map((pp) => (
-                <div key={pp.title} className="p-3.5 rounded-[10px] border border-[#E6E6E2] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <div className="font-semibold text-[#242424]">{pp.title}</div>
-                    <div className="text-xs text-[#686864] mt-0.5">{pp.evidence}</div>
-                  </div>
-                  <PriorityBadge priority={pp.severity} />
-                </div>
-              ))}
-            </div>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-07"
-            number="07"
-            title="Competitor Landscape"
-            factType="verified"
-            collapsible
-            expanded={Boolean(expandedSections['07'])}
-            onToggle={() => toggleReportSection('07')}
-          >
-            <p>{activeReport.competitorLandscapeSummary}</p>
-            <button
-              type="button"
-              onClick={() => navigate('competitive-intelligence')}
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#C44D00] hover:text-[#A33E00] cursor-pointer"
+            <ResearchReportSection
+              id="section-05"
+              number="05"
+              title="Customer Segments"
+              factType="estimate"
+              collapsible
+              expanded={Boolean(expandedSections['05'])}
+              onToggle={() => toggleReportSection('05')}
             >
-              Inspect {state.competitors.length} mapped competitors in Competitive Intelligence →
-            </button>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-08"
-            number="08"
-            title="Pricing Analysis"
-            factType="mixed"
-            collapsible
-            expanded={Boolean(expandedSections['08'])}
-            onToggle={() => toggleReportSection('08')}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-              {activeReport.pricingAnalysis.tiers.map((t) => (
-                <div key={t.tier} className="p-3.5 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]">
-                  <div className="text-xs text-[#686864]">{t.tier}</div>
-                  <div className="font-mono-num font-bold text-[#242424] mt-0.5">{t.range}</div>
-                  <div className="text-xs text-[#686864] mt-1">{t.positioning}</div>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-[#242424] font-medium">
-              Recommendation: {activeReport.pricingAnalysis.recommendation}
-            </p>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-09"
-            number="09"
-            title="Market Opportunities"
-            factType="estimate"
-            collapsible
-            expanded={Boolean(expandedSections['09'])}
-            onToggle={() => toggleReportSection('09')}
-          >
-            <ul className="space-y-1.5 text-sm">
-              {activeReport.marketOpportunities.map((op) => (
-                <li key={op} className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#FF7417] shrink-0 mt-0.5" />
-                  <span>{op}</span>
-                </li>
-              ))}
-            </ul>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-10"
-            number="10"
-            title="Business Model Options"
-            factType="estimate"
-            collapsible
-            expanded={Boolean(expandedSections['10'])}
-            onToggle={() => toggleReportSection('10')}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeReport.businessModelOptions.map((bm) => (
-                <div key={bm.model} className="p-4 rounded-[10px] border border-[#E6E6E2]">
-                  <div className="text-xs font-semibold text-[#C44D00]">{bm.fit}</div>
-                  <div className="font-semibold text-[#242424] mt-0.5">{bm.model}</div>
-                  <div className="text-xs text-[#686864] mt-2">Pros: {bm.pros}</div>
-                  <div className="text-xs text-[#686864] mt-1">Trade-off: {bm.cons}</div>
-                </div>
-              ))}
-            </div>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-11"
-            number="11"
-            title="Revenue Potential"
-            factType="estimate"
-            collapsible
-            expanded={Boolean(expandedSections['11'])}
-            onToggle={() => toggleReportSection('11')}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
-                <div className="text-xs text-[#686864]">Year 1 Conservative Band</div>
-                <div className="font-mono-num font-bold text-base text-[#242424] mt-1">
-                  {activeReport.revenuePotential.year1Conservative}
-                </div>
-              </div>
-              <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
-                <div className="text-xs text-[#686864]">Year 1 Target Band</div>
-                <div className="font-mono-num font-bold text-base text-[#C44D00] mt-1">
-                  {activeReport.revenuePotential.year1Target}
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-[#686864] mt-2">{activeReport.revenuePotential.unitEconomicsNote}</p>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-12"
-            number="12"
-            title="Startup Cost Estimates"
-            factType="estimate"
-            collapsible
-            expanded={Boolean(expandedSections['12'])}
-            onToggle={() => toggleReportSection('12')}
-          >
-            <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
-              {activeReport.startupCostEstimates.map((c) => (
-                <div key={c.category} className="p-3.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div>
-                    <div className="font-semibold text-[#242424]">{c.category}</div>
-                    <div className="text-[#686864]">{c.note}</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {activeReport.customerSegments.map((seg) => (
+                  <div key={seg.name} className="p-4 rounded-[10px] border border-[#E6E6E2]">
+                    <div className="text-xs font-mono-num text-[#C44D00]">{seg.share}</div>
+                    <div className="font-semibold text-[#242424] mt-1">{seg.name}</div>
+                    <p className="text-xs text-[#686864] mt-1.5">{seg.need}</p>
+                    <div className="text-[11px] text-[#242424] mt-2 pt-2 border-t border-[#E6E6E2]">
+                      Urgency: {seg.urgency}
+                    </div>
                   </div>
-                  <span className="font-mono-num font-semibold text-[#242424]">{c.range}</span>
-                </div>
-              ))}
-            </div>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-13"
-            number="13"
-            title="Risks & Challenges"
-            factType="mixed"
-            collapsible
-            expanded={Boolean(expandedSections['13'])}
-            onToggle={() => toggleReportSection('13')}
-          >
-            <div className="space-y-2.5">
-              {activeReport.risksAndChallenges.map((r) => (
-                <div key={r.risk} className="p-3.5 rounded-[10px] border border-[#E6E6E2]">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-[#242424]">{r.risk}</span>
-                    <PriorityBadge priority={r.severity} />
-                  </div>
-                  <div className="text-xs text-[#686864] mt-1">Mitigation: {r.mitigation}</div>
-                </div>
-              ))}
-            </div>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-14"
-            number="14"
-            title="Validation Experiments"
-            factType="estimate"
-            collapsible
-            expanded={Boolean(expandedSections['14'])}
-            onToggle={() => toggleReportSection('14')}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {activeReport.validationExperiments.map((ex) => (
-                <div key={ex.title} className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]">
-                  <div className="font-semibold text-[#242424] text-sm">{ex.title}</div>
-                  <div className="text-xs text-[#C44D00] mt-1">Success threshold: {ex.metric}</div>
-                  <div className="text-xs text-[#686864] mt-0.5">Timeframe: {ex.timeframe}</div>
-                </div>
-              ))}
-            </div>
-          </ResearchReportSection>
-
-          <ResearchReportSection
-            id="section-15"
-            number="15"
-            title="Final Recommendation & Source References"
-            factType="mixed"
-            collapsible
-            expanded={Boolean(expandedSections['15'])}
-            onToggle={() => toggleReportSection('15')}
-          >
-            <IntelligenceSurface variant="dark" className="p-4 sm:p-5 mb-4">
-              <div className="text-xs text-[#FF8A36] font-semibold inline-flex items-center gap-2">
-                <IntelligenceOrb size="xs" state="active" />
-                <span>Strategic Verdict</span>
+                ))}
               </div>
-              <p className="text-sm text-white mt-1.5 leading-relaxed">{activeReport.finalRecommendation.verdict}</p>
-            </IntelligenceSurface>
-            <div className="text-xs text-[#686864] space-y-1">
-              <div className="font-semibold text-[#242424]">Cited References</div>
-              {activeReport.sources.map((s) => (
-                <div key={s.title}>
-                  • {s.title} — {s.publisher} ({s.date}) · {s.reliability}
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-06"
+              number="06"
+              title="Customer Pain Points"
+              factType="verified"
+              collapsible
+              expanded={Boolean(expandedSections['06'])}
+              onToggle={() => toggleReportSection('06')}
+            >
+              <div className="space-y-2.5">
+                {activeReport.customerPainPoints.map((pp) => (
+                  <div
+                    key={pp.title}
+                    className="p-3.5 rounded-[10px] border border-[#E6E6E2] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                  >
+                    <div>
+                      <div className="font-semibold text-[#242424]">{pp.title}</div>
+                      <div className="text-xs text-[#686864] mt-0.5">{pp.evidence}</div>
+                    </div>
+                    <PriorityBadge priority={pp.severity} />
+                  </div>
+                ))}
+              </div>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-07"
+              number="07"
+              title="Competitor Landscape"
+              factType="verified"
+              collapsible
+              expanded={Boolean(expandedSections['07'])}
+              onToggle={() => toggleReportSection('07')}
+            >
+              <p>{activeReport.competitorLandscapeSummary}</p>
+              <button
+                type="button"
+                onClick={() => navigate('competitive-intelligence')}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#C44D00] hover:text-[#A33E00] cursor-pointer"
+              >
+                Inspect {state.competitors.length} mapped competitors in Competitive Intelligence →
+              </button>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-08"
+              number="08"
+              title="Pricing Analysis"
+              factType="mixed"
+              collapsible
+              expanded={Boolean(expandedSections['08'])}
+              onToggle={() => toggleReportSection('08')}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                {activeReport.pricingAnalysis.tiers.map((t) => (
+                  <div
+                    key={t.tier}
+                    className="p-3.5 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]"
+                  >
+                    <div className="text-xs text-[#686864]">{t.tier}</div>
+                    <div className="font-mono-num font-bold text-[#242424] mt-0.5">{t.range}</div>
+                    <div className="text-xs text-[#686864] mt-1">{t.positioning}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-[#242424] font-medium">
+                Recommendation: {activeReport.pricingAnalysis.recommendation}
+              </p>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-09"
+              number="09"
+              title="Market Opportunities"
+              factType="estimate"
+              collapsible
+              expanded={Boolean(expandedSections['09'])}
+              onToggle={() => toggleReportSection('09')}
+            >
+              <ul className="space-y-1.5 text-sm">
+                {activeReport.marketOpportunities.map((op) => (
+                  <li key={op} className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#FF7417] shrink-0 mt-0.5" />
+                    <span>{op}</span>
+                  </li>
+                ))}
+              </ul>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-10"
+              number="10"
+              title="Business Model Options"
+              factType="estimate"
+              collapsible
+              expanded={Boolean(expandedSections['10'])}
+              onToggle={() => toggleReportSection('10')}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {activeReport.businessModelOptions.map((bm) => (
+                  <div key={bm.model} className="p-4 rounded-[10px] border border-[#E6E6E2]">
+                    <div className="text-xs font-semibold text-[#C44D00]">{bm.fit}</div>
+                    <div className="font-semibold text-[#242424] mt-0.5">{bm.model}</div>
+                    <div className="text-xs text-[#686864] mt-2">Pros: {bm.pros}</div>
+                    <div className="text-xs text-[#686864] mt-1">Trade-off: {bm.cons}</div>
+                  </div>
+                ))}
+              </div>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-11"
+              number="11"
+              title="Revenue Potential"
+              factType="estimate"
+              collapsible
+              expanded={Boolean(expandedSections['11'])}
+              onToggle={() => toggleReportSection('11')}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
+                  <div className="text-xs text-[#686864]">Year 1 Conservative Band</div>
+                  <div className="font-mono-num font-bold text-base text-[#242424] mt-1">
+                    {activeReport.revenuePotential.year1Conservative}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </ResearchReportSection>
-        </div>
+                <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
+                  <div className="text-xs text-[#686864]">Year 1 Target Band</div>
+                  <div className="font-mono-num font-bold text-base text-[#C44D00] mt-1">
+                    {activeReport.revenuePotential.year1Target}
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-[#686864] mt-2">
+                {activeReport.revenuePotential.unitEconomicsNote}
+              </p>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-12"
+              number="12"
+              title="Startup Cost Estimates"
+              factType="estimate"
+              collapsible
+              expanded={Boolean(expandedSections['12'])}
+              onToggle={() => toggleReportSection('12')}
+            >
+              <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
+                {activeReport.startupCostEstimates.map((c) => (
+                  <div
+                    key={c.category}
+                    className="p-3.5 flex flex-wrap items-center justify-between gap-2 text-xs"
+                  >
+                    <div>
+                      <div className="font-semibold text-[#242424]">{c.category}</div>
+                      <div className="text-[#686864]">{c.note}</div>
+                    </div>
+                    <span className="font-mono-num font-semibold text-[#242424]">{c.range}</span>
+                  </div>
+                ))}
+              </div>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-13"
+              number="13"
+              title="Risks & Challenges"
+              factType="mixed"
+              collapsible
+              expanded={Boolean(expandedSections['13'])}
+              onToggle={() => toggleReportSection('13')}
+            >
+              <div className="space-y-2.5">
+                {activeReport.risksAndChallenges.map((r) => (
+                  <div key={r.risk} className="p-3.5 rounded-[10px] border border-[#E6E6E2]">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-[#242424]">{r.risk}</span>
+                      <PriorityBadge priority={r.severity} />
+                    </div>
+                    <div className="text-xs text-[#686864] mt-1">Mitigation: {r.mitigation}</div>
+                  </div>
+                ))}
+              </div>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-14"
+              number="14"
+              title="Validation Experiments"
+              factType="estimate"
+              collapsible
+              expanded={Boolean(expandedSections['14'])}
+              onToggle={() => toggleReportSection('14')}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {activeReport.validationExperiments.map((ex) => (
+                  <div
+                    key={ex.title}
+                    className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]"
+                  >
+                    <div className="font-semibold text-[#242424] text-sm">{ex.title}</div>
+                    <div className="text-xs text-[#C44D00] mt-1">
+                      Success threshold: {ex.metric}
+                    </div>
+                    <div className="text-xs text-[#686864] mt-0.5">Timeframe: {ex.timeframe}</div>
+                  </div>
+                ))}
+              </div>
+            </ResearchReportSection>
+
+            <ResearchReportSection
+              id="section-15"
+              number="15"
+              title="Final Recommendation & Source References"
+              factType="mixed"
+              collapsible
+              expanded={Boolean(expandedSections['15'])}
+              onToggle={() => toggleReportSection('15')}
+            >
+              <IntelligenceSurface variant="dark" className="p-4 sm:p-5 mb-4">
+                <div className="text-xs text-[#FF8A36] font-semibold inline-flex items-center gap-2">
+                  <IntelligenceOrb size="xs" state="active" />
+                  <span>Strategic Verdict</span>
+                </div>
+                <p className="text-sm text-white mt-1.5 leading-relaxed">
+                  {activeReport.finalRecommendation.verdict}
+                </p>
+              </IntelligenceSurface>
+              <div className="text-xs text-[#686864] space-y-1">
+                <div className="font-semibold text-[#242424]">Cited References</div>
+                {activeReport.sources.map((s) => (
+                  <div key={s.title}>
+                    • {s.title} — {s.publisher} ({s.date}) · {s.reliability}
+                  </div>
+                ))}
+              </div>
+            </ResearchReportSection>
+          </div>
         </div>
 
         <JourneyNextStep currentRoute="idea-intelligence" />
@@ -1234,7 +1334,10 @@ export const IdeaIntelligencePage: React.FC = () => {
   // Home View
   return (
     <div className="space-y-6">
-      <BusinessBrainContextBanner departmentLabel="Idea Intelligence" contextKey="ideaIntelligence" />
+      <BusinessBrainContextBanner
+        departmentLabel="Idea Intelligence"
+        contextKey="ideaIntelligence"
+      />
 
       <PageHeader
         mutedPrefix="Idea"
@@ -1351,7 +1454,9 @@ export const IdeaIntelligencePage: React.FC = () => {
                 <div className="flex items-center justify-between md:justify-end gap-5 shrink-0">
                   <div className="text-xs text-[#686864]">
                     <span className="block text-[11px] text-[#858585]">TAM Band</span>
-                    <strong className="font-mono-num text-[#242424]">{rep.tamSamSom.tamLabel}</strong>
+                    <strong className="font-mono-num text-[#242424]">
+                      {rep.tamSamSom.tamLabel}
+                    </strong>
                   </div>
                   <button
                     type="button"

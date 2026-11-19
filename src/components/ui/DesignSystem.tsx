@@ -1,12 +1,6 @@
 import React, { useId, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Search,
-  X,
-} from 'lucide-react';
+import { AlertCircle, Search, X } from 'lucide-react';
 import type { PriorityLevel } from '../../types/brainwise';
 import { typeClass } from '../../theme/typography';
 import {
@@ -26,13 +20,7 @@ import {
   NeuralNetworkAnimation,
   SuccessTransition,
 } from '../motion/LiquidMotion';
-import {
-  Dialog,
-  DialogBody,
-  DialogFooter,
-  DialogHeader,
-  type DialogProps,
-} from './Dialog';
+import { Dialog, DialogBody, DialogFooter, DialogHeader, type DialogProps } from './Dialog';
 import { useContextualLedger } from './ContextualActionLedger';
 import {
   DashboardFeedSkeleton,
@@ -43,10 +31,7 @@ import {
   Skeleton,
   type SkeletonProps,
 } from './Skeleton';
-import {
-  TopoGridOverlay,
-  type TopoGridOverlayProps,
-} from './TopoGridOverlay';
+import { TopoGridOverlay, type TopoGridOverlayProps } from './TopoGridOverlay';
 import {
   EmptyState,
   EmptyStateIllustration,
@@ -146,12 +131,7 @@ export const BrandLogoMark: React.FC<{ size?: number; dark?: boolean }> = ({
     aria-hidden="true"
     className="shrink-0"
   >
-    <rect
-      width="32"
-      height="32"
-      rx="9"
-      fill={dark ? '#252525' : '#171717'}
-    />
+    <rect width="32" height="32" rx="9" fill={dark ? '#252525' : '#171717'} />
     <path
       d="M8.5 21.5V10.5L13.5 16L16 12.5L18.5 16L23.5 10.5V21.5"
       stroke="#FF7417"
@@ -256,10 +236,7 @@ export const GrowthLine: React.FC<{
   const maxVal = rawMax + span * 0.14;
 
   const coords = points.map((p, idx) => {
-    const x =
-      points.length === 1
-        ? padX + chartW / 2
-        : padX + (idx / (points.length - 1)) * chartW;
+    const x = points.length === 1 ? padX + chartW / 2 : padX + (idx / (points.length - 1)) * chartW;
     const norm = (p.value - minVal) / Math.max(1, maxVal - minVal);
     const y = padTop + chartH - norm * chartH;
     return { x, y, ...p };
@@ -358,15 +335,7 @@ export const GrowthLine: React.FC<{
             >
               <circle cx={pt.x} cy={pt.y} r="14" fill="transparent" />
 
-              {isActive && (
-                <circle
-                  cx={pt.x}
-                  cy={pt.y}
-                  r="7"
-                  fill="#FF7417"
-                  fillOpacity="0.22"
-                />
-              )}
+              {isActive && <circle cx={pt.x} cy={pt.y} r="7" fill="#FF7417" fillOpacity="0.22" />}
               <circle
                 cx={pt.x}
                 cy={pt.y}
@@ -419,13 +388,7 @@ export const IntelligenceSurface: React.FC<{
   showGrid?: boolean;
   className?: string;
   children: React.ReactNode;
-}> = ({
-  variant = 'light',
-  interactiveGlow = true,
-  showGrid = true,
-  className = '',
-  children,
-}) => (
+}> = ({ variant = 'light', interactiveGlow = true, showGrid = true, className = '', children }) => (
   <LiquidSurface
     variant={variant === 'dark' ? 'dark' : 'intelligence'}
     interactiveGlow={interactiveGlow}
@@ -545,16 +508,10 @@ export const PageHeader: React.FC<{
     <div className="space-y-2 max-w-2xl">
       {meta && <div className={`${typeClass.overline} text-[#858585]`}>{meta}</div>}
       <h1 className={`${typeClass.h1} text-[#171717]`}>
-        {mutedPrefix && (
-          <span className="font-normal text-[#858585] mr-2">{mutedPrefix}</span>
-        )}
+        {mutedPrefix && <span className="font-normal text-[#858585] mr-2">{mutedPrefix}</span>}
         <span>{title}</span>
       </h1>
-      {subtitle && (
-        <p className={`${typeClass.body} text-[#5C5C58]`}>
-          {subtitle}
-        </p>
-      )}
+      {subtitle && <p className={`${typeClass.body} text-[#5C5C58]`}>{subtitle}</p>}
     </div>
     {actions && <div className="flex flex-wrap items-center gap-2.5 shrink-0">{actions}</div>}
   </div>
@@ -634,7 +591,9 @@ export const MetricCard: React.FC<{
     >
       <div>
         <div className="flex items-center justify-between gap-2">
-          <span className={`${typeClass.bodySm} font-medium ${dark ? 'text-[#A8A8A2]' : 'text-[#5C5C58]'}`}>
+          <span
+            className={`${typeClass.bodySm} font-medium ${dark ? 'text-[#A8A8A2]' : 'text-[#5C5C58]'}`}
+          >
             {label}
           </span>
           {delta && (
@@ -643,10 +602,10 @@ export const MetricCard: React.FC<{
                 deltaTone === 'positive'
                   ? 'text-[#24724E]'
                   : deltaTone === 'warning'
-                  ? 'text-[#A85E16]'
-                  : dark
-                  ? 'text-[#A8A8A2]'
-                  : 'text-[#5C5C58]'
+                    ? 'text-[#A85E16]'
+                    : dark
+                      ? 'text-[#A8A8A2]'
+                      : 'text-[#5C5C58]'
               }`}
             >
               {delta}
@@ -655,18 +614,24 @@ export const MetricCard: React.FC<{
         </div>
         <div
           className={`mt-2 ${
-            typeof value === 'string' && value.length > 10
-              ? typeClass.metricSm
-              : typeClass.metric
+            typeof value === 'string' && value.length > 10 ? typeClass.metricSm : typeClass.metric
           } truncate ${
-            accent ? (dark ? 'text-[#FF9A45]' : 'text-[#C44D00]') : dark ? 'text-white' : 'text-[#171717]'
+            accent
+              ? dark
+                ? 'text-[#FF9A45]'
+                : 'text-[#C44D00]'
+              : dark
+                ? 'text-white'
+                : 'text-[#171717]'
           }`}
         >
           {isPureNumber ? <AnimatedMetric value={value} /> : value}
         </div>
       </div>
       {detail && (
-        <p className={`mt-1.5 ${typeClass.bodySm} ${dark ? 'text-[#858585]' : 'text-[#5C5C58]'}`}>{detail}</p>
+        <p className={`mt-1.5 ${typeClass.bodySm} ${dark ? 'text-[#858585]' : 'text-[#5C5C58]'}`}>
+          {detail}
+        </p>
       )}
     </div>
   );
@@ -733,7 +698,14 @@ export const ProgressBar: React.FC<{
   size?: 'sm' | 'md';
   activeShimmer?: boolean;
   tone?: 'accent' | 'neutral';
-}> = ({ value, label, showPercent = true, size = 'md', activeShimmer = false, tone = 'neutral' }) => (
+}> = ({
+  value,
+  label,
+  showPercent = true,
+  size = 'md',
+  activeShimmer = false,
+  tone = 'neutral',
+}) => (
   <FluidProgress
     value={value}
     label={label}
@@ -767,9 +739,7 @@ export const Tabs: React.FC<{
             aria-selected={active}
             onClick={() => onChange(tab.id)}
             className={`relative px-3 py-3 text-sm font-medium rounded-[8px] whitespace-nowrap shrink-0 transition-colors focus-ring cursor-pointer ${
-              active
-                ? 'text-[#171717]'
-                : 'text-[#858585] hover:text-[#171717]'
+              active ? 'text-[#171717]' : 'text-[#858585] hover:text-[#171717]'
             }`}
           >
             <span>{tab.label}</span>
@@ -872,7 +842,10 @@ export const LoadingState: React.FC<{ label?: string; rows?: number }> = ({
   >
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-2.5 text-xs font-medium text-[#5C5C58]">
-        <span className="relative inline-flex w-2.5 h-2.5 items-center justify-center shrink-0" aria-hidden="true">
+        <span
+          className="relative inline-flex w-2.5 h-2.5 items-center justify-center shrink-0"
+          aria-hidden="true"
+        >
           <span className="absolute inset-0 rounded-full bg-[#FF7417]/35 bw-orb-halo" />
           <span className="relative w-1.5 h-1.5 rounded-full bg-[#FF7417]" />
         </span>
@@ -893,16 +866,8 @@ export const LoadingState: React.FC<{ label?: string; rows?: number }> = ({
               className="w-7 h-7 shrink-0"
             />
             <div className="space-y-1.5 flex-1">
-              <Skeleton
-                shape="pill"
-                className="h-3"
-                width={`${Math.max(46, 84 - idx * 10)}%`}
-              />
-              <Skeleton
-                shape="pill"
-                className="h-2.5"
-                width={`${Math.max(30, 56 - idx * 6)}%`}
-              />
+              <Skeleton shape="pill" className="h-3" width={`${Math.max(46, 84 - idx * 10)}%`} />
+              <Skeleton shape="pill" className="h-2.5" width={`${Math.max(30, 56 - idx * 6)}%`} />
             </div>
           </div>
           <Skeleton shape="pill" className="h-5 w-16 shrink-0" />
@@ -991,9 +956,7 @@ export const ChartContainer: React.FC<{
   >
     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-5">
       <div>
-        <h3 className={`${typeClass.h4} ${dark ? 'text-white' : 'text-[#171717]'}`}>
-          {title}
-        </h3>
+        <h3 className={`${typeClass.h4} ${dark ? 'text-white' : 'text-[#171717]'}`}>{title}</h3>
         {subtitle && (
           <p className={`${typeClass.bodySm} mt-1 ${dark ? 'text-[#A8A8A2]' : 'text-[#5C5C58]'}`}>
             {subtitle}

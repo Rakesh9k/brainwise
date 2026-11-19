@@ -29,7 +29,7 @@ export interface GroundTruthFacts {
 export function extractNumericPrices(text: string): number[] {
   if (!text) return [];
   // Match currency patterns like $15, $15.50, ₹2999, €45, 15 USD
-  const matches = text.match(/(?:[\$₹€£]|USD\s?|INR\s?)(\d+(?:\.\d+)?)/gi) || [];
+  const matches = text.match(/(?:[$₹€£]|USD\s?|INR\s?)(\d+(?:\.\d+)?)/gi) || [];
   const prices: number[] = [];
 
   for (const match of matches) {
@@ -100,10 +100,7 @@ export function extractGroundTruth(brain: BusinessBrainData): GroundTruthFacts {
 /**
  * Performs a deterministic truth check against verified BusinessBrain facts.
  */
-export function executeTruthCheck(
-  content: string,
-  brain: BusinessBrainData
-): TruthCheckResult {
+export function executeTruthCheck(content: string, brain: BusinessBrainData): TruthCheckResult {
   const groundTruth = extractGroundTruth(brain);
   const checkedItems: TruthCheckItem[] = [];
   const violations: TruthViolation[] = [];
@@ -181,8 +178,14 @@ export function executeTruthCheck(
 
   // 3. Check Wild / Fabricated Guarantees
   const wildPatterns = [
-    { pattern: /\b(guaranteed\s+(?:10x|100%|instant)\s+roi)\b/i, name: 'Unsubstantiated ROI guarantee' },
-    { pattern: /\b(become\s+a\s+millionaire\s+overnight)\b/i, name: 'Misleading financial promise' },
+    {
+      pattern: /\b(guaranteed\s+(?:10x|100%|instant)\s+roi)\b/i,
+      name: 'Unsubstantiated ROI guarantee',
+    },
+    {
+      pattern: /\b(become\s+a\s+millionaire\s+overnight)\b/i,
+      name: 'Misleading financial promise',
+    },
     { pattern: /\b(100%\s+risk[\s-]free\s+profit)\b/i, name: 'Unsubstantiated risk-free claim' },
   ];
 
@@ -207,7 +210,8 @@ export function executeTruthCheck(
 
   // Calculate Truth Score (0 to 100)
   const criticalViolations = violations.filter((v) => v.severity === 'critical');
-  const scoreDeductions = criticalViolations.length * 35 + (violations.length - criticalViolations.length) * 15;
+  const scoreDeductions =
+    criticalViolations.length * 35 + (violations.length - criticalViolations.length) * 15;
   const truthScore = Math.max(0, Math.min(100, 100 - scoreDeductions));
 
   const hasCritical = criticalViolations.length > 0;

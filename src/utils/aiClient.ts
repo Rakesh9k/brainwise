@@ -28,7 +28,10 @@ async function postJson<TResponse>(url: string, body: unknown): Promise<TRespons
 
   if (!response.ok) {
     const errorMessage =
-      payload && typeof payload === 'object' && 'error' in payload && typeof (payload as { error: unknown }).error === 'string'
+      payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof (payload as { error: unknown }).error === 'string'
         ? (payload as { error: string }).error
         : `Request failed with status ${response.status}.`;
     throw new Error(errorMessage);
@@ -82,9 +85,7 @@ export async function generateAiPlaybookAngle(
   });
 }
 
-export async function generateAiRecommendations(
-  state: BrainWiseState
-): Promise<{
+export async function generateAiRecommendations(state: BrainWiseState): Promise<{
   recommendations: Omit<StrategyRecommendation, 'id' | 'status'>[];
   model: string;
 }> {

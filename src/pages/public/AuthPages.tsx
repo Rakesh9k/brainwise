@@ -51,7 +51,9 @@ export const AuthPages: React.FC<{
         return;
       }
       if (digits === '000000') {
-        setError('That verification code is invalid or expired. Try any other 6 digits (e.g. 482910).');
+        setError(
+          'That verification code is invalid or expired. Try any other 6 digits (e.g. 482910).'
+        );
         return;
       }
       setIsSubmitting(true);
@@ -128,9 +130,7 @@ export const AuthPages: React.FC<{
       type="button"
       disabled={isSubmitting}
       onClick={() =>
-        mode === 'signup'
-          ? navigate('onboarding')
-          : loginDemo('Vishesh', 'vishesh.kakar@gmail.com')
+        mode === 'signup' ? navigate('onboarding') : loginDemo('Vishesh', 'vishesh.kakar@gmail.com')
       }
       className="w-full h-10 px-4 rounded-[10px] border border-[#E6E6E2] bg-[#FFFFFF] hover:bg-[#F5F5F4] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-[#242424] flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
     >
@@ -251,7 +251,8 @@ export const AuthPages: React.FC<{
               <span>Reset instructions sent</span>
             </div>
             <p className="text-xs text-[#242424] leading-relaxed">
-              We sent a recovery link to <strong>{email}</strong>. For prototype inspection, you can preview the Reset Password screen directly.
+              We sent a recovery link to <strong>{email}</strong>. For prototype inspection, you can
+              preview the Reset Password screen directly.
             </p>
             <button
               type="button"
@@ -264,12 +265,18 @@ export const AuthPages: React.FC<{
         ) : (
           <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
             {error && (
-              <div role="alert" className="p-3 rounded-[8px] bg-[#FDF0F0] border border-[#F5CECE] text-xs text-[#BC3E3E]">
+              <div
+                role="alert"
+                className="p-3 rounded-[8px] bg-[#FDF0F0] border border-[#F5CECE] text-xs text-[#BC3E3E]"
+              >
                 {error}
               </div>
             )}
             {successMsg && (
-              <div role="status" className="p-3 rounded-[8px] bg-[#ECF7F1] border border-[#CEE8DA] text-xs text-[#24724E] flex items-center gap-2">
+              <div
+                role="status"
+                className="p-3 rounded-[8px] bg-[#ECF7F1] border border-[#CEE8DA] text-xs text-[#24724E] flex items-center gap-2"
+              >
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>{successMsg}</span>
               </div>
@@ -278,7 +285,10 @@ export const AuthPages: React.FC<{
             {mode === 'verify-email' && (
               <div className="space-y-3">
                 <div>
-                  <label htmlFor="auth-verify-code" className="block text-xs font-medium text-[#242424] mb-1.5">
+                  <label
+                    htmlFor="auth-verify-code"
+                    className="block text-xs font-medium text-[#242424] mb-1.5"
+                  >
                     6-Digit Verification Code
                   </label>
                   <div className="relative">
@@ -321,7 +331,10 @@ export const AuthPages: React.FC<{
 
             {mode === 'signup' && (
               <div>
-                <label htmlFor="auth-name" className="block text-xs font-medium text-[#242424] mb-1.5">
+                <label
+                  htmlFor="auth-name"
+                  className="block text-xs font-medium text-[#242424] mb-1.5"
+                >
                   First Name
                 </label>
                 <div className="relative">
@@ -340,7 +353,10 @@ export const AuthPages: React.FC<{
 
             {(mode === 'signup' || mode === 'login' || mode === 'forgot-password') && (
               <div>
-                <label htmlFor="auth-email" className="block text-xs font-medium text-[#242424] mb-1.5">
+                <label
+                  htmlFor="auth-email"
+                  className="block text-xs font-medium text-[#242424] mb-1.5"
+                >
                   Work or Personal Email
                 </label>
                 <div className="relative">
@@ -389,7 +405,10 @@ export const AuthPages: React.FC<{
 
             {mode === 'reset-password' && (
               <div>
-                <label htmlFor="auth-confirm" className="block text-xs font-medium text-[#242424] mb-1.5">
+                <label
+                  htmlFor="auth-confirm"
+                  className="block text-xs font-medium text-[#242424] mb-1.5"
+                >
                   Confirm New Password
                 </label>
                 <div className="relative">
@@ -424,14 +443,14 @@ export const AuthPages: React.FC<{
                 {isSubmitting
                   ? 'Processing…'
                   : mode === 'signup'
-                  ? 'Create Account & Verify Email'
-                  : mode === 'verify-email'
-                  ? 'Verify & Start Onboarding'
-                  : mode === 'login'
-                  ? 'Sign In'
-                  : mode === 'forgot-password'
-                  ? 'Send Reset Link'
-                  : 'Update Password'}
+                    ? 'Create Account & Verify Email'
+                    : mode === 'verify-email'
+                      ? 'Verify & Start Onboarding'
+                      : mode === 'login'
+                        ? 'Sign In'
+                        : mode === 'forgot-password'
+                          ? 'Send Reset Link'
+                          : 'Update Password'}
               </span>
               {!isSubmitting && <ArrowRight className="w-4 h-4" />}
             </button>

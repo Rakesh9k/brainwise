@@ -73,15 +73,15 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
     embedded
       ? []
       : tab !== 'overview' && selectedEvent
-      ? [
-          { label: MARKET_WATCH_TAB_LABELS[tab], onClick: () => setSelectedEvent(null) },
-          { label: selectedEvent.competitorOrSource },
-        ]
-      : tab !== 'overview'
-      ? [{ label: MARKET_WATCH_TAB_LABELS[tab] }]
-      : selectedEvent
-      ? [{ label: selectedEvent.competitorOrSource }]
-      : [],
+        ? [
+            { label: MARKET_WATCH_TAB_LABELS[tab], onClick: () => setSelectedEvent(null) },
+            { label: selectedEvent.competitorOrSource },
+          ]
+        : tab !== 'overview'
+          ? [{ label: MARKET_WATCH_TAB_LABELS[tab] }]
+          : selectedEvent
+            ? [{ label: selectedEvent.competitorOrSource }]
+            : [],
     [embedded, tab, selectedEvent?.id, selectedEvent?.competitorOrSource]
   );
 
@@ -118,7 +118,9 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
       {embedded && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-heading text-lg font-bold text-[#252525]">Live Market Watch &amp; Signals</h2>
+            <h2 className="font-heading text-lg font-bold text-[#252525]">
+              Live Market Watch &amp; Signals
+            </h2>
             <p className="text-xs text-[#5C5C58] mt-0.5">
               Track verified pricing shifts, launches, and review sentiment across monitored peers.
             </p>
@@ -144,10 +146,27 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
       {tab === 'overview' && (
         <FluidTransition key="mw-overview" direction="fade" className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard label="Tracked Competitors" value={state.competitors.length} detail={`${monitoredCompetitors.length} active monitors`} />
-            <MetricCard label="Monitored Categories" value={MONITORING_CATEGORIES.length} detail="Pricing, launches & social" />
-            <MetricCard label="Recent Changes" value={visibleEvents.length} detail="Active signals" accent />
-            <MetricCard label="Unread Alerts" value={visibleEvents.filter((e) => !e.isRead).length} detail="Actionable signals" />
+            <MetricCard
+              label="Tracked Competitors"
+              value={state.competitors.length}
+              detail={`${monitoredCompetitors.length} active monitors`}
+            />
+            <MetricCard
+              label="Monitored Categories"
+              value={MONITORING_CATEGORIES.length}
+              detail="Pricing, launches & social"
+            />
+            <MetricCard
+              label="Recent Changes"
+              value={visibleEvents.length}
+              detail="Active signals"
+              accent
+            />
+            <MetricCard
+              label="Unread Alerts"
+              value={visibleEvents.filter((e) => !e.isRead).length}
+              detail="Actionable signals"
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -189,10 +208,13 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
                       </div>
                       <div className="text-sm font-medium text-[#242424]">{ev.detectedChange}</div>
                       <div className="p-2.5 rounded-[8px] bg-[#F5F5F4] text-xs text-[#686864]">
-                        <strong className="text-[#242424]">AI Interpretation:</strong> {ev.aiInterpretation}
+                        <strong className="text-[#242424]">AI Interpretation:</strong>{' '}
+                        {ev.aiInterpretation}
                       </div>
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                        <span className="text-[11px] font-mono-num text-[#8E8E88]">{ev.detectedAt}</span>
+                        <span className="text-[11px] font-mono-num text-[#8E8E88]">
+                          {ev.detectedAt}
+                        </span>
                         <div className="flex flex-wrap items-center gap-2">
                           {ev.convertedToExperimentId ? (
                             <button
@@ -254,16 +276,22 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
                 </p>
                 <div className="pt-3 border-t border-[#2E2E2E] space-y-2 text-xs text-[#B8B8B2]">
                   <div>
-                    • Opportunity: Align {state.brain.businessName}&apos;s core wedge ({state.brain.brandPositioning}) against competitor gaps.
+                    • Opportunity: Align {state.brain.businessName}&apos;s core wedge (
+                    {state.brain.brandPositioning}) against competitor gaps.
                   </div>
                   <div>
-                    • Watch: {state.competitors[0] ? `Monitor ${state.competitors[0].name} updates (${state.competitors[0].monitoringFrequency}).` : 'Add your first rival to enable weekly alerts.'}
+                    • Watch:{' '}
+                    {state.competitors[0]
+                      ? `Monitor ${state.competitors[0].name} updates (${state.competitors[0].monitoringFrequency}).`
+                      : 'Add your first rival to enable weekly alerts.'}
                   </div>
                 </div>
               </IntelligenceSurface>
 
               <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 bw-surface-raised">
-                <div className="text-xs font-semibold text-[#242424] mb-3">10 Active Monitoring Categories</div>
+                <div className="text-xs font-semibold text-[#242424] mb-3">
+                  10 Active Monitoring Categories
+                </div>
                 <div className="flex flex-wrap gap-1.5">
                   {MONITORING_CATEGORIES.map((c) => (
                     <span
@@ -307,7 +335,10 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
           ) : (
             <div className="space-y-3">
               {filteredFeed.map((ev) => (
-                <div key={ev.id} className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised">
+                <div
+                  key={ev.id}
+                  className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       <span className="font-bold text-[#242424]">{ev.competitorOrSource}</span>
@@ -324,14 +355,20 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
                       <div className="text-[11px] font-semibold text-[#24724E] uppercase tracking-wide">
                         Actual Detected Change
                       </div>
-                      <p className="text-sm text-[#242424] mt-1 leading-relaxed">{ev.detectedChange}</p>
-                      <div className="text-[11px] text-[#686864] mt-2">Source: {ev.sourceReference}</div>
+                      <p className="text-sm text-[#242424] mt-1 leading-relaxed">
+                        {ev.detectedChange}
+                      </p>
+                      <div className="text-[11px] text-[#686864] mt-2">
+                        Source: {ev.sourceReference}
+                      </div>
                     </div>
                     <div className="p-3.5 rounded-[10px] bg-[#FFF0E5]/60 border border-[#FFD3B3]">
                       <div className="text-[11px] font-semibold text-[#C44D00] uppercase tracking-wide">
                         AI-Generated Interpretation &amp; Action
                       </div>
-                      <p className="text-xs text-[#242424] mt-1 leading-relaxed">{ev.aiInterpretation}</p>
+                      <p className="text-xs text-[#242424] mt-1 leading-relaxed">
+                        {ev.aiInterpretation}
+                      </p>
                       <div className="text-xs font-medium text-[#242424] mt-2">
                         Suggested: {ev.suggestedAction}
                       </div>
@@ -411,15 +448,20 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2.5">
-                      <Radar className={`w-4 h-4 ${c.monitoringEnabled ? 'text-[#FF7417]' : 'text-[#8E8E88]'}`} />
-                      <span className="font-heading text-base font-bold text-[#242424]">{c.name}</span>
+                      <Radar
+                        className={`w-4 h-4 ${c.monitoringEnabled ? 'text-[#FF7417]' : 'text-[#8E8E88]'}`}
+                      />
+                      <span className="font-heading text-base font-bold text-[#242424]">
+                        {c.name}
+                      </span>
                       <StatusBadge
                         status={c.monitoringEnabled ? 'Active' : 'Paused'}
                         tone={c.monitoringEnabled ? 'success' : 'neutral'}
                       />
                     </div>
                     <div className="text-xs text-[#686864]">
-                      {c.website} · Tracking: {c.monitoredCategories.join(', ') || 'General updates'}
+                      {c.website} · Tracking:{' '}
+                      {c.monitoredCategories.join(', ') || 'General updates'}
                     </div>
                   </div>
 
@@ -444,7 +486,11 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
                       onClick={() => toggleCompetitorMonitoring(c.id)}
                       className="inline-flex items-center gap-1 px-3 h-8 text-xs font-medium border border-[#E6E6E2] rounded-[8px] hover:bg-[#F5F5F4] cursor-pointer"
                     >
-                      {c.monitoringEnabled ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      {c.monitoringEnabled ? (
+                        <Pause className="w-3.5 h-3.5" />
+                      ) : (
+                        <Play className="w-3.5 h-3.5" />
+                      )}
                       {c.monitoringEnabled ? 'Pause' : 'Resume'}
                     </button>
                     <button
@@ -464,7 +510,11 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
       )}
 
       {tab === 'reports' && (
-        <FluidTransition key="mw-reports" direction="fade" className="max-w-2xl rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 space-y-5 bw-surface-raised">
+        <FluidTransition
+          key="mw-reports"
+          direction="fade"
+          className="max-w-2xl rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 space-y-5 bw-surface-raised"
+        >
           <SectionHeader
             title="Scheduled Intelligence Reports"
             description="Configure automated digest delivery preferences (simulated)"
@@ -533,12 +583,18 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
         open={Boolean(selectedEvent)}
         onClose={() => setSelectedEvent(null)}
         title="Market Alert Detail"
-        subtitle={selectedEvent ? `${selectedEvent.competitorOrSource} · ${selectedEvent.category}` : undefined}
+        subtitle={
+          selectedEvent
+            ? `${selectedEvent.competitorOrSource} · ${selectedEvent.category}`
+            : undefined
+        }
       >
         {selectedEvent && (
           <div className="space-y-5 text-sm">
             <div className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]">
-              <div className="text-[11px] font-semibold text-[#24724E]">DETECTED FACTUAL CHANGE</div>
+              <div className="text-[11px] font-semibold text-[#24724E]">
+                DETECTED FACTUAL CHANGE
+              </div>
               <p className="mt-1 text-[#242424] leading-relaxed">{selectedEvent.detectedChange}</p>
               <div className="mt-2 text-xs text-[#686864]">
                 Observed: {selectedEvent.detectedAt}
@@ -548,8 +604,12 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
             </div>
 
             <div className="p-4 rounded-[10px] bg-[#FFF0E5]/65 border border-[#FFD3B3]">
-              <div className="text-[11px] font-semibold text-[#C44D00]">AI STRATEGIC INTERPRETATION</div>
-              <p className="mt-1 text-[#242424] leading-relaxed">{selectedEvent.aiInterpretation}</p>
+              <div className="text-[11px] font-semibold text-[#C44D00]">
+                AI STRATEGIC INTERPRETATION
+              </div>
+              <p className="mt-1 text-[#242424] leading-relaxed">
+                {selectedEvent.aiInterpretation}
+              </p>
             </div>
 
             <div>

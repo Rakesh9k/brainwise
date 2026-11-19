@@ -1,14 +1,7 @@
 import type { TopoGridDensity, TopoGridFade, TopoGridIntensity } from './topoGridUtils';
 
 export type EmptyStateIllustrationVariant =
-  | 'actions'
-  | 'sprint'
-  | 'signals'
-  | 'experiments'
-  | 'goals'
-  | 'activity'
-  | 'pulse'
-  | 'general';
+  'actions' | 'sprint' | 'signals' | 'experiments' | 'goals' | 'activity' | 'pulse' | 'general';
 
 export type EmptyStateTone = 'light' | 'dark';
 export type EmptyStateSize = 'compact' | 'default' | 'spacious';

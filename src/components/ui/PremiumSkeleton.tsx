@@ -38,7 +38,10 @@ export const PremiumSkeletonLine: React.FC<PremiumSkeletonLineProps> = ({
 }) => {
   const metrics = resolveModularLineMetrics(token);
   const waveClass = resolvePremiumWaveClass(tone);
-  const widths = lines > 1 ? buildStaggeredModularWidths(lines) : [typeof width === 'number' ? `${width}px` : width];
+  const widths =
+    lines > 1
+      ? buildStaggeredModularWidths(lines)
+      : [typeof width === 'number' ? `${width}px` : width];
   const borderRadius = pill ? 9999 : metrics.radiusPx;
 
   return (
@@ -88,9 +91,9 @@ export interface PremiumSkeletonProps {
 
 const GAP_XS = `${computeModularSpacingPx(-2)}px`; // 10.24px
 const GAP_SM = `${computeModularSpacingPx(-1)}px`; // 12.8px
-const GAP_MD = `${computeModularSpacingPx(0)}px`;  // 16px
-const GAP_LG = `${computeModularSpacingPx(1)}px`;  // 20px
-const GAP_XL = `${computeModularSpacingPx(2)}px`;  // 25px
+const GAP_MD = `${computeModularSpacingPx(0)}px`; // 16px
+const GAP_LG = `${computeModularSpacingPx(1)}px`; // 20px
+const GAP_XL = `${computeModularSpacingPx(2)}px`; // 25px
 
 /**
  * PremiumSkeleton
@@ -128,12 +131,22 @@ export const PremiumSkeleton: React.FC<PremiumSkeletonProps> = ({
         style={{ gap: GAP_XS }}
       >
         {showTopoGrid && (
-          <TopoGridOverlay tone={effectiveTone} fade="edges" density="compact" intensity="whisper" />
+          <TopoGridOverlay
+            tone={effectiveTone}
+            fade="edges"
+            density="compact"
+            intensity="whisper"
+          />
         )}
         <div className="relative z-10 flex flex-col" style={{ gap: GAP_XS }}>
           <div className="flex items-center justify-between gap-2">
             <PremiumSkeletonLine token="bodySm" width="54%" tone={waveTone} pill />
-            <PremiumSkeletonLine token="overline" width="22%" tone={isDark ? 'dark' : 'accent'} pill />
+            <PremiumSkeletonLine
+              token="overline"
+              width="22%"
+              tone={isDark ? 'dark' : 'accent'}
+              pill
+            />
           </div>
           <PremiumSkeletonLine token="metric" width="44%" tone={waveTone} />
           <PremiumSkeletonLine token="bodySm" width="68%" tone={waveTone} pill />
@@ -158,9 +171,18 @@ export const PremiumSkeleton: React.FC<PremiumSkeletonProps> = ({
         <div className="relative z-10 flex flex-col" style={{ gap: GAP_XL }}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <span aria-hidden="true" className={`w-2.5 h-2.5 rounded-full shrink-0 ${accentWave}`} />
+              <span
+                aria-hidden="true"
+                className={`w-2.5 h-2.5 rounded-full shrink-0 ${accentWave}`}
+              />
               <PremiumSkeletonLine token="overline" width={148} tone="accent" pill />
-              <PremiumSkeletonLine token="monoMeta" width={132} tone="light" pill className="hidden sm:block" />
+              <PremiumSkeletonLine
+                token="monoMeta"
+                width={132}
+                tone="light"
+                pill
+                className="hidden sm:block"
+              />
             </div>
             <PremiumSkeletonLine token="overline" width={104} tone="light" pill />
           </div>
@@ -281,9 +303,17 @@ export const PremiumSkeleton: React.FC<PremiumSkeletonProps> = ({
         } ${className}`}
       >
         {showTopoGrid && (
-          <TopoGridOverlay tone={effectiveTone} fade="edges" density="compact" intensity={isDark ? 'crisp' : 'subtle'} />
+          <TopoGridOverlay
+            tone={effectiveTone}
+            fade="edges"
+            density="compact"
+            intensity={isDark ? 'crisp' : 'subtle'}
+          />
         )}
-        <div className="relative z-10 flex items-start justify-between gap-3" style={{ marginBottom: GAP_LG }}>
+        <div
+          className="relative z-10 flex items-start justify-between gap-3"
+          style={{ marginBottom: GAP_LG }}
+        >
           <div className="flex-1 flex flex-col" style={{ gap: '4px' }}>
             <PremiumSkeletonLine token="h4" width="72%" tone={waveTone} />
             <PremiumSkeletonLine token="bodySm" width="84%" tone={waveTone} pill />
@@ -307,7 +337,11 @@ export const PremiumSkeleton: React.FC<PremiumSkeletonProps> = ({
         className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-y border-[#E6E6E2] divide-y sm:divide-y-0 sm:divide-x divide-[#EFEFEB] ${className}`}
       >
         {cellIndices.map((idx) => (
-          <div key={idx} className="px-4 sm:px-5 py-5 flex flex-col justify-between" style={{ gap: GAP_XS }}>
+          <div
+            key={idx}
+            className="px-4 sm:px-5 py-5 flex flex-col justify-between"
+            style={{ gap: GAP_XS }}
+          >
             <PremiumSkeletonLine token="overline" width="64%" tone="light" pill />
             <div className="flex flex-col" style={{ gap: '4px' }}>
               <PremiumSkeletonLine
@@ -408,7 +442,12 @@ export const PremiumSkeleton: React.FC<PremiumSkeletonProps> = ({
               <div key={idx} className="py-5 flex flex-col" style={{ gap: GAP_XS }}>
                 <div className="flex items-center justify-between gap-2">
                   <PremiumSkeletonLine token="monoMeta" width={164} tone="light" pill />
-                  <PremiumSkeletonLine token="overline" width={78} tone={idx === 0 ? 'accent' : 'light'} pill />
+                  <PremiumSkeletonLine
+                    token="overline"
+                    width={78}
+                    tone={idx === 0 ? 'accent' : 'light'}
+                    pill
+                  />
                 </div>
                 <PremiumSkeletonLine token="body" width="90%" tone="light" />
                 <PremiumSkeletonLine token="bodySm" width="72%" tone="light" pill />
@@ -435,10 +474,18 @@ export const PremiumSkeleton: React.FC<PremiumSkeletonProps> = ({
           <div className="border-t border-[#E6E6E2] divide-y divide-[#EFEFEB]">
             {sprintRows.map((idx) => (
               <div key={idx} className="py-4 flex items-start gap-3">
-                <div aria-hidden="true" className={`${baseWave} w-5 h-5 rounded-full shrink-0 mt-0.5`} />
+                <div
+                  aria-hidden="true"
+                  className={`${baseWave} w-5 h-5 rounded-full shrink-0 mt-0.5`}
+                />
                 <div className="flex-1 flex flex-col" style={{ gap: '6px' }}>
                   <PremiumSkeletonLine token="bodySm" width="88%" tone="light" />
-                  <PremiumSkeletonLine token="overline" width={76} tone={idx === 0 ? 'accent' : 'light'} pill />
+                  <PremiumSkeletonLine
+                    token="overline"
+                    width={76}
+                    tone={idx === 0 ? 'accent' : 'light'}
+                    pill
+                  />
                   <PremiumSkeletonLine token="monoMeta" width={164} tone="light" pill />
                 </div>
               </div>

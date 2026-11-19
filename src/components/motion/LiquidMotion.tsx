@@ -18,17 +18,11 @@ export const AmbientLight: React.FC<{
     corner === 'top-right'
       ? 'ellipse 64% 52% at 92% 6%'
       : corner === 'top-left'
-      ? 'ellipse 64% 52% at 8% 6%'
-      : 'ellipse 66% 52% at 50% 0%';
+        ? 'ellipse 64% 52% at 8% 6%'
+        : 'ellipse 66% 52% at 50% 0%';
 
   const alpha =
-    dark && intensity === 'medium'
-      ? 0.22
-      : dark
-      ? 0.14
-      : intensity === 'medium'
-      ? 0.12
-      : 0.075;
+    dark && intensity === 'medium' ? 0.22 : dark ? 0.14 : intensity === 'medium' ? 0.12 : 0.075;
 
   return (
     <span
@@ -78,8 +72,8 @@ export const FluidTransition: React.FC<{
     direction === 'up'
       ? { opacity: 0, y: 8 }
       : direction === 'scale'
-      ? { opacity: 0, scale: 0.985 }
-      : { opacity: 0 };
+        ? { opacity: 0, scale: 0.985 }
+        : { opacity: 0 };
 
   return (
     <motion.div
@@ -163,12 +157,9 @@ export const LiquidButton: React.FC<
       'text-white bg-[#FF7417] hover:bg-[#E55F08] border border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_2px_6px_rgba(255,116,23,0.22),0_10px_22px_-10px_rgba(255,116,23,0.38)]',
     secondary:
       'text-[#171717] bg-[#FFFFFF] hover:bg-[#FAFAF9] border border-[#E8E8E4] hover:border-[#D6D6D0] bw-ceramic-control',
-    ghost:
-      'text-[#5C5C58] hover:text-[#171717] hover:bg-[#F1F1EF] border border-transparent',
-    dark:
-      'text-white bg-[#171717] hover:bg-[#252525] border border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_6px_rgba(23,23,23,0.16),0_10px_22px_-12px_rgba(23,23,23,0.34)]',
-    danger:
-      'text-[#BC3E3E] bg-[#FDF0F0] hover:bg-[#FADEDE] border border-[#F5CECE]',
+    ghost: 'text-[#5C5C58] hover:text-[#171717] hover:bg-[#F1F1EF] border border-transparent',
+    dark: 'text-white bg-[#171717] hover:bg-[#252525] border border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_6px_rgba(23,23,23,0.16),0_10px_22px_-12px_rgba(23,23,23,0.34)]',
+    danger: 'text-[#BC3E3E] bg-[#FDF0F0] hover:bg-[#FADEDE] border border-[#F5CECE]',
   };
 
   const sizes = {
@@ -258,8 +249,7 @@ export const LiquidSurface: React.FC<{
     intelligence: 'border-[#ECECE8] text-[#252525] bw-intelligence-light',
   };
 
-  const glowRgba =
-    variant === 'dark' ? 'rgba(255, 116, 23, 0.14)' : 'rgba(255, 116, 23, 0.08)';
+  const glowRgba = variant === 'dark' ? 'rgba(255, 116, 23, 0.14)' : 'rgba(255, 116, 23, 0.08)';
 
   return (
     <div
@@ -300,7 +290,10 @@ export const LiquidLoader: React.FC<{
       aria-live="polite"
       className={`inline-flex items-center gap-2.5 ${className}`}
     >
-      <span className="relative inline-flex w-2.5 h-2.5 items-center justify-center shrink-0" aria-hidden="true">
+      <span
+        className="relative inline-flex w-2.5 h-2.5 items-center justify-center shrink-0"
+        aria-hidden="true"
+      >
         <span className="absolute inset-0 rounded-full bg-[#FF7417]/30 bw-orb-halo" />
         <span className="relative w-1.5 h-1.5 rounded-full bg-[#FF7417]" />
       </span>
@@ -348,9 +341,7 @@ export const FluidProgress: React.FC<{
     <div className="w-full">
       {(label || showPercent) && (
         <div className="flex items-center justify-between text-xs mb-1.5">
-          {label && (
-            <span className={dark ? 'text-[#A8A8A2]' : 'text-[#5C5C58]'}>{label}</span>
-          )}
+          {label && <span className={dark ? 'text-[#A8A8A2]' : 'text-[#5C5C58]'}>{label}</span>}
           {showPercent && (
             <span
               className={`font-mono-num font-medium tabular-nums ${
@@ -436,8 +427,7 @@ export const AnimatedMetric: React.FC<{
     };
   }, [value, reduced]);
 
-  const formatted =
-    decimals > 0 ? display.toFixed(decimals) : Math.round(display).toLocaleString();
+  const formatted = decimals > 0 ? display.toFixed(decimals) : Math.round(display).toLocaleString();
 
   return (
     <span className={`tabular-nums ${className}`}>
@@ -543,10 +533,10 @@ export const InteractiveNode: React.FC<{
             accent
               ? 'w-4 h-4 bg-[#FF7417] border-[#FFFFFF] shadow-[0_0_14px_rgba(255,116,23,0.55)]'
               : active
-              ? 'w-3.5 h-3.5 bg-[#FF9A45] border-[#FFFFFF] shadow-[0_0_10px_rgba(255,116,23,0.4)]'
-              : dark
-              ? 'w-3 h-3 bg-[#A8A8A2] border-[#171717] group-hover/node:bg-[#FF7417]'
-              : 'w-3 h-3 bg-[#252525] border-[#FFFFFF] shadow-xs group-hover/node:bg-[#FF7417]'
+                ? 'w-3.5 h-3.5 bg-[#FF9A45] border-[#FFFFFF] shadow-[0_0_10px_rgba(255,116,23,0.4)]'
+                : dark
+                  ? 'w-3 h-3 bg-[#A8A8A2] border-[#171717] group-hover/node:bg-[#FF7417]'
+                  : 'w-3 h-3 bg-[#252525] border-[#FFFFFF] shadow-xs group-hover/node:bg-[#FF7417]'
           }`}
         />
       </span>
@@ -555,10 +545,10 @@ export const InteractiveNode: React.FC<{
           accent
             ? 'bg-[#171717] text-white border-[#171717] shadow-sm'
             : active
-            ? 'bg-[#FFF0E5] text-[#C44D00] border-[#FFD3B3]'
-            : dark
-            ? 'bg-[#252525]/90 text-[#E6E6E2] border-[#383838]'
-            : 'bg-[#FFFFFF]/95 text-[#252525] border-[#E6E6E2] shadow-xs group-hover/node:border-[#FF7417]'
+              ? 'bg-[#FFF0E5] text-[#C44D00] border-[#FFD3B3]'
+              : dark
+                ? 'bg-[#252525]/90 text-[#E6E6E2] border-[#383838]'
+                : 'bg-[#FFFFFF]/95 text-[#252525] border-[#E6E6E2] shadow-xs group-hover/node:border-[#FF7417]'
         }`}
       >
         {label}
@@ -603,7 +593,7 @@ export const NeuralNetworkAnimation: React.FC<{
       const radiusFactor = 0.18 + ((idx * 37) % 60) / 100;
       return {
         angle,
-        speed: (idx % 2 === 0 ? 1 : -1) * (0.002 + ((idx % 5) * 0.0007)),
+        speed: (idx % 2 === 0 ? 1 : -1) * (0.002 + (idx % 5) * 0.0007),
         radiusFactor,
         size: idx % 5 === 0 ? 2.6 : 1.7,
         isOrange: idx === 0 || idx === 7 || idx === 14,
@@ -630,7 +620,8 @@ export const NeuralNetworkAnimation: React.FC<{
 
     const drawFrame = () => {
       const activeMode = modeRef.current;
-      const speedMult = activeMode === 'synthesizing' ? 2.4 : activeMode === 'convergence' ? 1.5 : 0.75;
+      const speedMult =
+        activeMode === 'synthesizing' ? 2.4 : activeMode === 'convergence' ? 1.5 : 0.75;
       const cx = width / 2;
       const cy = height / 2;
       const maxR = Math.min(width * 0.44, height * 0.44);
@@ -675,8 +666,8 @@ export const NeuralNetworkAnimation: React.FC<{
           ctx.strokeStyle = a.isOrange
             ? 'rgba(255, 116, 23, 0.28)'
             : dark
-            ? 'rgba(255, 255, 255, 0.09)'
-            : 'rgba(37, 37, 37, 0.09)';
+              ? 'rgba(255, 255, 255, 0.09)'
+              : 'rgba(37, 37, 37, 0.09)';
           ctx.lineWidth = a.isOrange ? 1.15 : 0.8;
           ctx.stroke();
         }
@@ -693,8 +684,8 @@ export const NeuralNetworkAnimation: React.FC<{
               a.isOrange || b.isOrange
                 ? `rgba(255, 116, 23, ${alpha * 1.45})`
                 : dark
-                ? `rgba(255, 255, 255, ${alpha})`
-                : `rgba(37, 37, 37, ${alpha})`;
+                  ? `rgba(255, 255, 255, ${alpha})`
+                  : `rgba(37, 37, 37, ${alpha})`;
             ctx.lineWidth = 0.85;
             ctx.stroke();
           }
@@ -708,8 +699,8 @@ export const NeuralNetworkAnimation: React.FC<{
         ctx.fillStyle = pt.isOrange
           ? '#FF9A45'
           : dark
-          ? 'rgba(255,255,255,0.68)'
-          : 'rgba(37,37,37,0.62)';
+            ? 'rgba(255,255,255,0.68)'
+            : 'rgba(37,37,37,0.62)';
         ctx.fill();
       });
 
@@ -826,8 +817,13 @@ export const AiRequestPulse: React.FC<{
         />
       )}
       <div className="relative z-10 flex items-center gap-2.5 text-xs font-medium text-[#C44D00]">
-        <span className="relative inline-flex w-2.5 h-2.5 items-center justify-center shrink-0" aria-hidden="true">
-          {!reduced && <span className="absolute inset-0 rounded-full bg-[#FF7417]/35 bw-orb-halo" />}
+        <span
+          className="relative inline-flex w-2.5 h-2.5 items-center justify-center shrink-0"
+          aria-hidden="true"
+        >
+          {!reduced && (
+            <span className="absolute inset-0 rounded-full bg-[#FF7417]/35 bw-orb-halo" />
+          )}
           <span className="relative w-2 h-2 rounded-full bg-[#FF7417]" />
         </span>
         <span>{label}</span>
@@ -851,21 +847,23 @@ export const LiquidSkeletonBlock: React.FC<{
     tone === 'dark'
       ? 'bw-skeleton-wave-dark'
       : tone === 'accent'
-      ? 'bw-skeleton-wave-accent'
-      : 'bw-skeleton-wave';
+        ? 'bw-skeleton-wave-accent'
+        : 'bw-skeleton-wave';
 
   const radiusClass =
     radius === 'full'
       ? 'rounded-full'
       : radius === 'xl'
-      ? 'rounded-[22px]'
-      : radius === 'lg'
-      ? 'rounded-[16px]'
-      : radius === 'sm'
-      ? 'rounded-[8px]'
-      : 'rounded-[12px]';
+        ? 'rounded-[22px]'
+        : radius === 'lg'
+          ? 'rounded-[16px]'
+          : radius === 'sm'
+            ? 'rounded-[8px]'
+            : 'rounded-[12px]';
 
-  return <div aria-hidden="true" className={`${toneClass} ${radiusClass} ${className}`} style={style} />;
+  return (
+    <div aria-hidden="true" className={`${toneClass} ${radiusClass} ${className}`} style={style} />
+  );
 };
 
 /**
@@ -1057,8 +1055,8 @@ export const ActionFeedbackBanner: React.FC<{
     tone === 'success'
       ? 'border-[#CEE8DA] bg-[#ECF7F1]/75 text-[#24724E]'
       : tone === 'error'
-      ? 'border-[#F5CECE] bg-[#FDF0F0] text-[#BC3E3E]'
-      : 'border-[#FFD3B3] bg-[#FFF0E5]/70 text-[#C44D00]';
+        ? 'border-[#F5CECE] bg-[#FDF0F0] text-[#BC3E3E]'
+        : 'border-[#FFD3B3] bg-[#FFF0E5]/70 text-[#C44D00]';
 
   return (
     <motion.div
@@ -1192,8 +1190,7 @@ export const NeuralConstellationSignature: React.FC<{
 }> = ({ className = '', onExploreDemo }) => {
   const reduced = useReducedMotion();
   const [selectedId, setSelectedId] = useState<string>('brain');
-  const activeNode =
-    CONSTELLATION_NODES.find((n) => n.id === selectedId) ?? CONSTELLATION_NODES[0];
+  const activeNode = CONSTELLATION_NODES.find((n) => n.id === selectedId) ?? CONSTELLATION_NODES[0];
 
   const isEdgeHighlighted = (a: string, b: string) => a === selectedId || b === selectedId;
 
@@ -1217,14 +1214,7 @@ export const NeuralConstellationSignature: React.FC<{
           aria-hidden="true"
         >
           {/* Delicate Concentric Architectural Orbits */}
-          <circle
-            cx="50"
-            cy="50"
-            r="22"
-            fill="none"
-            stroke="#EFEFEB"
-            strokeWidth="0.35"
-          />
+          <circle cx="50" cy="50" r="22" fill="none" stroke="#EFEFEB" strokeWidth="0.35" />
           <circle
             cx="50"
             cy="50"
@@ -1234,14 +1224,7 @@ export const NeuralConstellationSignature: React.FC<{
             strokeWidth="0.35"
             strokeDasharray="1.2 1.6"
           />
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            fill="none"
-            stroke="#F3F3F0"
-            strokeWidth="0.3"
-          />
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#F3F3F0" strokeWidth="0.3" />
 
           {CONSTELLATION_EDGES.map(([fromId, toId]) => {
             const from = CONSTELLATION_NODES.find((n) => n.id === fromId)!;
@@ -1278,13 +1261,7 @@ export const NeuralConstellationSignature: React.FC<{
               className="group absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center rounded-full focus-ring cursor-pointer"
             >
               <motion.span
-                animate={
-                  reduced
-                    ? undefined
-                    : isSelected
-                    ? { scale: 1.08 }
-                    : { scale: 1 }
-                }
+                animate={reduced ? undefined : isSelected ? { scale: 1.08 } : { scale: 1 }}
                 transition={{ duration: 0.2, ease: BW_EASE }}
                 style={{
                   width: sizePx,
@@ -1328,13 +1305,17 @@ export const NeuralConstellationSignature: React.FC<{
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
           <div>
-            <span className="block text-[10px] uppercase tracking-wider text-[#858585]">Reads from system</span>
+            <span className="block text-[10px] uppercase tracking-wider text-[#858585]">
+              Reads from system
+            </span>
             <span className="text-xs text-[#252525] leading-relaxed block mt-1">
               {activeNode.receives}
             </span>
           </div>
           <div>
-            <span className="block text-[10px] uppercase tracking-wider text-[#C44D00]">Feeds downstream</span>
+            <span className="block text-[10px] uppercase tracking-wider text-[#C44D00]">
+              Feeds downstream
+            </span>
             <span className="text-xs text-[#252525] leading-relaxed block mt-1">
               {activeNode.emits}
             </span>
@@ -1355,4 +1336,3 @@ export const NeuralConstellationSignature: React.FC<{
     </div>
   );
 };
-

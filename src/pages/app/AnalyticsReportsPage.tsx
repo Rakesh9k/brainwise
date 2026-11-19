@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BarChart3, Download, FileBarChart2, Info } from 'lucide-react';
+import { Download, FileBarChart2, Info } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
 import {
   buildExecutiveReportNarrative,
@@ -44,25 +44,64 @@ const MONTHLY_DEMO_SERIES = [
 const ANALYTICS_MRR_SERIES: GrowthTrendSeriesMap = {
   '7d': [
     { label: 'Mon', value: 1540, baseline: 1490, detail: '28 weekly trial leads' },
-    { label: 'Tue', value: 1565, baseline: 1510, detail: '34 weekly trial leads', milestone: 'Ship Hook' },
+    {
+      label: 'Tue',
+      value: 1565,
+      baseline: 1510,
+      detail: '34 weekly trial leads',
+      milestone: 'Ship Hook',
+    },
     { label: 'Wed', value: 1590, baseline: 1530, detail: '39 weekly trial leads' },
     { label: 'Thu', value: 1615, baseline: 1550, detail: '44 weekly trial leads' },
-    { label: 'Fri', value: 1648, baseline: 1570, detail: '51 weekly trial leads', milestone: 'Press Drop', milestoneTone: 'accent' },
+    {
+      label: 'Fri',
+      value: 1648,
+      baseline: 1570,
+      detail: '51 weekly trial leads',
+      milestone: 'Press Drop',
+      milestoneTone: 'accent',
+    },
     { label: 'Sun', value: 1680, baseline: 1595, detail: '58 weekly trial leads' },
   ],
   '30d': [
     { label: 'W1', value: 1420, baseline: 1380, detail: '172 qualified leads' },
-    { label: 'W2', value: 1485, baseline: 1435, detail: '184 qualified leads', milestone: 'Checkout Test' },
+    {
+      label: 'W2',
+      value: 1485,
+      baseline: 1435,
+      detail: '184 qualified leads',
+      milestone: 'Checkout Test',
+    },
     { label: 'W3', value: 1550, baseline: 1490, detail: '196 qualified leads' },
-    { label: 'W4', value: 1618, baseline: 1545, detail: '205 qualified leads', milestone: 'Tasting Kits', milestoneTone: 'accent' },
+    {
+      label: 'W4',
+      value: 1618,
+      baseline: 1545,
+      detail: '205 qualified leads',
+      milestone: 'Tasting Kits',
+      milestoneTone: 'accent',
+    },
     { label: 'Now', value: 1680, baseline: 1600, detail: '214 qualified leads' },
   ],
   '90d': [
     { label: 'Sep 1', value: 1060, baseline: 1020, detail: '124 qualified leads' },
-    { label: 'Sep 15', value: 1180, baseline: 1130, detail: '138 qualified leads', milestone: 'Flight Launch' },
+    {
+      label: 'Sep 15',
+      value: 1180,
+      baseline: 1130,
+      detail: '138 qualified leads',
+      milestone: 'Flight Launch',
+    },
     { label: 'Oct 1', value: 1310, baseline: 1240, detail: '154 qualified leads' },
     { label: 'Oct 15', value: 1420, baseline: 1350, detail: '172 qualified leads' },
-    { label: 'Nov 1', value: 1560, baseline: 1475, detail: '193 qualified leads', milestone: 'Free Ship', milestoneTone: 'accent' },
+    {
+      label: 'Nov 1',
+      value: 1560,
+      baseline: 1475,
+      detail: '193 qualified leads',
+      milestone: 'Free Ship',
+      milestoneTone: 'accent',
+    },
     { label: 'Now', value: 1680, baseline: 1600, detail: '214 qualified leads' },
   ],
   ytd: MONTHLY_DEMO_SERIES.map((pt, idx) => ({
@@ -73,8 +112,8 @@ const ANALYTICS_MRR_SERIES: GrowthTrendSeriesMap = {
     ...(pt.month === 'Jul'
       ? { milestone: 'Sub Launch' }
       : pt.month === 'Oct'
-      ? { milestone: 'B2B Studios', milestoneTone: 'accent' as const }
-      : {}),
+        ? { milestone: 'B2B Studios', milestoneTone: 'accent' as const }
+        : {}),
   })),
 };
 
@@ -112,13 +151,13 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
         ? [{ label: selectedReport }]
         : [{ label: ANALYTICS_TAB_LABELS[tab] }]
       : tab === 'reports'
-      ? [
-          { label: 'Executive Reports', onClick: () => setTab('overview') },
-          { label: selectedReport },
-        ]
-      : tab !== 'overview'
-      ? [{ label: ANALYTICS_TAB_LABELS[tab] }]
-      : [],
+        ? [
+            { label: 'Executive Reports', onClick: () => setTab('overview') },
+            { label: selectedReport },
+          ]
+        : tab !== 'overview'
+          ? [{ label: ANALYTICS_TAB_LABELS[tab] }]
+          : [],
     [initialTab, tab, selectedReport]
   );
 
@@ -154,8 +193,11 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
         <div className="flex items-center gap-2.5">
           <Info className="w-4 h-4 text-[#A85E16] shrink-0" />
           <span>
-            <strong className="text-[#242424]">Live Workspace + Simulated Storefront Telemetry:</strong>{' '}
-            Execution rates, goal progress, and experiment counts are live; external revenue/funnel charts are simulated preview feeds.
+            <strong className="text-[#242424]">
+              Live Workspace + Simulated Storefront Telemetry:
+            </strong>{' '}
+            Execution rates, goal progress, and experiment counts are live; external revenue/funnel
+            charts are simulated preview feeds.
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -308,7 +350,11 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
           )}
 
           {tab === 'marketing' && (
-            <FluidTransition key="marketing" direction="fade" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FluidTransition
+              key="marketing"
+              direction="fade"
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
               {[
                 {
                   channel: 'Social & Organic Reels',
@@ -354,7 +400,11 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
           )}
 
           {tab === 'growth' && (
-            <FluidTransition key="growth" direction="fade" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FluidTransition
+              key="growth"
+              direction="fade"
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
               <MetricCard
                 label="Task Completion Rate (Live)"
                 value={`${taskStats.completionRate}%`}
@@ -375,7 +425,11 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
           )}
 
           {tab === 'reports' && (
-            <FluidTransition key="reports" direction="fade" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <FluidTransition
+              key="reports"
+              direction="fade"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+            >
               <div className="lg:col-span-4 space-y-2.5">
                 <SectionHeader title="Available Reports" />
                 {[
@@ -453,7 +507,9 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
         </LiquidSkeletonReveal>
       )}
 
-      <JourneyNextStep currentRoute={initialTab === 'reports' ? 'reports' : 'business-performance'} />
+      <JourneyNextStep
+        currentRoute={initialTab === 'reports' ? 'reports' : 'business-performance'}
+      />
     </div>
   );
 };

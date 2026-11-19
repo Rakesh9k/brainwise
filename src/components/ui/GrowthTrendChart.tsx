@@ -138,11 +138,7 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
       }`}
     >
       <div className="flex items-center justify-between gap-3">
-        <div
-          className={`${typeClass.overline} ${
-            dark ? 'text-[#A8A8A2]' : 'text-[#858585]'
-          }`}
-        >
+        <div className={`${typeClass.overline} ${dark ? 'text-[#A8A8A2]' : 'text-[#858585]'}`}>
           {label}
         </div>
         {milestone && (
@@ -153,8 +149,8 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
                   ? 'text-[#FF9A45]'
                   : 'text-[#C44D00]'
                 : dark
-                ? 'text-[#D6D6D0]'
-                : 'text-[#5C5C58]'
+                  ? 'text-[#D6D6D0]'
+                  : 'text-[#5C5C58]'
             }`}
           >
             {milestone.label}
@@ -190,9 +186,7 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
       {point?.detail && (
         <div
           className={`mt-1.5 pt-1.5 border-t text-[11px] ${
-            dark
-              ? 'border-white/[0.08] text-[#A8A8A2]'
-              : 'border-[#EFEFEB] text-[#5C5C58]'
+            dark ? 'border-white/[0.08] text-[#A8A8A2]' : 'border-[#EFEFEB] text-[#5C5C58]'
           }`}
         >
           {point.detail}
@@ -212,11 +206,7 @@ interface MilestoneSvgLabelProps {
  * Editorial SVG milestone annotation anchored cleanly above the dashed vertical stem
  * using `.bw-type-mono-meta` typography (`--bw-font-mono`, `--bw-text-step-n1`).
  */
-const MilestoneSvgLabel: React.FC<MilestoneSvgLabelProps> = ({
-  viewBox,
-  milestone,
-  dark,
-}) => {
+const MilestoneSvgLabel: React.FC<MilestoneSvgLabelProps> = ({ viewBox, milestone, dark }) => {
   if (!viewBox || typeof viewBox.x !== 'number' || typeof viewBox.y !== 'number') {
     return null;
   }
@@ -227,24 +217,13 @@ const MilestoneSvgLabel: React.FC<MilestoneSvgLabelProps> = ({
   const dotFill = isAccent
     ? 'var(--bw-orange)'
     : dark
-    ? 'rgba(255, 255, 255, 0.48)'
-    : 'rgba(23, 23, 23, 0.36)';
-  const textFill = isAccent
-    ? dark
-      ? '#FF9A45'
-      : '#B94700'
-    : dark
-    ? '#B8B8B2'
-    : '#5C5C58';
+      ? 'rgba(255, 255, 255, 0.48)'
+      : 'rgba(23, 23, 23, 0.36)';
+  const textFill = isAccent ? (dark ? '#FF9A45' : '#B94700') : dark ? '#B8B8B2' : '#5C5C58';
 
   const textAnchor =
-    milestone.alignment === 'start'
-      ? 'start'
-      : milestone.alignment === 'end'
-      ? 'end'
-      : 'middle';
-  const xOffset =
-    milestone.alignment === 'start' ? 2 : milestone.alignment === 'end' ? -2 : 0;
+    milestone.alignment === 'start' ? 'start' : milestone.alignment === 'end' ? 'end' : 'middle';
+  const xOffset = milestone.alignment === 'start' ? 2 : milestone.alignment === 'end' ? -2 : 0;
 
   return (
     <g
@@ -252,12 +231,7 @@ const MilestoneSvgLabel: React.FC<MilestoneSvgLabelProps> = ({
       data-milestone-label={milestone.label}
       pointerEvents="none"
     >
-      <circle
-        cx={x}
-        cy={topY}
-        r={2.25}
-        fill={dotFill}
-      />
+      <circle cx={x} cy={topY} r={2.25} fill={dotFill} />
       <text
         x={x + xOffset}
         y={topY - 9}
@@ -295,13 +269,7 @@ const EditorialSeriesDot: React.FC<EditorialSeriesDotProps> = ({
   if (index === total - 1) {
     return (
       <g aria-hidden="true" data-terminal-dot="true">
-        <circle
-          cx={cx}
-          cy={cy}
-          r={8}
-          fill="var(--bw-orange)"
-          fillOpacity={dark ? 0.2 : 0.14}
-        />
+        <circle cx={cx} cy={cy} r={8} fill="var(--bw-orange)" fillOpacity={dark ? 0.2 : 0.14} />
         <circle
           cx={cx}
           cy={cy}
@@ -369,8 +337,8 @@ export const TactileCurveModeToggle: React.FC<{
               active
                 ? 'text-[#171717]'
                 : dark
-                ? 'text-[#A8A8A2] hover:text-white'
-                : 'text-[#686864] hover:text-[#171717]'
+                  ? 'text-[#A8A8A2] hover:text-white'
+                  : 'text-[#686864] hover:text-[#171717]'
             }`}
           >
             {active && (
@@ -406,8 +374,18 @@ export const TactileCurveModeToggle: React.FC<{
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  <circle cx="5" cy="3.5" r="1.1" fill={active ? 'var(--bw-orange)' : 'currentColor'} />
-                  <circle cx="9" cy="6" r="1.1" fill={active ? 'var(--bw-orange)' : 'currentColor'} />
+                  <circle
+                    cx="5"
+                    cy="3.5"
+                    r="1.1"
+                    fill={active ? 'var(--bw-orange)' : 'currentColor'}
+                  />
+                  <circle
+                    cx="9"
+                    cy="6"
+                    r="1.1"
+                    fill={active ? 'var(--bw-orange)' : 'currentColor'}
+                  />
                 </>
               )}
             </svg>
@@ -435,11 +413,7 @@ export const TactileRangeSelector: React.FC<{
   return (
     <div className="flex items-center justify-between gap-3">
       {label ? (
-        <span
-          className={`${typeClass.overline} ${
-            dark ? 'text-[#8A8A84]' : 'text-[#858585]'
-          }`}
-        >
+        <span className={`${typeClass.overline} ${dark ? 'text-[#8A8A84]' : 'text-[#858585]'}`}>
           {label}
         </span>
       ) : (
@@ -473,8 +447,8 @@ export const TactileRangeSelector: React.FC<{
                 active
                   ? 'text-[#171717]'
                   : dark
-                  ? 'text-[#A8A8A2] hover:text-white'
-                  : 'text-[#686864] hover:text-[#171717]'
+                    ? 'text-[#A8A8A2] hover:text-white'
+                    : 'text-[#686864] hover:text-[#171717]'
               }`}
             >
               {active && (
@@ -539,10 +513,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
 
   const activeRange = controlledRange ?? internalRange;
   const activeCurveMode = controlledCurveMode ?? internalCurveMode;
-  const curveConfig = useMemo(
-    () => resolveCurveModeConfig(activeCurveMode),
-    [activeCurveMode]
-  );
+  const curveConfig = useMemo(() => resolveCurveModeConfig(activeCurveMode), [activeCurveMode]);
 
   const handleSelectRange = (nextRange: GrowthTimeRange) => {
     if (nextRange === activeRange) return;
@@ -592,14 +563,8 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
     return map;
   }, [resolvedMilestones]);
 
-  const summary = useMemo(
-    () => computeGrowthTrendSummary(resolvedPoints),
-    [resolvedPoints]
-  );
-  const yTicks = useMemo(
-    () => buildEditorialTickValues(summary.yDomain),
-    [summary.yDomain]
-  );
+  const summary = useMemo(() => computeGrowthTrendSummary(resolvedPoints), [resolvedPoints]);
+  const yTicks = useMemo(() => buildEditorialTickValues(summary.yDomain), [summary.yDomain]);
   const hasBaseline = useMemo(
     () => resolvedPoints.some((p) => typeof p.baseline === 'number'),
     [resolvedPoints]
@@ -627,16 +592,12 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   const activePoint =
     hoveredIndex !== null && resolvedPoints[hoveredIndex]
       ? resolvedPoints[hoveredIndex]
-      : summary.latest ?? resolvedPoints[resolvedPoints.length - 1];
+      : (summary.latest ?? resolvedPoints[resolvedPoints.length - 1]);
   const signedDeltaPct = formatSignedDeltaPercent(summary.deltaPercent);
 
   const axisTickColor = dark ? '#8A8A84' : '#858585';
-  const hairlineColor = dark
-    ? 'rgba(255, 255, 255, 0.065)'
-    : 'rgba(23, 23, 23, 0.06)';
-  const cursorColor = dark
-    ? 'rgba(255, 116, 23, 0.36)'
-    : 'rgba(255, 116, 23, 0.28)';
+  const hairlineColor = dark ? 'rgba(255, 255, 255, 0.065)' : 'rgba(23, 23, 23, 0.06)';
+  const cursorColor = dark ? 'rgba(255, 116, 23, 0.36)' : 'rgba(255, 116, 23, 0.28)';
 
   return (
     <div
@@ -656,11 +617,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
               dark={dark}
             />
           ) : rangeLabel ? (
-            <span
-              className={`${typeClass.overline} ${
-                dark ? 'text-[#8A8A84]' : 'text-[#858585]'
-              }`}
-            >
+            <span className={`${typeClass.overline} ${dark ? 'text-[#8A8A84]' : 'text-[#858585]'}`}>
               {rangeLabel}
             </span>
           ) : (
@@ -668,11 +625,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
           )}
 
           {showRangeSelector && (
-            <TactileRangeSelector
-              value={activeRange}
-              onChange={handleSelectRange}
-              dark={dark}
-            />
+            <TactileRangeSelector value={activeRange} onChange={handleSelectRange} dark={dark} />
           )}
         </div>
       )}
@@ -698,9 +651,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                 }}
                 onMouseMove={(state) => {
                   const idx =
-                    typeof state?.activeTooltipIndex === 'number'
-                      ? state.activeTooltipIndex
-                      : null;
+                    typeof state?.activeTooltipIndex === 'number' ? state.activeTooltipIndex : null;
                   setHoveredIndex(idx);
                 }}
                 onMouseLeave={() => setHoveredIndex(null)}
@@ -717,11 +668,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                       stopColor="var(--bw-orange)"
                       stopOpacity={dark ? 0.03 : 0.02}
                     />
-                    <stop
-                      offset="100%"
-                      stopColor="var(--bw-orange)"
-                      stopOpacity={0}
-                    />
+                    <stop offset="100%" stopColor="var(--bw-orange)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
 
@@ -744,17 +691,13 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                           ? 'rgba(255, 154, 69, 0.42)'
                           : 'rgba(255, 116, 23, 0.38)'
                         : dark
-                        ? 'rgba(255, 255, 255, 0.2)'
-                        : 'rgba(23, 23, 23, 0.18)'
+                          ? 'rgba(255, 255, 255, 0.2)'
+                          : 'rgba(23, 23, 23, 0.18)'
                     }
                     strokeWidth={1}
                     strokeDasharray="2.5 3.5"
                     label={(labelProps) => (
-                      <MilestoneSvgLabel
-                        viewBox={labelProps.viewBox}
-                        milestone={m}
-                        dark={dark}
-                      />
+                      <MilestoneSvgLabel viewBox={labelProps.viewBox} milestone={m} dark={dark} />
                     )}
                   />
                 ))}
@@ -874,9 +817,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
               }`}
             >
               {hoveredIndex !== null ? 'Inspecting' : 'Latest'}:{' '}
-              <span className={dark ? 'text-white' : 'text-[#171717]'}>
-                {activePoint.label}
-              </span>
+              <span className={dark ? 'text-white' : 'text-[#171717]'}>{activePoint.label}</span>
             </span>
           </div>
 
@@ -889,8 +830,8 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                       ? 'text-[#4FA87B]'
                       : 'text-[#24724E]'
                     : summary.trend === 'down'
-                    ? 'text-[#BC3E3E]'
-                    : 'text-[#858585]'
+                      ? 'text-[#BC3E3E]'
+                      : 'text-[#858585]'
                 }`}
               >
                 {signedDeltaPct} ({activeRange.toUpperCase()})

@@ -96,11 +96,7 @@ export interface GrowthTrendSummary {
   yDomain: [number, number];
 }
 
-export function formatGrowthMetricValue(
-  value: number,
-  prefix = '',
-  suffix = ''
-): string {
+export function formatGrowthMetricValue(value: number, prefix = '', suffix = ''): string {
   const isNegative = value < 0;
   const abs = Math.abs(value);
   const formatted = Number.isInteger(abs)
@@ -185,9 +181,7 @@ export function resolveTimeRangePoints(options: {
   );
 }
 
-export function computeGrowthTrendSummary(
-  points: GrowthTrendPoint[]
-): GrowthTrendSummary {
+export function computeGrowthTrendSummary(points: GrowthTrendPoint[]): GrowthTrendSummary {
   if (!points.length) {
     return {
       count: 0,
@@ -220,8 +214,7 @@ export function computeGrowthTrendSummary(
       ? Number((((latest.value - first.value) / Math.abs(first.value)) * 100).toFixed(1))
       : null;
 
-  const trend: 'up' | 'down' | 'flat' =
-    delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+  const trend: 'up' | 'down' | 'flat' = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
 
   const span = max - min;
   const pad = span === 0 ? Math.max(Math.abs(max) * 0.2, 4) : span * 0.18;

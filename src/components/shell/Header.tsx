@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import {
-  Bell,
-  HelpCircle,
-  LogOut,
-  Menu,
-  Search,
-  Settings,
-  User,
-} from 'lucide-react';
+import { Bell, HelpCircle, LogOut, Menu, Search, Settings, User } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import { BW_EASE } from '../motion/LiquidMotion';
 import { Breadcrumbs } from './Breadcrumbs';
@@ -114,7 +106,9 @@ export const Header: React.FC<{
                     <div className="text-xs font-semibold text-[#171717]">
                       {state.user.firstName} {state.user.lastName}
                     </div>
-                    <div className="text-[11px] text-[#858585] truncate mt-0.5">{state.user.email}</div>
+                    <div className="text-[11px] text-[#858585] truncate mt-0.5">
+                      {state.user.email}
+                    </div>
                   </div>
                   <div className="py-1">
                     <button

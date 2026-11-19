@@ -3,11 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {
-  StrategicMemory,
-  StrategicAngleRecord,
-  BusinessBrainData,
-} from '../types/brainwise';
+import type { StrategicMemory, StrategicAngleRecord, BusinessBrainData } from '../types/brainwise';
 
 export const FATIGUE_THRESHOLD = 3;
 
@@ -65,9 +61,7 @@ export function buildAntiFatiguePromptDirectives(memory?: StrategicMemory): stri
 
   if (memory.usedAngles && memory.usedAngles.length > 0) {
     const recentAngles = memory.usedAngles.slice(-4).map((a) => `• "${a.angle}" (${a.theme})`);
-    directives.push(
-      `PREVIOUSLY USED HOOKS (DO NOT COPY DIRECTLY):\n${recentAngles.join('\n')}`
-    );
+    directives.push(`PREVIOUSLY USED HOOKS (DO NOT COPY DIRECTLY):\n${recentAngles.join('\n')}`);
   }
 
   if (memory.explicitExclusions && memory.explicitExclusions.length > 0) {

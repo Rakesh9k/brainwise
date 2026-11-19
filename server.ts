@@ -83,16 +83,26 @@ function formatSizingBands(tamBillion: number, samSharePct: number, somSharePct:
 function extractGeminiError(err: unknown): { status: number; message: string } {
   const rawMessage = err instanceof Error ? err.message : 'Unexpected server error.';
   if (rawMessage.includes('GEMINI_API_KEY is not configured')) {
-    return { status: 503, message: 'Live AI is unavailable because GEMINI_API_KEY is not configured on the server.' };
+    return {
+      status: 503,
+      message: 'Live AI is unavailable because GEMINI_API_KEY is not configured on the server.',
+    };
   }
   if (rawMessage.includes('timed out')) {
     return { status: 504, message: rawMessage };
   }
   if (rawMessage.includes('PERMISSION_DENIED') || rawMessage.includes('API_KEY_INVALID')) {
-    return { status: 403, message: 'Gemini API authentication failed. Please check GEMINI_API_KEY in Settings > Secrets.' };
+    return {
+      status: 403,
+      message:
+        'Gemini API authentication failed. Please check GEMINI_API_KEY in Settings > Secrets.',
+    };
   }
   if (rawMessage.includes('RESOURCE_EXHAUSTED') || rawMessage.includes('429')) {
-    return { status: 429, message: 'Gemini API quota limit reached. Please retry shortly or check Settings > Secrets.' };
+    return {
+      status: 429,
+      message: 'Gemini API quota limit reached. Please retry shortly or check Settings > Secrets.',
+    };
   }
   return { status: 500, message: rawMessage };
 }
@@ -145,12 +155,21 @@ async function startServer() {
   app.post('/api/ai/dossier', async (req: Request, res: Response) => {
     try {
       const body = (req.body || {}) as DossierPayloadBody;
-      const ideaSummary = (body.ideaSummary || '').trim() || `${body.brain?.businessName || 'New Venture'} Growth Initiative`;
-      const industry = (body.industry || '').trim() || body.brain?.industry || 'Modern Consumer & B2B';
-      const targetMarket = (body.targetMarket || '').trim() || body.brain?.targetAudience || 'Early-adopter urban buyers';
-      const geography = (body.geography || '').trim() || body.brain?.location || 'Primary Launch Market';
+      const ideaSummary =
+        (body.ideaSummary || '').trim() ||
+        `${body.brain?.businessName || 'New Venture'} Growth Initiative`;
+      const industry =
+        (body.industry || '').trim() || body.brain?.industry || 'Modern Consumer & B2B';
+      const targetMarket =
+        (body.targetMarket || '').trim() ||
+        body.brain?.targetAudience ||
+        'Early-adopter urban buyers';
+      const geography =
+        (body.geography || '').trim() || body.brain?.location || 'Primary Launch Market';
       const depth =
-        body.depth === 'Rapid Pulse' || body.depth === 'Standard Validation' || body.depth === 'Deep Market Dossier'
+        body.depth === 'Rapid Pulse' ||
+        body.depth === 'Standard Validation' ||
+        body.depth === 'Deep Market Dossier'
           ? body.depth
           : 'Deep Market Dossier';
 
@@ -164,168 +183,177 @@ async function startServer() {
         `Target Market: ${targetMarket}`,
         `Geography: ${geography}`,
         `Requested Depth: ${depth}`,
-        body.brain?.businessName ? `Business Brain Context: ${body.brain.businessName} (${body.brain.stage || 'Growing'}) — Positioning: ${body.brain.brandPositioning || 'Emerging'}` : '',
-        body.brain?.strategicMemory ? buildAntiFatiguePromptDirectives(body.brain.strategicMemory) : '',
+        body.brain?.businessName
+          ? `Business Brain Context: ${body.brain.businessName} (${body.brain.stage || 'Growing'}) — Positioning: ${body.brain.brandPositioning || 'Emerging'}`
+          : '',
+        body.brain?.strategicMemory
+          ? buildAntiFatiguePromptDirectives(body.brain.strategicMemory)
+          : '',
         'Return realistic numeric assumptions: tamBillion between 0.5 and 25, samSharePct between 4 and 30, somSharePct between 0.4 and 5.',
         'Keep language executive, concise, practical, and tailored specifically to the concept and geography.',
       ]
         .filter(Boolean)
         .join('\n');
 
-      const response = await withTimeout(ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              overallConfidence: { type: Type.STRING, enum: ['High', 'Moderate', 'Exploratory'] },
-              viabilitySignal: { type: Type.STRING, enum: ['Strong Fit', 'Promising with Niche Focus', 'Needs Pivot'] },
-              executiveSummary: { type: Type.STRING },
-              marketOverviewText: { type: Type.STRING },
-              tamBillion: { type: Type.NUMBER },
-              samSharePct: { type: Type.NUMBER },
-              somSharePct: { type: Type.NUMBER },
-              tamBasis: { type: Type.STRING },
-              samBasis: { type: Type.STRING },
-              somBasis: { type: Type.STRING },
-              marketDemandSummary: { type: Type.STRING },
-              demandSignals: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    label: { type: Type.STRING },
-                    trend: { type: Type.STRING },
-                  },
-                  required: ['label', 'trend'],
+      const response = await withTimeout(
+        ai.models.generateContent({
+          model: GEMINI_MODEL,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                overallConfidence: { type: Type.STRING, enum: ['High', 'Moderate', 'Exploratory'] },
+                viabilitySignal: {
+                  type: Type.STRING,
+                  enum: ['Strong Fit', 'Promising with Niche Focus', 'Needs Pivot'],
                 },
-              },
-              customerSegments: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    share: { type: Type.STRING },
-                    need: { type: Type.STRING },
-                    urgency: { type: Type.STRING },
+                executiveSummary: { type: Type.STRING },
+                marketOverviewText: { type: Type.STRING },
+                tamBillion: { type: Type.NUMBER },
+                samSharePct: { type: Type.NUMBER },
+                somSharePct: { type: Type.NUMBER },
+                tamBasis: { type: Type.STRING },
+                samBasis: { type: Type.STRING },
+                somBasis: { type: Type.STRING },
+                marketDemandSummary: { type: Type.STRING },
+                demandSignals: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      label: { type: Type.STRING },
+                      trend: { type: Type.STRING },
+                    },
+                    required: ['label', 'trend'],
                   },
-                  required: ['name', 'share', 'need', 'urgency'],
                 },
-              },
-              customerPainPoints: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    severity: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
-                    evidence: { type: Type.STRING },
+                customerSegments: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      share: { type: Type.STRING },
+                      need: { type: Type.STRING },
+                      urgency: { type: Type.STRING },
+                    },
+                    required: ['name', 'share', 'need', 'urgency'],
                   },
-                  required: ['title', 'severity', 'evidence'],
                 },
-              },
-              competitorLandscapeSummary: { type: Type.STRING },
-              pricingTiers: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    tier: { type: Type.STRING },
-                    range: { type: Type.STRING },
-                    positioning: { type: Type.STRING },
+                customerPainPoints: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      title: { type: Type.STRING },
+                      severity: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
+                      evidence: { type: Type.STRING },
+                    },
+                    required: ['title', 'severity', 'evidence'],
                   },
-                  required: ['tier', 'range', 'positioning'],
                 },
-              },
-              pricingRecommendation: { type: Type.STRING },
-              marketOpportunities: { type: Type.ARRAY, items: { type: Type.STRING } },
-              businessModelOptions: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    model: { type: Type.STRING },
-                    pros: { type: Type.STRING },
-                    cons: { type: Type.STRING },
-                    fit: { type: Type.STRING },
+                competitorLandscapeSummary: { type: Type.STRING },
+                pricingTiers: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      tier: { type: Type.STRING },
+                      range: { type: Type.STRING },
+                      positioning: { type: Type.STRING },
+                    },
+                    required: ['tier', 'range', 'positioning'],
                   },
-                  required: ['model', 'pros', 'cons', 'fit'],
                 },
-              },
-              year1Conservative: { type: Type.STRING },
-              year1Target: { type: Type.STRING },
-              unitEconomicsNote: { type: Type.STRING },
-              startupCostEstimates: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    category: { type: Type.STRING },
-                    range: { type: Type.STRING },
-                    note: { type: Type.STRING },
+                pricingRecommendation: { type: Type.STRING },
+                marketOpportunities: { type: Type.ARRAY, items: { type: Type.STRING } },
+                businessModelOptions: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      model: { type: Type.STRING },
+                      pros: { type: Type.STRING },
+                      cons: { type: Type.STRING },
+                      fit: { type: Type.STRING },
+                    },
+                    required: ['model', 'pros', 'cons', 'fit'],
                   },
-                  required: ['category', 'range', 'note'],
                 },
-              },
-              risksAndChallenges: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    risk: { type: Type.STRING },
-                    severity: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
-                    mitigation: { type: Type.STRING },
+                year1Conservative: { type: Type.STRING },
+                year1Target: { type: Type.STRING },
+                unitEconomicsNote: { type: Type.STRING },
+                startupCostEstimates: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      category: { type: Type.STRING },
+                      range: { type: Type.STRING },
+                      note: { type: Type.STRING },
+                    },
+                    required: ['category', 'range', 'note'],
                   },
-                  required: ['risk', 'severity', 'mitigation'],
                 },
-              },
-              validationExperiments: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    metric: { type: Type.STRING },
-                    timeframe: { type: Type.STRING },
+                risksAndChallenges: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      risk: { type: Type.STRING },
+                      severity: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
+                      mitigation: { type: Type.STRING },
+                    },
+                    required: ['risk', 'severity', 'mitigation'],
                   },
-                  required: ['title', 'metric', 'timeframe'],
                 },
+                validationExperiments: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      title: { type: Type.STRING },
+                      metric: { type: Type.STRING },
+                      timeframe: { type: Type.STRING },
+                    },
+                    required: ['title', 'metric', 'timeframe'],
+                  },
+                },
+                verdict: { type: Type.STRING },
+                nextSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
               },
-              verdict: { type: Type.STRING },
-              nextSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
+              required: [
+                'title',
+                'overallConfidence',
+                'viabilitySignal',
+                'executiveSummary',
+                'marketOverviewText',
+                'tamBillion',
+                'samSharePct',
+                'somSharePct',
+                'marketDemandSummary',
+                'customerSegments',
+                'customerPainPoints',
+                'competitorLandscapeSummary',
+                'pricingTiers',
+                'pricingRecommendation',
+                'marketOpportunities',
+                'businessModelOptions',
+                'year1Conservative',
+                'year1Target',
+                'startupCostEstimates',
+                'risksAndChallenges',
+                'validationExperiments',
+                'verdict',
+                'nextSteps',
+              ],
             },
-            required: [
-              'title',
-              'overallConfidence',
-              'viabilitySignal',
-              'executiveSummary',
-              'marketOverviewText',
-              'tamBillion',
-              'samSharePct',
-              'somSharePct',
-              'marketDemandSummary',
-              'customerSegments',
-              'customerPainPoints',
-              'competitorLandscapeSummary',
-              'pricingTiers',
-              'pricingRecommendation',
-              'marketOpportunities',
-              'businessModelOptions',
-              'year1Conservative',
-              'year1Target',
-              'startupCostEstimates',
-              'risksAndChallenges',
-              'validationExperiments',
-              'verdict',
-              'nextSteps',
-            ],
           },
-        },
-      }));
+        })
+      );
 
       const rawText = response.text || '';
       const parsed = JSON.parse(rawText) as Record<string, unknown>;
@@ -369,15 +397,45 @@ async function startServer() {
         },
         tamSamSom: {
           tamLabel: bands.tamBand,
-          tamBasis: String(parsed.tamBasis || `Estimated annual category demand across ${geography}.`),
+          tamBasis: String(
+            parsed.tamBasis || `Estimated annual category demand across ${geography}.`
+          ),
           samLabel: bands.samBand,
-          samBasis: String(parsed.samBasis || `${samSharePct}% serviceable digital & priority segment share.`),
+          samBasis: String(
+            parsed.samBasis || `${samSharePct}% serviceable digital & priority segment share.`
+          ),
           somLabel: bands.somBand,
-          somBasis: String(parsed.somBasis || `${somSharePct}% realistic 24-month capture inside launch markets.`),
+          somBasis: String(
+            parsed.somBasis || `${somSharePct}% realistic 24-month capture inside launch markets.`
+          ),
           assumptions: [
-            { id: 'tam', label: 'Category Annual Spend ($B)', value: tamBillion, unit: '$B', min: 0.5, max: 30, step: 0.5 },
-            { id: 'sam', label: 'Serviceable Target Share (%)', value: samSharePct, unit: '%', min: 2, max: 40, step: 1 },
-            { id: 'som', label: '24-Month Target Capture (%)', value: somSharePct, unit: '%', min: 0.2, max: 10, step: 0.2 },
+            {
+              id: 'tam',
+              label: 'Category Annual Spend ($B)',
+              value: tamBillion,
+              unit: '$B',
+              min: 0.5,
+              max: 30,
+              step: 0.5,
+            },
+            {
+              id: 'sam',
+              label: 'Serviceable Target Share (%)',
+              value: samSharePct,
+              unit: '%',
+              min: 2,
+              max: 40,
+              step: 1,
+            },
+            {
+              id: 'som',
+              label: '24-Month Target Capture (%)',
+              value: somSharePct,
+              unit: '%',
+              min: 0.2,
+              max: 10,
+              step: 0.2,
+            },
           ],
         },
         marketDemand: {
@@ -393,8 +451,12 @@ async function startServer() {
               })
             : [],
         },
-        customerSegments: Array.isArray(parsed.customerSegments) ? parsed.customerSegments.slice(0, 4) : [],
-        customerPainPoints: Array.isArray(parsed.customerPainPoints) ? parsed.customerPainPoints.slice(0, 4) : [],
+        customerSegments: Array.isArray(parsed.customerSegments)
+          ? parsed.customerSegments.slice(0, 4)
+          : [],
+        customerPainPoints: Array.isArray(parsed.customerPainPoints)
+          ? parsed.customerPainPoints.slice(0, 4)
+          : [],
         competitorLandscapeSummary: String(parsed.competitorLandscapeSummary || ''),
         pricingAnalysis: {
           tiers: Array.isArray(parsed.pricingTiers) ? parsed.pricingTiers.slice(0, 4) : [],
@@ -409,7 +471,9 @@ async function startServer() {
         revenuePotential: {
           year1Conservative: String(parsed.year1Conservative || '$45,000 – $72,000 ARR (modelled)'),
           year1Target: String(parsed.year1Target || '$110,000 – $165,000 ARR (modelled)'),
-          unitEconomicsNote: String(parsed.unitEconomicsNote || 'Modelled estimate subject to channel validation.'),
+          unitEconomicsNote: String(
+            parsed.unitEconomicsNote || 'Modelled estimate subject to channel validation.'
+          ),
           factType: 'estimate' as const,
         },
         startupCostEstimates: Array.isArray(parsed.startupCostEstimates)
@@ -423,7 +487,9 @@ async function startServer() {
           : [],
         finalRecommendation: {
           verdict: String(parsed.verdict || ''),
-          nextSteps: Array.isArray(parsed.nextSteps) ? parsed.nextSteps.map(String).slice(0, 4) : [],
+          nextSteps: Array.isArray(parsed.nextSteps)
+            ? parsed.nextSteps.map(String).slice(0, 4)
+            : [],
         },
         sources: [
           {
@@ -458,7 +524,10 @@ async function startServer() {
       const body = (req.body || {}) as PlaybookPayloadBody;
       const category = (body.category || 'Market Validation').trim();
       const title = (body.title || '').trim();
-      const focus = (body.question || '').trim() || (body.defaultPrompt || '').trim() || 'Specialty coffee subscription';
+      const focus =
+        (body.question || '').trim() ||
+        (body.defaultPrompt || '').trim() ||
+        'Specialty coffee subscription';
 
       const ai = getGeminiClient();
       const prompt = [
@@ -502,7 +571,10 @@ async function startServer() {
 
       const competitorsSummary = (body.competitors || [])
         .slice(0, 4)
-        .map((c) => `${c.name}: ${c.positioning} (weaknesses: ${(c.weaknesses || []).slice(0, 2).join('; ')})`)
+        .map(
+          (c) =>
+            `${c.name}: ${c.positioning} (weaknesses: ${(c.weaknesses || []).slice(0, 2).join('; ')})`
+        )
         .join(' | ');
 
       const goalsSummary = (body.goals || [])
@@ -523,43 +595,45 @@ async function startServer() {
         .filter(Boolean)
         .join('\n');
 
-      const response = await withTimeout(ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              recommendations: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    whatToDo: { type: Type.STRING },
-                    whyToDoIt: { type: Type.STRING },
-                    supportingResearch: { type: Type.STRING },
-                    expectedBenefit: { type: Type.STRING },
-                    difficulty: { type: Type.STRING, enum: ['Low', 'Medium', 'High'] },
-                    estimatedCost: { type: Type.STRING },
-                    priority: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
+      const response = await withTimeout(
+        ai.models.generateContent({
+          model: GEMINI_MODEL,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                recommendations: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      whatToDo: { type: Type.STRING },
+                      whyToDoIt: { type: Type.STRING },
+                      supportingResearch: { type: Type.STRING },
+                      expectedBenefit: { type: Type.STRING },
+                      difficulty: { type: Type.STRING, enum: ['Low', 'Medium', 'High'] },
+                      estimatedCost: { type: Type.STRING },
+                      priority: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
+                    },
+                    required: [
+                      'whatToDo',
+                      'whyToDoIt',
+                      'supportingResearch',
+                      'expectedBenefit',
+                      'difficulty',
+                      'estimatedCost',
+                      'priority',
+                    ],
                   },
-                  required: [
-                    'whatToDo',
-                    'whyToDoIt',
-                    'supportingResearch',
-                    'expectedBenefit',
-                    'difficulty',
-                    'estimatedCost',
-                    'priority',
-                  ],
                 },
               },
+              required: ['recommendations'],
             },
-            required: ['recommendations'],
           },
-        },
-      }));
+        })
+      );
 
       const parsed = JSON.parse(response.text || '{}') as { recommendations?: unknown[] };
       const items = Array.isArray(parsed.recommendations) ? parsed.recommendations.slice(0, 3) : [];
@@ -593,12 +667,11 @@ async function startServer() {
 
       const ai = getGeminiClient();
       const brandName = (body.brand?.brandName || 'Brand').trim();
-      const userBrief = (body.prompt || '').trim() || `Architectural minimal emblem for ${brandName}`;
+      const userBrief =
+        (body.prompt || '').trim() || `Architectural minimal emblem for ${brandName}`;
       const styleArchetype = (body.styleArchetype || 'Minimal Geometric').trim();
       const mood = (body.mood || 'Editorial Precision').trim();
-      const paletteStr = (body.brand?.palette || [])
-        .map((p) => `${p.name} (${p.hex})`)
-        .join(', ');
+      const paletteStr = (body.brand?.palette || []).map((p) => `${p.name} (${p.hex})`).join(', ');
 
       const prompt = [
         'You are BrainWise AI Logo Director — a world-class Swiss/architectural brand identity designer.',
@@ -638,7 +711,14 @@ async function startServer() {
                       accentColor: { type: Type.STRING },
                       customSvg: { type: Type.STRING },
                     },
-                    required: ['name', 'rationale', 'styleTag', 'markStyle', 'accentColor', 'customSvg'],
+                    required: [
+                      'name',
+                      'rationale',
+                      'styleTag',
+                      'markStyle',
+                      'accentColor',
+                      'customSvg',
+                    ],
                   },
                 },
               },
@@ -685,7 +765,9 @@ async function startServer() {
       const ai = getGeminiClient();
       const category = (body.category || 'Packaging').trim();
       const brandName = (body.brand?.brandName || 'Brand').trim();
-      const userBrief = (body.prompt || '').trim() || `High-contrast architectural ${category} concept for ${brandName}`;
+      const userBrief =
+        (body.prompt || '').trim() ||
+        `High-contrast architectural ${category} concept for ${brandName}`;
       const productInfo = (body.brain?.products || [])
         .slice(0, 2)
         .map((p) => `${p.name} (${p.priceRange}): ${p.description}`)
@@ -750,7 +832,9 @@ async function startServer() {
         20000
       );
 
-      const parsed = JSON.parse(response.text || '{}') as { variations?: Record<string, unknown>[] };
+      const parsed = JSON.parse(response.text || '{}') as {
+        variations?: Record<string, unknown>[];
+      };
       const variations = Array.isArray(parsed.variations) ? parsed.variations.slice(0, 3) : [];
       if (variations.length === 0) {
         throw new Error('Model returned no brand asset variations.');
@@ -787,7 +871,8 @@ async function startServer() {
       const isCarousel = platform === 'Carousel';
       const slideCount = isCarousel ? clampNum(body.slideCount, 3, 7, 5) : 1;
       const brandName = (body.brand?.brandName || 'Brand').trim();
-      const userBrief = (body.prompt || '').trim() || `High-converting ${platform} for ${brandName}`;
+      const userBrief =
+        (body.prompt || '').trim() || `High-converting ${platform} for ${brandName}`;
 
       const prompt = [
         'You are BrainWise AI Social Creative Director crafting scroll-stopping Instagram posts, swipeable carousels, stories, and social ads.',
@@ -799,7 +884,9 @@ async function startServer() {
         `Campaign Angle: ${body.angle || 'Educational Carousel'}`,
         `Visual Mood: ${body.mood || 'Dark Charcoal Editorial'}`,
         `Creative Prompt: ${userBrief}`,
-        body.brain?.strategicMemory ? buildAntiFatiguePromptDirectives(body.brain.strategicMemory) : '',
+        body.brain?.strategicMemory
+          ? buildAntiFatiguePromptDirectives(body.brain.strategicMemory)
+          : '',
         body.regenerateSlideNumber
           ? `Regenerate ONLY slide ${body.regenerateSlideNumber} with a sharper angle, stronger hook, and fresh visual motif, returning a 1-element slides array with slideNumber=${body.regenerateSlideNumber}.`
           : `Generate exactly ${slideCount} cohesive ${isCarousel ? 'swipeable carousel slides flowing from Hook -> Value/Proof -> Clear CTA' : 'high-impact creative slide'} plus a ready-to-post caption, 6 relevant hashtags, and posting rationale.`,
@@ -829,20 +916,42 @@ async function startServer() {
                       slideNumber: { type: Type.INTEGER },
                       role: {
                         type: Type.STRING,
-                        enum: ['Hook', 'Problem', 'Insight', 'Proof', 'Framework', 'CTA', 'Spotlight'],
+                        enum: [
+                          'Hook',
+                          'Problem',
+                          'Insight',
+                          'Proof',
+                          'Framework',
+                          'CTA',
+                          'Spotlight',
+                        ],
                       },
                       kicker: { type: Type.STRING },
                       headline: { type: Type.STRING },
                       body: { type: Type.STRING },
                       layout: {
                         type: Type.STRING,
-                        enum: ['editorial-grid', 'split-stat', 'quote-focus', 'checklist', 'product-spotlight'],
+                        enum: [
+                          'editorial-grid',
+                          'split-stat',
+                          'quote-focus',
+                          'checklist',
+                          'product-spotlight',
+                        ],
                       },
                       statCallout: { type: Type.STRING },
                       svgMotif: { type: Type.STRING },
                       artDirectionPrompt: { type: Type.STRING },
                     },
-                    required: ['slideNumber', 'role', 'kicker', 'headline', 'body', 'layout', 'artDirectionPrompt'],
+                    required: [
+                      'slideNumber',
+                      'role',
+                      'kicker',
+                      'headline',
+                      'body',
+                      'layout',
+                      'artDirectionPrompt',
+                    ],
                   },
                 },
               },

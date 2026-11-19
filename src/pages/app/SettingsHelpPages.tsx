@@ -71,11 +71,23 @@ const SETTINGS_NAV: { id: SettingsTabId; label: string; icon: React.ReactNode }[
   { id: 'personal-profile', label: 'Personal Profile', icon: <User className="w-4 h-4" /> },
   { id: 'business-profile', label: 'Business Profile', icon: <Building2 className="w-4 h-4" /> },
   { id: 'team-members', label: 'Team & Members', icon: <Users className="w-4 h-4" /> },
-  { id: 'workspace-preferences', label: 'Workspace Preferences', icon: <Sliders className="w-4 h-4" /> },
-  { id: 'notification-settings', label: 'Notification Settings', icon: <Bell className="w-4 h-4" /> },
+  {
+    id: 'workspace-preferences',
+    label: 'Workspace Preferences',
+    icon: <Sliders className="w-4 h-4" />,
+  },
+  {
+    id: 'notification-settings',
+    label: 'Notification Settings',
+    icon: <Bell className="w-4 h-4" />,
+  },
   { id: 'ai-preferences', label: 'AI Preferences', icon: <Sparkles className="w-4 h-4" /> },
   { id: 'data-privacy', label: 'Data & Privacy', icon: <Lock className="w-4 h-4" /> },
-  { id: 'subscription-billing', label: 'Subscription & Billing', icon: <CreditCard className="w-4 h-4" /> },
+  {
+    id: 'subscription-billing',
+    label: 'Subscription & Billing',
+    icon: <CreditCard className="w-4 h-4" />,
+  },
   { id: 'usage-credits', label: 'Usage & Credits', icon: <Gauge className="w-4 h-4" /> },
   { id: 'integrations', label: 'Integrations', icon: <Link2 className="w-4 h-4" /> },
   { id: 'help-support', label: 'Help & Support', icon: <HelpCircle className="w-4 h-4" /> },
@@ -180,8 +192,7 @@ export const SettingsPage: React.FC = () => {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    const initials =
-      ((firstName.trim()[0] || 'V') + (lastName.trim()[0] || 'K')).toUpperCase();
+    const initials = ((firstName.trim()[0] || 'V') + (lastName.trim()[0] || 'K')).toUpperCase();
     updateUserProfile({
       firstName: firstName.trim() || state.user.firstName,
       lastName: lastName.trim() || state.user.lastName,
@@ -548,7 +559,9 @@ export const SettingsPage: React.FC = () => {
 
               <label className="flex items-center justify-between p-4 rounded-[10px] border border-[#E6E6E2] hover:bg-[#F5F5F4] cursor-pointer transition-colors">
                 <div>
-                  <div className="text-sm font-medium text-[#242424]">Compact Information Density</div>
+                  <div className="text-sm font-medium text-[#242424]">
+                    Compact Information Density
+                  </div>
                   <div className="text-xs text-[#686864]">
                     Tighter vertical padding across workspace panels and research dossiers.
                   </div>
@@ -584,7 +597,10 @@ export const SettingsPage: React.FC = () => {
                 description="Control competitor intelligence alerts and scheduled executive digests."
               />
               <div>
-                <label htmlFor="notif-email" className="block text-xs font-medium text-[#242424] mb-1">
+                <label
+                  htmlFor="notif-email"
+                  className="block text-xs font-medium text-[#242424] mb-1"
+                >
                   Digest Delivery Email
                 </label>
                 <div className="flex gap-2">
@@ -736,7 +752,8 @@ export const SettingsPage: React.FC = () => {
                   <StatusBadge status="Browser Local Only" tone="success" />
                 </div>
                 <p className="text-xs text-[#686864] leading-relaxed">
-                  BrainWise operates here as an interactive frontend prototype. No external customer credentials or live scraping feeds are transmitted.
+                  BrainWise operates here as an interactive frontend prototype. No external customer
+                  credentials or live scraping feeds are transmitted.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -835,7 +852,9 @@ export const SettingsPage: React.FC = () => {
                           >
                             {plan.price}
                           </span>
-                          <span className={`text-xs ${selected ? 'text-[#A8A8A2]' : 'text-[#686864]'}`}>
+                          <span
+                            className={`text-xs ${selected ? 'text-[#A8A8A2]' : 'text-[#686864]'}`}
+                          >
                             / month
                           </span>
                         </div>
@@ -977,8 +996,16 @@ export const SettingsPage: React.FC = () => {
                     <span>Command Shortcut</span>
                   </div>
                   <p className="text-xs text-[#686864] mt-1.5">
-                    Press <kbd className="px-1.5 py-0.5 bg-white border border-[#E6E6E2] rounded text-[#242424]">⌘K</kbd> or{' '}
-                    <kbd className="px-1.5 py-0.5 bg-white border border-[#E6E6E2] rounded text-[#242424]">Ctrl+K</kbd> anywhere inside BrainWise to jump to any competitor, research report, task, or asset.
+                    Press{' '}
+                    <kbd className="px-1.5 py-0.5 bg-white border border-[#E6E6E2] rounded text-[#242424]">
+                      ⌘K
+                    </kbd>{' '}
+                    or{' '}
+                    <kbd className="px-1.5 py-0.5 bg-white border border-[#E6E6E2] rounded text-[#242424]">
+                      Ctrl+K
+                    </kbd>{' '}
+                    anywhere inside BrainWise to jump to any competitor, research report, task, or
+                    asset.
                   </p>
                 </div>
                 <div className="p-4 rounded-[10px] border border-[#E6E6E2] bg-[#F5F5F4]">
@@ -987,7 +1014,8 @@ export const SettingsPage: React.FC = () => {
                     <span>Complete Founder Journey</span>
                   </div>
                   <p className="text-xs text-[#686864] mt-1.5">
-                    Follow the connected flow from Business Brain → Idea Intelligence → Competitive Intelligence → Brand Studio → Growth Planner → Market Watch.
+                    Follow the connected flow from Business Brain → Idea Intelligence → Competitive
+                    Intelligence → Brand Studio → Growth Planner → Market Watch.
                   </p>
                 </div>
               </div>
@@ -1081,7 +1109,8 @@ export const SettingsPage: React.FC = () => {
 const FROZEN_SCREEN_COVERAGE = [
   {
     area: 'Marketing',
-    screens: 'Homepage, Features (#capabilities), Departments (#departments), Journal (#journal), About (#about), Pricing (#pricing), FAQ (#faq)',
+    screens:
+      'Homepage, Features (#capabilities), Departments (#departments), Journal (#journal), About (#about), Pricing (#pricing), FAQ (#faq)',
   },
   {
     area: 'Account & Security',
@@ -1089,23 +1118,28 @@ const FROZEN_SCREEN_COVERAGE = [
   },
   {
     area: 'Onboarding',
-    screens: 'Role Selection, Strategic Goals, Business & Industry Setup, Initial Competitors, Business Brain Sync',
+    screens:
+      'Role Selection, Strategic Goals, Business & Industry Setup, Initial Competitors, Business Brain Sync',
   },
   {
     area: 'Core Workspace',
-    screens: 'Executive Dashboard (single dominant insight), Business Brain (shared memory & decisions)',
+    screens:
+      'Executive Dashboard (single dominant insight), Business Brain (shared memory & decisions)',
   },
   {
     area: 'Intelligence',
-    screens: 'Idea Intelligence (7-step wizard + 15-section dossier), Competitive Intelligence, Market Watch',
+    screens:
+      'Idea Intelligence (7-step wizard + 15-section dossier), Competitive Intelligence, Market Watch',
   },
   {
     area: 'AI Execution',
-    screens: 'AI Brand Studio (AI Logo Studio, Brand Guidelines, AI Instagram Post/Carousel & Collateral Studio), Asset Library, Growth Planner',
+    screens:
+      'AI Brand Studio (AI Logo Studio, Brand Guidelines, AI Instagram Post/Carousel & Collateral Studio), Asset Library, Growth Planner',
   },
   {
     area: 'Reporting & Settings',
-    screens: 'Analytics, Scheduled Reports, Activity History, Settings (Profile, Team, Billing, Integrations), Help & Frozen Design System',
+    screens:
+      'Analytics, Scheduled Reports, Activity History, Settings (Profile, Team, Billing, Integrations), Help & Frozen Design System',
   },
 ];
 
@@ -1132,8 +1166,8 @@ export const HelpSupportPage: React.FC = () => {
     activeTab === 'design-system'
       ? [{ label: 'Design System & Tokens v1.0' }]
       : query.trim()
-      ? [{ label: `Filter: ${query.trim()}` }]
-      : [],
+        ? [{ label: `Filter: ${query.trim()}` }]
+        : [],
     [activeTab, query]
   );
 
@@ -1211,14 +1245,22 @@ export const HelpSupportPage: React.FC = () => {
         { label: 'Deep Charcoal', hex: BW_COLORS.charcoal.deep, token: '--bw-dark' },
         { label: 'Graphite Primary', hex: BW_COLORS.charcoal.graphite, token: '--bw-text-primary' },
         { label: 'Muted Prose', hex: BW_COLORS.charcoal.bodyMuted, token: '--bw-text-body-muted' },
-        { label: 'Secondary Meta', hex: BW_COLORS.charcoal.secondary, token: '--bw-text-secondary' },
+        {
+          label: 'Secondary Meta',
+          hex: BW_COLORS.charcoal.secondary,
+          token: '--bw-text-secondary',
+        },
       ],
     },
     {
       name: 'Restrained Orange Illumination & Semantic',
       items: [
         { label: 'Signature Orange', hex: BW_COLORS.accent.orange, token: '--bw-orange' },
-        { label: 'Accessible Orange Text', hex: BW_COLORS.accent.orangeAccessibleText, token: '--bw-orange-text' },
+        {
+          label: 'Accessible Orange Text',
+          hex: BW_COLORS.accent.orangeAccessibleText,
+          token: '--bw-orange-text',
+        },
         { label: 'Success Emerald', hex: BW_COLORS.semantic.success, token: '--bw-success' },
         { label: 'Error Crimson', hex: BW_COLORS.semantic.error, token: '--bw-error' },
       ],
@@ -1356,7 +1398,9 @@ export const HelpSupportPage: React.FC = () => {
                 BrainWise Visual Identity, Tokens &amp; State Contract
               </h2>
               <p className="mt-1 text-xs text-[#C8C8C2] max-w-2xl leading-relaxed">
-                Canonical engineering reference locking brand geometry, alabaster-charcoal-orange color tokens, Geist &amp; JetBrains Mono scale, 4px spacing rules, interactive component states, and Liquid Motion transitions.
+                Canonical engineering reference locking brand geometry, alabaster-charcoal-orange
+                color tokens, Geist &amp; JetBrains Mono scale, 4px spacing rules, interactive
+                component states, and Liquid Motion transitions.
               </p>
             </div>
             <Button variant="primary" size="sm" onClick={handleCopyTokensCss} className="shrink-0">
@@ -1377,7 +1421,9 @@ export const HelpSupportPage: React.FC = () => {
                   <BrandLogoMark size={36} />
                   <div>
                     <div className="font-heading text-lg font-bold text-[#171717]">BrainWise</div>
-                    <div className="text-[11px] font-mono-num text-[#858585]">LIGHT SURFACE LOCK</div>
+                    <div className="text-[11px] font-mono-num text-[#858585]">
+                      LIGHT SURFACE LOCK
+                    </div>
                   </div>
                 </div>
                 <span className="text-[11px] font-mono-num text-[#5C5C58]">Clearspace ≥ 12px</span>
@@ -1387,7 +1433,9 @@ export const HelpSupportPage: React.FC = () => {
                   <BrandLogoMark size={36} dark />
                   <div>
                     <div className="font-heading text-lg font-bold text-white">BrainWise</div>
-                    <div className="text-[11px] font-mono-num text-[#A8A8A2]">DARK SURFACE LOCK</div>
+                    <div className="text-[11px] font-mono-num text-[#A8A8A2]">
+                      DARK SURFACE LOCK
+                    </div>
                   </div>
                 </div>
                 <span className="text-[11px] font-mono-num text-[#FF9A45]">Accent #FF7417</span>
@@ -1446,7 +1494,10 @@ export const HelpSupportPage: React.FC = () => {
               />
               <div className="divide-y divide-[#EFEFEB] border-y border-[#EFEFEB]">
                 {BW_TYPOGRAPHY.scale.map((row) => (
-                  <div key={row.token} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div
+                    key={row.token}
+                    className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-mono-num text-[11px] font-semibold text-[#C44D00]">
@@ -1460,7 +1511,9 @@ export const HelpSupportPage: React.FC = () => {
                     </div>
                     <div className="text-[11px] font-mono-num text-[#252525] sm:text-right shrink-0">
                       <div>{row.size}</div>
-                      <div className="text-[#858585]">w{row.weight} · lh {row.lineHeight} · {row.tracking}</div>
+                      <div className="text-[#858585]">
+                        w{row.weight} · lh {row.lineHeight} · {row.tracking}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1493,7 +1546,9 @@ export const HelpSupportPage: React.FC = () => {
                     className="p-2.5 border border-[#E6E6E2] bg-[#FAFAF9]"
                     style={{ borderRadius: val }}
                   >
-                    <div className="font-mono-num text-[11px] font-semibold text-[#252525]">{key}</div>
+                    <div className="font-mono-num text-[11px] font-semibold text-[#252525]">
+                      {key}
+                    </div>
                     <div className="font-mono-num text-[10px] text-[#858585]">{val}</div>
                   </div>
                 ))}
@@ -1510,21 +1565,43 @@ export const HelpSupportPage: React.FC = () => {
 
             {/* Buttons incl. Disabled */}
             <div className="space-y-2.5">
-              <div className="text-xs font-semibold text-[#5C5C58]">Button Variants &amp; Disabled State</div>
+              <div className="text-xs font-semibold text-[#5C5C58]">
+                Button Variants &amp; Disabled State
+              </div>
               <div className="flex flex-wrap items-center gap-3">
-                <Button variant="primary" size="md" onClick={() => showToast('Primary action triggered')}>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => showToast('Primary action triggered')}
+                >
                   Primary Action
                 </Button>
-                <Button variant="dark" size="md" onClick={() => showToast('Charcoal action triggered')}>
+                <Button
+                  variant="dark"
+                  size="md"
+                  onClick={() => showToast('Charcoal action triggered')}
+                >
                   Charcoal Action
                 </Button>
-                <Button variant="secondary" size="md" onClick={() => showToast('Secondary action triggered')}>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => showToast('Secondary action triggered')}
+                >
                   Secondary
                 </Button>
-                <Button variant="ghost" size="md" onClick={() => showToast('Ghost action triggered')}>
+                <Button
+                  variant="ghost"
+                  size="md"
+                  onClick={() => showToast('Ghost action triggered')}
+                >
                   Ghost Link
                 </Button>
-                <Button variant="danger" size="md" onClick={() => showToast('Destructive action triggered')}>
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => showToast('Destructive action triggered')}
+                >
                   Destructive
                 </Button>
                 <Button variant="primary" size="md" disabled>
@@ -1550,7 +1627,12 @@ export const HelpSupportPage: React.FC = () => {
                 </p>
               </Field>
               <Field label="Disabled Input" htmlFor="ds-input-disabled">
-                <Input id="ds-input-disabled" defaultValue="Locked after freeze" disabled className="opacity-60 cursor-not-allowed bg-[#F5F5F4]" />
+                <Input
+                  id="ds-input-disabled"
+                  defaultValue="Locked after freeze"
+                  disabled
+                  className="opacity-60 cursor-not-allowed bg-[#F5F5F4]"
+                />
               </Field>
             </div>
 
@@ -1577,14 +1659,17 @@ export const HelpSupportPage: React.FC = () => {
                 >
                   <div className="rounded-[20px] border border-[#ECECE8] bg-[#FFFFFF] p-6 space-y-3 bw-surface-raised">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-[#C44D00]">Revealed Intelligence Card</span>
+                      <span className="text-xs font-semibold text-[#C44D00]">
+                        Revealed Intelligence Card
+                      </span>
                       <InsightSavedBeacon saved label="Synced" />
                     </div>
                     <h4 className="font-heading text-base font-bold text-[#171717]">
                       Founding 100 Roastery Club · +28% projected retention lift
                     </h4>
                     <p className="text-xs text-[#5C5C58] leading-relaxed">
-                      Content flows cleanly from the shape-matched alabaster shimmer skeleton using cubic-bezier(0.16, 1, 0.3, 1).
+                      Content flows cleanly from the shape-matched alabaster shimmer skeleton using
+                      cubic-bezier(0.16, 1, 0.3, 1).
                     </p>
                   </div>
                 </LiquidSkeletonReveal>
@@ -1635,15 +1720,24 @@ export const HelpSupportPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-4">
-                <InsightSavedBeacon saved={previewSaved} label={previewSaved ? 'Synced to Business Brain' : 'Pending save'} />
+                <InsightSavedBeacon
+                  saved={previewSaved}
+                  label={previewSaved ? 'Synced to Business Brain' : 'Pending save'}
+                />
                 <StatusBadge status="Active Intelligence" tone="accent" />
                 <StatusBadge status="Verified" tone="success" />
                 <StatusBadge status="Action Needed" tone="warning" />
               </div>
-              <AiRequestPulse active={previewPulse} label="Liquid orange sweep communicating live AI synthesis..." />
+              <AiRequestPulse
+                active={previewPulse}
+                label="Liquid orange sweep communicating live AI synthesis..."
+              />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-2">
                 {BW_MOTION.primitives.map((prim) => (
-                  <div key={prim.name} className="p-3 rounded-[10px] border border-[#E6E6E2] bg-[#FAFAF9] text-xs">
+                  <div
+                    key={prim.name}
+                    className="p-3 rounded-[10px] border border-[#E6E6E2] bg-[#FAFAF9] text-xs"
+                  >
                     <div className="font-mono-num font-semibold text-[#171717]">{prim.name}</div>
                     <div className="text-[#5C5C58] mt-0.5">{prim.role}</div>
                   </div>

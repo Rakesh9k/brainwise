@@ -40,10 +40,7 @@ test('resolveEmptyStateOverline prefers explicit non-empty overline and falls ba
     resolveEmptyStateOverline('signals', '   '),
     EMPTY_STATE_PRESETS.signals.defaultOverline
   );
-  assert.equal(
-    resolveEmptyStateOverline('pulse'),
-    EMPTY_STATE_PRESETS.pulse.defaultOverline
-  );
+  assert.equal(resolveEmptyStateOverline('pulse'), EMPTY_STATE_PRESETS.pulse.defaultOverline);
 });
 
 test('resolveEmptyStateSizeClasses scales padding and illustration box monotonically', () => {

@@ -45,8 +45,8 @@ export const BusinessBrainContextBanner: React.FC<{
         <div className="flex items-center gap-2 text-[#A85E16] min-w-0">
           <Brain className="w-3.5 h-3.5 shrink-0" />
           <span className="truncate">
-            <strong className="font-semibold text-[#171717]">{departmentLabel}</strong>{' '}
-            context syncing paused for {state.brain.businessName}
+            <strong className="font-semibold text-[#171717]">{departmentLabel}</strong> context
+            syncing paused for {state.brain.businessName}
           </span>
         </div>
         <button
@@ -71,8 +71,11 @@ export const BusinessBrainContextBanner: React.FC<{
         >
           <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#24724E] shrink-0" />
           <span className="truncate">
-            Brain Memory · <strong className="font-medium text-[#171717]">{state.brain.businessName}</strong>
-            <span className="mx-1.5 text-[#D6D6D0]" aria-hidden="true">/</span>
+            Brain Memory ·{' '}
+            <strong className="font-medium text-[#171717]">{state.brain.businessName}</strong>
+            <span className="mx-1.5 text-[#D6D6D0]" aria-hidden="true">
+              /
+            </span>
             <span className="font-mono-num text-[#5C5C58]">{comp.percentage}% synced</span>
           </span>
           <ChevronDown
@@ -101,13 +104,15 @@ export const BusinessBrainContextBanner: React.FC<{
           <div>
             <div className={`${typeClass.overline} text-[#858585]`}>Linked Signals</div>
             <div className="mt-1 font-mono-num text-[#171717]">
-              {state.brain.primaryGoals.length} goals · {state.competitors.length} rivals · {state.reports.length} dossiers
+              {state.brain.primaryGoals.length} goals · {state.competitors.length} rivals ·{' '}
+              {state.reports.length} dossiers
             </div>
           </div>
           <div className="sm:text-right">
             <div className={`${typeClass.overline} text-[#858585]`}>Scope</div>
             <div className="mt-1 text-[#5C5C58]">
-              Auto-injected into <strong className="font-medium text-[#171717]">{departmentLabel}</strong>
+              Auto-injected into{' '}
+              <strong className="font-medium text-[#171717]">{departmentLabel}</strong>
             </div>
           </div>
         </div>
@@ -205,8 +210,8 @@ export const TaskCard: React.FC<{
         flat
           ? 'px-3 -mx-3 py-4 rounded-[14px] hover:bg-[#FFFFFF]/90 cursor-pointer'
           : isDone
-          ? 'rounded-[18px] border p-5 bg-[#FAFAF9] border-[#EFEFEB]'
-          : 'rounded-[18px] border p-5 bg-[#FFFFFF] border-[#ECECE8] bw-surface-raised cursor-pointer'
+            ? 'rounded-[18px] border p-5 bg-[#FAFAF9] border-[#EFEFEB]'
+            : 'rounded-[18px] border p-5 bg-[#FFFFFF] border-[#ECECE8] bw-surface-raised cursor-pointer'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -233,8 +238,12 @@ export const TaskCard: React.FC<{
             </h3>
             <PriorityBadge priority={task.priority} />
           </div>
-          {!flat && <p className={`${typeClass.bodySm} text-[#5C5C58] mt-1`}>{task.whyItMatters}</p>}
-          <div className={`mt-1.5 flex flex-wrap items-center justify-between gap-2 ${typeClass.bodySm} text-[#5C5C58]`}>
+          {!flat && (
+            <p className={`${typeClass.bodySm} text-[#5C5C58] mt-1`}>{task.whyItMatters}</p>
+          )}
+          <div
+            className={`mt-1.5 flex flex-wrap items-center justify-between gap-2 ${typeClass.bodySm} text-[#5C5C58]`}
+          >
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-medium text-[#5C5C58]">{task.department}</span>
               <span aria-hidden="true">·</span>
@@ -247,7 +256,9 @@ export const TaskCard: React.FC<{
             </div>
             <div
               className={`flex items-center gap-3 ${
-                flat ? 'sm:opacity-0 sm:group-hover/task:opacity-100 sm:focus-within:opacity-100 transition-opacity' : ''
+                flat
+                  ? 'sm:opacity-0 sm:group-hover/task:opacity-100 sm:focus-within:opacity-100 transition-opacity'
+                  : ''
               }`}
             >
               {onSkip && !isDone && !isSkipped && (
@@ -315,26 +326,26 @@ export const CompetitorCard: React.FC<{
           : 'border-[#EFEFEB] bg-[#FFFFFF]/70 hover:bg-[#FFFFFF]'
       }`}
     >
-    <div className="flex items-start justify-between gap-2">
-      <div>
-        <div className={`${typeClass.body} font-semibold text-[#171717]`}>{competitor.name}</div>
-        <div className={`${typeClass.bodySm} text-[#5C5C58] mt-0.5`}>{competitor.category}</div>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className={`${typeClass.body} font-semibold text-[#171717]`}>{competitor.name}</div>
+          <div className={`${typeClass.bodySm} text-[#5C5C58] mt-0.5`}>{competitor.category}</div>
+        </div>
+        <StatusBadge
+          status={competitor.monitoringEnabled ? 'Monitoring' : 'Analyzed'}
+          tone={competitor.monitoringEnabled ? 'accent' : 'neutral'}
+        />
       </div>
-      <StatusBadge
-        status={competitor.monitoringEnabled ? 'Monitoring' : 'Analyzed'}
-        tone={competitor.monitoringEnabled ? 'accent' : 'neutral'}
-      />
-    </div>
-    <p className={`${typeClass.bodySm} text-[#5C5C58] mt-2.5 line-clamp-2`}>
-      {competitor.positioning}
-    </p>
-    <div className="mt-3 pt-2.5 border-t border-[#E6E6E2] flex items-center justify-between text-[11px] text-[#5C5C58]">
-      <span className="tabular-nums">{competitor.priceRange}</span>
-      <span className="inline-flex items-center gap-1 text-[#252525] font-medium">
-        Inspect <ExternalLink className="w-3 h-3" />
-      </span>
-    </div>
-  </button>
+      <p className={`${typeClass.bodySm} text-[#5C5C58] mt-2.5 line-clamp-2`}>
+        {competitor.positioning}
+      </p>
+      <div className="mt-3 pt-2.5 border-t border-[#E6E6E2] flex items-center justify-between text-[11px] text-[#5C5C58]">
+        <span className="tabular-nums">{competitor.priceRange}</span>
+        <span className="inline-flex items-center gap-1 text-[#252525] font-medium">
+          Inspect <ExternalLink className="w-3 h-3" />
+        </span>
+      </div>
+    </button>
   );
 };
 
@@ -361,8 +372,8 @@ export const ResearchReportSection: React.FC<{
     factType === 'verified'
       ? 'Verified Market Reference'
       : factType === 'estimate'
-      ? 'Modelled Estimate'
-      : 'Verified Data + Estimates';
+        ? 'Modelled Estimate'
+        : 'Verified Data + Estimates';
 
   return (
     <section id={id} className="py-5 border-b border-[#E6E6E2] last:border-b-0 scroll-mt-20">
@@ -373,12 +384,18 @@ export const ResearchReportSection: React.FC<{
           aria-expanded={expanded}
           className="w-full flex flex-wrap items-center justify-between gap-2 text-left cursor-pointer group"
         >
-          <h3 className={`${typeClass.h4} text-[#171717] group-hover:text-[#C44D00] transition-colors`}>
+          <h3
+            className={`${typeClass.h4} text-[#171717] group-hover:text-[#C44D00] transition-colors`}
+          >
             <span className={`${typeClass.monoMeta} text-[#858585] mr-2`}>{number}.</span>
             {title}
           </h3>
           <div className="flex items-center gap-3 shrink-0">
-            {factType && <span className={`${typeClass.overline} normal-case tracking-normal text-[#858585]`}>{factLabel}</span>}
+            {factType && (
+              <span className={`${typeClass.overline} normal-case tracking-normal text-[#858585]`}>
+                {factLabel}
+              </span>
+            )}
             <ChevronDown
               className={`w-4 h-4 text-[#858585] transition-transform duration-150 ${
                 expanded ? 'rotate-0' : '-rotate-90'
@@ -391,7 +408,11 @@ export const ResearchReportSection: React.FC<{
           <h3 className={`${typeClass.h4} text-[#171717]`}>
             {number}. {title}
           </h3>
-          {factType && <span className={`${typeClass.overline} normal-case tracking-normal text-[#5C5C58]`}>{factLabel}</span>}
+          {factType && (
+            <span className={`${typeClass.overline} normal-case tracking-normal text-[#5C5C58]`}>
+              {factLabel}
+            </span>
+          )}
         </div>
       )}
       {(!collapsible || expanded) && (
@@ -435,68 +456,71 @@ export const AssetCard: React.FC<{
       onContextMenu={handleContextMenu}
       className="bw-trace-card rounded-[20px] border border-[#ECECE8] bg-[#FFFFFF] overflow-hidden flex flex-col bw-surface-raised transition-all duration-200"
     >
-    <button
-      type="button"
-      onClick={() => onPreview(asset)}
-      aria-label={`Preview ${asset.title}`}
-      className={`w-full text-left h-36 p-5 flex flex-col justify-between border-b border-[#EFEFEB] cursor-pointer focus-ring-inset ${
-        asset.darkVariant ? 'bg-[#171717] text-white' : 'bg-[#FAFAF9] text-[#252525]'
-      }`}
-    >
-      <div className="w-full flex items-center justify-between text-[10px] font-mono-num opacity-75">
-        <span>{asset.category.toUpperCase()}</span>
-        <span>
-          {asset.slides && asset.slides.length > 1
-            ? `${asset.slides.length} SLIDES`
-            : asset.format.split('·')[0]}
-        </span>
-      </div>
-      <div className="w-full flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <div className="font-heading font-bold text-sm leading-snug line-clamp-2">
-            {asset.headlineText}
+      <button
+        type="button"
+        onClick={() => onPreview(asset)}
+        aria-label={`Preview ${asset.title}`}
+        className={`w-full text-left h-36 p-5 flex flex-col justify-between border-b border-[#EFEFEB] cursor-pointer focus-ring-inset ${
+          asset.darkVariant ? 'bg-[#171717] text-white' : 'bg-[#FAFAF9] text-[#252525]'
+        }`}
+      >
+        <div className="w-full flex items-center justify-between text-[10px] font-mono-num opacity-75">
+          <span>{asset.category.toUpperCase()}</span>
+          <span>
+            {asset.slides && asset.slides.length > 1
+              ? `${asset.slides.length} SLIDES`
+              : asset.format.split('·')[0]}
+          </span>
+        </div>
+        <div className="w-full flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-heading font-bold text-sm leading-snug line-clamp-2">
+              {asset.headlineText}
+            </div>
+            <div
+              className="w-8 h-0.5 mt-2 rounded-full"
+              style={{ backgroundColor: asset.accentHex }}
+            />
           </div>
-          <div className="w-8 h-0.5 mt-2 rounded-full" style={{ backgroundColor: asset.accentHex }} />
+          {asset.svgMarkup && asset.svgMarkup.includes('<svg') && (
+            <div
+              className="w-12 h-8 shrink-0 opacity-85 [&>svg]:w-full [&>svg]:h-full"
+              dangerouslySetInnerHTML={{ __html: asset.svgMarkup }}
+            />
+          )}
         </div>
-        {asset.svgMarkup && asset.svgMarkup.includes('<svg') && (
-          <div
-            className="w-12 h-8 shrink-0 opacity-85 [&>svg]:w-full [&>svg]:h-full"
-            dangerouslySetInnerHTML={{ __html: asset.svgMarkup }}
+      </button>
+      <div className="p-3.5 flex-1 flex flex-col justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-[#252525] truncate">{asset.title}</div>
+          <div className="text-xs text-[#5C5C58] mt-0.5">
+            {asset.folder} · {asset.createdAt}
+            {asset.aiGenerated ? ' · AI' : ''}
+          </div>
+        </div>
+        <div className="flex items-center justify-between pt-2 border-t border-[#E6E6E2]">
+          <StatusBadge
+            status={asset.status}
+            tone={
+              asset.status === 'Approved'
+                ? 'success'
+                : asset.status === 'Draft'
+                  ? 'warning'
+                  : 'neutral'
+            }
           />
-        )}
-      </div>
-    </button>
-    <div className="p-3.5 flex-1 flex flex-col justify-between gap-3">
-      <div>
-        <div className="text-sm font-semibold text-[#252525] truncate">{asset.title}</div>
-        <div className="text-xs text-[#5C5C58] mt-0.5">
-          {asset.folder} · {asset.createdAt}
-          {asset.aiGenerated ? ' · AI' : ''}
+          <button
+            type="button"
+            onClick={() => onPreview(asset)}
+            className="inline-flex items-center gap-1 text-xs font-medium text-[#252525] hover:text-[#C44D00] cursor-pointer"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            Preview
+          </button>
         </div>
-      </div>
-      <div className="flex items-center justify-between pt-2 border-t border-[#E6E6E2]">
-        <StatusBadge
-          status={asset.status}
-          tone={
-            asset.status === 'Approved'
-              ? 'success'
-              : asset.status === 'Draft'
-              ? 'warning'
-              : 'neutral'
-          }
-        />
-        <button
-          type="button"
-          onClick={() => onPreview(asset)}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[#252525] hover:text-[#C44D00] cursor-pointer"
-        >
-          <Eye className="w-3.5 h-3.5" />
-          Preview
-        </button>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 export const DepartmentQuickLink: React.FC<{
@@ -569,9 +593,7 @@ export const BrainLineagePopover: React.FC<{
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className={`inline-flex items-center gap-1.5 text-[11px] font-medium cursor-pointer transition-colors ${
-          darkSurface
-            ? 'text-[#A8A8A2] hover:text-white'
-            : 'text-[#858585] hover:text-[#171717]'
+          darkSurface ? 'text-[#A8A8A2] hover:text-white' : 'text-[#858585] hover:text-[#171717]'
         }`}
       >
         <Brain className="w-3 h-3 shrink-0" />

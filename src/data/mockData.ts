@@ -365,15 +365,21 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       marketOverview: {
         text: 'India’s out-of-home and specialty coffee market has transitioned from instant coffee dominance toward freshly roasted whole-bean and pour-over culture. Rising adoption of domestic espresso machines, AeroPress, and cold-brew concentrates among 24–40 urban professionals creates durable repeat demand.',
         factType: 'verified',
-        sources: ['Euromonitor Hot Drinks India Summary', 'Coffee Board of India Consumption Brief'],
+        sources: [
+          'Euromonitor Hot Drinks India Summary',
+          'Coffee Board of India Consumption Brief',
+        ],
       },
       tamSamSom: {
         tamLabel: '$2.4B – $2.9B',
-        tamBasis: 'Total urban branded & café coffee retail expenditure across India (annualized band).',
+        tamBasis:
+          'Total urban branded & café coffee retail expenditure across India (annualized band).',
         samLabel: '$280M – $340M',
-        samBasis: 'Specialty roasted beans, home brewing, and urban artisan café segment in Tier-1 metros.',
+        samBasis:
+          'Specialty roasted beans, home brewing, and urban artisan café segment in Tier-1 metros.',
         somLabel: '$1.8M – $2.6M',
-        somBasis: '3-year serviceable capture across D2C metro subscriptions & 60–90 boutique B2B accounts.',
+        somBasis:
+          '3-year serviceable capture across D2C metro subscriptions & 60–90 boutique B2B accounts.',
         assumptions: [
           {
             id: 'a-tam',
@@ -449,12 +455,14 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         {
           title: 'Stale inventory on quick-commerce & marketplaces',
           severity: 'high',
-          evidence: 'Customer interviews showed 14 of 18 brewers received bags roasted 60–120 days prior.',
+          evidence:
+            'Customer interviews showed 14 of 18 brewers received bags roasted 60–120 days prior.',
         },
         {
           title: 'Intimidating specialty jargon without actionable brew ratios',
           severity: 'medium',
-          evidence: 'New brewers abandon whole-bean orders when water temperature/ratio feels unclear.',
+          evidence:
+            'New brewers abandon whole-bean orders when water temperature/ratio feels unclear.',
         },
         {
           title: 'Subscription rigidity (inability to pause or swap origins cleanly)',
@@ -466,9 +474,21 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         'Regional competitors cluster around physical cafés expanding into retail bags (Roastery House, Bigg Boss Cafe) or traditional catalog e-commerce brands (The Coffee Co.). Few brands combine digital roast-transparency, frictionless tasting flights, and cohesive editorial branding.',
       pricingAnalysis: {
         tiers: [
-          { tier: 'Entry / Mass Specialty', range: '$8 – $11 / 250g', positioning: 'High-volume blends, older warehouse stock' },
-          { tier: 'Target Solstice Core', range: '$12 – $16 / 250g', positioning: '48-hour post-roast dispatch, single-estate micro-lots' },
-          { tier: 'Ultra-Reserve Microlots', range: '$20 – $28 / 250g', positioning: 'Limited competition/experimental anaerobic lots' },
+          {
+            tier: 'Entry / Mass Specialty',
+            range: '$8 – $11 / 250g',
+            positioning: 'High-volume blends, older warehouse stock',
+          },
+          {
+            tier: 'Target Solstice Core',
+            range: '$12 – $16 / 250g',
+            positioning: '48-hour post-roast dispatch, single-estate micro-lots',
+          },
+          {
+            tier: 'Ultra-Reserve Microlots',
+            range: '$20 – $28 / 250g',
+            positioning: 'Limited competition/experimental anaerobic lots',
+          },
         ],
         recommendation:
           'Anchor core subscription at $18/month (2 × 250g or flexible cadence) and price the 3×100g Discovery Flight at $15 with an automatic $5 credit toward the first subscription cycle.',
@@ -495,24 +515,39 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       revenuePotential: {
         year1Conservative: '$95k – $135k ARR (350 subscribers + 8 B2B studios)',
         year1Target: '$180k – $240k ARR (650 subscribers + 18 B2B studios)',
-        unitEconomicsNote: 'Estimated blended contribution margin ~41% after green bean cost, roasting, packaging, and metro courier.',
+        unitEconomicsNote:
+          'Estimated blended contribution margin ~41% after green bean cost, roasting, packaging, and metro courier.',
         factType: 'estimate',
       },
       startupCostEstimates: [
-        { category: 'Initial Green Bean & Packaging Inventory', range: '$6,500 – $9,500', note: 'Compostable valved bags + 3-pack flight boxes' },
-        { category: 'Contract Roasting / Shared Roastery Access', range: '$2,000 – $3,500', note: 'Avoids $45k roaster capex in first 6 months' },
-        { category: 'Brand Identity, Storefront & Launch Content', range: '$2,500 – $4,500', note: 'Photography, brew cards, digital storefront' },
+        {
+          category: 'Initial Green Bean & Packaging Inventory',
+          range: '$6,500 – $9,500',
+          note: 'Compostable valved bags + 3-pack flight boxes',
+        },
+        {
+          category: 'Contract Roasting / Shared Roastery Access',
+          range: '$2,000 – $3,500',
+          note: 'Avoids $45k roaster capex in first 6 months',
+        },
+        {
+          category: 'Brand Identity, Storefront & Launch Content',
+          range: '$2,500 – $4,500',
+          note: 'Photography, brew cards, digital storefront',
+        },
       ],
       risksAndChallenges: [
         {
           risk: 'Rising Arabica green bean commodity prices compressing margins',
           severity: 'high',
-          mitigation: 'Lock seasonal forward contracts directly with 2 Chikmagalur estates for 60% of volume.',
+          mitigation:
+            'Lock seasonal forward contracts directly with 2 Chikmagalur estates for 60% of volume.',
         },
         {
           risk: 'Paid social CAC inflation on Meta/Instagram',
           severity: 'medium',
-          mitigation: 'Pair behind-the-scenes roasting reels with B2B office sampling to acquire individual subscribers organically.',
+          mitigation:
+            'Pair behind-the-scenes roasting reels with B2B office sampling to acquire individual subscribers organically.',
         },
       ],
       validationExperiments: [
@@ -537,15 +572,31 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         ],
       },
       sources: [
-        { title: 'Coffee Board of India Market Note 2026', publisher: 'Coffee Board', date: '2026-09', reliability: 'Primary' },
-        { title: 'Specialty Beverage D2C Retention Benchmarks', publisher: 'Industry Synthesis', date: '2026-10', reliability: 'Market Estimate' },
-        { title: 'Founder Discovery Interviews (n=18)', publisher: 'Internal Research', date: '2026-11', reliability: 'Primary' },
+        {
+          title: 'Coffee Board of India Market Note 2026',
+          publisher: 'Coffee Board',
+          date: '2026-09',
+          reliability: 'Primary',
+        },
+        {
+          title: 'Specialty Beverage D2C Retention Benchmarks',
+          publisher: 'Industry Synthesis',
+          date: '2026-10',
+          reliability: 'Market Estimate',
+        },
+        {
+          title: 'Founder Discovery Interviews (n=18)',
+          publisher: 'Internal Research',
+          date: '2026-11',
+          reliability: 'Primary',
+        },
       ],
     },
     {
       id: 'rep-2',
       title: 'Cold Brew Concentrate Ready-to-Pour Format (2027 Expansion)',
-      ideaSummary: 'Shelf-stable nitrogen-flushed specialty cold brew concentrate pouches for rapid iced coffee at home.',
+      ideaSummary:
+        'Shelf-stable nitrogen-flushed specialty cold brew concentrate pouches for rapid iced coffee at home.',
       industry: 'RTD & Concentrate Coffee',
       targetMarket: 'Busy urban commuters & fitness-oriented professionals',
       geography: 'Pan-India Tier-1 & Tier-2 Metros',
@@ -575,25 +626,51 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         ],
       },
       marketDemand: {
-        summary: 'High social curiosity during March–August; lower retention without bundle discounts.',
+        summary:
+          'High social curiosity during March–August; lower retention without bundle discounts.',
         signals: [
-          { label: 'Iced specialty coffee social search volume', trend: '+34% seasonal lift Q2–Q3', factType: 'verified' },
+          {
+            label: 'Iced specialty coffee social search volume',
+            trend: '+34% seasonal lift Q2–Q3',
+            factType: 'verified',
+          },
         ],
       },
       customerSegments: [
-        { name: 'Iced Coffee Daily Drinkers', share: '70%', need: '30-second café-grade iced Americano or latte', urgency: 'Moderate' },
+        {
+          name: 'Iced Coffee Daily Drinkers',
+          share: '70%',
+          need: '30-second café-grade iced Americano or latte',
+          urgency: 'Moderate',
+        },
       ],
       customerPainPoints: [
-        { title: 'Existing concentrates taste overly acidic or burnt', severity: 'medium', evidence: 'Marketplace review analysis.' },
+        {
+          title: 'Existing concentrates taste overly acidic or burnt',
+          severity: 'medium',
+          evidence: 'Marketplace review analysis.',
+        },
       ],
-      competitorLandscapeSummary: 'Sleepy Owl & Blue Tokai hold retail shelf awareness; room exists for single-estate cold concentrates.',
+      competitorLandscapeSummary:
+        'Sleepy Owl & Blue Tokai hold retail shelf awareness; room exists for single-estate cold concentrates.',
       pricingAnalysis: {
-        tiers: [{ tier: '10-Serve Concentrate Bottle', range: '$11 – $14', positioning: 'Convenience premium' }],
+        tiers: [
+          {
+            tier: '10-Serve Concentrate Bottle',
+            range: '$11 – $14',
+            positioning: 'Convenience premium',
+          },
+        ],
         recommendation: 'Introduce as a subscriber add-on before standalone retail.',
       },
       marketOpportunities: ['Subscriber summer add-on bundle'],
       businessModelOptions: [
-        { model: 'Subscriber Add-On SKU', pros: 'Zero new acquisition cost', cons: 'Requires retort/HPP bottling partner', fit: 'Phase 2 Expansion' },
+        {
+          model: 'Subscriber Add-On SKU',
+          pros: 'Zero new acquisition cost',
+          cons: 'Requires retort/HPP bottling partner',
+          fit: 'Phase 2 Expansion',
+        },
       ],
       revenuePotential: {
         year1Conservative: '$35k – $55k incremental ARR',
@@ -602,20 +679,38 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         factType: 'estimate',
       },
       startupCostEstimates: [
-        { category: 'Co-packing Trial Run', range: '$4,500 – $7,000', note: 'Shelf-life & stability testing included' },
+        {
+          category: 'Co-packing Trial Run',
+          range: '$4,500 – $7,000',
+          note: 'Shelf-life & stability testing included',
+        },
       ],
       risksAndChallenges: [
-        { risk: 'Cold-chain or shelf-life spoilage if velocity lags', severity: 'medium', mitigation: 'Pre-sell to existing subscribers first.' },
+        {
+          risk: 'Cold-chain or shelf-life spoilage if velocity lags',
+          severity: 'medium',
+          mitigation: 'Pre-sell to existing subscribers first.',
+        },
       ],
       validationExperiments: [
-        { title: 'Waitlist landing page inside customer portal', metric: '15% opt-in from existing buyers', timeframe: '14 days' },
+        {
+          title: 'Waitlist landing page inside customer portal',
+          metric: '15% opt-in from existing buyers',
+          timeframe: '14 days',
+        },
       ],
       finalRecommendation: {
-        verdict: 'Defer co-packing spend to Q2 2027; prioritize core whole-bean Discovery Flight launch first.',
+        verdict:
+          'Defer co-packing spend to Q2 2027; prioritize core whole-bean Discovery Flight launch first.',
         nextSteps: ['Keep in Research Repository as Phase 2 SKU expansion.'],
       },
       sources: [
-        { title: 'Beverage Packaging & Co-Packing Brief', publisher: 'Market Estimate', date: '2026-10', reliability: 'Market Estimate' },
+        {
+          title: 'Beverage Packaging & Co-Packing Brief',
+          publisher: 'Market Estimate',
+          date: '2026-10',
+          reliability: 'Market Estimate',
+        },
       ],
     },
   ],
@@ -644,7 +739,8 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         { name: 'Café Dine-In & Bakery Menu', price: '$5 – $12', notes: 'Primary revenue driver' },
       ],
       pricingModel: {
-        summary: 'Accessible specialty retail pricing subsidized by high-margin café food & beverage.',
+        summary:
+          'Accessible specialty retail pricing subsidized by high-margin café food & beverage.',
         entryPrice: '$10.50 / 250g',
         flagshipPrice: '$15.00 / 250g',
         discounts: '10% off 1kg packs; minimal subscription incentives.',
@@ -674,7 +770,11 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         averageRating: '4.6 / 5',
         reviewCount: '3,400+ Google & social reviews',
         praisedFor: ['Courtyard ambience', 'Consistent cranberry coffee', 'Friendly baristas'],
-        complaints: ['Weekend wait times', 'Online bean shipping takes 5–7 days', 'Bags sometimes lack recent roast stamps'],
+        complaints: [
+          'Weekend wait times',
+          'Online bean shipping takes 5–7 days',
+          'Bags sometimes lack recent roast stamps',
+        ],
       },
       strengths: [
         'Iconic physical café footprint driving organic brand love',
@@ -686,12 +786,25 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         'Slow fulfillment turnaround for online orders',
       ],
       historicalChanges: [
-        { date: '2026-11-11', change: 'Expanded weekend brunch menu in Jubilee Hills flagship', source: 'Instagram & Menu PDF' },
-        { date: '2026-10-22', change: 'Increased 250g Mandalkhan price by +8%', source: 'Website Pricing Snapshot' },
+        {
+          date: '2026-11-11',
+          change: 'Expanded weekend brunch menu in Jubilee Hills flagship',
+          source: 'Instagram & Menu PDF',
+        },
+        {
+          date: '2026-10-22',
+          change: 'Increased 250g Mandalkhan price by +8%',
+          source: 'Website Pricing Snapshot',
+        },
       ],
       monitoringEnabled: true,
       monitoringFrequency: 'Daily',
-      monitoredCategories: ['Pricing changes', 'Product launches', 'Website changes', 'Public social media activity'],
+      monitoredCategories: [
+        'Pricing changes',
+        'Product launches',
+        'Website changes',
+        'Public social media activity',
+      ],
     },
     {
       id: 'comp-2',
@@ -711,7 +824,11 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       overview:
         'The Coffee Co. operates a mature national D2C engine and strong marketplace presence. While comprehensive, their 18-SKU catalog overwhelms newcomers and their packaging/messaging feels clinical and crowded.',
       productsAndServices: [
-        { name: 'Customizer 250g Single Origins (18 SKUs)', price: '$13 – $19', notes: 'Broad roast spectrum' },
+        {
+          name: 'Customizer 250g Single Origins (18 SKUs)',
+          price: '$13 – $19',
+          notes: 'Broad roast spectrum',
+        },
         { name: 'Easy Pour Drip Bags (Box of 10)', price: '$11', notes: 'Travel & convenience' },
         { name: 'B2B Office Espresso Supply', price: 'Custom quote', notes: 'Enterprise focus' },
       ],
@@ -745,23 +862,36 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         averageRating: '4.4 / 5',
         reviewCount: '5,100+ verified reviews',
         praisedFor: ['Wide selection', 'Fast metro delivery', 'Consistent medium-dark roasts'],
-        complaints: ['Confusing flavor wheel descriptions', 'Occasional rigid subscription renewal reminders'],
+        complaints: [
+          'Confusing flavor wheel descriptions',
+          'Occasional rigid subscription renewal reminders',
+        ],
       },
-      strengths: [
-        'High SEO authority and marketplace distribution',
-        'Fast 24–48h metro logistics',
-      ],
+      strengths: ['High SEO authority and marketplace distribution', 'Fast 24–48h metro logistics'],
       weaknesses: [
         'Catalog sprawl creates decision fatigue for new brewers',
         'Visual identity lacks warmth and collectible craft appeal',
       ],
       historicalChanges: [
-        { date: '2026-11-14', change: 'Launched winter limited-edition Honey Process micro-lot ($19)', source: 'Homepage Hero Banner' },
-        { date: '2026-11-02', change: 'Updated subscription discount from 12% to 15% on 500g bags', source: 'Pricing Page Diff' },
+        {
+          date: '2026-11-14',
+          change: 'Launched winter limited-edition Honey Process micro-lot ($19)',
+          source: 'Homepage Hero Banner',
+        },
+        {
+          date: '2026-11-02',
+          change: 'Updated subscription discount from 12% to 15% on 500g bags',
+          source: 'Pricing Page Diff',
+        },
       ],
       monitoringEnabled: true,
       monitoringFrequency: 'Daily',
-      monitoredCategories: ['Pricing changes', 'Product launches', 'Offers and promotions', 'Search visibility'],
+      monitoredCategories: [
+        'Pricing changes',
+        'Product launches',
+        'Offers and promotions',
+        'Search visibility',
+      ],
     },
     {
       id: 'comp-3',
@@ -781,8 +911,16 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       overview:
         'Bigg Boss Cafe excels at Instagram-driven foot traffic and trending café aesthetics, generating +12% weekly social momentum. However, their bean sourcing transparency and home-brew ecosystem are underdeveloped.',
       productsAndServices: [
-        { name: 'House Signature Blend (250g)', price: '$10', notes: 'Dark chocolate & hazelnut profile' },
-        { name: 'Iced Matcha & Espresso Tonics', price: '$4.50', notes: 'High social shareability' },
+        {
+          name: 'House Signature Blend (250g)',
+          price: '$10',
+          notes: 'Dark chocolate & hazelnut profile',
+        },
+        {
+          name: 'Iced Matcha & Espresso Tonics',
+          price: '$4.50',
+          notes: 'High social shareability',
+        },
       ],
       pricingModel: {
         summary: 'Value-oriented retail bags acting as café merch.',
@@ -822,11 +960,19 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         'No digital retention loop after café visits',
       ],
       historicalChanges: [
-        { date: '2026-11-15', change: 'Behind-the-scenes barista pour video hit 2.3x average engagement', source: 'Public Social Feed' },
+        {
+          date: '2026-11-15',
+          change: 'Behind-the-scenes barista pour video hit 2.3x average engagement',
+          source: 'Public Social Feed',
+        },
       ],
       monitoringEnabled: true,
       monitoringFrequency: 'Weekly',
-      monitoredCategories: ['Public social media activity', 'Offers and promotions', 'Business expansion announcements'],
+      monitoredCategories: [
+        'Public social media activity',
+        'Offers and promotions',
+        'Business expansion announcements',
+      ],
     },
     {
       id: 'comp-4',
@@ -880,7 +1026,11 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       strengths: ['Strong design prestige', 'High average order value'],
       weaknesses: ['Narrow addressable audience', 'Poor everyday subscription continuity'],
       historicalChanges: [
-        { date: '2026-11-08', change: 'Sold out Lot #09 in 36 hours', source: 'Storefront Stock Monitor' },
+        {
+          date: '2026-11-08',
+          change: 'Sold out Lot #09 in 36 hours',
+          source: 'Storefront Stock Monitor',
+        },
       ],
       monitoringEnabled: false,
       monitoringFrequency: 'Weekly',
@@ -979,14 +1129,21 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       'Warm architectural minimalism meets radical roast-date transparency—making café-caliber single-origin rituals effortless at home and in the studio.',
     targetAudience: 'Design-conscious remote professionals & modern creative workspaces',
     personalityTraits: ['Warm', 'Precise', 'Unpretentious', 'Transparent', 'Tactile'],
-    attributes: ['48h Freshness', 'Single-Estate Traceable', 'Guided Rituals', 'Architectural Calm'],
-    visualDirection: 'Warm Alabaster, Charcoal Roast & Ember Orange accents with editorial Manrope typography.',
+    attributes: [
+      '48h Freshness',
+      'Single-Estate Traceable',
+      'Guided Rituals',
+      'Architectural Calm',
+    ],
+    visualDirection:
+      'Warm Alabaster, Charcoal Roast & Ember Orange accents with editorial Manrope typography.',
     selectedConceptId: 'concept-1',
     concepts: [
       {
         id: 'concept-1',
         name: 'Solar Roast Horizon',
-        rationale: 'Clean geometric sunrise-over-bean emblem symbolizing Tuesday dawn roasting and warm morning rituals.',
+        rationale:
+          'Clean geometric sunrise-over-bean emblem symbolizing Tuesday dawn roasting and warm morning rituals.',
         primaryColor: '#242424',
         secondaryColor: '#F8F8F6',
         accentColor: '#EE7542',
@@ -999,7 +1156,8 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       {
         id: 'concept-2',
         name: 'Monogram Craft Seal',
-        rationale: 'Interlocking SC architectural seal designed for wax-like batch stickers, coffee tins, and studio signage.',
+        rationale:
+          'Interlocking SC architectural seal designed for wax-like batch stickers, coffee tins, and studio signage.',
         primaryColor: '#1E1D1B',
         secondaryColor: '#F2F2EF',
         accentColor: '#DB6334',
@@ -1012,7 +1170,8 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       {
         id: 'concept-3',
         name: 'Origin Stamp Emblem',
-        rationale: 'Passport-inspired micro-lot coordinate frame built to showcase Chikmagalur & Araku elevation metadata.',
+        rationale:
+          'Passport-inspired micro-lot coordinate frame built to showcase Chikmagalur & Araku elevation metadata.',
         primaryColor: '#252525',
         secondaryColor: '#FFF0E8',
         accentColor: '#EE7542',
@@ -1036,10 +1195,14 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       mono: 'JetBrains Mono (Roast dates, elevation & brew ratios)',
     },
     guidelines: {
-      logoUsage: 'Maintain minimum 1x mark height clearspace on all sides. Use Espresso Ink on light stock and Pure White/Ember on dark cartons.',
-      spacingRule: '8px spatial grid. Generous 32px+ margins on packaging front panels; avoid crowding tasting descriptors.',
-      visualStyle: 'Natural window-lit photography on travertine/oak surfaces paired with clean batch coordinate typography.',
-      brandVoice: 'Knowledgeable, calm, encouraging—never pretentious. Explain why a roast tastes bright without intimidating jargon.',
+      logoUsage:
+        'Maintain minimum 1x mark height clearspace on all sides. Use Espresso Ink on light stock and Pure White/Ember on dark cartons.',
+      spacingRule:
+        '8px spatial grid. Generous 32px+ margins on packaging front panels; avoid crowding tasting descriptors.',
+      visualStyle:
+        'Natural window-lit photography on travertine/oak surfaces paired with clean batch coordinate typography.',
+      brandVoice:
+        'Knowledgeable, calm, encouraging—never pretentious. Explain why a roast tastes bright without intimidating jargon.',
       messagingPillars: [
         'Roasted every Tuesday, at your door within 48 hours.',
         'Single-estate Indian coffee, calibrated for your home brewer.',
@@ -1128,56 +1291,64 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       id: 'evt-1',
       competitorOrSource: 'The Coffee Co.',
       category: 'Product launches',
-      detectedChange: 'Published new homepage banner for Winter Honey Process Micro-Lot priced at $19 / 250g.',
+      detectedChange:
+        'Published new homepage banner for Winter Honey Process Micro-Lot priced at $19 / 250g.',
       detectedAt: '2 hours ago · 2026-11-16',
       sourceReference: 'thecoffeeco.example.com/collections/microlots',
       importance: 'high',
       aiInterpretation:
         'Competitor is pushing higher-margin seasonal drops ahead of December gifting. Their $19 single-bag threshold creates a clear price-anchoring contrast for Solstice’s $15 3-origin Discovery Flight.',
       potentialImpact: 'Validates strong appetite for seasonal micro-lot storytelling in Q4.',
-      suggestedAction: 'Launch a 48-hour early-access Discovery Flight campaign highlighting 3 seasonal harvests for $15.',
+      suggestedAction:
+        'Launch a 48-hour early-access Discovery Flight campaign highlighting 3 seasonal harvests for $15.',
       isRead: false,
     },
     {
       id: 'evt-2',
       competitorOrSource: 'Bigg Boss Cafe',
       category: 'Public social media activity',
-      detectedChange: 'Behind-the-scenes barista pour & café aesthetic reel series achieved +12% weekly follower growth.',
+      detectedChange:
+        'Behind-the-scenes barista pour & café aesthetic reel series achieved +12% weekly follower growth.',
       detectedAt: 'Yesterday · 2026-11-15',
       sourceReference: 'Instagram @biggbosscafe public feed',
       importance: 'medium',
       aiInterpretation:
         'Short-form behind-the-scenes craft clips are currently outperforming static product flat-lays by ~2.3x in regional coffee engagement.',
       potentialImpact: 'Organic reach opportunity for Solstice Tuesday roasting batch videos.',
-      suggestedAction: 'Film a 25-second Tuesday morning roaster drum + tasting flight packing reel for Instagram.',
+      suggestedAction:
+        'Film a 25-second Tuesday morning roaster drum + tasting flight packing reel for Instagram.',
       isRead: false,
     },
     {
       id: 'evt-3',
       competitorOrSource: 'Roastery House',
       category: 'Pricing changes',
-      detectedChange: 'Increased Mandalkhan Estate 250g retail bag from $11.00 to $12.00 (+9%) and raised free-shipping threshold to $25.',
+      detectedChange:
+        'Increased Mandalkhan Estate 250g retail bag from $11.00 to $12.00 (+9%) and raised free-shipping threshold to $25.',
       detectedAt: '3 days ago · 2026-11-13',
       sourceReference: 'roasteryhouse.example.com/shop',
       importance: 'high',
       aiInterpretation:
         'Rising green bean costs are forcing competitors to raise shipping thresholds. Solstice can highlight free metro courier on all bi-weekly subscriptions.',
       potentialImpact: 'Improves Solstice’s relative price-value perception for D2C subscribers.',
-      suggestedAction: 'Add "Free 48h Metro Dispatch on Subscriptions" callout to checkout and social ads.',
+      suggestedAction:
+        'Add "Free 48h Metro Dispatch on Subscriptions" callout to checkout and social ads.',
       isRead: true,
     },
     {
       id: 'evt-4',
       competitorOrSource: 'Regional Industry Brief',
       category: 'Market trends',
-      detectedChange: 'Specialty grinder & pour-over kettle sales rose 28% YoY in Bengaluru & Hyderabad.',
+      detectedChange:
+        'Specialty grinder & pour-over kettle sales rose 28% YoY in Bengaluru & Hyderabad.',
       detectedAt: '5 days ago · 2026-11-11',
       sourceReference: 'Urban Home Brewing Equipment Report Q4',
       importance: 'medium',
       aiInterpretation:
         'Expanding installed base of home pour-over gear directly increases demand for freshly roasted whole beans and grind-matched brew guides.',
       potentialImpact: 'Expands serviceable addressable market for Solstice home subscriptions.',
-      suggestedAction: 'Partner with 2 local specialty gear boutiques to slip Discovery Flight QR cards into grinder boxes.',
+      suggestedAction:
+        'Partner with 2 local specialty gear boutiques to slip Discovery Flight QR cards into grinder boxes.',
       isRead: true,
     },
   ],
@@ -1234,8 +1405,10 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'task-1',
       title: 'Publish 48-Hour Roast Freshness Carousel on Instagram',
-      description: 'Export the approved 5-slide carousel from Brand Studio and pair with link-in-bio $15 Discovery Flight offer.',
-      whyItMatters: 'Addresses #1 customer frustration discovered in research (stale 90-day marketplace coffee).',
+      description:
+        'Export the approved 5-slide carousel from Brand Studio and pair with link-in-bio $15 Discovery Flight offer.',
+      whyItMatters:
+        'Addresses #1 customer frustration discovered in research (stale 90-day marketplace coffee).',
       expectedOutcome: '18–25 Discovery Flight orders and 40+ email signups in 72 hours.',
       priority: 'high',
       estimatedMinutes: 25,
@@ -1248,9 +1421,12 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'task-2',
       title: 'Send Studio Barista Tasting Kits to 5 Hyderabad Design Agencies',
-      description: 'Deliver complimentary 3-origin sample kits with the Studio Barista one-pager to pre-qualified creative studios.',
-      whyItMatters: 'B2B studio accounts deliver 10x higher LTV than single-bag retail orders with near-zero digital ad spend.',
-      expectedOutcome: 'Book 3 live cupping sessions and close 1–2 recurring $240/mo studio contracts.',
+      description:
+        'Deliver complimentary 3-origin sample kits with the Studio Barista one-pager to pre-qualified creative studios.',
+      whyItMatters:
+        'B2B studio accounts deliver 10x higher LTV than single-bag retail orders with near-zero digital ad spend.',
+      expectedOutcome:
+        'Book 3 live cupping sessions and close 1–2 recurring $240/mo studio contracts.',
       priority: 'high',
       estimatedMinutes: 45,
       dueDate: '2026-11-17',
@@ -1261,8 +1437,10 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'task-3',
       title: 'Add "Free 48h Metro Dispatch" Banner Following Roastery House Price Hike',
-      description: 'Highlight free metro subscription shipping above the fold after Roastery House raised their free-shipping floor to $25.',
-      whyItMatters: 'Capitalizes on a live Market Watch competitor pricing shift detected 3 days ago.',
+      description:
+        'Highlight free metro subscription shipping above the fold after Roastery House raised their free-shipping floor to $25.',
+      whyItMatters:
+        'Capitalizes on a live Market Watch competitor pricing shift detected 3 days ago.',
       expectedOutcome: '+6% checkout completion lift on subscription landing page.',
       priority: 'high',
       estimatedMinutes: 15,
@@ -1274,8 +1452,10 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'task-4',
       title: 'Configure Automated Day-10 Discovery Flight Follow-Up Flow',
-      description: 'Send personalized brew check-in + $5 credit code 10 days after flight delivery while beans are at peak flavor.',
-      whyItMatters: 'Timing conversion outreach to peak tasting window drives 38–42% subscription conversion.',
+      description:
+        'Send personalized brew check-in + $5 credit code 10 days after flight delivery while beans are at peak flavor.',
+      whyItMatters:
+        'Timing conversion outreach to peak tasting window drives 38–42% subscription conversion.',
       expectedOutcome: 'Consistent conversion from trial box to recurring Tuesday roasts.',
       priority: 'medium',
       estimatedMinutes: 35,
@@ -1314,16 +1494,19 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       title: '$15 Discovery Flight + $5 Subscription Credit Funnel',
       hypothesis:
         'Offering a low-risk 3×100g flight with a $5 credit toward the first subscription will convert 2x better than direct $18 single-bag ads.',
-      objective: 'Acquire 100 trial buyers and convert >= 38% to recurring subscribers within 21 days.',
+      objective:
+        'Acquire 100 trial buyers and convert >= 38% to recurring subscribers within 21 days.',
       targetAudience: 'Urban home brewers (24–38) in Hyderabad & Bengaluru',
-      action: 'Split Instagram & search traffic 50/50 between Discovery Flight landing page and standard whole-bean store.',
+      action:
+        'Split Instagram & search traffic 50/50 between Discovery Flight landing page and standard whole-bean store.',
       successMetric: 'Flight-to-subscription conversion >= 38% at <$11 blended CAC',
       budget: '$450',
       startDate: '2026-11-01',
       endDate: '2026-11-30',
       status: 'Active',
       results: '42 flights sold in first 15 days; 36% of Day-10 cohort already converted.',
-      learnings: 'Customers overwhelmingly select V60 & AeroPress grind presets; add Moka Pot guide card next.',
+      learnings:
+        'Customers overwhelmingly select V60 & AeroPress grind presets; add Moka Pot guide card next.',
     },
     {
       id: 'exp-2',
@@ -1362,7 +1545,8 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'rec-1',
       whatToDo: 'Launch a "Founding 100 Roastery Club" tier with locked-in free Tuesday shipping',
-      whyToDoIt: 'Roastery House just raised their free-shipping threshold to $25, creating an immediate comparison hook.',
+      whyToDoIt:
+        'Roastery House just raised their free-shipping threshold to $25, creating an immediate comparison hook.',
       supportingResearch: 'Market Watch Pricing Diff (Nov 13) & Idea Report Pricing Analysis',
       expectedBenefit: '+25–35 recurring subscribers before Dec 15',
       difficulty: 'Low',
@@ -1373,7 +1557,8 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'rec-2',
       whatToDo: 'Bundle a 15-minute virtual dial-in call for new whole-bean subscribers',
-      whyToDoIt: 'Interviewed brewers cited inconsistent grind/water ratios as their #1 fear when switching roasters.',
+      whyToDoIt:
+        'Interviewed brewers cited inconsistent grind/water ratios as their #1 fear when switching roasters.',
       supportingResearch: 'Business Brain Customer Interviews (n=18)',
       expectedBenefit: 'Reduces first-month subscription churn by est. 12%',
       difficulty: 'Medium',
@@ -1384,7 +1569,8 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'rec-3',
       whatToDo: 'Delay Cold Brew Concentrate co-packing until 400 active subscribers',
-      whyToDoIt: '3,000-unit MOQ ties up $5k+ working capital better deployed into Discovery Flight acquisition.',
+      whyToDoIt:
+        '3,000-unit MOQ ties up $5k+ working capital better deployed into Discovery Flight acquisition.',
       supportingResearch: 'Research Report #2 (Cold Brew Format Validation)',
       expectedBenefit: 'Preserves $5,500 runway for high-ROI customer acquisition',
       difficulty: 'Low',
@@ -1415,7 +1601,8 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'notif-3',
       title: 'Research Report Saved to Business Brain',
-      description: 'Specialty Roast-on-Demand Subscription dossier (High confidence) synced across departments.',
+      description:
+        'Specialty Roast-on-Demand Subscription dossier (High confidence) synced across departments.',
       category: 'Research Complete',
       timestamp: 'Yesterday',
       read: true,
@@ -1424,7 +1611,8 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     {
       id: 'notif-4',
       title: 'Opportunity: Free Shipping Comparison Hook',
-      description: 'Roastery House raised shipping threshold to $25 — suggested conversion experiment ready.',
+      description:
+        'Roastery House raised shipping threshold to $25 — suggested conversion experiment ready.',
       category: 'Opportunity',
       timestamp: '3d ago',
       read: true,

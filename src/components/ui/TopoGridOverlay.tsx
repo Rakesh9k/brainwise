@@ -9,13 +9,7 @@ import {
   resolveTopoGridClassName,
 } from './topoGridUtils';
 
-export type {
-  TopoGridDensity,
-  TopoGridFade,
-  TopoGridIntensity,
-  TopoGridPlacement,
-  TopoGridTone,
-};
+export type { TopoGridDensity, TopoGridFade, TopoGridIntensity, TopoGridPlacement, TopoGridTone };
 
 export interface TopoGridOverlayProps {
   /** Selects `.bw-topo-grid` (light surfaces) or `.bw-topo-grid-dark` (obsidian surfaces). */

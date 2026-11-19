@@ -9,7 +9,6 @@ import {
   Copy,
   Download,
   FolderKanban,
-  Layers,
   Lock,
   Moon,
   RefreshCw,
@@ -84,10 +83,34 @@ const COLLATERAL_CATEGORIES: BrandAsset['category'][] = [
 ];
 
 const SOCIAL_FORMATS = [
-  { id: 'Carousel' as const, label: 'Instagram Carousel', ratio: '4:5 (1080×1350)', aspectKey: '4:5' as const, folder: 'Social Media' as const },
-  { id: 'Instagram Post' as const, label: 'Instagram Post', ratio: '1:1 (1080×1080)', aspectKey: '1:1' as const, folder: 'Social Media' as const },
-  { id: 'Campaign' as const, label: 'Story / Reel Cover', ratio: '9:16 (1080×1920)', aspectKey: '9:16' as const, folder: 'Campaigns' as const },
-  { id: 'Facebook Creative' as const, label: 'Social Ad / Link Card', ratio: '1.91:1 (1200×628)', aspectKey: '1.91:1' as const, folder: 'Social Media' as const },
+  {
+    id: 'Carousel' as const,
+    label: 'Instagram Carousel',
+    ratio: '4:5 (1080×1350)',
+    aspectKey: '4:5' as const,
+    folder: 'Social Media' as const,
+  },
+  {
+    id: 'Instagram Post' as const,
+    label: 'Instagram Post',
+    ratio: '1:1 (1080×1080)',
+    aspectKey: '1:1' as const,
+    folder: 'Social Media' as const,
+  },
+  {
+    id: 'Campaign' as const,
+    label: 'Story / Reel Cover',
+    ratio: '9:16 (1080×1920)',
+    aspectKey: '9:16' as const,
+    folder: 'Campaigns' as const,
+  },
+  {
+    id: 'Facebook Creative' as const,
+    label: 'Social Ad / Link Card',
+    ratio: '1.91:1 (1200×628)',
+    aspectKey: '1.91:1' as const,
+    folder: 'Social Media' as const,
+  },
 ];
 
 const LOGO_ARCHETYPES = [
@@ -124,7 +147,9 @@ export const BrandStudioPage: React.FC = () => {
   const [studioMode, setStudioMode] = useState<'social' | 'collateral'>('social');
   const [builderOpen, setBuilderOpen] = useState(false);
   const [builderStep, setBuilderStep] = useState(1);
-  const [showcaseSurface, setShowcaseSurface] = useState<'packaging' | 'instagram' | 'hero'>('packaging');
+  const [showcaseSurface, setShowcaseSurface] = useState<'packaging' | 'instagram' | 'hero'>(
+    'packaging'
+  );
   const [copiedToken, setCopiedToken] = useState<'css' | 'json' | 'caption' | null>(null);
   const [brandLockEnabled, setBrandLockEnabled] = useState(true);
   const copyTimerRef = useRef<number | null>(null);
@@ -190,20 +215,23 @@ export const BrandStudioPage: React.FC = () => {
       ? `Minimal matte sleeve for ${flagshipProduct.name} (${flagshipProduct.priceRange}) highlighting batch freshness`
       : `Signature ${state.brand.brandName} brand launch collateral`
   );
-  const [collateralSurfacePref, setCollateralSurfacePref] = useState<'mixed' | 'light' | 'dark'>('mixed');
+  const [collateralSurfacePref, setCollateralSurfacePref] = useState<'mixed' | 'light' | 'dark'>(
+    'mixed'
+  );
   const [collateralGenerating, setCollateralGenerating] = useState(false);
   const [collateralError, setCollateralError] = useState<string | null>(null);
   const [collateralModelUsed, setCollateralModelUsed] = useState<string | null>(null);
-  const [collateralVariations, setCollateralVariations] = useState<GeneratedCollateralVariation[]>(() =>
-    buildLocalBrandAssetVariations({
-      category: 'Packaging',
-      prompt: state.brand.tagline,
-      brandName: state.brand.brandName,
-      tagline: state.brand.tagline,
-      positioning: state.brand.positioningStatement,
-      accentHex: activeConcept?.accentColor ?? '#FF7417',
-      surfaceMode: 'mixed',
-    })
+  const [collateralVariations, setCollateralVariations] = useState<GeneratedCollateralVariation[]>(
+    () =>
+      buildLocalBrandAssetVariations({
+        category: 'Packaging',
+        prompt: state.brand.tagline,
+        brandName: state.brand.brandName,
+        tagline: state.brand.tagline,
+        positioning: state.brand.positioningStatement,
+        accentHex: activeConcept?.accentColor ?? '#FF7417',
+        surfaceMode: 'mixed',
+      })
   );
   const [selectedVariationIdx, setSelectedVariationIdx] = useState(0);
   const [showCollateralEditor, setShowCollateralEditor] = useState(false);
@@ -233,7 +261,10 @@ export const BrandStudioPage: React.FC = () => {
       setTab('studio');
       setStudioMode('collateral');
       if (pendingCreativeRemix.prompt) setCollateralPrompt(pendingCreativeRemix.prompt);
-      if (pendingCreativeRemix.category && COLLATERAL_CATEGORIES.includes(pendingCreativeRemix.category)) {
+      if (
+        pendingCreativeRemix.category &&
+        COLLATERAL_CATEGORIES.includes(pendingCreativeRemix.category)
+      ) {
         setSelectedCollateral(pendingCreativeRemix.category);
       }
     }
@@ -243,9 +274,7 @@ export const BrandStudioPage: React.FC = () => {
   const handleCopyPayload = (kind: 'css' | 'json' | 'caption', customText?: string) => {
     const payload =
       customText ??
-      (kind === 'css'
-        ? formatBrandCssVariables(state.brand)
-        : formatBrandJsonTokens(state.brand));
+      (kind === 'css' ? formatBrandCssVariables(state.brand) : formatBrandJsonTokens(state.brand));
     void navigator.clipboard?.writeText(payload)?.catch(() => {});
     setCopiedToken(kind);
     if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
@@ -254,8 +283,8 @@ export const BrandStudioPage: React.FC = () => {
       kind === 'css'
         ? 'Copied CSS design tokens to clipboard.'
         : kind === 'json'
-        ? 'Copied JSON design tokens to clipboard.'
-        : 'Copied AI caption & hashtags to clipboard.'
+          ? 'Copied JSON design tokens to clipboard.'
+          : 'Copied AI caption & hashtags to clipboard.'
     );
   };
 
@@ -281,20 +310,20 @@ export const BrandStudioPage: React.FC = () => {
           { label: `Step ${builderStep} of 11` },
         ]
       : tab === 'logos'
-      ? [{ label: 'AI Logo Studio' }]
-      : tab === 'guidelines'
-      ? [{ label: 'Brand Guidelines' }]
-      : tab === 'studio'
-      ? [
-          { label: 'AI Assets & Social Studio', onClick: () => setTab('home') },
-          {
-            label:
-              studioMode === 'social'
-                ? `AI Social · ${socialPlatform}`
-                : `AI Asset · ${selectedCollateral}`,
-          },
-        ]
-      : [],
+        ? [{ label: 'AI Logo Studio' }]
+        : tab === 'guidelines'
+          ? [{ label: 'Brand Guidelines' }]
+          : tab === 'studio'
+            ? [
+                { label: 'AI Assets & Social Studio', onClick: () => setTab('home') },
+                {
+                  label:
+                    studioMode === 'social'
+                      ? `AI Social · ${socialPlatform}`
+                      : `AI Asset · ${selectedCollateral}`,
+                },
+              ]
+            : [],
     [tab, builderOpen, builderStep, studioMode, selectedCollateral, socialPlatform]
   );
 
@@ -347,7 +376,8 @@ export const BrandStudioPage: React.FC = () => {
         headingFont: state.brand.typography.heading,
         bodyFont: state.brand.typography.body,
         personality: [c.styleTag || logoArchetype, logoMood],
-        markStyle: c.markStyle === 'monogram' || c.markStyle === 'emblem' ? c.markStyle : 'geometric',
+        markStyle:
+          c.markStyle === 'monogram' || c.markStyle === 'emblem' ? c.markStyle : 'geometric',
         styleTag: c.styleTag || logoArchetype,
         aiPrompt: effectivePrompt,
         customSvg: sanitizeAiSvgMarkup(c.customSvg, '0 0 64 64'),
@@ -460,7 +490,9 @@ export const BrandStudioPage: React.FC = () => {
       }
       setSocialModelUsed(data.model || 'gemini-4-hydrogen');
     } catch (err) {
-      setSocialError(err instanceof Error ? err.message : 'Unable to reach AI social creative engine.');
+      setSocialError(
+        err instanceof Error ? err.message : 'Unable to reach AI social creative engine.'
+      );
     } finally {
       setSocialGenerating(false);
       setRegeneratingSlide(null);
@@ -526,24 +558,28 @@ export const BrandStudioPage: React.FC = () => {
         throw new Error(data.error || `AI asset request failed (${res.status}).`);
       }
 
-      const nextVars: GeneratedCollateralVariation[] = data.variations.slice(0, 3).map((v, idx) => ({
-        id: `ai-var-${Date.now()}-${idx}`,
-        title: v.title || `${state.brand.brandName} ${selectedCollateral} v${idx + 1}`,
-        layoutLabel: v.layoutLabel || 'Editorial Composition',
-        headlineText: v.headlineText || state.brand.tagline,
-        subtext: v.subtext || state.brand.positioningStatement,
-        footerNote: v.footerNote || state.brand.brandName,
-        artDirectionNote: v.artDirectionNote || 'Brand-locked architectural grid.',
-        darkVariant: Boolean(v.darkVariant),
-        svgMotif: sanitizeAiSvgMarkup(v.svgMotif, '0 0 120 48'),
-      }));
+      const nextVars: GeneratedCollateralVariation[] = data.variations
+        .slice(0, 3)
+        .map((v, idx) => ({
+          id: `ai-var-${Date.now()}-${idx}`,
+          title: v.title || `${state.brand.brandName} ${selectedCollateral} v${idx + 1}`,
+          layoutLabel: v.layoutLabel || 'Editorial Composition',
+          headlineText: v.headlineText || state.brand.tagline,
+          subtext: v.subtext || state.brand.positioningStatement,
+          footerNote: v.footerNote || state.brand.brandName,
+          artDirectionNote: v.artDirectionNote || 'Brand-locked architectural grid.',
+          darkVariant: Boolean(v.darkVariant),
+          svgMotif: sanitizeAiSvgMarkup(v.svgMotif, '0 0 120 48'),
+        }));
 
       setCollateralVariations(nextVars);
       setSelectedVariationIdx(0);
       setCollateralModelUsed(data.model || 'gemini-4-hydrogen');
       showToast(`Generated 3 AI ${selectedCollateral} variations.`);
     } catch (err) {
-      setCollateralError(err instanceof Error ? err.message : 'Unable to reach AI asset generator.');
+      setCollateralError(
+        err instanceof Error ? err.message : 'Unable to reach AI asset generator.'
+      );
     } finally {
       setCollateralGenerating(false);
     }
@@ -585,7 +621,12 @@ export const BrandStudioPage: React.FC = () => {
     showToast(`Exported Slide 0${activeSlide.slideNumber} artwork (.svg).`);
   };
 
-  const renderLogoMark = (concept: BrandConcept, accent: string, lightBg: boolean, sizeClass = 'w-11 h-11') => {
+  const renderLogoMark = (
+    concept: BrandConcept,
+    accent: string,
+    lightBg: boolean,
+    sizeClass = 'w-11 h-11'
+  ) => {
     const sanitized = sanitizeAiSvgMarkup(concept.customSvg, '0 0 64 64');
     if (sanitized) {
       return (
@@ -603,8 +644,18 @@ export const BrandStudioPage: React.FC = () => {
       return (
         <svg viewBox="0 0 48 48" className={`${sizeClass} shrink-0`} fill="none">
           <rect x="4" y="4" width="40" height="40" rx="11" stroke={stroke} strokeWidth="2.4" />
-          <path d="M16 30C16 25 24 25 24 20C24 16 17 15 16 18" stroke={accent} strokeWidth="2.6" strokeLinecap="round" />
-          <path d="M32 18C28 15 24 18 24 24C24 30 28 33 32 30" stroke={stroke} strokeWidth="2.4" strokeLinecap="round" />
+          <path
+            d="M16 30C16 25 24 25 24 20C24 16 17 15 16 18"
+            stroke={accent}
+            strokeWidth="2.6"
+            strokeLinecap="round"
+          />
+          <path
+            d="M32 18C28 15 24 18 24 24C24 30 28 33 32 30"
+            stroke={stroke}
+            strokeWidth="2.4"
+            strokeLinecap="round"
+          />
         </svg>
       );
     }
@@ -620,7 +671,12 @@ export const BrandStudioPage: React.FC = () => {
     return (
       <svg viewBox="0 0 48 48" className={`${sizeClass} shrink-0`} fill="none">
         <path d="M8 31H40" stroke={stroke} strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M13 31C13 21 18 15 24 15C30 15 35 21 35 31" stroke={accent} strokeWidth="2.8" strokeLinecap="round" />
+        <path
+          d="M13 31C13 21 18 15 24 15C30 15 35 21 35 31"
+          stroke={accent}
+          strokeWidth="2.8"
+          strokeLinecap="round"
+        />
         <circle cx="24" cy="11" r="2.2" fill={stroke} />
       </svg>
     );
@@ -735,15 +791,19 @@ export const BrandStudioPage: React.FC = () => {
 
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] px-4 py-3 bw-surface-raised">
             <div className="text-xs text-[#5C5C58]">
-              <strong className="text-[#252525]">Identity Configuration:</strong>{' '}
-              Fine-tune positioning, voice, attributes, and visual direction across all 11 brand steps.
+              <strong className="text-[#252525]">Identity Configuration:</strong> Fine-tune
+              positioning, voice, attributes, and visual direction across all 11 brand steps.
             </div>
             <Button
               variant={builderOpen ? 'dark' : 'secondary'}
               size="sm"
               onClick={() => setBuilderOpen((v) => !v)}
             >
-              {builderOpen ? <X className="w-3.5 h-3.5" /> : <Sliders className="w-3.5 h-3.5 text-[#FF7417]" />}
+              {builderOpen ? (
+                <X className="w-3.5 h-3.5" />
+              ) : (
+                <Sliders className="w-3.5 h-3.5 text-[#FF7417]" />
+              )}
               {builderOpen ? 'Close Identity Builder' : 'Launch 11-Step Identity Builder'}
             </Button>
           </div>
@@ -760,14 +820,19 @@ export const BrandStudioPage: React.FC = () => {
                       11-Step Brand Identity Builder
                     </h2>
                     <p className="text-xs text-[#686864]">
-                      Every change immediately feeds your AI Logo Studio, AI Carousel Generator, and Brand Guidelines.
+                      Every change immediately feeds your AI Logo Studio, AI Carousel Generator, and
+                      Brand Guidelines.
                     </p>
                   </div>
                   <span className="text-xs font-mono-num font-semibold text-[#C44D00]">
                     Step {builderStep} of 11
                   </span>
                 </div>
-                <ProgressBar value={Math.round((builderStep / 11) * 100)} showPercent={false} size="sm" />
+                <ProgressBar
+                  value={Math.round((builderStep / 11) * 100)}
+                  showPercent={false}
+                  size="sm"
+                />
 
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                   {[
@@ -820,12 +885,17 @@ export const BrandStudioPage: React.FC = () => {
                     </Field>
                   )}
                   {builderStep === 3 && (
-                    <Field label="Brand Positioning (Synced with Competitive Strategy)" htmlFor="bs-positioning">
+                    <Field
+                      label="Brand Positioning (Synced with Competitive Strategy)"
+                      htmlFor="bs-positioning"
+                    >
                       <Textarea
                         id="bs-positioning"
                         rows={3}
                         value={state.brand.positioningStatement}
-                        onChange={(e) => updateBrandIdentity({ positioningStatement: e.target.value })}
+                        onChange={(e) =>
+                          updateBrandIdentity({ positioningStatement: e.target.value })
+                        }
                       />
                     </Field>
                   )}
@@ -841,7 +911,9 @@ export const BrandStudioPage: React.FC = () => {
                   )}
                   {builderStep === 5 && (
                     <div className="space-y-3">
-                      <div className="text-xs font-medium text-[#242424]">Brand Personality Traits</div>
+                      <div className="text-xs font-medium text-[#242424]">
+                        Brand Personality Traits
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {Array.from(
                           new Set([
@@ -862,7 +934,8 @@ export const BrandStudioPage: React.FC = () => {
                                 const next = active
                                   ? state.brand.personalityTraits.filter((x) => x !== t)
                                   : [...state.brand.personalityTraits, t];
-                                if (next.length > 0) updateBrandIdentity({ personalityTraits: next });
+                                if (next.length > 0)
+                                  updateBrandIdentity({ personalityTraits: next });
                               }}
                               className={`px-3 py-1.5 rounded-[8px] border text-xs font-medium cursor-pointer transition-colors ${
                                 active
@@ -905,7 +978,9 @@ export const BrandStudioPage: React.FC = () => {
                   )}
                   {builderStep === 6 && (
                     <div className="space-y-3">
-                      <div className="text-xs font-medium text-[#242424]">Core Brand Attributes</div>
+                      <div className="text-xs font-medium text-[#242424]">
+                        Core Brand Attributes
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {Array.from(
                           new Set([
@@ -980,7 +1055,9 @@ export const BrandStudioPage: React.FC = () => {
                   {builderStep === 8 && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className="text-xs font-medium text-[#242424]">Choose Primary Logo Direction</div>
+                        <div className="text-xs font-medium text-[#242424]">
+                          Choose Primary Logo Direction
+                        </div>
                         <button
                           type="button"
                           onClick={() => {
@@ -999,7 +1076,9 @@ export const BrandStudioPage: React.FC = () => {
                             type="button"
                             onClick={() => selectBrandConcept(c.id)}
                             className={`p-3 rounded-[10px] border text-left bg-white cursor-pointer ${
-                              c.id === state.brand.selectedConceptId ? 'border-[#FF7417]' : 'border-[#E6E6E2]'
+                              c.id === state.brand.selectedConceptId
+                                ? 'border-[#FF7417]'
+                                : 'border-[#E6E6E2]'
                             }`}
                           >
                             <div className="mb-2">{renderLogoMark(c, c.accentColor, true)}</div>
@@ -1011,7 +1090,9 @@ export const BrandStudioPage: React.FC = () => {
                   )}
                   {builderStep === 9 && (
                     <div className="space-y-3">
-                      <div className="text-xs font-medium text-[#242424]">Select Accent Token Direction</div>
+                      <div className="text-xs font-medium text-[#242424]">
+                        Select Accent Token Direction
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {[
                           { name: 'Signal Orange', hex: '#FF7417' },
@@ -1037,7 +1118,10 @@ export const BrandStudioPage: React.FC = () => {
                                   : 'bg-white border-[#E6E6E2] text-[#5C5C58] hover:border-[#242424]'
                               }`}
                             >
-                              <span className="w-4 h-4 rounded-full border border-[#E6E6E2]" style={{ backgroundColor: opt.hex }} />
+                              <span
+                                className="w-4 h-4 rounded-full border border-[#E6E6E2]"
+                                style={{ backgroundColor: opt.hex }}
+                              />
                               <span>{opt.name}</span>
                             </button>
                           );
@@ -1047,7 +1131,9 @@ export const BrandStudioPage: React.FC = () => {
                   )}
                   {builderStep === 10 && (
                     <div className="space-y-3 text-xs">
-                      <div className="font-medium text-[#242424]">Choose Display &amp; Body Pairing</div>
+                      <div className="font-medium text-[#242424]">
+                        Choose Display &amp; Body Pairing
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         {[
                           { heading: 'Geist', body: 'Inter / Geist', mono: 'JetBrains Mono' },
@@ -1061,10 +1147,14 @@ export const BrandStudioPage: React.FC = () => {
                               type="button"
                               onClick={() => updateBrandIdentity({ typography: pair })}
                               className={`p-3 rounded-[9px] border text-left cursor-pointer transition-colors ${
-                                selected ? 'bg-white border-[#FF7417]' : 'bg-white border-[#E6E6E2] hover:border-[#252525]'
+                                selected
+                                  ? 'bg-white border-[#FF7417]'
+                                  : 'bg-white border-[#E6E6E2] hover:border-[#252525]'
                               }`}
                             >
-                              <div className="font-heading font-bold text-sm text-[#242424]">{pair.heading}</div>
+                              <div className="font-heading font-bold text-sm text-[#242424]">
+                                {pair.heading}
+                              </div>
                               <div className="text-[11px] text-[#686864] mt-0.5">{pair.body}</div>
                             </button>
                           );
@@ -1090,7 +1180,11 @@ export const BrandStudioPage: React.FC = () => {
                     Previous
                   </Button>
                   {builderStep < 11 ? (
-                    <Button variant="primary" size="sm" onClick={() => setBuilderStep((s) => s + 1)}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setBuilderStep((s) => s + 1)}
+                    >
                       Next Step
                     </Button>
                   ) : (
@@ -1120,7 +1214,9 @@ export const BrandStudioPage: React.FC = () => {
               <div className="py-8 flex items-center gap-4">
                 {renderLogoMark(activeConcept, activeConcept.accentColor, false)}
                 <div className="min-w-0">
-                  <div className="font-heading text-2xl font-bold truncate">{state.brand.brandName}</div>
+                  <div className="font-heading text-2xl font-bold truncate">
+                    {state.brand.brandName}
+                  </div>
                   <div className="text-xs text-[#FF8A36] mt-0.5">{state.brand.tagline}</div>
                 </div>
               </div>
@@ -1152,7 +1248,8 @@ export const BrandStudioPage: React.FC = () => {
                     />
                   </div>
                   <p className="text-xs text-[#5C5C58] mt-0.5">
-                    Automatically injected into every AI Logo, Collateral, and Instagram Carousel prompt
+                    Automatically injected into every AI Logo, Collateral, and Instagram Carousel
+                    prompt
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 no-print">
@@ -1180,7 +1277,10 @@ export const BrandStudioPage: React.FC = () => {
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {state.brand.palette.map((c) => (
                   <div key={`${c.name}-${c.hex}`} className="space-y-1.5">
-                    <div className="h-14 rounded-[10px] border border-[#E6E6E2]" style={{ backgroundColor: c.hex }} />
+                    <div
+                      className="h-14 rounded-[10px] border border-[#E6E6E2]"
+                      style={{ backgroundColor: c.hex }}
+                    />
                     <div className="text-xs font-semibold text-[#252525]">{c.name}</div>
                     <div className="text-[11px] font-mono-num text-[#5C5C58]">{c.hex}</div>
                   </div>
@@ -1212,7 +1312,8 @@ export const BrandStudioPage: React.FC = () => {
                   Live Real-World Touchpoint Previews
                 </h2>
                 <p className="text-xs text-[#686864] mt-0.5">
-                  Verify how {state.brand.brandName}&rsquo;s approved AI mark, tagline, and tokens render across surfaces
+                  Verify how {state.brand.brandName}&rsquo;s approved AI mark, tagline, and tokens
+                  render across surfaces
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -1249,11 +1350,15 @@ export const BrandStudioPage: React.FC = () => {
                         </span>
                       </div>
                       <div>
-                        <div className="font-heading text-xl font-bold">{state.brand.brandName}</div>
+                        <div className="font-heading text-xl font-bold">
+                          {state.brand.brandName}
+                        </div>
                         <div className="text-xs text-[#A8A8A2] mt-1">{state.brand.tagline}</div>
                       </div>
                       <div className="pt-3 border-t border-[#2E2E2E] flex items-center justify-between text-[11px] font-mono-num text-[#CCCCCC]">
-                        <span className="truncate max-w-[160px]">{flagshipProduct?.name ?? 'Flagship Package'}</span>
+                        <span className="truncate max-w-[160px]">
+                          {flagshipProduct?.name ?? 'Flagship Package'}
+                        </span>
                         <span>{flagshipProduct?.priceRange ?? state.brain.stage}</span>
                       </div>
                     </DarkSurfacePanel>
@@ -1284,8 +1389,13 @@ export const BrandStudioPage: React.FC = () => {
                         <span>1080×1350</span>
                       </div>
                       <div className="space-y-2.5">
-                        <div className="w-8 h-1 rounded-full" style={{ backgroundColor: activeConcept.accentColor }} />
-                        <h3 className="font-heading text-lg font-bold leading-snug">{state.brand.tagline}</h3>
+                        <div
+                          className="w-8 h-1 rounded-full"
+                          style={{ backgroundColor: activeConcept.accentColor }}
+                        />
+                        <h3 className="font-heading text-lg font-bold leading-snug">
+                          {state.brand.tagline}
+                        </h3>
                         <p className="text-[11px] text-[#A8A8A2]">
                           {state.brand.positioningStatement.slice(0, 96)}…
                         </p>
@@ -1296,9 +1406,12 @@ export const BrandStudioPage: React.FC = () => {
                       </div>
                     </DarkSurfacePanel>
                     <div className="flex-1 space-y-2 text-xs text-[#5C5C58]">
-                      <div className="font-semibold text-[#252525] text-sm">AI Social Carousel System</div>
+                      <div className="font-semibold text-[#252525] text-sm">
+                        AI Social Carousel System
+                      </div>
                       <p className="leading-relaxed">
-                        Generate complete 5-slide Instagram carousels with hook, proof, CTA, captions, and hashtags directly in AI Social Studio.
+                        Generate complete 5-slide Instagram carousels with hook, proof, CTA,
+                        captions, and hashtags directly in AI Social Studio.
                       </p>
                       <button
                         type="button"
@@ -1369,7 +1482,11 @@ export const BrandStudioPage: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {state.assets.slice(0, 3).map((asset) => (
-                <AssetCard key={asset.id} asset={asset} onPreview={() => navigate('asset-library')} />
+                <AssetCard
+                  key={asset.id}
+                  asset={asset}
+                  onPreview={() => navigate('asset-library')}
+                />
               ))}
             </div>
           )}
@@ -1425,7 +1542,10 @@ export const BrandStudioPage: React.FC = () => {
                 />
               </div>
               <div className="lg:col-span-3 space-y-1.5">
-                <label htmlFor="ai-logo-arch" className="block text-[11px] font-medium text-[#5C5C58]">
+                <label
+                  htmlFor="ai-logo-arch"
+                  className="block text-[11px] font-medium text-[#5C5C58]"
+                >
                   Style Archetype
                 </label>
                 <Select
@@ -1441,7 +1561,10 @@ export const BrandStudioPage: React.FC = () => {
                 </Select>
               </div>
               <div className="lg:col-span-3 space-y-1.5">
-                <label htmlFor="ai-logo-mood" className="block text-[11px] font-medium text-[#5C5C58]">
+                <label
+                  htmlFor="ai-logo-mood"
+                  className="block text-[11px] font-medium text-[#5C5C58]"
+                >
                   Visual Mood
                 </label>
                 <Select
@@ -1514,76 +1637,80 @@ export const BrandStudioPage: React.FC = () => {
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {state.brand.concepts.map((concept, idx) => {
-              const selected = concept.id === state.brand.selectedConceptId;
-              return (
-                <ProgressiveResultReveal key={concept.id} index={idx}>
-                  <div
-                    className={`rounded-[12px] border p-5 space-y-4 bw-surface-raised h-full flex flex-col justify-between ${
-                      selected ? 'border-[#FF7417] bg-[#FFF0E5]/30' : 'border-[#E6E6E2] bg-[#FFFFFF]'
-                    }`}
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold font-heading text-[#242424] truncate">
-                          {concept.name}
-                        </span>
-                        {selected && <InsightSavedBeacon saved label="Master Mark" />}
+                const selected = concept.id === state.brand.selectedConceptId;
+                return (
+                  <ProgressiveResultReveal key={concept.id} index={idx}>
+                    <div
+                      className={`rounded-[12px] border p-5 space-y-4 bw-surface-raised h-full flex flex-col justify-between ${
+                        selected
+                          ? 'border-[#FF7417] bg-[#FFF0E5]/30'
+                          : 'border-[#E6E6E2] bg-[#FFFFFF]'
+                      }`}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-bold font-heading text-[#242424] truncate">
+                            {concept.name}
+                          </span>
+                          {selected && <InsightSavedBeacon saved label="Master Mark" />}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            selectBrandConcept(concept.id);
+                            setLogoAccent(concept.accentColor);
+                          }}
+                          className="w-full h-28 rounded-[10px] bg-[#FAFAF9] border border-[#E6E6E2] hover:border-[#252525] flex items-center justify-center gap-3 px-4 transition-colors cursor-pointer"
+                        >
+                          {renderLogoMark(concept, concept.accentColor, true, 'w-12 h-12')}
+                          <span className="font-heading font-bold text-base text-[#171717] truncate">
+                            {state.brand.brandName.split(' ')[0]}
+                          </span>
+                        </button>
+                        <p className="text-xs text-[#5C5C58] leading-relaxed">
+                          {concept.rationale}
+                        </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          selectBrandConcept(concept.id);
-                          setLogoAccent(concept.accentColor);
-                        }}
-                        className="w-full h-28 rounded-[10px] bg-[#FAFAF9] border border-[#E6E6E2] hover:border-[#252525] flex items-center justify-center gap-3 px-4 transition-colors cursor-pointer"
-                      >
-                        {renderLogoMark(concept, concept.accentColor, true, 'w-12 h-12')}
-                        <span className="font-heading font-bold text-base text-[#171717] truncate">
-                          {state.brand.brandName.split(' ')[0]}
-                        </span>
-                      </button>
-                      <p className="text-xs text-[#5C5C58] leading-relaxed">{concept.rationale}</p>
-                    </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-[#E6E6E2]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          addBrandAsset({
-                            title: `${state.brand.brandName} Logo — ${concept.name}`,
-                            category: 'Logo',
-                            folder: 'Identity',
-                            format: 'Scalable Vector (.svg)',
-                            status: selected ? 'Approved' : 'Draft',
-                            headlineText: state.brand.brandName,
-                            subtext: concept.rationale,
-                            accentHex: concept.accentColor,
-                            darkVariant: !logoLightMode,
-                            aiGenerated: true,
-                            aiPrompt: concept.aiPrompt || logoPrompt,
-                            aiModel: logoSourceModel || 'BrainWise AI',
-                            svgMarkup: sanitizeAiSvgMarkup(concept.customSvg, '0 0 64 64'),
-                          });
-                        }}
-                        className="text-xs font-medium text-[#5C5C58] hover:text-[#252525] cursor-pointer"
-                      >
-                        Save to Library
-                      </button>
-                      <Button
-                        variant={selected ? 'dark' : 'primary'}
-                        size="sm"
-                        onClick={() => {
-                          selectBrandConcept(concept.id);
-                          setLogoAccent(concept.accentColor);
-                        }}
-                      >
-                        {selected ? 'Active Master Logo' : 'Approve Logo'}
-                      </Button>
+                      <div className="flex items-center justify-between pt-3 border-t border-[#E6E6E2]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addBrandAsset({
+                              title: `${state.brand.brandName} Logo — ${concept.name}`,
+                              category: 'Logo',
+                              folder: 'Identity',
+                              format: 'Scalable Vector (.svg)',
+                              status: selected ? 'Approved' : 'Draft',
+                              headlineText: state.brand.brandName,
+                              subtext: concept.rationale,
+                              accentHex: concept.accentColor,
+                              darkVariant: !logoLightMode,
+                              aiGenerated: true,
+                              aiPrompt: concept.aiPrompt || logoPrompt,
+                              aiModel: logoSourceModel || 'BrainWise AI',
+                              svgMarkup: sanitizeAiSvgMarkup(concept.customSvg, '0 0 64 64'),
+                            });
+                          }}
+                          className="text-xs font-medium text-[#5C5C58] hover:text-[#252525] cursor-pointer"
+                        >
+                          Save to Library
+                        </button>
+                        <Button
+                          variant={selected ? 'dark' : 'primary'}
+                          size="sm"
+                          onClick={() => {
+                            selectBrandConcept(concept.id);
+                            setLogoAccent(concept.accentColor);
+                          }}
+                        >
+                          {selected ? 'Active Master Logo' : 'Approve Logo'}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </ProgressiveResultReveal>
-              );
-            })}
+                  </ProgressiveResultReveal>
+                );
+              })}
             </div>
           </LiquidSkeletonReveal>
 
@@ -1600,7 +1727,11 @@ export const BrandStudioPage: React.FC = () => {
                     onClick={() => setLogoLightMode((l) => !l)}
                     className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-[#E6E6E2] rounded-[8px] cursor-pointer"
                   >
-                    {logoLightMode ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                    {logoLightMode ? (
+                      <Moon className="w-3.5 h-3.5" />
+                    ) : (
+                      <Sun className="w-3.5 h-3.5" />
+                    )}
                     {logoLightMode ? 'Dark' : 'Light'}
                   </button>
                   {(['horizontal', 'stacked', 'icon'] as const).map((v) => (
@@ -1609,7 +1740,9 @@ export const BrandStudioPage: React.FC = () => {
                       type="button"
                       onClick={() => setLogoVariant(v)}
                       className={`px-2.5 py-1 text-xs rounded-[6px] capitalize cursor-pointer ${
-                        logoVariant === v ? 'bg-[#171717] text-white' : 'bg-[#ECECE9] text-[#686864]'
+                        logoVariant === v
+                          ? 'bg-[#171717] text-white'
+                          : 'bg-[#ECECE9] text-[#686864]'
                       }`}
                     >
                       {v}
@@ -1625,7 +1758,9 @@ export const BrandStudioPage: React.FC = () => {
                     : 'bg-[#171717] border-[#2C2C2C] text-white bw-dark-ambient-glow'
                 }`}
               >
-                <div className={`flex items-center gap-3.5 ${logoVariant === 'stacked' ? 'flex-col text-center' : ''}`}>
+                <div
+                  className={`flex items-center gap-3.5 ${logoVariant === 'stacked' ? 'flex-col text-center' : ''}`}
+                >
                   {renderLogoMark(activeConcept, logoAccent, logoLightMode, 'w-14 h-14')}
                   {logoVariant !== 'icon' && (
                     <div>
@@ -1769,7 +1904,10 @@ export const BrandStudioPage: React.FC = () => {
               { title: 'Visual & Photography Style', body: state.brand.guidelines.visualStyle },
               { title: 'Brand Voice & Tone', body: state.brand.guidelines.brandVoice },
             ].map((item) => (
-              <div key={item.title} className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]">
+              <div
+                key={item.title}
+                className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]"
+              >
                 <div className="text-xs font-semibold text-[#C44D00]">{item.title}</div>
                 <p className="mt-1.5 text-sm text-[#242424] leading-relaxed">{item.body}</p>
               </div>
@@ -1825,7 +1963,8 @@ export const BrandStudioPage: React.FC = () => {
                   style={{ backgroundColor: activeConcept.accentColor }}
                 />
                 <span>
-                  Auto-context: <strong className="text-[#252525]">{state.brand.brandName}</strong> · {state.brand.typography.heading}
+                  Auto-context: <strong className="text-[#252525]">{state.brand.brandName}</strong>{' '}
+                  · {state.brand.typography.heading}
                 </span>
               </span>
               <button
@@ -1854,12 +1993,16 @@ export const BrandStudioPage: React.FC = () => {
                         </h2>
                       </div>
                       {socialModelUsed && (
-                        <span className="text-[11px] font-mono-num text-[#858585]">{socialModelUsed}</span>
+                        <span className="text-[11px] font-mono-num text-[#858585]">
+                          {socialModelUsed}
+                        </span>
                       )}
                     </div>
 
                     <div>
-                      <div className="text-xs font-medium text-[#242424] mb-1.5">Platform &amp; Format</div>
+                      <div className="text-xs font-medium text-[#242424] mb-1.5">
+                        Platform &amp; Format
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         {SOCIAL_FORMATS.map((sf) => (
                           <button
@@ -1878,7 +2021,9 @@ export const BrandStudioPage: React.FC = () => {
                             }`}
                           >
                             <div>{sf.label}</div>
-                            <div className="text-[10px] font-mono-num opacity-75 mt-0.5">{sf.ratio}</div>
+                            <div className="text-[10px] font-mono-num opacity-75 mt-0.5">
+                              {sf.ratio}
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -1901,7 +2046,9 @@ export const BrandStudioPage: React.FC = () => {
 
                       {socialPlatform === 'Carousel' ? (
                         <div>
-                          <div className="text-xs font-medium text-[#242424] mb-1.5">Carousel Length</div>
+                          <div className="text-xs font-medium text-[#242424] mb-1.5">
+                            Carousel Length
+                          </div>
                           <div className="grid grid-cols-3 gap-1.5">
                             {([3, 5, 7] as const).map((cnt) => (
                               <button
@@ -1921,20 +2068,29 @@ export const BrandStudioPage: React.FC = () => {
                         </div>
                       ) : (
                         <div>
-                          <div className="text-xs font-medium text-[#242424] mb-1.5">Surface Mood</div>
+                          <div className="text-xs font-medium text-[#242424] mb-1.5">
+                            Surface Mood
+                          </div>
                           <button
                             type="button"
                             onClick={() => setSocialDark((d) => !d)}
                             className="w-full h-9 px-3 rounded-[8px] border border-[#E6E6E2] bg-[#FAFAF9] text-xs font-medium text-[#252525] flex items-center justify-between cursor-pointer"
                           >
                             <span>{socialDark ? 'Dark Charcoal Luxe' : 'Swiss White Minimal'}</span>
-                            {socialDark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                            {socialDark ? (
+                              <Moon className="w-3.5 h-3.5" />
+                            ) : (
+                              <Sun className="w-3.5 h-3.5" />
+                            )}
                           </button>
                         </div>
                       )}
                     </div>
 
-                    <Field label="AI Creative Brief (What should this communicate?)" htmlFor="ai-soc-prompt">
+                    <Field
+                      label="AI Creative Brief (What should this communicate?)"
+                      htmlFor="ai-soc-prompt"
+                    >
                       <Textarea
                         id="ai-soc-prompt"
                         rows={3}
@@ -1946,7 +2102,9 @@ export const BrandStudioPage: React.FC = () => {
 
                     {/* Business Brain Smart Prompt Starters */}
                     <div className="space-y-1.5">
-                      <div className="text-[11px] text-[#858585]">Prompt starters from Business Brain:</div>
+                      <div className="text-[11px] text-[#858585]">
+                        Prompt starters from Business Brain:
+                      </div>
                       <div className="flex flex-col gap-1.5">
                         {smartSocialStarters.map((starter) => (
                           <button
@@ -2019,10 +2177,10 @@ export const BrandStudioPage: React.FC = () => {
                           socialPlatform === 'Instagram Post'
                             ? 'aspect-square'
                             : socialPlatform === 'Campaign'
-                            ? 'aspect-[9/14]'
-                            : socialPlatform === 'Facebook Creative'
-                            ? 'aspect-[16/10]'
-                            : 'aspect-[4/5]'
+                              ? 'aspect-[9/14]'
+                              : socialPlatform === 'Facebook Creative'
+                                ? 'aspect-[16/10]'
+                                : 'aspect-[4/5]'
                         }
                       />
                     }
@@ -2030,361 +2188,404 @@ export const BrandStudioPage: React.FC = () => {
                   >
                     <div className="space-y-4">
                       <div className="rounded-[14px] border border-[#E6E6E2] bg-[#F5F5F4] p-5 sm:p-6 space-y-4">
-                      {/* Stage Top Bar */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#5C5C58]">
-                          <strong className="text-[#171717]">{socialPackage.title}</strong>
-                          <span className="mx-1" aria-hidden="true">·</span>
-                          <span className="font-mono-num">
-                            Slide 0{activeSlide.slideNumber} / 0{socialPackage.slides.length}
-                          </span>
-                          {socialPackage.truthCheck && (
-                            <span
-                              title={`Truth Check Score: ${socialPackage.truthCheck.truthScore}% grounded against Business Brain`}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
-                                socialPackage.truthCheck.status === 'VERIFIED'
-                                  ? 'bg-[#EAF5EF] text-[#24724E] border-[#CDE5D7]'
-                                  : socialPackage.truthCheck.status === 'REMEDIATED'
-                                  ? 'bg-[#FFF4E5] text-[#A85E16] border-[#FBE0C2]'
-                                  : 'bg-[#FDF2F2] text-[#BC3E3E] border-[#F8D7D7]'
-                              }`}
-                            >
-                              <ShieldCheck className="w-3 h-3" />
-                              Truth Score: {socialPackage.truthCheck.truthScore}%
+                        {/* Stage Top Bar */}
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-[#5C5C58]">
+                            <strong className="text-[#171717]">{socialPackage.title}</strong>
+                            <span className="mx-1" aria-hidden="true">
+                              ·
                             </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={regeneratingSlide === activeSlide.slideNumber || socialGenerating}
-                            onClick={() => handleGenerateAiSocial(activeSlide.slideNumber)}
-                          >
-                            <RefreshCw className={`w-3.5 h-3.5 ${regeneratingSlide === activeSlide.slideNumber ? 'animate-spin' : ''}`} />
-                            {regeneratingSlide === activeSlide.slideNumber ? 'Rewriting…' : 'Regenerate Slide'}
-                          </Button>
-                          <Button variant="secondary" size="sm" onClick={handleDownloadActiveSlideSvg}>
-                            <Download className="w-3.5 h-3.5" />
-                            Export SVG
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Minimal Instagram Post Frame */}
-                      <div className="max-w-[400px] mx-auto rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] overflow-hidden shadow-sm">
-                        {/* Instagram Account Header */}
-                        <div className="px-4 py-2.5 border-b border-[#E6E6E2] flex items-center justify-between text-xs">
+                            <span className="font-mono-num">
+                              Slide 0{activeSlide.slideNumber} / 0{socialPackage.slides.length}
+                            </span>
+                            {socialPackage.truthCheck && (
+                              <span
+                                title={`Truth Check Score: ${socialPackage.truthCheck.truthScore}% grounded against Business Brain`}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
+                                  socialPackage.truthCheck.status === 'VERIFIED'
+                                    ? 'bg-[#EAF5EF] text-[#24724E] border-[#CDE5D7]'
+                                    : socialPackage.truthCheck.status === 'REMEDIATED'
+                                      ? 'bg-[#FFF4E5] text-[#A85E16] border-[#FBE0C2]'
+                                      : 'bg-[#FDF2F2] text-[#BC3E3E] border-[#F8D7D7]'
+                                }`}
+                              >
+                                <ShieldCheck className="w-3 h-3" />
+                                Truth Score: {socialPackage.truthCheck.truthScore}%
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-[#171717] text-white flex items-center justify-center p-1">
-                              {renderLogoMark(activeConcept, activeConcept.accentColor, false, 'w-4 h-4')}
-                            </div>
-                            <span className="font-semibold text-[#171717]">{brandHandle}</span>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              disabled={
+                                regeneratingSlide === activeSlide.slideNumber || socialGenerating
+                              }
+                              onClick={() => handleGenerateAiSocial(activeSlide.slideNumber)}
+                            >
+                              <RefreshCw
+                                className={`w-3.5 h-3.5 ${regeneratingSlide === activeSlide.slideNumber ? 'animate-spin' : ''}`}
+                              />
+                              {regeneratingSlide === activeSlide.slideNumber
+                                ? 'Rewriting…'
+                                : 'Regenerate Slide'}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={handleDownloadActiveSlideSvg}
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              Export SVG
+                            </Button>
                           </div>
-                          <span className="font-mono-num text-[10px] text-[#858585]">
-                            {activeSlide.role.toUpperCase()} · {activeSlide.slideNumber}/{socialPackage.slides.length}
-                          </span>
                         </div>
 
-                        {/* Interactive Artboard Canvas */}
-                        <div
-                          className={`relative p-6 sm:p-7 flex flex-col justify-between transition-colors ${
-                            socialPlatform === 'Instagram Post'
-                              ? 'aspect-square'
-                              : socialPlatform === 'Campaign'
-                              ? 'aspect-[9/14]'
-                              : socialPlatform === 'Facebook Creative'
-                              ? 'aspect-[16/10]'
-                              : 'aspect-[4/5]'
-                          } ${
-                            socialDark
-                              ? 'bg-[#171717] text-white bw-dark-ambient-glow'
-                              : 'bg-[#FFFFFF] text-[#171717]'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-mono-num">
-                            <span className={socialDark ? 'text-[#FF8A36]' : 'text-[#C44D00]'}>
-                              {activeSlide.kicker}
+                        {/* Minimal Instagram Post Frame */}
+                        <div className="max-w-[400px] mx-auto rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] overflow-hidden shadow-sm">
+                          {/* Instagram Account Header */}
+                          <div className="px-4 py-2.5 border-b border-[#E6E6E2] flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-[#171717] text-white flex items-center justify-center p-1">
+                                {renderLogoMark(
+                                  activeConcept,
+                                  activeConcept.accentColor,
+                                  false,
+                                  'w-4 h-4'
+                                )}
+                              </div>
+                              <span className="font-semibold text-[#171717]">{brandHandle}</span>
+                            </div>
+                            <span className="font-mono-num text-[10px] text-[#858585]">
+                              {activeSlide.role.toUpperCase()} · {activeSlide.slideNumber}/
+                              {socialPackage.slides.length}
                             </span>
-                            <span className="opacity-55">{socialPlatform}</span>
                           </div>
 
+                          {/* Interactive Artboard Canvas */}
                           <div
-                            className={`my-auto py-4 space-y-3.5 ${
-                              socialPackage.slides.length > 1 ? 'px-8 sm:px-9' : ''
+                            className={`relative p-6 sm:p-7 flex flex-col justify-between transition-colors ${
+                              socialPlatform === 'Instagram Post'
+                                ? 'aspect-square'
+                                : socialPlatform === 'Campaign'
+                                  ? 'aspect-[9/14]'
+                                  : socialPlatform === 'Facebook Creative'
+                                    ? 'aspect-[16/10]'
+                                    : 'aspect-[4/5]'
+                            } ${
+                              socialDark
+                                ? 'bg-[#171717] text-white bw-dark-ambient-glow'
+                                : 'bg-[#FFFFFF] text-[#171717]'
                             }`}
                           >
-                            {/* AI Generated Geometric Motif */}
-                            {activeSlide.svgMotif && (
-                              <div
-                                className={`w-28 h-11 [&>svg]:w-full [&>svg]:h-full ${
-                                  socialDark ? 'text-white' : 'text-[#171717]'
-                                }`}
-                                dangerouslySetInnerHTML={{
-                                  __html: sanitizeAiSvgMarkup(activeSlide.svgMotif, '0 0 120 48'),
-                                }}
-                              />
-                            )}
-                            <h3 className="font-heading text-xl sm:text-2xl font-bold leading-tight tracking-tight">
-                              {activeSlide.headline}
-                            </h3>
-                            <p
-                              className={`text-xs sm:text-sm leading-relaxed ${
-                                socialDark ? 'text-[#CCCCCC]' : 'text-[#5C5C58]'
+                            <div className="flex items-center justify-between text-[10px] font-mono-num">
+                              <span className={socialDark ? 'text-[#FF8A36]' : 'text-[#C44D00]'}>
+                                {activeSlide.kicker}
+                              </span>
+                              <span className="opacity-55">{socialPlatform}</span>
+                            </div>
+
+                            <div
+                              className={`my-auto py-4 space-y-3.5 ${
+                                socialPackage.slides.length > 1 ? 'px-8 sm:px-9' : ''
                               }`}
                             >
-                              {activeSlide.body}
-                            </p>
-                            {activeSlide.statCallout && (
-                              <div
-                                className="inline-block pt-1 font-mono-num text-sm font-bold"
-                                style={{ color: socialDark ? '#FF9A45' : '#C44D00' }}
+                              {/* AI Generated Geometric Motif */}
+                              {activeSlide.svgMotif && (
+                                <div
+                                  className={`w-28 h-11 [&>svg]:w-full [&>svg]:h-full ${
+                                    socialDark ? 'text-white' : 'text-[#171717]'
+                                  }`}
+                                  dangerouslySetInnerHTML={{
+                                    __html: sanitizeAiSvgMarkup(activeSlide.svgMotif, '0 0 120 48'),
+                                  }}
+                                />
+                              )}
+                              <h3 className="font-heading text-xl sm:text-2xl font-bold leading-tight tracking-tight">
+                                {activeSlide.headline}
+                              </h3>
+                              <p
+                                className={`text-xs sm:text-sm leading-relaxed ${
+                                  socialDark ? 'text-[#CCCCCC]' : 'text-[#5C5C58]'
+                                }`}
                               >
-                                {activeSlide.statCallout}
+                                {activeSlide.body}
+                              </p>
+                              {activeSlide.statCallout && (
+                                <div
+                                  className="inline-block pt-1 font-mono-num text-sm font-bold"
+                                  style={{ color: socialDark ? '#FF9A45' : '#C44D00' }}
+                                >
+                                  {activeSlide.statCallout}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="pt-3 border-t border-current/15 flex items-center justify-between text-[11px]">
+                              <div className="flex items-center gap-2">
+                                {renderLogoMark(
+                                  activeConcept,
+                                  activeConcept.accentColor,
+                                  !socialDark,
+                                  'w-5 h-5'
+                                )}
+                                <span className="font-semibold">{state.brand.brandName}</span>
                               </div>
+                              <span className="font-mono-num opacity-65">
+                                {socialPackage.slides.length > 1 &&
+                                activeSlideIdx < socialPackage.slides.length - 1
+                                  ? 'Swipe →'
+                                  : brandHandle}
+                              </span>
+                            </div>
+
+                            {/* Carousel Prev/Next Overlay Controls */}
+                            {socialPackage.slides.length > 1 && (
+                              <>
+                                <button
+                                  type="button"
+                                  aria-label="Previous carousel slide"
+                                  disabled={activeSlideIdx === 0}
+                                  onClick={() => setActiveSlideIdx((i) => Math.max(0, i - 1))}
+                                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-black/75 disabled:opacity-25 text-white flex items-center justify-center cursor-pointer transition-opacity"
+                                >
+                                  <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label="Next carousel slide"
+                                  disabled={activeSlideIdx === socialPackage.slides.length - 1}
+                                  onClick={() =>
+                                    setActiveSlideIdx((i) =>
+                                      Math.min(socialPackage.slides.length - 1, i + 1)
+                                    )
+                                  }
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-black/75 disabled:opacity-25 text-white flex items-center justify-center cursor-pointer transition-opacity"
+                                >
+                                  <ChevronRight className="w-4 h-4" />
+                                </button>
+                              </>
                             )}
                           </div>
 
-                          <div className="pt-3 border-t border-current/15 flex items-center justify-between text-[11px]">
-                            <div className="flex items-center gap-2">
-                              {renderLogoMark(activeConcept, activeConcept.accentColor, !socialDark, 'w-5 h-5')}
-                              <span className="font-semibold">{state.brand.brandName}</span>
+                          {/* Carousel Pagination Dots + Art Direction Note */}
+                          <div className="px-4 py-3 bg-[#FFFFFF] border-t border-[#E6E6E2] space-y-2">
+                            {socialPackage.slides.length > 1 && (
+                              <div className="flex items-center justify-center gap-1.5">
+                                {socialPackage.slides.map((sl, i) => (
+                                  <button
+                                    key={sl.slideNumber}
+                                    type="button"
+                                    aria-label={`View slide ${sl.slideNumber}`}
+                                    onClick={() => setActiveSlideIdx(i)}
+                                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                                      i === activeSlideIdx
+                                        ? 'w-5 bg-[#FF7417]'
+                                        : 'w-1.5 bg-[#D6D6D0]'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                            <div className="text-[11px] text-[#5C5C58] leading-relaxed">
+                              <span className="font-semibold text-[#252525]">
+                                AI Visual Direction:{' '}
+                              </span>
+                              {activeSlide.artDirectionPrompt}
                             </div>
-                            <span className="font-mono-num opacity-65">
-                              {socialPackage.slides.length > 1 && activeSlideIdx < socialPackage.slides.length - 1
-                                ? 'Swipe →'
-                                : brandHandle}
-                            </span>
                           </div>
-
-                          {/* Carousel Prev/Next Overlay Controls */}
-                          {socialPackage.slides.length > 1 && (
-                            <>
-                              <button
-                                type="button"
-                                aria-label="Previous carousel slide"
-                                disabled={activeSlideIdx === 0}
-                                onClick={() => setActiveSlideIdx((i) => Math.max(0, i - 1))}
-                                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-black/75 disabled:opacity-25 text-white flex items-center justify-center cursor-pointer transition-opacity"
-                              >
-                                <ChevronLeft className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                aria-label="Next carousel slide"
-                                disabled={activeSlideIdx === socialPackage.slides.length - 1}
-                                onClick={() =>
-                                  setActiveSlideIdx((i) => Math.min(socialPackage.slides.length - 1, i + 1))
-                                }
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-black/75 disabled:opacity-25 text-white flex items-center justify-center cursor-pointer transition-opacity"
-                              >
-                                <ChevronRight className="w-4 h-4" />
-                              </button>
-                            </>
-                          )}
                         </div>
 
-                        {/* Carousel Pagination Dots + Art Direction Note */}
-                        <div className="px-4 py-3 bg-[#FFFFFF] border-t border-[#E6E6E2] space-y-2">
-                          {socialPackage.slides.length > 1 && (
-                            <div className="flex items-center justify-center gap-1.5">
-                              {socialPackage.slides.map((sl, i) => (
+                        {/* Horizontal Slide Filmstrip (for Carousels) */}
+                        {socialPackage.slides.length > 1 && (
+                          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                            {socialPackage.slides.map((sl, idx) => {
+                              const active = idx === activeSlideIdx;
+                              return (
                                 <button
                                   key={sl.slideNumber}
                                   type="button"
-                                  aria-label={`View slide ${sl.slideNumber}`}
-                                  onClick={() => setActiveSlideIdx(i)}
-                                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                                    i === activeSlideIdx ? 'w-5 bg-[#FF7417]' : 'w-1.5 bg-[#D6D6D0]'
+                                  onClick={() => setActiveSlideIdx(idx)}
+                                  className={`p-2.5 rounded-[9px] border text-left transition-all cursor-pointer ${
+                                    active
+                                      ? 'border-[#FF7417] bg-[#FFFFFF] shadow-xs'
+                                      : 'border-[#E6E6E2] bg-[#FAFAF9] hover:border-[#252525]'
                                   }`}
-                                />
-                              ))}
-                            </div>
-                          )}
-                          <div className="text-[11px] text-[#5C5C58] leading-relaxed">
-                            <span className="font-semibold text-[#252525]">AI Visual Direction: </span>
-                            {activeSlide.artDirectionPrompt}
+                                >
+                                  <div className="text-[10px] font-mono-num text-[#C44D00]">
+                                    0{sl.slideNumber} · {sl.role}
+                                  </div>
+                                  <div className="text-[11px] font-semibold text-[#171717] line-clamp-2 mt-1">
+                                    {sl.headline}
+                                  </div>
+                                </button>
+                              );
+                            })}
                           </div>
-                        </div>
-                      </div>
+                        )}
 
-                      {/* Horizontal Slide Filmstrip (for Carousels) */}
-                      {socialPackage.slides.length > 1 && (
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                          {socialPackage.slides.map((sl, idx) => {
-                            const active = idx === activeSlideIdx;
-                            return (
-                              <button
-                                key={sl.slideNumber}
-                                type="button"
-                                onClick={() => setActiveSlideIdx(idx)}
-                                className={`p-2.5 rounded-[9px] border text-left transition-all cursor-pointer ${
-                                  active
-                                    ? 'border-[#FF7417] bg-[#FFFFFF] shadow-xs'
-                                    : 'border-[#E6E6E2] bg-[#FAFAF9] hover:border-[#252525]'
-                                }`}
-                              >
-                                <div className="text-[10px] font-mono-num text-[#C44D00]">
-                                  0{sl.slideNumber} · {sl.role}
-                                </div>
-                                <div className="text-[11px] font-semibold text-[#171717] line-clamp-2 mt-1">
-                                  {sl.headline}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Optional Progressive-Disclosure Slide Copy Fine-Tuner */}
-                      <div className="border-t border-[#E6E6E2] pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowSlideEditor((v) => !v)}
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C5C58] hover:text-[#171717] cursor-pointer"
-                        >
-                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showSlideEditor ? 'rotate-180' : ''}`} />
-                          <span>Optional: Fine-tune Slide 0{activeSlide.slideNumber} text manually</span>
-                        </button>
-                        {showSlideEditor && (
-                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-[10px] bg-[#FFFFFF] border border-[#E6E6E2]">
-                            <Field label="Slide Headline" htmlFor="edit-sl-head">
-                              <Input
-                                id="edit-sl-head"
-                                type="text"
-                                value={activeSlide.headline}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setSocialPackage((prev) => ({
-                                    ...prev,
-                                    slides: prev.slides.map((s, i) =>
-                                      i === activeSlideIdx ? { ...s, headline: val } : s
-                                    ),
-                                  }));
-                                }}
-                              />
-                            </Field>
-                            <Field label="Stat / CTA Highlight" htmlFor="edit-sl-stat">
-                              <Input
-                                id="edit-sl-stat"
-                                type="text"
-                                value={activeSlide.statCallout ?? ''}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setSocialPackage((prev) => ({
-                                    ...prev,
-                                    slides: prev.slides.map((s, i) =>
-                                      i === activeSlideIdx ? { ...s, statCallout: val } : s
-                                    ),
-                                  }));
-                                }}
-                              />
-                            </Field>
-                            <div className="sm:col-span-2">
-                              <Field label="Slide Body" htmlFor="edit-sl-body">
-                                <Textarea
-                                  id="edit-sl-body"
-                                  rows={2}
-                                  value={activeSlide.body}
+                        {/* Optional Progressive-Disclosure Slide Copy Fine-Tuner */}
+                        <div className="border-t border-[#E6E6E2] pt-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowSlideEditor((v) => !v)}
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C5C58] hover:text-[#171717] cursor-pointer"
+                          >
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform ${showSlideEditor ? 'rotate-180' : ''}`}
+                            />
+                            <span>
+                              Optional: Fine-tune Slide 0{activeSlide.slideNumber} text manually
+                            </span>
+                          </button>
+                          {showSlideEditor && (
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-[10px] bg-[#FFFFFF] border border-[#E6E6E2]">
+                              <Field label="Slide Headline" htmlFor="edit-sl-head">
+                                <Input
+                                  id="edit-sl-head"
+                                  type="text"
+                                  value={activeSlide.headline}
                                   onChange={(e) => {
                                     const val = e.target.value;
                                     setSocialPackage((prev) => ({
                                       ...prev,
                                       slides: prev.slides.map((s, i) =>
-                                        i === activeSlideIdx ? { ...s, body: val } : s
+                                        i === activeSlideIdx ? { ...s, headline: val } : s
                                       ),
                                     }));
                                   }}
                                 />
                               </Field>
+                              <Field label="Stat / CTA Highlight" htmlFor="edit-sl-stat">
+                                <Input
+                                  id="edit-sl-stat"
+                                  type="text"
+                                  value={activeSlide.statCallout ?? ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setSocialPackage((prev) => ({
+                                      ...prev,
+                                      slides: prev.slides.map((s, i) =>
+                                        i === activeSlideIdx ? { ...s, statCallout: val } : s
+                                      ),
+                                    }));
+                                  }}
+                                />
+                              </Field>
+                              <div className="sm:col-span-2">
+                                <Field label="Slide Body" htmlFor="edit-sl-body">
+                                  <Textarea
+                                    id="edit-sl-body"
+                                    rows={2}
+                                    value={activeSlide.body}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setSocialPackage((prev) => ({
+                                        ...prev,
+                                        slides: prev.slides.map((s, i) =>
+                                          i === activeSlideIdx ? { ...s, body: val } : s
+                                        ),
+                                      }));
+                                    }}
+                                  />
+                                </Field>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* AI Generated Caption, Hashtags & Save Actions */}
-                    <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-4 bw-surface-raised">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="text-xs font-semibold text-[#171717]">
-                          AI-Written Caption &amp; Hashtags
+                          )}
                         </div>
-                        <LiquidButton
-                          variant="secondary"
-                          size="sm"
-                          success={copiedToken === 'caption'}
-                          onClick={() =>
-                            handleCopyPayload(
-                              'caption',
-                              `${socialPackage.caption}\n\n${socialPackage.hashtags.join(' ')}`
-                            )
-                          }
-                        >
-                          {copiedToken !== 'caption' && <Copy className="w-3.5 h-3.5" />}
-                          {copiedToken === 'caption' ? 'Copied Caption' : 'Copy Caption + Tags'}
-                        </LiquidButton>
-                      </div>
-                      <p className="text-xs text-[#252525] whitespace-pre-line leading-relaxed bg-[#FAFAF9] p-3.5 rounded-[10px] border border-[#E6E6E2]">
-                        {socialPackage.caption}
-                      </p>
-                      <div className="text-xs text-[#C44D00] font-medium">
-                        {socialPackage.hashtags.join('  ')}
                       </div>
 
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#E6E6E2]">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            addTask({
-                              title: `Publish AI ${socialPlatform}: ${socialPackage.title.slice(0, 36)}`,
-                              description: `Post ${socialPackage.slides.length}-slide ${socialPlatform} generated in Brand Studio.`,
-                              whyItMatters: socialPackage.postingRationale || 'Executes brand-locked social growth campaign.',
-                              expectedOutcome: 'Published social creative driving bio link clicks & saves.',
-                              priority: 'high',
-                              estimatedMinutes: 20,
-                              dueDate: new Date().toISOString().slice(0, 10),
-                              department: 'Brand Studio',
-                              status: 'pending',
-                              isTodayPriority: true,
-                            });
-                            navigate('growth-director');
-                          }}
-                        >
-                          <Compass className="w-3.5 h-3.5 text-[#FF7417]" />
-                          Schedule in Growth Planner
-                        </Button>
+                      {/* AI Generated Caption, Hashtags & Save Actions */}
+                      <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-4 bw-surface-raised">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="text-xs font-semibold text-[#171717]">
+                            AI-Written Caption &amp; Hashtags
+                          </div>
+                          <LiquidButton
+                            variant="secondary"
+                            size="sm"
+                            success={copiedToken === 'caption'}
+                            onClick={() =>
+                              handleCopyPayload(
+                                'caption',
+                                `${socialPackage.caption}\n\n${socialPackage.hashtags.join(' ')}`
+                              )
+                            }
+                          >
+                            {copiedToken !== 'caption' && <Copy className="w-3.5 h-3.5" />}
+                            {copiedToken === 'caption' ? 'Copied Caption' : 'Copy Caption + Tags'}
+                          </LiquidButton>
+                        </div>
+                        <p className="text-xs text-[#252525] whitespace-pre-line leading-relaxed bg-[#FAFAF9] p-3.5 rounded-[10px] border border-[#E6E6E2]">
+                          {socialPackage.caption}
+                        </p>
+                        <div className="text-xs text-[#C44D00] font-medium">
+                          {socialPackage.hashtags.join('  ')}
+                        </div>
 
-                        <Button
-                          variant="primary"
-                          size="md"
-                          onClick={() => {
-                            const fmt = SOCIAL_FORMATS.find((f) => f.id === socialPlatform);
-                            addBrandAsset({
-                              title: socialPackage.title,
-                              category: socialPlatform,
-                              folder: fmt?.folder ?? 'Social Media',
-                              format: `${fmt?.ratio ?? '4:5'} · ${socialPackage.slides.length} slide${socialPackage.slides.length > 1 ? 's' : ''}`,
-                              status: 'Approved',
-                              headlineText: socialPackage.slides[0]?.headline ?? state.brand.tagline,
-                              subtext: socialPackage.slides[0]?.body ?? state.brand.positioningStatement,
-                              accentHex: activeConcept.accentColor,
-                              darkVariant: socialDark,
-                              aiGenerated: true,
-                              aiPrompt: socialPrompt,
-                              aiModel: socialModelUsed || 'BrainWise AI',
-                              svgMarkup: socialPackage.slides[0]?.svgMotif,
-                              slides: socialPackage.slides,
-                              caption: socialPackage.caption,
-                              hashtags: socialPackage.hashtags,
-                              artDirectionNote: socialPackage.postingRationale,
-                            });
-                          }}
-                        >
-                          Save {socialPlatform === 'Carousel' ? `${socialPackage.slides.length}-Slide Carousel` : socialPlatform} to Asset Library
-                        </Button>
+                        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#E6E6E2]">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              addTask({
+                                title: `Publish AI ${socialPlatform}: ${socialPackage.title.slice(0, 36)}`,
+                                description: `Post ${socialPackage.slides.length}-slide ${socialPlatform} generated in Brand Studio.`,
+                                whyItMatters:
+                                  socialPackage.postingRationale ||
+                                  'Executes brand-locked social growth campaign.',
+                                expectedOutcome:
+                                  'Published social creative driving bio link clicks & saves.',
+                                priority: 'high',
+                                estimatedMinutes: 20,
+                                dueDate: new Date().toISOString().slice(0, 10),
+                                department: 'Brand Studio',
+                                status: 'pending',
+                                isTodayPriority: true,
+                              });
+                              navigate('growth-director');
+                            }}
+                          >
+                            <Compass className="w-3.5 h-3.5 text-[#FF7417]" />
+                            Schedule in Growth Planner
+                          </Button>
+
+                          <Button
+                            variant="primary"
+                            size="md"
+                            onClick={() => {
+                              const fmt = SOCIAL_FORMATS.find((f) => f.id === socialPlatform);
+                              addBrandAsset({
+                                title: socialPackage.title,
+                                category: socialPlatform,
+                                folder: fmt?.folder ?? 'Social Media',
+                                format: `${fmt?.ratio ?? '4:5'} · ${socialPackage.slides.length} slide${socialPackage.slides.length > 1 ? 's' : ''}`,
+                                status: 'Approved',
+                                headlineText:
+                                  socialPackage.slides[0]?.headline ?? state.brand.tagline,
+                                subtext:
+                                  socialPackage.slides[0]?.body ?? state.brand.positioningStatement,
+                                accentHex: activeConcept.accentColor,
+                                darkVariant: socialDark,
+                                aiGenerated: true,
+                                aiPrompt: socialPrompt,
+                                aiModel: socialModelUsed || 'BrainWise AI',
+                                svgMarkup: socialPackage.slides[0]?.svgMotif,
+                                slides: socialPackage.slides,
+                                caption: socialPackage.caption,
+                                hashtags: socialPackage.hashtags,
+                                artDirectionNote: socialPackage.postingRationale,
+                              });
+                            }}
+                          >
+                            Save{' '}
+                            {socialPlatform === 'Carousel'
+                              ? `${socialPackage.slides.length}-Slide Carousel`
+                              : socialPlatform}{' '}
+                            to Asset Library
+                          </Button>
+                        </div>
                       </div>
-                    </div>
                     </div>
                   </LiquidSkeletonReveal>
                 </div>
@@ -2402,12 +2603,16 @@ export const BrandStudioPage: React.FC = () => {
                         </h2>
                       </div>
                       {collateralModelUsed && (
-                        <span className="text-[11px] font-mono-num text-[#858585]">{collateralModelUsed}</span>
+                        <span className="text-[11px] font-mono-num text-[#858585]">
+                          {collateralModelUsed}
+                        </span>
                       )}
                     </div>
 
                     <div>
-                      <div className="text-xs font-medium text-[#242424] mb-1.5">Asset Category</div>
+                      <div className="text-xs font-medium text-[#242424] mb-1.5">
+                        Asset Category
+                      </div>
                       <div className="flex flex-wrap gap-1.5">
                         {COLLATERAL_CATEGORIES.map((cat) => (
                           <button
@@ -2437,7 +2642,9 @@ export const BrandStudioPage: React.FC = () => {
                     </Field>
 
                     <div>
-                      <div className="text-xs font-medium text-[#242424] mb-1.5">Surface Exploration</div>
+                      <div className="text-xs font-medium text-[#242424] mb-1.5">
+                        Surface Exploration
+                      </div>
                       <div className="grid grid-cols-3 gap-1.5">
                         {(
                           [
@@ -2504,158 +2711,177 @@ export const BrandStudioPage: React.FC = () => {
                   >
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      {collateralVariations.map((v, idx) => {
-                        const active = idx === selectedVariationIdx;
-                        return (
-                          <button
-                            key={v.id}
-                            type="button"
-                            onClick={() => setSelectedVariationIdx(idx)}
-                            className={`p-3 rounded-[10px] border text-left transition-all cursor-pointer ${
-                              active
-                                ? 'border-[#FF7417] bg-[#FFFFFF] shadow-xs'
-                                : 'border-[#E6E6E2] bg-[#FAFAF9] hover:border-[#252525]'
-                            }`}
-                          >
-                            <div className="text-[10px] font-mono-num text-[#C44D00]">
-                              CONCEPT 0{idx + 1} · {v.darkVariant ? 'DARK' : 'LIGHT'}
-                            </div>
-                            <div className="text-xs font-semibold text-[#171717] mt-1 truncate">
-                              {v.layoutLabel}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="rounded-[14px] border border-[#E6E6E2] bg-[#F5F5F4] p-6 sm:p-8 space-y-5">
-                      <div
-                        className={`rounded-[14px] p-8 min-h-[300px] flex flex-col justify-between border ${
-                          activeVariation.darkVariant
-                            ? 'bg-[#171717] text-white border-[#2C2C2C] bw-dark-ambient-glow'
-                            : 'bg-[#FFFFFF] text-[#242424] border-[#E6E6E2] bw-surface-raised'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5">
-                            {renderLogoMark(activeConcept, activeConcept.accentColor, !activeVariation.darkVariant, 'w-8 h-8')}
-                            <span className="font-heading font-bold text-sm">{state.brand.brandName}</span>
-                          </div>
-                          <span
-                            className={`text-[11px] font-mono-num ${
-                              activeVariation.darkVariant ? 'text-[#FF8A36]' : 'text-[#C44D00]'
-                            }`}
-                          >
-                            {selectedCollateral.toUpperCase()} · {activeVariation.layoutLabel.toUpperCase()}
-                          </span>
-                        </div>
-
-                        <div className="my-6 space-y-3">
-                          {activeVariation.svgMotif && (
-                            <div
-                              className={`w-28 h-11 [&>svg]:w-full [&>svg]:h-full ${
-                                activeVariation.darkVariant ? 'text-white' : 'text-[#171717]'
+                        {collateralVariations.map((v, idx) => {
+                          const active = idx === selectedVariationIdx;
+                          return (
+                            <button
+                              key={v.id}
+                              type="button"
+                              onClick={() => setSelectedVariationIdx(idx)}
+                              className={`p-3 rounded-[10px] border text-left transition-all cursor-pointer ${
+                                active
+                                  ? 'border-[#FF7417] bg-[#FFFFFF] shadow-xs'
+                                  : 'border-[#E6E6E2] bg-[#FAFAF9] hover:border-[#252525]'
                               }`}
-                              dangerouslySetInnerHTML={{
-                                __html: sanitizeAiSvgMarkup(activeVariation.svgMotif, '0 0 120 48'),
-                              }}
-                            />
-                          )}
-                          <h3 className="font-heading text-2xl font-bold leading-snug">
-                            {activeVariation.headlineText}
-                          </h3>
-                          <p
-                            className={`text-sm leading-relaxed ${
-                              activeVariation.darkVariant ? 'text-[#CCCCCC]' : 'text-[#686864]'
-                            }`}
-                          >
-                            {activeVariation.subtext}
-                          </p>
-                        </div>
-
-                        <div className="pt-4 border-t border-current/15 flex items-center justify-between text-xs opacity-75">
-                          <span>{activeVariation.footerNote}</span>
-                          <span>{state.brain.location}</span>
-                        </div>
+                            >
+                              <div className="text-[10px] font-mono-num text-[#C44D00]">
+                                CONCEPT 0{idx + 1} · {v.darkVariant ? 'DARK' : 'LIGHT'}
+                              </div>
+                              <div className="text-xs font-semibold text-[#171717] mt-1 truncate">
+                                {v.layoutLabel}
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
 
-                      <div className="p-3.5 rounded-[10px] bg-[#FFFFFF] border border-[#E6E6E2] text-xs text-[#5C5C58] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                          <span className="font-semibold text-[#252525]">AI Art Direction &amp; Print Note: </span>
-                          {activeVariation.artDirectionNote}
-                        </div>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="shrink-0"
-                          onClick={() =>
-                            addBrandAsset({
-                              title: activeVariation.title,
-                              category: selectedCollateral,
-                              folder: 'Print & Packaging',
-                              format: `AI ${activeVariation.layoutLabel} · Print Vector`,
-                              status: 'Approved',
-                              headlineText: activeVariation.headlineText,
-                              subtext: activeVariation.subtext,
-                              accentHex: activeConcept.accentColor,
-                              darkVariant: activeVariation.darkVariant,
-                              aiGenerated: true,
-                              aiPrompt: collateralPrompt,
-                              aiModel: collateralModelUsed || 'BrainWise AI',
-                              svgMarkup: activeVariation.svgMotif,
-                              artDirectionNote: activeVariation.artDirectionNote,
-                            })
-                          }
+                      <div className="rounded-[14px] border border-[#E6E6E2] bg-[#F5F5F4] p-6 sm:p-8 space-y-5">
+                        <div
+                          className={`rounded-[14px] p-8 min-h-[300px] flex flex-col justify-between border ${
+                            activeVariation.darkVariant
+                              ? 'bg-[#171717] text-white border-[#2C2C2C] bw-dark-ambient-glow'
+                              : 'bg-[#FFFFFF] text-[#242424] border-[#E6E6E2] bw-surface-raised'
+                          }`}
                         >
-                          Save Concept to Asset Library
-                        </Button>
-                      </div>
-
-                      <div className="border-t border-[#E6E6E2] pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowCollateralEditor((v) => !v)}
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C5C58] hover:text-[#171717] cursor-pointer"
-                        >
-                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCollateralEditor ? 'rotate-180' : ''}`} />
-                          <span>Optional: Fine-tune generated headline &amp; copy</span>
-                        </button>
-                        {showCollateralEditor && (
-                          <div className="mt-3 space-y-3 p-4 rounded-[10px] bg-[#FFFFFF] border border-[#E6E6E2]">
-                            <Field label="Headline" htmlFor="col-edit-head">
-                              <Input
-                                id="col-edit-head"
-                                type="text"
-                                value={activeVariation.headlineText}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setCollateralVariations((prev) =>
-                                    prev.map((item, i) =>
-                                      i === selectedVariationIdx ? { ...item, headlineText: val } : item
-                                    )
-                                  );
-                                }}
-                              />
-                            </Field>
-                            <Field label="Supporting Copy" htmlFor="col-edit-sub">
-                              <Textarea
-                                id="col-edit-sub"
-                                rows={2}
-                                value={activeVariation.subtext}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setCollateralVariations((prev) =>
-                                    prev.map((item, i) =>
-                                      i === selectedVariationIdx ? { ...item, subtext: val } : item
-                                    )
-                                  );
-                                }}
-                              />
-                            </Field>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2.5">
+                              {renderLogoMark(
+                                activeConcept,
+                                activeConcept.accentColor,
+                                !activeVariation.darkVariant,
+                                'w-8 h-8'
+                              )}
+                              <span className="font-heading font-bold text-sm">
+                                {state.brand.brandName}
+                              </span>
+                            </div>
+                            <span
+                              className={`text-[11px] font-mono-num ${
+                                activeVariation.darkVariant ? 'text-[#FF8A36]' : 'text-[#C44D00]'
+                              }`}
+                            >
+                              {selectedCollateral.toUpperCase()} ·{' '}
+                              {activeVariation.layoutLabel.toUpperCase()}
+                            </span>
                           </div>
-                        )}
+
+                          <div className="my-6 space-y-3">
+                            {activeVariation.svgMotif && (
+                              <div
+                                className={`w-28 h-11 [&>svg]:w-full [&>svg]:h-full ${
+                                  activeVariation.darkVariant ? 'text-white' : 'text-[#171717]'
+                                }`}
+                                dangerouslySetInnerHTML={{
+                                  __html: sanitizeAiSvgMarkup(
+                                    activeVariation.svgMotif,
+                                    '0 0 120 48'
+                                  ),
+                                }}
+                              />
+                            )}
+                            <h3 className="font-heading text-2xl font-bold leading-snug">
+                              {activeVariation.headlineText}
+                            </h3>
+                            <p
+                              className={`text-sm leading-relaxed ${
+                                activeVariation.darkVariant ? 'text-[#CCCCCC]' : 'text-[#686864]'
+                              }`}
+                            >
+                              {activeVariation.subtext}
+                            </p>
+                          </div>
+
+                          <div className="pt-4 border-t border-current/15 flex items-center justify-between text-xs opacity-75">
+                            <span>{activeVariation.footerNote}</span>
+                            <span>{state.brain.location}</span>
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 rounded-[10px] bg-[#FFFFFF] border border-[#E6E6E2] text-xs text-[#5C5C58] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <span className="font-semibold text-[#252525]">
+                              AI Art Direction &amp; Print Note:{' '}
+                            </span>
+                            {activeVariation.artDirectionNote}
+                          </div>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() =>
+                              addBrandAsset({
+                                title: activeVariation.title,
+                                category: selectedCollateral,
+                                folder: 'Print & Packaging',
+                                format: `AI ${activeVariation.layoutLabel} · Print Vector`,
+                                status: 'Approved',
+                                headlineText: activeVariation.headlineText,
+                                subtext: activeVariation.subtext,
+                                accentHex: activeConcept.accentColor,
+                                darkVariant: activeVariation.darkVariant,
+                                aiGenerated: true,
+                                aiPrompt: collateralPrompt,
+                                aiModel: collateralModelUsed || 'BrainWise AI',
+                                svgMarkup: activeVariation.svgMotif,
+                                artDirectionNote: activeVariation.artDirectionNote,
+                              })
+                            }
+                          >
+                            Save Concept to Asset Library
+                          </Button>
+                        </div>
+
+                        <div className="border-t border-[#E6E6E2] pt-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowCollateralEditor((v) => !v)}
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C5C58] hover:text-[#171717] cursor-pointer"
+                          >
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform ${showCollateralEditor ? 'rotate-180' : ''}`}
+                            />
+                            <span>Optional: Fine-tune generated headline &amp; copy</span>
+                          </button>
+                          {showCollateralEditor && (
+                            <div className="mt-3 space-y-3 p-4 rounded-[10px] bg-[#FFFFFF] border border-[#E6E6E2]">
+                              <Field label="Headline" htmlFor="col-edit-head">
+                                <Input
+                                  id="col-edit-head"
+                                  type="text"
+                                  value={activeVariation.headlineText}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setCollateralVariations((prev) =>
+                                      prev.map((item, i) =>
+                                        i === selectedVariationIdx
+                                          ? { ...item, headlineText: val }
+                                          : item
+                                      )
+                                    );
+                                  }}
+                                />
+                              </Field>
+                              <Field label="Supporting Copy" htmlFor="col-edit-sub">
+                                <Textarea
+                                  id="col-edit-sub"
+                                  rows={2}
+                                  value={activeVariation.subtext}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setCollateralVariations((prev) =>
+                                      prev.map((item, i) =>
+                                        i === selectedVariationIdx
+                                          ? { ...item, subtext: val }
+                                          : item
+                                      )
+                                    );
+                                  }}
+                                />
+                              </Field>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
                     </div>
                   </LiquidSkeletonReveal>
                 </div>
