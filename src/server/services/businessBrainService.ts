@@ -58,6 +58,10 @@ export class BusinessBrainService {
     return await businessProfileRepository.saveProfile(updated);
   }
 
+  public async deleteProfile(workspaceId: string): Promise<void> {
+    await businessProfileRepository.deleteProfile(workspaceId);
+  }
+
   /**
    * Generates a structured Business Brain from onboarding answers.
    * Enforces Fact Provenance: user inputs = USER_CONFIRMED; AI inferences = AI_INFERRED.

@@ -9,6 +9,7 @@ import { memberRepository } from '../repositories/memberRepository';
 import { creditWalletRepository } from '../repositories/creditWalletRepository';
 import { businessProfileRepository } from '../repositories/businessProfileRepository';
 import { onboardingRepository } from '../repositories/onboardingRepository';
+import { creditEngine } from '../billing/creditEngine';
 import { auditService } from './auditService';
 import {
   hashPassword,
@@ -430,6 +431,7 @@ export class WorkspaceService {
 
     // Initialize Credit Wallet with monthly plan quota
     await creditWalletRepository.initializeWallet(workspaceId, 800);
+    await creditEngine.initializeAccount(workspaceId, 150);
 
     // Initialize Business Brain root document
     const now = new Date().toISOString();

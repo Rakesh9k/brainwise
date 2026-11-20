@@ -154,6 +154,14 @@ export class CreditEngine {
         ),
         reservation
       );
+      if (idempotencyKey) {
+        transaction.set(
+          db.doc<CreditReservationRecord>(
+            `workspaces/${workspaceId}/creditAccount/root/reservations/${idempotencyKey}`
+          ),
+          reservation
+        );
+      }
 
       return reservation;
     });

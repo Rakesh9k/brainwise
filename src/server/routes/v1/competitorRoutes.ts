@@ -12,6 +12,7 @@ import { competitorSnapshotRepository } from '../../repositories/competitorSnaps
 import { marketWatchRepository } from '../../repositories/marketWatchRepository';
 import { departmentEventBus } from '../../events/eventBus';
 import { creditService } from '../../services/creditService';
+import { validateSafeExternalUrl } from '../../utils/ssrfValidator';
 import type {
   CompetitorEntity,
   CompetitorSnapshotEntity,
@@ -64,6 +65,22 @@ router.post(
         },
       });
       return;
+    }
+
+    if (website && typeof website === 'string' && website.trim().length > 0) {
+      const ssrfCheck = validateSafeExternalUrl(website);
+      if (!ssrfCheck.isSafe) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'UNSAFE_EXTERNAL_URL',
+            message: `Competitor website URL failed security verification: ${ssrfCheck.reason}`,
+            category: 'VALIDATION_ERROR',
+            retryable: false,
+          },
+        });
+        return;
+      }
     }
 
     const competitorId =
@@ -199,6 +216,21 @@ router.post(
     }
 
     const { offerings, pricingSummary, positioning, sourceUrl } = req.body;
+    if (sourceUrl && typeof sourceUrl === 'string' && sourceUrl.trim().length > 0) {
+      const ssrfCheck = validateSafeExternalUrl(sourceUrl);
+      if (!ssrfCheck.isSafe) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'UNSAFE_EXTERNAL_URL',
+            message: `Snapshot source URL failed security verification: ${ssrfCheck.reason}`,
+            category: 'VALIDATION_ERROR',
+            retryable: false,
+          },
+        });
+        return;
+      }
+    }
     const now = new Date().toISOString();
     const previous = await competitorSnapshotRepository.getLatest(
       req.workspace!.workspaceId,

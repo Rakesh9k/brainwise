@@ -75,6 +75,8 @@ export interface IDatabaseService {
   runTransaction<R>(updateFunction: (transaction: DbTransaction) => Promise<R>): Promise<R>;
   serverTimestamp(): string;
   resetForTesting(): void;
+  exportBackup(): Record<string, any>;
+  restoreBackup(backup: Record<string, any>): void;
 }
 
 // -----------------------------------------------------------------------------
@@ -91,9 +93,26 @@ interface StoredDoc {
 
 class InMemoryDatabase implements IDatabaseService {
   private store: Map<string, StoredDoc> = new Map();
+  private txQueue: Promise<void> = Promise.resolve();
 
   public resetForTesting(): void {
     this.store.clear();
+    this.txQueue = Promise.resolve();
+  }
+
+  public exportBackup(): Record<string, any> {
+    const backup: Record<string, any> = {};
+    for (const [k, v] of this.store.entries()) {
+      backup[k] = JSON.parse(JSON.stringify(v));
+    }
+    return backup;
+  }
+
+  public restoreBackup(backup: Record<string, any>): void {
+    this.store.clear();
+    for (const [k, v] of Object.entries(backup)) {
+      this.store.set(k, JSON.parse(JSON.stringify(v)));
+    }
   }
 
   public serverTimestamp(): string {
@@ -150,6 +169,15 @@ class InMemoryDatabase implements IDatabaseService {
   public async runTransaction<R>(
     updateFunction: (transaction: DbTransaction) => Promise<R>
   ): Promise<R> {
+    let releaseLock: () => void;
+    const lockAcquired = new Promise<void>((resolve) => {
+      releaseLock = resolve;
+    });
+    const previousQueue = this.txQueue;
+    this.txQueue = previousQueue.then(() => lockAcquired);
+
+    await previousQueue;
+
     // Clone current store snapshot for atomic rollback
     const snapshot = new Map<string, StoredDoc>();
     for (const [k, v] of this.store.entries()) {
@@ -184,6 +212,8 @@ class InMemoryDatabase implements IDatabaseService {
       // Rollback on failure
       this.store = snapshot;
       throw err;
+    } finally {
+      releaseLock!();
     }
   }
 }
@@ -404,6 +434,18 @@ class CloudFirestoreDatabase implements IDatabaseService {
 
   public resetForTesting(): void {
     // No-op on real Cloud Firestore
+  }
+
+  public exportBackup(): Record<string, any> {
+    return {
+      timestamp: new Date().toISOString(),
+      type: 'cloud_firestore_managed',
+      projectId: serverConfig.firebaseProjectId,
+    };
+  }
+
+  public restoreBackup(_backup: Record<string, any>): void {
+    // Managed GCP Firestore export/import through gcloud firestore import
   }
 
   public async runTransaction<R>(

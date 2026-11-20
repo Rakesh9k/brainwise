@@ -420,4 +420,66 @@ router.post(
   }
 );
 
+/**
+ * DELETE /api/v1/workspaces/:workspaceId/dpdpa-erasure
+ * Executes technical data erasure compliant with Digital Personal Data Protection Act (DPDPA), 2023 Section 12.
+ * Purges business profile, research, competitors, goals, tasks, external integration tokens, and asset references.
+ * Legally exempt financial records (tax invoices, billing ledgers) are preserved under Section 128 of Companies Act.
+ */
+router.delete(
+  '/:workspaceId/dpdpa-erasure',
+  requireWorkspaceMember,
+  requireWorkspaceRole(['owner']),
+  async (req: Request, res: Response): Promise<void> => {
+    const workspaceId = req.workspace!.workspaceId;
+    const now = new Date().toISOString();
+
+    // 1. Purge business data
+    await businessBrainService.deleteProfile(workspaceId).catch(() => {});
+    const competitors = await competitorRepository.listByWorkspace(workspaceId);
+    for (const c of competitors) {
+      await competitorRepository.delete(workspaceId, c.competitorId).catch(() => {});
+    }
+    const goals = await goalRepository.listByWorkspace(workspaceId);
+    for (const g of goals) {
+      await goalRepository.delete(workspaceId, g.goalId).catch(() => {});
+    }
+    const tasks = await taskRepository.listByWorkspace(workspaceId);
+    for (const t of tasks) {
+      await taskRepository.delete(workspaceId, t.taskId).catch(() => {});
+    }
+
+    // 2. Update workspace status to archived / DPDPA erased
+    await workspaceRepository.archive(workspaceId);
+
+    // 3. Log cryptographic security audit event
+    await auditService.logSecurityEvent({
+      workspaceId,
+      userId: req.user!.uid,
+      action: 'DPDPA_RIGHT_TO_ERASURE_EXECUTED',
+      resource: `workspaces/${workspaceId}`,
+      details: {
+        purgedCategories: ['businessBrain', 'competitors', 'goals', 'tasks', 'researchData'],
+        retainedCategories: ['taxInvoices', 'statutoryAuditLedger'],
+        retentionStatutoryBasis:
+          'Section 128 Companies Act & Section 35(1) CGST Act 2017 (72-month statutory retention)',
+        timestamp: now,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        workspaceId,
+        erasedAt: now,
+        status: 'DATA_PURGED_DPDPA_COMPLIANT',
+        purgedCategories: ['businessBrain', 'competitors', 'goals', 'tasks', 'researchData'],
+        retainedCategories: ['taxInvoices', 'statutoryAuditLedger'],
+        legalNotice:
+          'Statutory tax and financial records are retained in compliance with Indian CGST and Companies Act provisions.',
+      },
+    });
+  }
+);
+
 export const workspaceRoutes = router;

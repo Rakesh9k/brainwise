@@ -99,6 +99,10 @@ export class BusinessProfileRepository {
       .get();
     return snap.docs.map((d) => d.data()).filter((d): d is BusinessProfileEntity => Boolean(d));
   }
+
+  public async deleteProfile(workspaceId: string): Promise<void> {
+    await db.doc(`workspaces/${workspaceId}/businessBrain/rootDoc`).delete();
+  }
 }
 
 export const businessProfileRepository = new BusinessProfileRepository();
