@@ -1,0 +1,814 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model & Schema Directives
+// ===============================================================
+//
+// Application: BrainWise Multi-Tenant Strategic Marketing SaaS
+// Product Boundary: STRICT VIDEO EXCLUSION (No AI video generation or video entities)
+//
+// 1. Root Collection: users/{userId}
+//    - uid / userId: string (1-128 chars, matches request.auth.uid)
+//    - email: string (RFC-compliant email, <= 256 chars)
+//    - firstName, lastName, displayName: string (optional, <= 150 chars)
+//    - photoUrl, avatarUrl: string (optional, URL, <= 1000 chars)
+//    - avatarInitials, timezone: string (optional, <= 64 chars)
+//    - activeWorkspaceId: string (optional, <= 128 chars)
+//    - accountStatus: string (optional: 'active' | 'suspended' | 'pending')
+//    - emailVerified: bool (optional)
+//    - isSuperAdmin: bool (optional, privileged: cannot be self-elevated)
+//    - preferences: map (optional)
+//    - onboardingStatus: string (optional: 'pending' | 'completed')
+//    - lastLoginAt, createdAt, updatedAt: timestamp or ISO string
+//
+// 2. Root Collection: workspaces/{workspaceId}
+//    - workspaceId: string (UUID/slug, 1-128 chars)
+//    - name / workspaceName: string (2-100 chars)
+//    - slug / workspaceSlug: string (2-100 chars)
+//    - ownerId / ownerUserId: string (matches creator UID)
+//    - workspaceType: string (optional: 'individual' | 'startup' | 'enterprise')
+//    - industry, country, timezone, currency: string (optional, bounded)
+//    - planId: string ('starter' | 'growth' | 'scale' | 'Starter' | 'Growth Pro' | 'Venture Team')
+//    - workspaceStatus: string (optional: 'active' | 'suspended' | 'archived')
+//    - createdAt, updatedAt: timestamp or ISO string
+//
+// 3. Workspace Subcollections:
+//    - businessBrain/rootDoc: Core truth engine & strategic memory
+//    - products/{productId}: Verified product/service items for price grounding
+//    - personas/{personaId}: Target customer segment definitions
+//    - brandIdentities/{identityId}: Brand concept, tone, palettes, typography
+//    - brandAssets/{assetId}: Vector collateral (SVG), stationery, flyers (NO VIDEOS)
+//    - marketingStrategies/{strategyId}: Positioning, moats, strategic plays
+//    - contentItems/{contentId}: Static carousels, social copy packs (NO VIDEOS)
+//    - competitors/{competitorId}: Market watch, competitive audits & teardowns
+//    - researchReports/{reportId}: Market dossier, TAM/SAM/SOM validation
+//    - recommendations/{recommendationId}: Tactical & strategic advice
+//    - marketingTasks/{taskId}: Actionable execution tasks with priorities
+//    - scheduledPosts/{scheduledPostId}: Multi-channel scheduled static publishing
+//    - analyticsSnapshots/{snapshotId}: Read-only analytics telemetry
+//    - creditWallet/rootWallet: Server-side credit balance (client read-only)
+//      - transactions/{txId}: Append-only credit ledger (client read-only)
+//      - reservations/{resId}: Two-phase reservation locks (client read-only)
+//    - subscriptions/rootSubscription: Billing state from webhooks (client read-only)
+//
+// 4. Root Collection: workspaceMembers/{memberId} (Composite key: uid_workspaceId)
+//    - membershipId: string (optional)
+//    - workspaceId: string (1-128 chars)
+//    - userId: string (1-128 chars)
+//    - role: string ('owner' | 'admin' | 'member' | 'viewer' | 'Owner' | 'Strategist' | 'Brand Designer' | 'Viewer')
+//    - membershipStatus / status: string ('active' | 'invited' | 'revoked' | 'Active' | 'Invited')
+//    - invitedBy, joinedAt, createdAt, updatedAt
+//
+// 5. Server-Authoritative Global Collections (client read/write DENIED):
+//    - paymentOrders/{orderId}
+//    - aiUsageLogs/{logId}
+//    - auditLogs/{logId}
+//    - adminActions/{actionId}
+//    - socialAccounts/{accountId}
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Universal Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidNotModified() {
+      return (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid) &&
+             (!('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validStringLength(field, minLen, maxLen) {
+      return (field in request.resource.data) &&
+             request.resource.data[field] is string &&
+             request.resource.data[field].size() >= minLen &&
+             request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() >= minLen &&
+              request.resource.data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalList(field, maxElements) {
+      return !(field in request.resource.data) ||
+             (request.resource.data[field] is list &&
+              request.resource.data[field].size() <= maxElements);
+    }
+
+    function isValidOptionalMap(field) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] is map;
+    }
+
+    function isValidOptionalNumber(field, minVal, maxVal) {
+      return !(field in request.resource.data) ||
+             ((request.resource.data[field] is int || request.resource.data[field] is float) &&
+              request.resource.data[field] >= minVal &&
+              request.resource.data[field] <= maxVal);
+    }
+
+    function isValidOptionalBool(field) {
+      return !(field in request.resource.data) || request.resource.data[field] is bool;
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+             email.size() >= 3 &&
+             email.size() <= 256 &&
+             email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidTimestampOrDate(field) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] is timestamp ||
+             (request.resource.data[field] is string && request.resource.data[field].size() <= 64);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Multi-Tenant RBAC & Membership Helpers
+    // ===============================================================
+
+    function isDirectMember(workspaceId) {
+      return exists(/databases/$(database)/documents/workspaces/$(workspaceId)/members/$(request.auth.uid));
+    }
+
+    function isGlobalMember(workspaceId) {
+      return exists(/databases/$(database)/documents/workspaceMembers/$(request.auth.uid + '_' + workspaceId));
+    }
+
+    function isWorkspaceOwnerByDoc(workspaceId) {
+      return exists(/databases/$(database)/documents/workspaces/$(workspaceId)) &&
+        (('ownerId' in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data &&
+          get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerId == request.auth.uid) ||
+         ('ownerUserId' in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data &&
+          get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerUserId == request.auth.uid));
+    }
+
+    function isWorkspaceMember(workspaceId) {
+      return isAuthenticated() && (
+        isDirectMember(workspaceId) ||
+        isGlobalMember(workspaceId) ||
+        isWorkspaceOwnerByDoc(workspaceId)
+      );
+    }
+
+    function getDirectMemberRole(workspaceId) {
+      return get(/databases/$(database)/documents/workspaces/$(workspaceId)/members/$(request.auth.uid)).data.role;
+    }
+
+    function getGlobalMemberRole(workspaceId) {
+      return get(/databases/$(database)/documents/workspaceMembers/$(request.auth.uid + '_' + workspaceId)).data.role;
+    }
+
+    function isOwnerOrAdmin(workspaceId) {
+      return isAuthenticated() && (
+        (isDirectMember(workspaceId) &&
+          getDirectMemberRole(workspaceId) in ['owner', 'admin', 'Owner', 'Admin']) ||
+        (isGlobalMember(workspaceId) &&
+          getGlobalMemberRole(workspaceId) in ['owner', 'admin', 'Owner', 'Admin']) ||
+        isWorkspaceOwnerByDoc(workspaceId)
+      );
+    }
+
+    function isNotViewer(workspaceId) {
+      return isWorkspaceMember(workspaceId) && (
+        isOwnerOrAdmin(workspaceId) ||
+        (isDirectMember(workspaceId) &&
+          !(getDirectMemberRole(workspaceId) in ['viewer', 'Viewer'])) ||
+        (isGlobalMember(workspaceId) &&
+          !(getGlobalMemberRole(workspaceId) in ['viewer', 'Viewer']))
+      );
+    }
+
+    // ===============================================================
+    // Domain Validators (Validator Function Pattern)
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields([
+        'uid', 'userId', 'email', 'firstName', 'lastName', 'displayName',
+        'photoUrl', 'avatarUrl', 'avatarInitials', 'timezone', 'role',
+        'activeWorkspaceId', 'accountStatus', 'emailVerified', 'isSuperAdmin',
+        'preferences', 'onboardingStatus', 'lastLoginAt', 'createdAt', 'updatedAt'
+      ]) &&
+      ('email' in data && isValidEmail(data.email)) &&
+      isValidOptionalString('firstName', 1, 100) &&
+      isValidOptionalString('lastName', 1, 100) &&
+      isValidOptionalString('displayName', 1, 150) &&
+      isValidOptionalString('avatarUrl', 1, 1000) &&
+      isValidOptionalString('photoUrl', 1, 1000) &&
+      isValidOptionalString('avatarInitials', 1, 10) &&
+      isValidOptionalString('timezone', 1, 64) &&
+      isValidOptionalString('activeWorkspaceId', 1, 128) &&
+      (!( 'accountStatus' in data ) || data.accountStatus in ['active', 'suspended', 'pending']) &&
+      isValidOptionalBool('emailVerified') &&
+      isValidOptionalBool('isSuperAdmin') &&
+      isValidOptionalMap('preferences') &&
+      (!( 'onboardingStatus' in data ) || data.onboardingStatus in ['pending', 'completed']) &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidWorkspace(data) {
+      return hasOnlyAllowedFields([
+        'workspaceId', 'name', 'workspaceName', 'slug', 'workspaceSlug',
+        'ownerId', 'ownerUserId', 'workspaceType', 'industry', 'country',
+        'timezone', 'currency', 'planId', 'workspaceStatus', 'createdAt', 'updatedAt'
+      ]) &&
+      (('name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 100) ||
+       ('workspaceName' in data && data.workspaceName is string && data.workspaceName.size() >= 2 && data.workspaceName.size() <= 100)) &&
+      (('ownerId' in data && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128) ||
+       ('ownerUserId' in data && data.ownerUserId is string && data.ownerUserId.size() >= 1 && data.ownerUserId.size() <= 128)) &&
+      isValidOptionalString('slug', 2, 100) &&
+      isValidOptionalString('workspaceSlug', 2, 100) &&
+      (!( 'workspaceType' in data ) || data.workspaceType in ['individual', 'startup', 'enterprise']) &&
+      isValidOptionalString('industry', 1, 100) &&
+      isValidOptionalString('country', 1, 100) &&
+      isValidOptionalString('timezone', 1, 64) &&
+      isValidOptionalString('currency', 1, 10) &&
+      ('planId' in data && data.planId in ['starter', 'growth', 'scale', 'Starter', 'Growth Pro', 'Venture Team']) &&
+      (!( 'workspaceStatus' in data ) || data.workspaceStatus in ['active', 'suspended', 'archived']) &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidWorkspaceMember(data) {
+      return hasOnlyAllowedFields([
+        'membershipId', 'workspaceId', 'userId', 'role',
+        'membershipStatus', 'status', 'invitedBy', 'joinedAt',
+        'name', 'email', 'createdAt', 'updatedAt'
+      ]) &&
+      validStringLength('workspaceId', 1, 128) &&
+      validStringLength('userId', 1, 128) &&
+      ('role' in data && data.role in ['owner', 'admin', 'member', 'viewer', 'Owner', 'Strategist', 'Brand Designer', 'Viewer']) &&
+      (!( 'membershipStatus' in data ) || data.membershipStatus in ['active', 'invited', 'revoked']) &&
+      (!( 'status' in data ) || data.status in ['active', 'invited', 'revoked', 'Active', 'Invited']) &&
+      isValidOptionalString('invitedBy', 1, 128) &&
+      isValidOptionalString('name', 1, 150) &&
+      (!( 'email' in data ) || isValidEmail(data.email)) &&
+      isValidTimestampOrDate('joinedAt') &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidBusinessBrain(data) {
+      return hasOnlyAllowedFields([
+        'businessName', 'tagline', 'industry', 'stage', 'location',
+        'website', 'foundedYear', 'overviewSummary', 'targetAudience',
+        'brandPositioning', 'valueProposition', 'businessModel', 'revenueModel',
+        'primaryGoals', 'products', 'personas', 'documents', 'decisions',
+        'history', 'lastUpdated', 'updatedAt', 'provenance', 'strategicMemory',
+        'version', 'marketingRestrictions', 'brandPersonality', 'brandVoice',
+        'productsAndServices', 'customerPersonas'
+      ]) &&
+      isValidOptionalString('businessName', 1, 200) &&
+      isValidOptionalString('tagline', 1, 300) &&
+      isValidOptionalString('industry', 1, 100) &&
+      isValidOptionalString('stage', 1, 60) &&
+      isValidOptionalString('location', 1, 150) &&
+      isValidOptionalString('website', 1, 300) &&
+      isValidOptionalString('foundedYear', 1, 10) &&
+      isValidOptionalString('overviewSummary', 1, 5000) &&
+      isValidOptionalString('targetAudience', 1, 3000) &&
+      isValidOptionalString('brandPositioning', 1, 3000) &&
+      isValidOptionalString('valueProposition', 1, 3000) &&
+      isValidOptionalString('businessModel', 1, 3000) &&
+      isValidOptionalString('revenueModel', 1, 3000) &&
+      isValidOptionalList('primaryGoals', 50) &&
+      isValidOptionalList('products', 100) &&
+      isValidOptionalList('personas', 50) &&
+      isValidOptionalList('documents', 100) &&
+      isValidOptionalList('decisions', 100) &&
+      isValidOptionalList('history', 100) &&
+      isValidOptionalMap('provenance') &&
+      isValidOptionalMap('strategicMemory') &&
+      isValidOptionalNumber('version', 1, 10000) &&
+      isValidTimestampOrDate('lastUpdated') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidProduct(data) {
+      return hasOnlyAllowedFields([
+        'id', 'productId', 'workspaceId', 'name', 'category',
+        'priceRange', 'normalizedPrices', 'description', 'marginEstimate',
+        'createdAt', 'updatedAt'
+      ]) &&
+      validStringLength('name', 1, 200) &&
+      isValidOptionalString('category', 1, 100) &&
+      isValidOptionalString('priceRange', 1, 100) &&
+      isValidOptionalList('normalizedPrices', 20) &&
+      isValidOptionalString('description', 1, 3000) &&
+      isValidOptionalString('marginEstimate', 1, 100) &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidPersona(data) {
+      return hasOnlyAllowedFields([
+        'id', 'personaId', 'workspaceId', 'name', 'segment',
+        'ageOrFirmographics', 'painPoints', 'buyingTriggers',
+        'willingnessToPay', 'createdAt', 'updatedAt'
+      ]) &&
+      validStringLength('name', 1, 200) &&
+      isValidOptionalString('segment', 1, 150) &&
+      isValidOptionalString('ageOrFirmographics', 1, 200) &&
+      isValidOptionalList('painPoints', 50) &&
+      isValidOptionalList('buyingTriggers', 50) &&
+      isValidOptionalString('willingnessToPay', 1, 100) &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidBrandIdentity(data) {
+      return hasOnlyAllowedFields([
+        'id', 'identityId', 'workspaceId', 'status', 'brandName',
+        'tagline', 'industry', 'positioningStatement', 'targetAudience',
+        'personalityTraits', 'attributes', 'visualDirection',
+        'selectedConceptId', 'concepts', 'palette', 'typography',
+        'guidelines', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidOptionalString('brandName', 1, 200) &&
+      isValidOptionalString('status', 1, 50) &&
+      isValidOptionalString('tagline', 1, 300) &&
+      isValidOptionalString('positioningStatement', 1, 3000) &&
+      isValidOptionalString('targetAudience', 1, 3000) &&
+      isValidOptionalString('visualDirection', 1, 3000) &&
+      isValidOptionalList('personalityTraits', 50) &&
+      isValidOptionalList('attributes', 50) &&
+      isValidOptionalList('concepts', 20) &&
+      isValidOptionalList('palette', 30) &&
+      isValidOptionalMap('typography') &&
+      isValidOptionalMap('guidelines') &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    // STRICT VIDEO EXCLUSION: Reject any video parameters
+    function isValidBrandAsset(data) {
+      return hasOnlyAllowedFields([
+        'id', 'assetId', 'workspaceId', 'title', 'name', 'category',
+        'folder', 'format', 'assetType', 'storagePath', 'fileSize',
+        'mimeType', 'svgContent', 'svgMarkup', 'createdAt', 'updatedAt',
+        'status', 'headlineText', 'subtext', 'accentHex', 'darkVariant',
+        'aiGenerated', 'aiPrompt', 'aiModel', 'slides', 'caption',
+        'hashtags', 'artDirectionNote', 'generationMetadata', 'version', 'createdBy'
+      ]) &&
+      (('title' in data && data.title is string && data.title.size() >= 1 && data.title.size() <= 200) ||
+       ('name' in data && data.name is string && data.name.size() >= 1 && data.name.size() <= 200)) &&
+      ('category' in data && data.category is string &&
+        !(data.category in ['Video', 'video', 'Reel', 'reels', 'TikTok', 'Shorts', 'video_generation'])) &&
+      !('videoUrl' in data) &&
+      !('video' in data) &&
+      isValidOptionalString('folder', 1, 100) &&
+      isValidOptionalString('format', 1, 20) &&
+      isValidOptionalString('assetType', 1, 20) &&
+      isValidOptionalString('storagePath', 1, 500) &&
+      isValidOptionalNumber('fileSize', 0, 52428800) && // max 50MB
+      isValidOptionalString('svgContent', 1, 500000) && // max 500KB inline SVG
+      isValidOptionalString('svgMarkup', 1, 500000) &&
+      isValidOptionalString('headlineText', 1, 500) &&
+      isValidOptionalString('subtext', 1, 1000) &&
+      isValidOptionalString('accentHex', 1, 10) &&
+      isValidOptionalBool('darkVariant') &&
+      isValidOptionalBool('aiGenerated') &&
+      isValidOptionalString('caption', 1, 5000) &&
+      isValidOptionalList('slides', 10) &&
+      isValidOptionalList('hashtags', 50) &&
+      (!( 'status' in data ) || data.status in ['Approved', 'Draft', 'Archived', 'active', 'archived']) &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidMarketingStrategy(data) {
+      return hasOnlyAllowedFields([
+        'id', 'strategyId', 'workspaceId', 'whereToCompete',
+        'whereToDifferentiate', 'whatToAvoid', 'targetSegment',
+        'potentialMoat', 'nextMoves', 'savedToBrain', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidOptionalString('whereToCompete', 1, 3000) &&
+      isValidOptionalString('whereToDifferentiate', 1, 3000) &&
+      isValidOptionalString('whatToAvoid', 1, 3000) &&
+      isValidOptionalString('targetSegment', 1, 3000) &&
+      isValidOptionalString('potentialMoat', 1, 3000) &&
+      isValidOptionalList('nextMoves', 50) &&
+      isValidOptionalBool('savedToBrain') &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    // STRICT VIDEO EXCLUSION: Reject video platforms or video content
+    function isValidContentItem(data) {
+      return hasOnlyAllowedFields([
+        'id', 'contentId', 'workspaceId', 'platform', 'title',
+        'caption', 'hashtags', 'postingRationale', 'slideCount',
+        'slides', 'truthScore', 'status', 'createdAt', 'updatedAt',
+        'createdBy', 'versions'
+      ]) &&
+      validStringLength('title', 1, 300) &&
+      ('platform' in data && data.platform is string &&
+        !(data.platform in ['video', 'reels', 'Reels', 'TikTok', 'YouTube Shorts', 'video_generation'])) &&
+      !('videoUrl' in data) &&
+      !('video' in data) &&
+      isValidOptionalString('caption', 1, 10000) &&
+      isValidOptionalList('hashtags', 50) &&
+      isValidOptionalString('postingRationale', 1, 3000) &&
+      isValidOptionalNumber('slideCount', 1, 10) &&
+      isValidOptionalList('slides', 10) &&
+      isValidOptionalNumber('truthScore', 0, 100) &&
+      (!( 'status' in data ) || data.status in ['draft', 'approved', 'scheduled', 'published']) &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidCompetitor(data) {
+      return hasOnlyAllowedFields([
+        'id', 'competitorId', 'workspaceId', 'name', 'website',
+        'category', 'industry', 'geography', 'location', 'discoveryMethod',
+        'positioning', 'priceRange', 'pricingRange', 'researchStatus',
+        'lastResearched', 'threatLevel', 'marketShareBand', 'marketShare',
+        'xValueScore', 'yDiffScore', 'overview', 'productsAndServices',
+        'pricingModel', 'brandPositioningDetail', 'websiteAnalysis',
+        'marketingStrategy', 'customerReviews', 'strengths', 'weaknesses',
+        'historicalChanges', 'monitoringEnabled', 'isMonitored',
+        'monitoringFrequency', 'monitoredCategories', 'createdAt', 'updatedAt'
+      ]) &&
+      validStringLength('name', 1, 200) &&
+      isValidOptionalString('website', 1, 300) &&
+      isValidOptionalString('category', 1, 150) &&
+      isValidOptionalString('industry', 1, 150) &&
+      isValidOptionalString('positioning', 1, 3000) &&
+      isValidOptionalString('priceRange', 1, 150) &&
+      isValidOptionalString('pricingRange', 1, 150) &&
+      (!( 'threatLevel' in data ) || data.threatLevel in ['high', 'medium', 'low', 'High', 'Medium', 'Low']) &&
+      isValidOptionalList('strengths', 50) &&
+      isValidOptionalList('weaknesses', 50) &&
+      isValidOptionalBool('monitoringEnabled') &&
+      isValidOptionalBool('isMonitored') &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidResearchReport(data) {
+      return hasOnlyAllowedFields([
+        'id', 'reportId', 'workspaceId', 'title', 'subtitle',
+        'reportType', 'ideaSummary', 'industry', 'targetMarket',
+        'geography', 'depth', 'createdAt', 'updatedAt', 'overallConfidence',
+        'viabilitySignal', 'savedToBrain', 'isSavedToBrain', 'executiveSummary',
+        'marketOverview', 'tamSamSom', 'marketDemand', 'customerSegments',
+        'customerPainPoints', 'competitorLandscapeSummary', 'pricingAnalysis',
+        'marketOpportunities', 'businessModelOptions', 'revenuePotential',
+        'startupCostEstimates', 'risksAndChallenges', 'validationExperiments',
+        'finalRecommendation', 'sources', 'sourceReferences', 'truthCheck',
+        'tamValue', 'samValue', 'somValue', 'tamBillion', 'samSharePct',
+        'somSharePct', 'cagr', 'growthDrivers', 'assumptions', 'status', 'createdBy'
+      ]) &&
+      validStringLength('title', 1, 300) &&
+      isValidOptionalString('ideaSummary', 1, 5000) &&
+      isValidOptionalString('industry', 1, 200) &&
+      isValidOptionalString('depth', 1, 100) &&
+      isValidOptionalString('executiveSummary', 1, 15000) &&
+      (!( 'status' in data ) || data.status in ['completed', 'generating', 'failed']) &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidRecommendation(data) {
+      return hasOnlyAllowedFields([
+        'id', 'recommendationId', 'workspaceId', 'whatToDo', 'title',
+        'whyToDoIt', 'description', 'supportingResearch', 'expectedBenefit',
+        'difficulty', 'estimatedCost', 'priority', 'status', 'department',
+        'impact', 'confidence', 'reasoning', 'relatedGoalId', 'createdAt', 'updatedAt'
+      ]) &&
+      (('whatToDo' in data && data.whatToDo is string && data.whatToDo.size() >= 1 && data.whatToDo.size() <= 300) ||
+       ('title' in data && data.title is string && data.title.size() >= 1 && data.title.size() <= 300)) &&
+      isValidOptionalString('whyToDoIt', 1, 3000) &&
+      isValidOptionalString('description', 1, 3000) &&
+      isValidOptionalString('expectedBenefit', 1, 3000) &&
+      ('status' in data && data.status in ['pending', 'accepted', 'rejected']) &&
+      (!( 'impact' in data ) || data.impact in ['high', 'medium', 'low', 'High', 'Medium', 'Low']) &&
+      isValidOptionalNumber('confidence', 0, 100) &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    function isValidMarketingTask(data) {
+      return hasOnlyAllowedFields([
+        'id', 'taskId', 'workspaceId', 'title', 'description',
+        'whyItMatters', 'expectedOutcome', 'priority', 'estimatedMinutes',
+        'dueDate', 'department', 'status', 'isTodayPriority', 'notes',
+        'assignedUserId', 'relatedGoalId', 'relatedExperimentId',
+        'completedAt', 'createdBy', 'createdAt', 'updatedAt'
+      ]) &&
+      validStringLength('title', 1, 300) &&
+      ('status' in data && data.status in ['pending', 'in_progress', 'completed', 'skipped']) &&
+      isValidOptionalString('description', 1, 5000) &&
+      isValidOptionalString('whyItMatters', 1, 2000) &&
+      isValidOptionalString('expectedOutcome', 1, 2000) &&
+      (!( 'priority' in data ) || data.priority in ['high', 'medium', 'low', 'High', 'Medium', 'Low']) &&
+      isValidOptionalNumber('estimatedMinutes', 0, 10000) &&
+      isValidOptionalBool('isTodayPriority') &&
+      isValidTimestampOrDate('dueDate') &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    // STRICT VIDEO EXCLUSION: Reject video platforms or video scheduled posts
+    function isValidScheduledPost(data) {
+      return hasOnlyAllowedFields([
+        'id', 'scheduledPostId', 'workspaceId', 'contentId',
+        'platform', 'scheduledTime', 'status', 'createdAt', 'updatedAt'
+      ]) &&
+      ('platform' in data && data.platform is string &&
+        !(data.platform in ['video', 'reels', 'Reels', 'TikTok', 'YouTube Shorts', 'video_generation'])) &&
+      !('videoUrl' in data) &&
+      !('video' in data) &&
+      ('status' in data && data.status in ['scheduled', 'publishing', 'published', 'failed', 'cancelled']) &&
+      isValidTimestampOrDate('scheduledTime') &&
+      isValidTimestampOrDate('createdAt') &&
+      isValidTimestampOrDate('updatedAt');
+    }
+
+    // ===============================================================
+    // Root Collection: Users
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidUser(request.resource.data) &&
+                       (!('isSuperAdmin' in request.resource.data) || request.resource.data.isSuperAdmin == false);
+      allow update: if isOwner(userId) &&
+                       isValidUser(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['isSuperAdmin', 'createdAt']) &&
+                       uidNotModified();
+      allow delete: if isOwner(userId);
+    }
+
+    // ===============================================================
+    // Root Collection: Workspace Members (Composite key: uid_workspaceId)
+    // ===============================================================
+
+    match /workspaceMembers/{memberId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isOwnerOrAdmin(resource.data.workspaceId)
+      );
+      allow create: if isOwnerOrAdmin(request.resource.data.workspaceId) &&
+                       isValidWorkspaceMember(request.resource.data);
+      allow update: if isOwnerOrAdmin(resource.data.workspaceId) &&
+                       isValidWorkspaceMember(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['membershipId', 'workspaceId', 'userId', 'createdAt']) &&
+                       (!(request.auth.uid == resource.data.userId) || request.resource.data.role == resource.data.role);
+      allow delete: if isOwnerOrAdmin(resource.data.workspaceId);
+    }
+
+    // ===============================================================
+    // Root Collection: Workspaces & Subcollections
+    // ===============================================================
+
+    match /workspaces/{workspaceId} {
+      allow read: if isAuthenticated() && (
+        isDirectMember(workspaceId) ||
+        isGlobalMember(workspaceId) ||
+        (('ownerId' in resource.data && resource.data.ownerId == request.auth.uid) ||
+         ('ownerUserId' in resource.data && resource.data.ownerUserId == request.auth.uid))
+      );
+      allow create: if isAuthenticated() &&
+                       (('ownerId' in request.resource.data && request.resource.data.ownerId == request.auth.uid) ||
+                        ('ownerUserId' in request.resource.data && request.resource.data.ownerUserId == request.auth.uid)) &&
+                       isValidWorkspace(request.resource.data);
+      allow update: if isOwnerOrAdmin(workspaceId) &&
+                       isValidWorkspace(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['workspaceId', 'ownerId', 'ownerUserId', 'createdAt']);
+      allow delete: if isAuthenticated() && (
+        ('ownerId' in resource.data && resource.data.ownerId == request.auth.uid) ||
+        ('ownerUserId' in resource.data && resource.data.ownerUserId == request.auth.uid) ||
+        (isGlobalMember(workspaceId) && getGlobalMemberRole(workspaceId) in ['owner', 'Owner']) ||
+        (isDirectMember(workspaceId) && getDirectMemberRole(workspaceId) in ['owner', 'Owner'])
+      );
+
+      // --- Subcollection: Direct Members ---
+      match /members/{memberUserId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update, delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Business Brain (Root intelligence doc) ---
+      match /businessBrain/{docId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isOwnerOrAdmin(workspaceId) && isValidBusinessBrain(request.resource.data);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Products Catalog ---
+      match /products/{productId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId) && isValidProduct(request.resource.data);
+        allow update: if isNotViewer(workspaceId) &&
+                         isValidProduct(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'productId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Customer Personas ---
+      match /personas/{personaId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId) && isValidPersona(request.resource.data);
+        allow update: if isNotViewer(workspaceId) &&
+                         isValidPersona(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'personaId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Brand Identities ---
+      match /brandIdentities/{identityId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isOwnerOrAdmin(workspaceId) && isValidBrandIdentity(request.resource.data);
+        allow update: if isOwnerOrAdmin(workspaceId) &&
+                         isValidBrandIdentity(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'identityId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Brand Assets (Vector SVG, Collateral, NO VIDEO) ---
+      match /brandAssets/{assetId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId) && isValidBrandAsset(request.resource.data);
+        allow update: if isNotViewer(workspaceId) &&
+                         isValidBrandAsset(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'assetId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Marketing Strategies ---
+      match /marketingStrategies/{strategyId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isOwnerOrAdmin(workspaceId) && isValidMarketingStrategy(request.resource.data);
+        allow update: if isOwnerOrAdmin(workspaceId) &&
+                         isValidMarketingStrategy(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'strategyId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Content Items (Carousels, Copy, NO VIDEO) ---
+      match /contentItems/{contentId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId) && isValidContentItem(request.resource.data);
+        allow update: if isNotViewer(workspaceId) &&
+                         isValidContentItem(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'contentId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+
+        match /versions/{versionId} {
+          allow read: if isWorkspaceMember(workspaceId);
+          allow create, update: if isNotViewer(workspaceId);
+          allow delete: if isOwnerOrAdmin(workspaceId);
+        }
+      }
+
+      // --- Subcollection: Competitors & Market Watch ---
+      match /competitors/{competitorId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId) && isValidCompetitor(request.resource.data);
+        allow update: if isNotViewer(workspaceId) &&
+                         isValidCompetitor(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'competitorId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+
+        match /snapshots/{snapshotId} {
+          allow read: if isWorkspaceMember(workspaceId);
+          allow create, update: if isNotViewer(workspaceId);
+          allow delete: if isOwnerOrAdmin(workspaceId);
+        }
+      }
+
+      // --- Subcollection: Research Reports (Market Dossiers) ---
+      match /researchReports/{reportId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isOwnerOrAdmin(workspaceId) && isValidResearchReport(request.resource.data);
+        allow update: if isOwnerOrAdmin(workspaceId) &&
+                         isValidResearchReport(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'reportId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Recommendations ---
+      match /recommendations/{recommendationId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isOwnerOrAdmin(workspaceId) && isValidRecommendation(request.resource.data);
+        allow update: if isOwnerOrAdmin(workspaceId) &&
+                         isValidRecommendation(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'recommendationId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Marketing Tasks ---
+      match /marketingTasks/{taskId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId) && isValidMarketingTask(request.resource.data);
+        allow update: if isNotViewer(workspaceId) &&
+                         isValidMarketingTask(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'taskId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Scheduled Posts (NO VIDEO) ---
+      match /scheduledPosts/{scheduledPostId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId) && isValidScheduledPost(request.resource.data);
+        allow update: if isNotViewer(workspaceId) &&
+                         isValidScheduledPost(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['id', 'scheduledPostId', 'createdAt', 'workspaceId']);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Analytics Snapshots (Read-only for members; write DENIED) ---
+      match /analyticsSnapshots/{snapshotId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow write: if false; // Computed server-side only
+      }
+
+      // --- Subcollection: Integrations ---
+      match /integrations/{integrationId} {
+        allow read, write: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Subcollection: Credit Wallet (Client read-only; writes strictly DENIED) ---
+      match /creditWallet/{docId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow write: if false; // Server-side Two-Phase Reservation Protocol only
+
+        match /transactions/{txId} {
+          allow read: if isWorkspaceMember(workspaceId);
+          allow write: if false; // Immutable ledger written by backend Cloud Functions
+        }
+
+        match /reservations/{reservationId} {
+          allow read: if isWorkspaceMember(workspaceId);
+          allow write: if false; // Two-phase lock handled by server Admin SDK
+        }
+      }
+
+      // --- Subcollection: Subscriptions (Client read-only; writes strictly DENIED) ---
+      match /subscriptions/{docId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow write: if false; // Webhooks and backend subscription management only
+      }
+    }
+
+    // ===============================================================
+    // Server-Only Collections (Client Read/Write Strictly DENIED)
+    // ===============================================================
+
+    match /paymentOrders/{orderId} {
+      allow read, write: if false; // Cashfree / Stripe webhooks via Cloud Functions
+    }
+
+    match /aiUsageLogs/{logId} {
+      allow read, write: if false; // FinOps token monitoring
+    }
+
+    match /auditLogs/{logId} {
+      allow read, write: if false; // Immutable audit trails
+    }
+
+    match /adminActions/{actionId} {
+      allow read, write: if false; // Super-admin operations
+    }
+
+    match /socialAccounts/{accountId} {
+      allow read, write: if false; // Encrypted AES-256 tokens accessed via server only
+    }
+
+    // ===============================================================
+    // Global Catch-All: Deny by Default
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

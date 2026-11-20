@@ -88,6 +88,79 @@ export const FluidTransition: React.FC<{
 };
 
 /**
+ * StaggeredLiquidContainer
+ * Orchestrates a calm, staggered entrance cascade for dashboard cards and metric surfaces.
+ */
+export const StaggeredLiquidContainer: React.FC<{
+  children: React.ReactNode;
+  staggerDelay?: number;
+  initialDelay?: number;
+  className?: string;
+}> = ({ children, staggerDelay = 0.07, initialDelay = 0.05, className = '' }) => {
+  const reduced = useReducedMotion();
+
+  if (reduced) {
+    return <div className={className}>{children}</div>;
+  }
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: staggerDelay,
+            delayChildren: initialDelay,
+          },
+        },
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+/**
+ * StaggeredLiquidItem
+ * Individual card/surface that gently rises and fades in with BrainWise liquid easing.
+ */
+export const StaggeredLiquidItem: React.FC<{
+  children: React.ReactNode;
+  yOffset?: number;
+  duration?: number;
+  className?: string;
+}> = ({ children, yOffset = 14, duration = 0.42, className = '' }) => {
+  const reduced = useReducedMotion();
+
+  if (reduced) {
+    return <div className={className}>{children}</div>;
+  }
+
+  return (
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: yOffset },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: {
+            duration,
+            ease: BW_EASE,
+          },
+        },
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+/**
  * MorphingPanel
  * Animated surface reveal/exit used in modals, studio tabs, sprint switchers, and drawers.
  */

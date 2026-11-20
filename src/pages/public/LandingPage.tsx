@@ -959,45 +959,51 @@ export const LandingPage: React.FC = () => {
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
               {
-                name: 'Founder Starter',
-                audience: 'For validating ideas & early launch',
-                monthly: 29,
-                annual: 23,
+                name: 'Starter',
+                audience: 'For solo founders & early idea validation',
+                monthly: 2763,
+                annual: 2210,
                 featured: false,
                 features: [
+                  '800 credits refreshed monthly',
                   '1 Business Brain workspace',
-                  '5 Idea Intelligence dossiers / mo',
+                  '10 Idea Intelligence dossiers / mo',
                   '5 tracked competitors in Market Watch',
-                  'Brand Studio identity & 25 assets',
-                  '30-day Growth Planner sprint',
+                  '50 Brand Studio assets & SVG collateral',
+                  '3 active external platform integrations',
                 ],
               },
               {
-                name: 'Growth Studio',
-                audience: 'For active startups & small businesses',
-                monthly: 79,
-                annual: 63,
+                name: 'Professional',
+                audience: 'Hero tier for scaling brands & product teams',
+                monthly: 6999,
+                annual: 5599,
                 featured: true,
                 features: [
-                  '3 Business Brain workspaces',
-                  'Unlimited Idea & Competitive dossiers',
-                  '25 daily monitored competitors',
-                  'Full Collateral & Social Media Studio',
-                  'Experiments, 90-day roadmap & digests',
+                  '3,000 credits refreshed monthly',
+                  '3 Business Brain workspaces (5 team seats)',
+                  'Unlimited Idea & Market Intelligence',
+                  '20 tracked competitors & teardowns',
+                  '250 Brand Studio assets & carousels',
+                  'All 9 external integrations & automations',
+                  'Priority Gemini 2.5 Flash / Pro reasoning',
+                  'White-label executive PDF exports & daily briefs',
                 ],
               },
               {
-                name: 'Executive Team',
-                audience: 'For multi-brand operators & agencies',
-                monthly: 189,
-                annual: 151,
+                name: 'Business Enterprise',
+                audience: 'For multi-brand operators & high-velocity teams',
+                monthly: 16499,
+                annual: 13199,
                 featured: false,
                 features: [
-                  '10 Business Brain workspaces',
-                  'Up to 12 team seats & shared decisions',
-                  'Custom scheduled intelligence reports',
-                  'Exportable white-label PDF dossiers',
-                  'Dedicated onboarding & priority credits',
+                  '10,000 credits refreshed monthly',
+                  '10 Business Brain workspaces (20 team seats)',
+                  'Unlimited dossiers & market scans',
+                  '100 actively tracked competitors',
+                  '1,000 Brand Studio assets & marketing collateral',
+                  'Unlimited automations & custom triggers',
+                  'Dedicated priority model throughput & VIP support',
                 ],
               },
             ].map((plan) => {
@@ -1023,7 +1029,9 @@ export const LandingPage: React.FC = () => {
                     </div>
                     <h3 className={`mt-1.5 ${typeClass.h4} font-bold`}>{plan.name}</h3>
                     <div className="mt-5 flex items-baseline gap-1">
-                      <span className={`${typeClass.displaySm} tabular-nums`}>${price}</span>
+                      <span className={`${typeClass.displaySm} tabular-nums`}>
+                        ₹{price.toLocaleString()}
+                      </span>
                       <span
                         className={`${typeClass.monoMeta} ${
                           plan.featured ? 'text-[#A8A8A2]' : 'text-[#858585]'

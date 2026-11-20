@@ -1,0 +1,18 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Deny all by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // Workspace assets
+    match /workspaces/{workspaceId}/{allPaths=**} {
+      // Direct client upload is restricted; uploads & downloads are coordinated via Cloud Functions signed URLs
+      // In authenticated client scenarios, only active workspace members may read assets
+      allow read: if request.auth != null && 
+        firestore.exists(/databases/(default)/documents/workspaces/$(workspaceId)/members/$(request.auth.uid));
+      allow write: if false; // Only signed URLs or Admin SDK can write
+    }
+  }
+}

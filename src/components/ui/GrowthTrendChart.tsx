@@ -24,6 +24,7 @@ import {
   type ResolvedGrowthMilestone,
   buildEditorialTickValues,
   computeGrowthTrendSummary,
+  findMilestoneForPoint,
   formatGrowthMetricValue,
   formatSignedDeltaPercent,
   resolveChartMilestones,
@@ -38,7 +39,9 @@ export type {
   GrowthTrendMilestonesMap,
   GrowthTrendPoint,
   GrowthTrendSeriesMap,
+  ResolvedGrowthMilestone,
 };
+export { findMilestoneForPoint };
 
 export interface GrowthTrendChartProps {
   /** Base point series (used for the active range or as anchor when rangeSeries is omitted). */
@@ -51,6 +54,14 @@ export interface GrowthTrendChartProps {
   rangeMilestones?: GrowthTrendMilestonesMap;
   /** Toggle rendering of dashed vertical milestone indicator lines & `.bw-type-mono-meta` labels (default true). */
   showMilestones?: boolean;
+  /** Toggle interactive annotation markers on significant data points (defaults to true). */
+  showAnnotations?: boolean;
+  /** Callback fired when an annotation marker is hovered or unhovered. */
+  onAnnotationHover?: (milestone: ResolvedGrowthMilestone | null) => void;
+  /** Callback fired when an annotation marker is clicked/selected. */
+  onAnnotationClick?: (milestone: ResolvedGrowthMilestone) => void;
+  /** Controlled active/selected milestone X label. */
+  activeMilestoneX?: string | null;
   /** Controlled time range selection. */
   range?: GrowthTimeRange;
   /** Uncontrolled initial time range (default `'30d'`). */
@@ -183,7 +194,53 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
         </div>
       )}
 
-      {point?.detail && (
+      {milestone ? (
+        <div
+          data-milestone-tooltip-card="true"
+          className={`mt-2.5 rounded-[10px] border p-2.5 transition-all ${
+            dark
+              ? 'bg-white/[0.05] border-white/[0.1] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
+              : 'bg-[#F9F9F7] border-[#ECECE8] text-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: 'var(--bw-orange)' }}
+              />
+              <span
+                className={`${typeClass.overline} tracking-wider text-[9.5px] truncate ${
+                  dark ? 'text-[#FF9A45]' : 'text-[#C44D00]'
+                }`}
+              >
+                Milestone Event
+              </span>
+            </div>
+            {milestone.impact && (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[9px] font-mono-num font-semibold shrink-0 border ${
+                  dark
+                    ? 'bg-[#FF9A45]/15 border-[#FF9A45]/30 text-[#FF9A45]'
+                    : 'bg-[#FFF3EB] border-[#FFD2B3] text-[#C44D00]'
+                }`}
+              >
+                {milestone.impact}
+              </span>
+            )}
+          </div>
+          <div className="font-semibold text-xs leading-snug">{milestone.label}</div>
+          {(milestone.detail || point?.detail) && (
+            <div
+              className={`mt-1 text-[11px] leading-relaxed ${
+                dark ? 'text-[#B8B8B2]' : 'text-[#5C5C58]'
+              }`}
+            >
+              {milestone.detail || point?.detail}
+            </div>
+          )}
+        </div>
+      ) : point?.detail ? (
         <div
           className={`mt-1.5 pt-1.5 border-t text-[11px] ${
             dark ? 'border-white/[0.08] text-[#A8A8A2]' : 'border-[#EFEFEB] text-[#5C5C58]'
@@ -191,7 +248,7 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
         >
           {point.detail}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
@@ -200,20 +257,33 @@ interface MilestoneSvgLabelProps {
   viewBox?: { x?: number; y?: number; width?: number; height?: number };
   milestone: ResolvedGrowthMilestone;
   dark: boolean;
+  isHovered?: boolean;
+  isActive?: boolean;
+  onHover?: (milestone: ResolvedGrowthMilestone | null) => void;
+  onClick?: (milestone: ResolvedGrowthMilestone) => void;
 }
 
 /**
  * Editorial SVG milestone annotation anchored cleanly above the dashed vertical stem
  * using `.bw-type-mono-meta` typography (`--bw-font-mono`, `--bw-text-step-n1`).
+ * Interactive: hoverable and clickable to reveal rich milestone details.
  */
-const MilestoneSvgLabel: React.FC<MilestoneSvgLabelProps> = ({ viewBox, milestone, dark }) => {
+const MilestoneSvgLabel: React.FC<MilestoneSvgLabelProps> = ({
+  viewBox,
+  milestone,
+  dark,
+  isHovered = false,
+  isActive = false,
+  onHover,
+  onClick,
+}) => {
   if (!viewBox || typeof viewBox.x !== 'number' || typeof viewBox.y !== 'number') {
     return null;
   }
 
   const x = viewBox.x;
   const topY = viewBox.y;
-  const isAccent = milestone.tone === 'accent';
+  const isAccent = milestone.tone === 'accent' || isHovered || isActive;
   const dotFill = isAccent
     ? 'var(--bw-orange)'
     : dark
@@ -227,17 +297,42 @@ const MilestoneSvgLabel: React.FC<MilestoneSvgLabelProps> = ({ viewBox, mileston
 
   return (
     <g
+      tabIndex={0}
+      role="button"
+      aria-label={`Milestone: ${milestone.label}. ${milestone.detail || ''}`}
       data-milestone-marker={milestone.xLabel}
       data-milestone-label={milestone.label}
-      pointerEvents="none"
+      data-milestone-hovered={isHovered ? 'true' : 'false'}
+      className="cursor-pointer outline-none focus:outline-none"
+      onMouseEnter={() => onHover?.(milestone)}
+      onMouseLeave={() => onHover?.(null)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(milestone);
+      }}
+      onFocus={() => onHover?.(milestone)}
+      onBlur={() => onHover?.(null)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.(milestone);
+        }
+      }}
     >
-      <circle cx={x} cy={topY} r={2.25} fill={dotFill} />
+      <circle
+        cx={x}
+        cy={topY}
+        r={isHovered || isActive ? 3.5 : 2.25}
+        fill={dotFill}
+        className="transition-all duration-150"
+      />
       <text
         x={x + xOffset}
         y={topY - 9}
         textAnchor={textAnchor}
         fill={textFill}
-        className={typeClass.monoMeta}
+        className={`${typeClass.monoMeta} transition-colors select-none`}
+        style={{ fontWeight: isHovered || isActive ? 600 : 500 }}
       >
         {milestone.label}
       </text>
@@ -252,6 +347,11 @@ interface EditorialSeriesDotProps {
   total: number;
   dark: boolean;
   showAllPointDots: boolean;
+  milestone?: ResolvedGrowthMilestone;
+  isHovered?: boolean;
+  isActive?: boolean;
+  onHover?: (milestone: ResolvedGrowthMilestone | null) => void;
+  onClick?: (milestone: ResolvedGrowthMilestone) => void;
 }
 
 const EditorialSeriesDot: React.FC<EditorialSeriesDotProps> = ({
@@ -261,11 +361,87 @@ const EditorialSeriesDot: React.FC<EditorialSeriesDotProps> = ({
   total,
   dark,
   showAllPointDots,
+  milestone,
+  isHovered = false,
+  isActive = false,
+  onHover,
+  onClick,
 }) => {
   if (typeof cx !== 'number' || typeof cy !== 'number' || typeof index !== 'number') {
     return null;
   }
 
+  // Interactive Ceramic Annotation Marker on significant data points
+  if (milestone) {
+    const isAccent = milestone.tone === 'accent' || isHovered || isActive;
+    const auraRadius = isHovered || isActive ? 13 : 9;
+    const outerRadius = isHovered || isActive ? 6.5 : 5.5;
+    const innerRadius = isHovered || isActive ? 3 : 2.25;
+
+    return (
+      <g
+        tabIndex={0}
+        role="button"
+        aria-label={`Milestone: ${milestone.label}. ${milestone.detail || ''}`}
+        data-annotation-marker={milestone.xLabel}
+        data-annotation-active={isHovered || isActive ? 'true' : 'false'}
+        data-annotation-tone={milestone.tone}
+        className="cursor-pointer outline-none focus:outline-none"
+        onMouseEnter={() => onHover?.(milestone)}
+        onMouseLeave={() => onHover?.(null)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.(milestone);
+        }}
+        onFocus={() => onHover?.(milestone)}
+        onBlur={() => onHover?.(null)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick?.(milestone);
+          }
+        }}
+      >
+        {/* Soft Ceramic Beacon Aura */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={auraRadius}
+          fill="var(--bw-orange)"
+          fillOpacity={isHovered || isActive ? (dark ? 0.35 : 0.22) : dark ? 0.18 : 0.1}
+          style={{ transition: 'all 0.15s ease' }}
+        />
+
+        {/* Tactile Ceramic Ring */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={outerRadius}
+          fill={dark ? '#1D1D1B' : '#FFFFFF'}
+          stroke={
+            isAccent
+              ? 'var(--bw-orange)'
+              : dark
+                ? 'rgba(255, 255, 255, 0.7)'
+                : 'rgba(23, 23, 23, 0.6)'
+          }
+          strokeWidth={isHovered || isActive ? 2.25 : 1.75}
+          style={{ transition: 'all 0.15s ease' }}
+        />
+
+        {/* High-Precision Core Pin */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={innerRadius}
+          fill={isAccent ? 'var(--bw-orange)' : dark ? '#FFFFFF' : '#171717'}
+          style={{ transition: 'all 0.15s ease' }}
+        />
+      </g>
+    );
+  }
+
+  // Terminal Point Dot
   if (index === total - 1) {
     return (
       <g aria-hidden="true" data-terminal-dot="true">
@@ -483,6 +659,10 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   milestones,
   rangeMilestones,
   showMilestones = true,
+  showAnnotations = true,
+  onAnnotationHover,
+  onAnnotationClick,
+  activeMilestoneX: controlledActiveMilestoneX,
   range: controlledRange,
   defaultRange = '30d',
   onRangeChange,
@@ -510,6 +690,8 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   const [internalRange, setInternalRange] = useState<GrowthTimeRange>(defaultRange);
   const [internalCurveMode, setInternalCurveMode] = useState<GrowthCurveMode>(defaultCurveMode);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [hoveredMilestoneX, setHoveredMilestoneX] = useState<string | null>(null);
+  const [selectedMilestoneX, setSelectedMilestoneX] = useState<string | null>(null);
 
   const activeRange = controlledRange ?? internalRange;
   const activeCurveMode = controlledCurveMode ?? internalCurveMode;
@@ -518,6 +700,8 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   const handleSelectRange = (nextRange: GrowthTimeRange) => {
     if (nextRange === activeRange) return;
     setHoveredIndex(null);
+    setHoveredMilestoneX(null);
+    setSelectedMilestoneX(null);
     if (controlledRange === undefined) {
       setInternalRange(nextRange);
     }
@@ -562,6 +746,24 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
     }
     return map;
   }, [resolvedMilestones]);
+
+  const activeMilestone = useMemo(() => {
+    const targetX = controlledActiveMilestoneX ?? hoveredMilestoneX ?? selectedMilestoneX;
+    return targetX ? milestonesByX.get(targetX) : null;
+  }, [controlledActiveMilestoneX, hoveredMilestoneX, selectedMilestoneX, milestonesByX]);
+
+  const handleAnnotationHover = (milestone: ResolvedGrowthMilestone | null) => {
+    setHoveredMilestoneX(milestone?.xLabel ?? null);
+    if (milestone) {
+      setHoveredIndex(milestone.pointIndex);
+    }
+    onAnnotationHover?.(milestone);
+  };
+
+  const handleAnnotationClick = (milestone: ResolvedGrowthMilestone) => {
+    setSelectedMilestoneX((prev) => (prev === milestone.xLabel ? null : milestone.xLabel));
+    onAnnotationClick?.(milestone);
+  };
 
   const summary = useMemo(() => computeGrowthTrendSummary(resolvedPoints), [resolvedPoints]);
   const yTicks = useMemo(() => buildEditorialTickValues(summary.yDomain), [summary.yDomain]);
@@ -681,26 +883,39 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                   />
                 )}
 
-                {resolvedMilestones.map((m) => (
-                  <ReferenceLine
-                    key={`milestone-${activeRange}-${m.xLabel}`}
-                    x={m.xLabel}
-                    stroke={
-                      m.tone === 'accent'
-                        ? dark
-                          ? 'rgba(255, 154, 69, 0.42)'
-                          : 'rgba(255, 116, 23, 0.38)'
-                        : dark
-                          ? 'rgba(255, 255, 255, 0.2)'
-                          : 'rgba(23, 23, 23, 0.18)'
-                    }
-                    strokeWidth={1}
-                    strokeDasharray="2.5 3.5"
-                    label={(labelProps) => (
-                      <MilestoneSvgLabel viewBox={labelProps.viewBox} milestone={m} dark={dark} />
-                    )}
-                  />
-                ))}
+                {resolvedMilestones.map((m) => {
+                  const isHovered =
+                    hoveredMilestoneX === m.xLabel || activeMilestone?.xLabel === m.xLabel;
+                  const isSelected = selectedMilestoneX === m.xLabel;
+                  return (
+                    <ReferenceLine
+                      key={`milestone-${activeRange}-${m.xLabel}`}
+                      x={m.xLabel}
+                      stroke={
+                        m.tone === 'accent' || isHovered || isSelected
+                          ? dark
+                            ? 'rgba(255, 154, 69, 0.48)'
+                            : 'rgba(255, 116, 23, 0.44)'
+                          : dark
+                            ? 'rgba(255, 255, 255, 0.2)'
+                            : 'rgba(23, 23, 23, 0.18)'
+                      }
+                      strokeWidth={isHovered || isSelected ? 1.5 : 1}
+                      strokeDasharray="2.5 3.5"
+                      label={(labelProps) => (
+                        <MilestoneSvgLabel
+                          viewBox={labelProps.viewBox}
+                          milestone={m}
+                          dark={dark}
+                          isHovered={isHovered}
+                          isActive={isSelected}
+                          onHover={handleAnnotationHover}
+                          onClick={handleAnnotationClick}
+                        />
+                      )}
+                    />
+                  );
+                })}
 
                 <XAxis
                   dataKey="label"
@@ -773,17 +988,31 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   fill={`url(#${gradientId})`}
-                  dot={(dotProps) => (
-                    <EditorialSeriesDot
-                      key={`dot-${dotProps.index}`}
-                      cx={dotProps.cx}
-                      cy={dotProps.cy}
-                      index={dotProps.index}
-                      total={resolvedPoints.length}
-                      dark={dark}
-                      showAllPointDots={curveConfig.showAllPointDots}
-                    />
-                  )}
+                  dot={(dotProps) => {
+                    const pt =
+                      dotProps.index !== undefined ? resolvedPoints[dotProps.index] : undefined;
+                    const m = pt ? milestonesByX.get(pt.label) : undefined;
+                    const isHovered = Boolean(
+                      m && (hoveredMilestoneX === m.xLabel || activeMilestone?.xLabel === m.xLabel)
+                    );
+                    const isSelected = Boolean(m && selectedMilestoneX === m.xLabel);
+                    return (
+                      <EditorialSeriesDot
+                        key={`dot-${dotProps.index}`}
+                        cx={dotProps.cx}
+                        cy={dotProps.cy}
+                        index={dotProps.index}
+                        total={resolvedPoints.length}
+                        dark={dark}
+                        showAllPointDots={curveConfig.showAllPointDots}
+                        milestone={showAnnotations ? m : undefined}
+                        isHovered={isHovered}
+                        isActive={isSelected}
+                        onHover={handleAnnotationHover}
+                        onClick={handleAnnotationClick}
+                      />
+                    );
+                  }}
                   activeDot={{
                     r: 5,
                     fill: 'var(--bw-orange)',
@@ -811,14 +1040,34 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
               className="w-1.5 h-1.5 rounded-full shrink-0"
               style={{ backgroundColor: 'var(--bw-orange)' }}
             />
-            <span
-              className={`${typeClass.monoMeta} truncate ${
-                dark ? 'text-[#A8A8A2]' : 'text-[#5C5C58]'
-              }`}
-            >
-              {hoveredIndex !== null ? 'Inspecting' : 'Latest'}:{' '}
-              <span className={dark ? 'text-white' : 'text-[#171717]'}>{activePoint.label}</span>
-            </span>
+            {activeMilestone ? (
+              <span
+                className={`${typeClass.monoMeta} truncate ${
+                  dark ? 'text-[#D6D6D0]' : 'text-[#3D3D3A]'
+                }`}
+              >
+                <span
+                  className="font-semibold"
+                  style={{ color: dark ? '#FF9A45' : 'var(--bw-orange)' }}
+                >
+                  Milestone: {activeMilestone.label}
+                </span>{' '}
+                {activeMilestone.detail && (
+                  <span className={dark ? 'text-[#8A8A84]' : 'text-[#858585]'}>
+                    — {activeMilestone.detail}
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span
+                className={`${typeClass.monoMeta} truncate ${
+                  dark ? 'text-[#A8A8A2]' : 'text-[#5C5C58]'
+                }`}
+              >
+                {hoveredIndex !== null ? 'Inspecting' : 'Latest'}:{' '}
+                <span className={dark ? 'text-white' : 'text-[#171717]'}>{activePoint.label}</span>
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">

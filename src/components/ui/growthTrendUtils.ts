@@ -63,6 +63,10 @@ export interface GrowthTrendPoint {
   milestone?: string;
   /** Optional milestone emphasis tone (`'neutral'` default or `'accent'` for `--bw-orange`). */
   milestoneTone?: 'neutral' | 'accent';
+  /** Optional detailed milestone description revealed on interactive marker hover. */
+  milestoneDetail?: string;
+  /** Optional milestone category or impact metric badge (e.g. "+34% ARR", "Product Launch"). */
+  milestoneImpact?: string;
 }
 
 export interface GrowthTrendMilestone {
@@ -72,6 +76,10 @@ export interface GrowthTrendMilestone {
   label: string;
   /** Visual emphasis tone (`'neutral'` default or `'accent'` for `--bw-orange`). */
   tone?: 'neutral' | 'accent';
+  /** Optional detailed milestone description revealed on interactive marker hover. */
+  detail?: string;
+  /** Optional milestone category or impact metric badge (e.g. "+34% ARR", "Product Launch"). */
+  impact?: string;
 }
 
 export interface ResolvedGrowthMilestone extends GrowthTrendMilestone {
@@ -79,6 +87,8 @@ export interface ResolvedGrowthMilestone extends GrowthTrendMilestone {
   pointIndex: number;
   /** Horizontal label anchor preventing edge clipping on first/last points. */
   alignment: 'start' | 'middle' | 'end';
+  detail?: string;
+  impact?: string;
 }
 
 export type GrowthTrendSeriesMap = Partial<Record<GrowthTimeRange, GrowthTrendPoint[]>>;
@@ -277,6 +287,8 @@ export function resolveChartMilestones(options: {
         xLabel: pt.label,
         label: pt.milestone.trim(),
         tone: pt.milestoneTone ?? 'neutral',
+        detail: pt.milestoneDetail?.trim() || pt.detail?.trim(),
+        impact: pt.milestoneImpact?.trim(),
       })),
   ];
 
@@ -293,6 +305,10 @@ export function resolveChartMilestones(options: {
     seenX.add(item.xLabel);
     const alignment: 'start' | 'middle' | 'end' =
       pointIndex === 0 ? 'start' : pointIndex === lastIdx ? 'end' : 'middle';
+    const point = points[pointIndex];
+    const resolvedDetail =
+      item.detail?.trim() || point?.milestoneDetail?.trim() || point?.detail?.trim();
+    const resolvedImpact = item.impact?.trim() || point?.milestoneImpact?.trim();
 
     resolved.push({
       xLabel: item.xLabel,
@@ -300,8 +316,21 @@ export function resolveChartMilestones(options: {
       tone: item.tone ?? 'neutral',
       pointIndex,
       alignment,
+      detail: resolvedDetail || undefined,
+      impact: resolvedImpact || undefined,
     });
   }
 
   return resolved.sort((a, b) => a.pointIndex - b.pointIndex);
+}
+
+/**
+ * Finds a resolved milestone matching a specific point's X-axis label.
+ */
+export function findMilestoneForPoint(
+  milestones: readonly ResolvedGrowthMilestone[] | undefined,
+  pointLabel: string
+): ResolvedGrowthMilestone | undefined {
+  if (!milestones || milestones.length === 0) return undefined;
+  return milestones.find((m) => m.xLabel === pointLabel);
 }

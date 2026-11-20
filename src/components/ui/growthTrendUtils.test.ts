@@ -5,6 +5,7 @@ import {
   GROWTH_TIME_RANGE_OPTIONS,
   buildEditorialTickValues,
   computeGrowthTrendSummary,
+  findMilestoneForPoint,
   formatGrowthMetricValue,
   formatSignedDeltaPercent,
   resolveChartMilestones,
@@ -144,4 +145,54 @@ test('GROWTH_CURVE_MODE_OPTIONS and resolveCurveModeConfig distinguish smooth sp
   assert.equal(raw.areaType, 'linear');
   assert.equal(raw.showAllPointDots, true);
   assert.equal(raw.strokeWidth, 1.85);
+});
+
+test('resolveChartMilestones and findMilestoneForPoint correctly extract annotation detail and impact', () => {
+  const points = [
+    {
+      label: 'Mon',
+      value: 120,
+      milestone: 'Beta Launch',
+      milestoneDetail: 'First 500 early access founders onboarded',
+      milestoneImpact: '+42% signups',
+      milestoneTone: 'accent' as const,
+    },
+    { label: 'Tue', value: 145 },
+    {
+      label: 'Wed',
+      value: 190,
+      detail: 'Referral loop ignited',
+    },
+  ];
+
+  const resolved = resolveChartMilestones({
+    points,
+    range: '7d',
+    milestones: [
+      {
+        xLabel: 'Wed',
+        label: 'Viral Loop',
+        impact: 'K-factor 1.4',
+      },
+    ],
+  });
+
+  assert.equal(resolved.length, 2);
+
+  const beta = findMilestoneForPoint(resolved, 'Mon');
+  assert.ok(beta);
+  assert.equal(beta.label, 'Beta Launch');
+  assert.equal(beta.detail, 'First 500 early access founders onboarded');
+  assert.equal(beta.impact, '+42% signups');
+  assert.equal(beta.tone, 'accent');
+
+  const viral = findMilestoneForPoint(resolved, 'Wed');
+  assert.ok(viral);
+  assert.equal(viral.label, 'Viral Loop');
+  // Inherits point.detail when milestone.detail is omitted
+  assert.equal(viral.detail, 'Referral loop ignited');
+  assert.equal(viral.impact, 'K-factor 1.4');
+
+  const missing = findMilestoneForPoint(resolved, 'Tue');
+  assert.equal(missing, undefined);
 });

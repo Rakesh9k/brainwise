@@ -24,6 +24,8 @@ import {
   PriorityBadge,
   ProgressBar,
   SectionHeader,
+  StaggeredLiquidContainer,
+  StaggeredLiquidItem,
   StatusBadge,
   type GrowthTimeRange,
   type GrowthTrendSeriesMap,
@@ -254,216 +256,226 @@ export const DashboardPage: React.FC = () => {
       >
         <div className="space-y-10">
           {/* 1. Asymmetric Executive Command Strip: One Dominant Strategic Insight + Performance Pulse */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <ContextualCard
-              cardId="executive-primary-priority"
-              title={primaryFocus.title}
-              subtitle={primaryFocus.context}
-              category="Strategic Priority"
-              route="growth-director"
-              data={primaryFocus}
-              className="lg:col-span-7 flex flex-col"
-            >
-              <IntelligenceSurface
-                variant="light"
-                className="bw-trace-card h-full p-7 sm:p-8 flex flex-col justify-between"
+          <StaggeredLiquidContainer className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <StaggeredLiquidItem className="lg:col-span-7 flex flex-col">
+              <ContextualCard
+                cardId="executive-primary-priority"
+                title={primaryFocus.title}
+                subtitle={primaryFocus.context}
+                category="Strategic Priority"
+                route="growth-director"
+                data={primaryFocus}
+                className="h-full flex flex-col"
               >
-                <div className="space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-2.5">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[#171717]">
-                      <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                        <IntelligenceOrb size="xs" state="active" />
-                        <span>{primaryFocus.badge}</span>
-                      </span>
-                      <span className="hidden sm:inline text-[#D6D6D0]" aria-hidden="true">
-                        ·
-                      </span>
-                      <span className={`${typeClass.monoMeta} font-normal text-[#858585]`}>
-                        {primaryFocus.context}
-                      </span>
-                    </div>
-                    <StatusBadge status={metrics.trajectoryLabel} tone={metrics.trajectoryTone} />
-                  </div>
-
-                  <div>
-                    <h2 className={`${typeClass.h2} text-[#171717]`}>{primaryFocus.title}</h2>
-                  </div>
-
-                  {/* Structured Reasoning & Expected Outcome (Answers "Why?" and "Expected Outcome?") */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-5 border-t border-[#EFEFEB]">
-                    <div>
-                      <div className={`${typeClass.overline} text-[#858585]`}>
-                        Why this matters now
+                <IntelligenceSurface
+                  variant="light"
+                  className="bw-trace-card h-full p-7 sm:p-8 flex flex-col justify-between"
+                >
+                  <div className="space-y-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2.5">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[#171717]">
+                        <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                          <IntelligenceOrb size="xs" state="active" />
+                          <span>{primaryFocus.badge}</span>
+                        </span>
+                        <span className="hidden sm:inline text-[#D6D6D0]" aria-hidden="true">
+                          ·
+                        </span>
+                        <span className={`${typeClass.monoMeta} font-normal text-[#858585]`}>
+                          {primaryFocus.context}
+                        </span>
                       </div>
-                      <p className={`mt-1.5 ${typeClass.bodySm} text-[#252525]`}>
-                        {primaryFocus.whyDoIt}
-                      </p>
+                      <StatusBadge status={metrics.trajectoryLabel} tone={metrics.trajectoryTone} />
                     </div>
+
                     <div>
-                      <div className={`${typeClass.overline} text-[#858585]`}>Expected outcome</div>
-                      <p className={`mt-1.5 ${typeClass.bodySm} text-[#171717] font-medium`}>
-                        {primaryFocus.expectedOutcome}
-                      </p>
+                      <h2 className={`${typeClass.h2} text-[#171717]`}>{primaryFocus.title}</h2>
+                    </div>
+
+                    {/* Structured Reasoning & Expected Outcome (Answers "Why?" and "Expected Outcome?") */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-5 border-t border-[#EFEFEB]">
+                      <div>
+                        <div className={`${typeClass.overline} text-[#858585]`}>
+                          Why this matters now
+                        </div>
+                        <p className={`mt-1.5 ${typeClass.bodySm} text-[#252525]`}>
+                          {primaryFocus.whyDoIt}
+                        </p>
+                      </div>
+                      <div>
+                        <div className={`${typeClass.overline} text-[#858585]`}>
+                          Expected outcome
+                        </div>
+                        <p className={`mt-1.5 ${typeClass.bodySm} text-[#171717] font-medium`}>
+                          {primaryFocus.expectedOutcome}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
+                      <Button variant="primary" size="md" onClick={primaryFocus.onCta}>
+                        {primaryFocus.ctaLabel}
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                      <Button variant="secondary" size="md" onClick={primaryFocus.onSecondary}>
+                        {primaryFocus.secondaryLabel}
+                      </Button>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
-                    <Button variant="primary" size="md" onClick={primaryFocus.onCta}>
-                      {primaryFocus.ctaLabel}
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                    <Button variant="secondary" size="md" onClick={primaryFocus.onSecondary}>
-                      {primaryFocus.secondaryLabel}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="mt-7 pt-6 border-t border-[#EFEFEB] grid grid-cols-1 sm:grid-cols-12 gap-5 items-start">
-                  <div className="sm:col-span-7 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={`${typeClass.overline} text-[#858585]`}>
-                        Primary Objective
-                      </span>
-                      <InsightSavedBeacon
-                        saved={brainComp.percentage === 100}
-                        label={brainComp.percentage === 100 ? 'Synced' : 'Partial'}
+                  <div className="mt-7 pt-6 border-t border-[#EFEFEB] grid grid-cols-1 sm:grid-cols-12 gap-5 items-start">
+                    <div className="sm:col-span-7 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`${typeClass.overline} text-[#858585]`}>
+                          Primary Objective
+                        </span>
+                        <InsightSavedBeacon
+                          saved={brainComp.percentage === 100}
+                          label={brainComp.percentage === 100 ? 'Synced' : 'Partial'}
+                        />
+                      </div>
+                      <div className={`${typeClass.bodySm} font-semibold text-[#171717] mt-1`}>
+                        {state.brain.primaryGoals[0] ??
+                          'Set primary growth objective in Business Brain'}
+                      </div>
+                    </div>
+                    <div className="sm:col-span-5">
+                      <FluidProgress
+                        value={brainComp.percentage}
+                        label="Business Brain Completeness"
+                        size="sm"
+                        tone="neutral"
+                        activeShimmer={brainComp.percentage < 100}
                       />
                     </div>
-                    <div className={`${typeClass.bodySm} font-semibold text-[#171717] mt-1`}>
-                      {state.brain.primaryGoals[0] ??
-                        'Set primary growth objective in Business Brain'}
-                    </div>
                   </div>
-                  <div className="sm:col-span-5">
-                    <FluidProgress
-                      value={brainComp.percentage}
-                      label="Business Brain Completeness"
-                      size="sm"
-                      tone="neutral"
-                      activeShimmer={brainComp.percentage < 100}
-                    />
-                  </div>
-                </div>
-              </IntelligenceSurface>
-            </ContextualCard>
+                </IntelligenceSurface>
+              </ContextualCard>
+            </StaggeredLiquidItem>
 
-            <ContextualCard
-              cardId="performance-execution-pulse"
-              title="Performance & Execution Pulse"
-              subtitle={
-                metrics.isFreshWorkspace
-                  ? 'Awaiting baseline activity'
-                  : 'Workspace execution + simulated storefront telemetry'
-              }
-              category="Storefront Telemetry"
-              route="business-performance"
-              data={{
-                funnelPercent: DASHBOARD_FUNNEL_BY_RANGE[rangeLabel],
-                timeframe: rangeLabel,
-                series: DASHBOARD_PULSE_SERIES[rangeLabel],
-              }}
-              className="lg:col-span-5 flex flex-col"
-            >
-              <ChartContainer
-                dark
-                className="bw-trace-card bw-trace-dark h-full"
+            <StaggeredLiquidItem className="lg:col-span-5 flex flex-col">
+              <ContextualCard
+                cardId="performance-execution-pulse"
                 title="Performance & Execution Pulse"
                 subtitle={
                   metrics.isFreshWorkspace
                     ? 'Awaiting baseline activity'
                     : 'Workspace execution + simulated storefront telemetry'
                 }
+                category="Storefront Telemetry"
+                route="business-performance"
+                data={{
+                  funnelPercent: DASHBOARD_FUNNEL_BY_RANGE[rangeLabel],
+                  timeframe: rangeLabel,
+                  series: DASHBOARD_PULSE_SERIES[rangeLabel],
+                }}
+                className="h-full flex flex-col"
               >
-                {metrics.isFreshWorkspace ? (
-                  <EmptyState
-                    tone="dark"
-                    surface="embedded"
-                    size="compact"
-                    illustration="pulse"
-                    overline="Telemetry · Awaiting Baseline"
-                    title="Execution pulse on standby"
-                    description="Complete your Business Brain context, run an Idea Intelligence validation, or add your first growth goal to unlock live execution tracking."
-                    actionLabel="Run First Validation"
-                    onAction={() => navigate('idea-intelligence')}
-                    secondaryActionLabel="Update Business Brain"
-                    onSecondaryAction={() => navigate('business-brain')}
-                    showTopoGrid={false}
-                  />
-                ) : (
-                  <div>
-                    <div className="grid grid-cols-3 gap-3 mb-3.5">
-                      <div>
-                        <div className={`${typeClass.metricSm} text-white`}>
-                          <AnimatedMetric value={metrics.goalsAvgPercentage} suffix="%" />
-                        </div>
-                        <div
-                          className={`${typeClass.overline} normal-case tracking-normal text-[#A8A8A2] mt-0.5`}
-                        >
-                          Goal Progress
-                        </div>
-                        <div
-                          className={`${typeClass.overline} normal-case tracking-normal text-[#4FA87B] mt-0.5`}
-                        >
-                          {state.goals.length} tracked
-                        </div>
-                      </div>
-                      <div>
-                        <div className={`${typeClass.metricSm} text-white`}>
-                          <AnimatedMetric value={taskStats.completionRate} suffix="%" />
-                        </div>
-                        <div
-                          className={`${typeClass.overline} normal-case tracking-normal text-[#A8A8A2] mt-0.5`}
-                        >
-                          Sprint Rate
-                        </div>
-                        <div
-                          className={`${typeClass.overline} normal-case tracking-normal text-[#4FA87B] mt-0.5`}
-                        >
-                          {taskStats.completed}/{taskStats.total} done
-                        </div>
-                      </div>
-                      <div>
-                        <div className={`${typeClass.metricSm} text-[#FF9A45]`}>
-                          <AnimatedMetric
-                            value={DASHBOARD_FUNNEL_BY_RANGE[rangeLabel]}
-                            prefix="+"
-                            suffix="%"
-                          />
-                        </div>
-                        <div
-                          className={`${typeClass.overline} normal-case tracking-normal text-[#A8A8A2] mt-0.5`}
-                        >
-                          Sample Funnel
-                        </div>
-                        <div
-                          className={`${typeClass.overline} normal-case tracking-normal text-[#858585] mt-0.5`}
-                        >
-                          Simulated
-                        </div>
-                      </div>
-                    </div>
-
-                    <GrowthTrendChart
-                      dark
-                      height={136}
-                      range={rangeLabel}
-                      onRangeChange={setRangeLabel}
-                      rangeLabel="Timeframe"
-                      rangeSeries={DASHBOARD_PULSE_SERIES}
-                      unitPrefix="+"
-                      unitSuffix="%"
-                      metricLabel="Sample Funnel"
-                      ariaLabel="Performance and execution pulse growth trend"
+                <ChartContainer
+                  dark
+                  className="bw-trace-card bw-trace-dark h-full"
+                  title="Performance & Execution Pulse"
+                  subtitle={
+                    metrics.isFreshWorkspace
+                      ? 'Awaiting baseline activity'
+                      : 'Workspace execution + simulated storefront telemetry'
+                  }
+                >
+                  {metrics.isFreshWorkspace ? (
+                    <EmptyState
+                      tone="dark"
+                      surface="embedded"
+                      size="compact"
+                      illustration="pulse"
+                      overline="Telemetry · Awaiting Baseline"
+                      title="Execution pulse on standby"
+                      description="Complete your Business Brain context, run an Idea Intelligence validation, or add your first growth goal to unlock live execution tracking."
+                      actionLabel="Run First Validation"
+                      onAction={() => navigate('idea-intelligence')}
+                      secondaryActionLabel="Update Business Brain"
+                      onSecondaryAction={() => navigate('business-brain')}
+                      showTopoGrid={false}
                     />
-                  </div>
-                )}
-              </ChartContainer>
-            </ContextualCard>
-          </div>
+                  ) : (
+                    <div>
+                      <div className="grid grid-cols-3 gap-3 mb-3.5">
+                        <div>
+                          <div className={`${typeClass.metricSm} text-white`}>
+                            <AnimatedMetric value={metrics.goalsAvgPercentage} suffix="%" />
+                          </div>
+                          <div
+                            className={`${typeClass.overline} normal-case tracking-normal text-[#A8A8A2] mt-0.5`}
+                          >
+                            Goal Progress
+                          </div>
+                          <div
+                            className={`${typeClass.overline} normal-case tracking-normal text-[#4FA87B] mt-0.5`}
+                          >
+                            {state.goals.length} tracked
+                          </div>
+                        </div>
+                        <div>
+                          <div className={`${typeClass.metricSm} text-white`}>
+                            <AnimatedMetric value={taskStats.completionRate} suffix="%" />
+                          </div>
+                          <div
+                            className={`${typeClass.overline} normal-case tracking-normal text-[#A8A8A2] mt-0.5`}
+                          >
+                            Sprint Rate
+                          </div>
+                          <div
+                            className={`${typeClass.overline} normal-case tracking-normal text-[#4FA87B] mt-0.5`}
+                          >
+                            {taskStats.completed}/{taskStats.total} done
+                          </div>
+                        </div>
+                        <div>
+                          <div className={`${typeClass.metricSm} text-[#FF9A45]`}>
+                            <AnimatedMetric
+                              value={DASHBOARD_FUNNEL_BY_RANGE[rangeLabel]}
+                              prefix="+"
+                              suffix="%"
+                            />
+                          </div>
+                          <div
+                            className={`${typeClass.overline} normal-case tracking-normal text-[#A8A8A2] mt-0.5`}
+                          >
+                            Sample Funnel
+                          </div>
+                          <div
+                            className={`${typeClass.overline} normal-case tracking-normal text-[#858585] mt-0.5`}
+                          >
+                            Simulated
+                          </div>
+                        </div>
+                      </div>
+
+                      <GrowthTrendChart
+                        dark
+                        height={136}
+                        range={rangeLabel}
+                        onRangeChange={setRangeLabel}
+                        rangeLabel="Timeframe"
+                        rangeSeries={DASHBOARD_PULSE_SERIES}
+                        unitPrefix="+"
+                        unitSuffix="%"
+                        metricLabel="Sample Funnel"
+                        ariaLabel="Performance and execution pulse growth trend"
+                      />
+                    </div>
+                  )}
+                </ChartContainer>
+              </ContextualCard>
+            </StaggeredLiquidItem>
+          </StaggeredLiquidContainer>
 
           {/* 2. Unboxed Open Editorial Hairline Telemetry Ledger */}
           <section aria-label="Operating departments status">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-y border-[#E6E6E2] divide-y sm:divide-y-0 sm:divide-x divide-[#EFEFEB]">
+            <StaggeredLiquidContainer
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-y border-[#E6E6E2] divide-y sm:divide-y-0 sm:divide-x divide-[#EFEFEB]"
+              staggerDelay={0.04}
+              initialDelay={0.12}
+            >
               {[
                 {
                   label: 'Market Position',
@@ -502,49 +514,50 @@ export const DashboardPage: React.FC = () => {
                   route: 'asset-library' as const,
                 },
               ].map((cell) => (
-                <ContextualCard
-                  key={cell.label}
-                  cardId={`telemetry-${cell.label.toLowerCase().replace(/\s+/g, '-')}`}
-                  title={cell.label}
-                  subtitle={cell.detail}
-                  category="Operating Ledger"
-                  route={cell.route}
-                  data={{ label: cell.label, value: cell.value, detail: cell.detail }}
-                  showActionTrigger={false}
-                  className="h-full"
-                >
-                  <button
-                    type="button"
-                    onClick={() => navigate(cell.route)}
-                    className="bw-trace-card w-full h-full group px-4 sm:px-5 py-5 text-left hover:bg-[#FFFFFF] transition-all flex flex-col justify-between gap-2.5 focus-ring-inset cursor-pointer"
+                <StaggeredLiquidItem key={cell.label} className="h-full">
+                  <ContextualCard
+                    cardId={`telemetry-${cell.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    title={cell.label}
+                    subtitle={cell.detail}
+                    category="Operating Ledger"
+                    route={cell.route}
+                    data={{ label: cell.label, value: cell.value, detail: cell.detail }}
+                    showActionTrigger={false}
+                    className="h-full"
                   >
-                    <span
-                      className={`${typeClass.overline} text-[#858585] group-hover:text-[#171717] transition-colors`}
+                    <button
+                      type="button"
+                      onClick={() => navigate(cell.route)}
+                      className="bw-trace-card w-full h-full group px-4 sm:px-5 py-5 text-left hover:bg-[#FFFFFF] transition-all flex flex-col justify-between gap-2.5 focus-ring-inset cursor-pointer"
                     >
-                      {cell.label}
-                    </span>
-                    <div>
-                      <div
-                        className={`truncate ${
-                          typeof cell.value === 'string' && cell.value.length > 10
-                            ? typeClass.body + ' font-bold'
-                            : typeClass.metric
-                        } text-[#171717]`}
+                      <span
+                        className={`${typeClass.overline} text-[#858585] group-hover:text-[#171717] transition-colors`}
                       >
-                        {typeof cell.value === 'number' ? (
-                          <AnimatedMetric value={cell.value} />
-                        ) : (
-                          cell.value
-                        )}
+                        {cell.label}
+                      </span>
+                      <div>
+                        <div
+                          className={`truncate ${
+                            typeof cell.value === 'string' && cell.value.length > 10
+                              ? typeClass.body + ' font-bold'
+                              : typeClass.metric
+                          } text-[#171717]`}
+                        >
+                          {typeof cell.value === 'number' ? (
+                            <AnimatedMetric value={cell.value} />
+                          ) : (
+                            cell.value
+                          )}
+                        </div>
+                        <div className={`${typeClass.bodySm} text-[#858585] mt-1 truncate`}>
+                          {cell.detail}
+                        </div>
                       </div>
-                      <div className={`${typeClass.bodySm} text-[#858585] mt-1 truncate`}>
-                        {cell.detail}
-                      </div>
-                    </div>
-                  </button>
-                </ContextualCard>
+                    </button>
+                  </ContextualCard>
+                </StaggeredLiquidItem>
               ))}
-            </div>
+            </StaggeredLiquidContainer>
           </section>
 
           {/* 3. Progressive Disclosure Workspace Feed Switcher */}
@@ -573,8 +586,12 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {(feedTab === 'actions' || feedTab === 'all') && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-                <div className="lg:col-span-7 space-y-4">
+              <StaggeredLiquidContainer
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10"
+                staggerDelay={0.08}
+                initialDelay={0.16}
+              >
+                <StaggeredLiquidItem className="lg:col-span-7 space-y-4">
                   <SectionHeader
                     title="Recommended Next Actions"
                     description={`${pendingRecommendations.length} opportunities synthesized from Business Brain`}
@@ -670,9 +687,9 @@ export const DashboardPage: React.FC = () => {
                       ))}
                     </div>
                   )}
-                </div>
+                </StaggeredLiquidItem>
 
-                <div className="lg:col-span-5 space-y-4">
+                <StaggeredLiquidItem className="lg:col-span-5 space-y-4">
                   <SectionHeader
                     title="Today’s Priorities"
                     description="Focused sprint synced with Growth Planner"
@@ -723,13 +740,17 @@ export const DashboardPage: React.FC = () => {
                       ))}
                     </div>
                   )}
-                </div>
-              </div>
+                </StaggeredLiquidItem>
+              </StaggeredLiquidContainer>
             )}
 
             {(feedTab === 'signals' || feedTab === 'all') && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-                <div className="lg:col-span-7 space-y-4">
+              <StaggeredLiquidContainer
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10"
+                staggerDelay={0.08}
+                initialDelay={0.16}
+              >
+                <StaggeredLiquidItem className="lg:col-span-7 space-y-4">
                   <SectionHeader
                     title="Competitor Developments"
                     description={`${metrics.unreadHighImpactCount} urgent · ${visibleEvents.length} active alerts`}
@@ -809,9 +830,9 @@ export const DashboardPage: React.FC = () => {
                       ))}
                     </div>
                   )}
-                </div>
+                </StaggeredLiquidItem>
 
-                <div className="lg:col-span-5 space-y-4">
+                <StaggeredLiquidItem className="lg:col-span-5 space-y-4">
                   <SectionHeader
                     title="Active Growth Experiments"
                     description={`${activeExperiments.length} running tests`}
@@ -870,13 +891,17 @@ export const DashboardPage: React.FC = () => {
                       ))
                     )}
                   </div>
-                </div>
-              </div>
+                </StaggeredLiquidItem>
+              </StaggeredLiquidContainer>
             )}
 
             {(feedTab === 'goals' || feedTab === 'all') && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-                <div className="lg:col-span-6 space-y-4">
+              <StaggeredLiquidContainer
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10"
+                staggerDelay={0.08}
+                initialDelay={0.16}
+              >
+                <StaggeredLiquidItem className="lg:col-span-6 space-y-4">
                   <SectionHeader
                     title="Goal Progress"
                     description="Primary workspace targets"
@@ -948,9 +973,9 @@ export const DashboardPage: React.FC = () => {
                       })
                     )}
                   </div>
-                </div>
+                </StaggeredLiquidItem>
 
-                <div className="lg:col-span-6 space-y-4">
+                <StaggeredLiquidItem className="lg:col-span-6 space-y-4">
                   <SectionHeader
                     title="Recent Activity"
                     description="Cross-department Business Brain log"
@@ -1011,15 +1036,19 @@ export const DashboardPage: React.FC = () => {
                       ))}
                     </div>
                   )}
-                </div>
-              </div>
+                </StaggeredLiquidItem>
+              </StaggeredLiquidContainer>
             )}
           </section>
         </div>
       </LiquidSkeletonReveal>
 
       {(metrics.isFreshWorkspace || brainComp.percentage < 100) && (
-        <JourneyNextStep currentRoute="dashboard" />
+        <StaggeredLiquidContainer initialDelay={0.24}>
+          <StaggeredLiquidItem>
+            <JourneyNextStep currentRoute="dashboard" />
+          </StaggeredLiquidItem>
+        </StaggeredLiquidContainer>
       )}
     </div>
   );

@@ -18,6 +18,8 @@ import {
   LiquidSurface,
   MorphingPanel,
   NeuralNetworkAnimation,
+  StaggeredLiquidContainer,
+  StaggeredLiquidItem,
   SuccessTransition,
 } from '../motion/LiquidMotion';
 import { Dialog, DialogBody, DialogFooter, DialogHeader, type DialogProps } from './Dialog';
@@ -93,6 +95,8 @@ export {
   PremiumSkeleton,
   PremiumSkeletonLine,
   Skeleton,
+  StaggeredLiquidContainer,
+  StaggeredLiquidItem,
   SuccessTransition,
   TactileCurveModeToggle,
   TactileRangeSelector,

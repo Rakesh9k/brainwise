@@ -7,7 +7,16 @@ import { typeClass } from '../../theme/typography';
 export const AuthPages: React.FC<{
   mode: 'signup' | 'verify-email' | 'login' | 'forgot-password' | 'reset-password';
 }> = ({ mode }) => {
-  const { navigate, loginDemo } = useBrainWise();
+  const {
+    navigate,
+    loginDemo,
+    loginUser,
+    registerUser,
+    verifyUserEmail,
+    resendUserVerification,
+    forgotUserPassword,
+    resetUserPassword,
+  } = useBrainWise();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +48,7 @@ export const AuthPages: React.FC<{
     (mode === 'login' && (!email.trim() || !password)) ||
     (mode === 'signup' && (!name.trim() || !email.trim() || !password));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
@@ -50,18 +59,17 @@ export const AuthPages: React.FC<{
         setError('Enter the 6-digit verification code sent to your inbox.');
         return;
       }
-      if (digits === '000000') {
-        setError(
-          'That verification code is invalid or expired. Try any other 6 digits (e.g. 482910).'
-        );
-        return;
-      }
       setIsSubmitting(true);
-      setSuccessMsg('Email verified. Initializing Business Brain onboarding…');
-      window.setTimeout(() => {
-        setIsSubmitting(false);
-        navigate('onboarding');
-      }, 450);
+      const res = await verifyUserEmail(digits, email);
+      setIsSubmitting(false);
+      if (res.success) {
+        setSuccessMsg('Email verified. Initializing Business Brain onboarding…');
+        window.setTimeout(() => {
+          navigate('onboarding');
+        }, 350);
+      } else {
+        setError(res.error || 'Verification code is invalid or expired.');
+      }
       return;
     }
 
@@ -71,10 +79,13 @@ export const AuthPages: React.FC<{
         return;
       }
       setIsSubmitting(true);
-      window.setTimeout(() => {
-        setIsSubmitting(false);
+      const res = await forgotUserPassword(email);
+      setIsSubmitting(false);
+      if (res.sent) {
         setResetSent(true);
-      }, 320);
+      } else {
+        setError(res.error || 'Failed to dispatch reset instructions.');
+      }
       return;
     }
 
@@ -88,11 +99,16 @@ export const AuthPages: React.FC<{
         return;
       }
       setIsSubmitting(true);
-      setSuccessMsg('Password updated. Redirecting to sign in…');
-      window.setTimeout(() => {
-        setIsSubmitting(false);
-        navigate('login');
-      }, 400);
+      const res = await resetUserPassword('test-reset-token', password);
+      setIsSubmitting(false);
+      if (res.success) {
+        setSuccessMsg('Password updated. Redirecting to sign in…');
+        window.setTimeout(() => {
+          navigate('login');
+        }, 400);
+      } else {
+        setError(res.error || 'Password reset failed.');
+      }
       return;
     }
 
@@ -104,25 +120,32 @@ export const AuthPages: React.FC<{
       setError('Password must be at least 6 characters.');
       return;
     }
+
     if (mode === 'signup') {
       if (!name.trim()) {
-        setError('Please enter your first name to personalize your workspace.');
+        setError('Please enter your full name to personalize your workspace.');
         return;
       }
       setIsSubmitting(true);
-      window.setTimeout(() => {
-        setIsSubmitting(false);
+      const res = await registerUser(name, email, password);
+      setIsSubmitting(false);
+      if (res.success) {
         navigate('verify-email');
-      }, 350);
+      } else {
+        setError(res.error || 'Registration failed.');
+      }
       return;
     }
 
+    // Login
     setIsSubmitting(true);
-    const first = name.trim() || email.split('@')[0];
-    window.setTimeout(() => {
-      setIsSubmitting(false);
-      loginDemo(first.charAt(0).toUpperCase() + first.slice(1), email);
-    }, 320);
+    const res = await loginUser(email, password);
+    setIsSubmitting(false);
+    if (res.success) {
+      navigate((res.nextRoute as any) || 'dashboard');
+    } else {
+      setError(res.error || 'Invalid email or password.');
+    }
   };
 
   const GoogleButton = () => (
@@ -309,8 +332,9 @@ export const AuthPages: React.FC<{
                     <button
                       type="button"
                       disabled={resendCooldown > 0}
-                      onClick={() => {
-                        setResendCooldown(30);
+                      onClick={async () => {
+                        const res = await resendUserVerification(email);
+                        setResendCooldown(res.cooldownSeconds || 60);
                         setSuccessMsg('Fresh verification code dispatched.');
                       }}
                       className="font-medium text-[#C44D00] hover:text-[#A33E00] disabled:text-[#8E8E88] disabled:cursor-not-allowed cursor-pointer"

@@ -1,0 +1,40 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import express, { type Express } from 'express';
+import { configureCors } from './middleware/cors';
+import { rateLimiter } from './middleware/rateLimit';
+import { errorHandler } from './middleware/error';
+import { createApiRouter } from './routes/index';
+
+export function createApp(): Express {
+  const app = express();
+
+  // Basic security headers
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+
+  // CORS
+  app.use(configureCors());
+
+  // JSON Body Parser with 2MB limit
+  app.use(express.json({ limit: '2mb' }));
+
+  // Global Rate Limiting
+  app.use('/api', rateLimiter({ windowMs: 60 * 1000, max: 200 }));
+
+  // Mount API Router
+  app.use('/api', createApiRouter());
+
+  // Global Centralized Error Handler
+  app.use(errorHandler);
+
+  return app;
+}

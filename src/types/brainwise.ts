@@ -628,5 +628,6 @@ export interface BrainWiseState {
   subscription?: SubscriptionState;
   integrations?: IntegrationItem[];
   pinnedWidgetIds?: string[];
+  activeWorkspaceId?: string;
   prototypeNoticeDismissed: boolean;
 }

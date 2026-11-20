@@ -8,6 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { INITIAL_BRAINWISE_STATE } from '../data/mockData';
+import { apiClient } from '../services/apiClient';
 import { recordStrategicAngle, ensureStrategicMemory } from '../utils/strategicMemory';
 import type {
   AnyRoute,
@@ -46,6 +47,30 @@ interface BrainWiseContextValue {
     options?: { settingsTab?: SettingsTabId; competitorId?: string; reportId?: string }
   ) => void;
   loginDemo: (firstName?: string, email?: string) => void;
+  loginUser: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; nextRoute?: string; error?: string }>;
+  registerUser: (
+    fullName: string,
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; verificationCode?: string; error?: string }>;
+  verifyUserEmail: (
+    codeOrToken: string,
+    email?: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  resendUserVerification: (
+    email: string
+  ) => Promise<{ sent: boolean; cooldownSeconds?: number; error?: string }>;
+  forgotUserPassword: (
+    email: string
+  ) => Promise<{ sent: boolean; message: string; error?: string }>;
+  resetUserPassword: (
+    token: string,
+    newPassword: string
+  ) => Promise<{ success: boolean; message?: string; error?: string }>;
+  deleteUserAccount: () => Promise<{ success: boolean; error?: string }>;
   launchWorkspaceWithIdea: (ideaPrompt: string) => void;
   prefilledIdeaPrompt: string;
   setPrefilledIdeaPrompt: (idea: string) => void;
@@ -220,11 +245,24 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const uiPrefs = {
+        currentRoute: state.currentRoute,
+        settingsTab: state.settingsTab,
+        pinnedWidgetIds: state.pinnedWidgetIds,
+        prototypeNoticeDismissed: state.prototypeNoticeDismissed,
+        activeWorkspaceId: state.activeWorkspaceId,
+      };
+      localStorage.setItem('brainwise_ui_preferences_v1', JSON.stringify(uiPrefs));
     } catch {
       // ignore storage quota errors
     }
-  }, [state]);
+  }, [
+    state.currentRoute,
+    state.settingsTab,
+    state.pinnedWidgetIds,
+    state.prototypeNoticeDismissed,
+    state.activeWorkspaceId,
+  ]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -306,21 +344,273 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => window.removeEventListener('brainwise-navigate', onRemoteNav);
   }, [navigate]);
 
+  useEffect(() => {
+    try {
+      const savedToken = sessionStorage.getItem('brainwise_auth_token');
+      if (savedToken) {
+        apiClient.setAuthToken(savedToken);
+        apiClient
+          .getCurrentUser()
+          .then(({ user, workspaces, activeWorkspace }) => {
+            if (user) {
+              const wsId = activeWorkspace?.workspaceId || workspaces?.[0]?.workspaceId;
+              if (wsId) {
+                apiClient.setActiveWorkspaceId(wsId);
+              }
+              const firstName = user.displayName?.split(' ')[0] || user.email.split('@')[0];
+              const lastName = user.displayName?.split(' ').slice(1).join(' ') || '';
+
+              setState((prev) => ({
+                ...prev,
+                isAuthenticated: true,
+                activeWorkspaceId: wsId,
+                user: {
+                  ...prev.user,
+                  firstName,
+                  lastName,
+                  email: user.email,
+                  avatarInitials:
+                    (firstName[0] || 'U').toUpperCase() + (lastName[0] || 'B').toUpperCase(),
+                },
+              }));
+            }
+          })
+          .catch(() => {
+            sessionStorage.removeItem('brainwise_auth_token');
+          });
+      }
+    } catch {
+      // ignore storage access error
+    }
+  }, []);
+
+  const loginUser: BrainWiseContextValue['loginUser'] = async (email, password) => {
+    try {
+      const res = await apiClient.authLogin({ email, password });
+      apiClient.setAuthToken(res.token);
+      try {
+        sessionStorage.setItem('brainwise_auth_token', res.token);
+      } catch {
+        // ignore storage access error
+      }
+
+      if (res.activeWorkspaceId) {
+        apiClient.setActiveWorkspaceId(res.activeWorkspaceId);
+      }
+
+      const firstName = res.user.displayName?.split(' ')[0] || email.split('@')[0];
+      const lastName = res.user.displayName?.split(' ').slice(1).join(' ') || '';
+
+      setState((prev) => ({
+        ...prev,
+        isAuthenticated: true,
+        activeWorkspaceId: res.activeWorkspaceId,
+        currentRoute: (res.nextRoute as AnyRoute) || 'dashboard',
+        user: {
+          ...prev.user,
+          firstName,
+          lastName,
+          email: res.user.email,
+          avatarInitials: (firstName[0] || 'U').toUpperCase() + (lastName[0] || 'B').toUpperCase(),
+        },
+      }));
+
+      showToast(`Welcome back, ${firstName}.`);
+      return { success: true, nextRoute: res.nextRoute };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Login failed';
+      return { success: false, error: msg };
+    }
+  };
+
+  const registerUser: BrainWiseContextValue['registerUser'] = async (fullName, email, password) => {
+    try {
+      const res = await apiClient.authRegister({ fullName, email, password });
+      apiClient.setAuthToken(res.token);
+      try {
+        sessionStorage.setItem('brainwise_auth_token', res.token);
+      } catch {
+        // ignore storage access error
+      }
+
+      const firstName = fullName.split(' ')[0] || email.split('@')[0];
+      const lastName = fullName.split(' ').slice(1).join(' ') || '';
+
+      setState((prev) => ({
+        ...prev,
+        user: {
+          ...prev.user,
+          firstName,
+          lastName,
+          email: res.user.email,
+          avatarInitials: (firstName[0] || 'U').toUpperCase() + (lastName[0] || 'B').toUpperCase(),
+        },
+      }));
+
+      return { success: true, verificationCode: res.verificationCode };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Registration failed';
+      return { success: false, error: msg };
+    }
+  };
+
+  const verifyUserEmail: BrainWiseContextValue['verifyUserEmail'] = async (codeOrToken, email) => {
+    try {
+      const targetEmail = email || state.user.email;
+      const res = await apiClient.authVerifyEmail({ email: targetEmail, code: codeOrToken });
+      apiClient.setAuthToken(res.token);
+      try {
+        sessionStorage.setItem('brainwise_auth_token', res.token);
+      } catch {
+        // ignore storage access error
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isAuthenticated: true,
+        currentRoute: 'onboarding',
+      }));
+
+      showToast('Email verified successfully.');
+      return { success: true };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Verification failed';
+      return { success: false, error: msg };
+    }
+  };
+
+  const resendUserVerification: BrainWiseContextValue['resendUserVerification'] = async (email) => {
+    try {
+      const res = await apiClient.authResendVerification(email || state.user.email);
+      return { sent: res.sent, cooldownSeconds: res.cooldownSeconds };
+    } catch (err) {
+      return { sent: false, error: err instanceof Error ? err.message : 'Failed to resend' };
+    }
+  };
+
+  const forgotUserPassword: BrainWiseContextValue['forgotUserPassword'] = async (email) => {
+    try {
+      const res = await apiClient.authForgotPassword(email);
+      return { sent: res.sent, message: res.message };
+    } catch (err) {
+      return {
+        sent: false,
+        message: '',
+        error: err instanceof Error ? err.message : 'Request failed',
+      };
+    }
+  };
+
+  const resetUserPassword: BrainWiseContextValue['resetUserPassword'] = async (
+    token,
+    newPassword
+  ) => {
+    try {
+      const res = await apiClient.authResetPassword({ token, newPassword });
+      return { success: res.success, message: res.message };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Reset failed' };
+    }
+  };
+
+  const deleteUserAccount: BrainWiseContextValue['deleteUserAccount'] = async () => {
+    try {
+      await apiClient.authDeleteAccount();
+      apiClient.setAuthToken(null);
+      apiClient.setActiveWorkspaceId(null);
+      try {
+        sessionStorage.removeItem('brainwise_auth_token');
+      } catch {
+        // ignore storage access error
+      }
+      setState({
+        ...INITIAL_BRAINWISE_STATE,
+        isAuthenticated: false,
+        currentRoute: 'landing',
+      });
+      showToast('Account and associated data deleted successfully.');
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Deletion failed' };
+    }
+  };
+
   const loginDemo: BrainWiseContextValue['loginDemo'] = (firstName, email) => {
+    const userEmail = email?.trim() || 'vishesh.kakar@gmail.com';
+    const userName = firstName?.trim() || 'Vishesh';
+    const token = `test-token-${userEmail.split('@')[0]}`;
+    apiClient.setAuthToken(token);
+
     setState((prev) => ({
       ...prev,
       isAuthenticated: true,
       currentRoute: prev.workspacePrefs?.defaultLandingView ?? 'dashboard',
       user: {
         ...prev.user,
-        firstName: firstName?.trim() || prev.user.firstName,
-        email: email?.trim() || prev.user.email,
-        avatarInitials:
-          (firstName?.trim()?.[0] || prev.user.firstName[0] || 'V').toUpperCase() +
-          (prev.user.lastName[0] || 'K'),
+        firstName: userName,
+        email: userEmail,
+        avatarInitials: (userName[0] || 'V').toUpperCase() + (prev.user.lastName[0] || 'K'),
       },
     }));
     showToast('Welcome back to your BrainWise command centre.');
+
+    // Asynchronously synchronize with authenticated backend
+    void (async () => {
+      try {
+        const { workspaces, activeWorkspace } = await apiClient.getCurrentUser();
+        let wsId = activeWorkspace?.workspaceId;
+
+        if (!wsId && (!workspaces || workspaces.length === 0)) {
+          const created = await apiClient.createWorkspace({
+            workspaceName: 'Solstice Craft Coffee',
+            industry: 'Specialty Food & Beverage',
+            country: 'IN',
+          });
+          wsId = created.workspace.workspaceId;
+        } else if (!wsId && workspaces && workspaces.length > 0) {
+          wsId = workspaces[0].workspaceId;
+        }
+
+        if (wsId) {
+          apiClient.setActiveWorkspaceId(wsId);
+          setState((prev) => ({ ...prev, activeWorkspaceId: wsId }));
+
+          // Check for legacy prototype state to migrate
+          const legacy = localStorage.getItem(STORAGE_KEY);
+          if (legacy) {
+            try {
+              const parsed = JSON.parse(legacy);
+              await apiClient.migrateLegacyState(wsId, parsed);
+              localStorage.removeItem(STORAGE_KEY);
+            } catch {
+              // ignore
+            }
+          }
+
+          // Fetch authoritative server Business Brain
+          const profile = await apiClient.getBusinessProfile(wsId);
+          if (profile && profile.businessName) {
+            setState((prev) => ({
+              ...prev,
+              brain: {
+                ...prev.brain,
+                businessName: profile.businessName || prev.brain.businessName,
+                tagline: profile.tagline || prev.brain.tagline,
+                stage: profile.stage || prev.brain.stage,
+                location: profile.location || prev.brain.location,
+                website: profile.website || prev.brain.website,
+                overviewSummary: profile.overviewSummary || prev.brain.overviewSummary,
+                targetAudience: profile.targetAudience || prev.brain.targetAudience,
+                brandPositioning: profile.brandPositioning || prev.brain.brandPositioning,
+                valueProposition: profile.valueProposition || prev.brain.valueProposition,
+              },
+            }));
+          }
+        }
+      } catch {
+        // Fallback gracefully in offline mode
+      }
+    })();
   };
 
   const launchWorkspaceWithIdea: BrainWiseContextValue['launchWorkspaceWithIdea'] = (idea) => {
@@ -502,6 +792,35 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         },
       };
     });
+
+    // Create persistent backend workspace and initialize Business Brain
+    void (async () => {
+      try {
+        const customName = payload.businessName.trim() || 'New Venture Workspace';
+        const created = await apiClient.createWorkspace({
+          workspaceName: customName,
+          industry: payload.industry.trim() || 'General Business',
+          country: payload.location.trim() || 'India',
+        });
+        const wsId = created.workspace.workspaceId;
+        apiClient.setActiveWorkspaceId(wsId);
+        setState((prev) => ({ ...prev, activeWorkspaceId: wsId }));
+
+        await apiClient.updateBusinessProfile(wsId, {
+          businessName: customName,
+          industry: payload.industry.trim(),
+          stage: payload.stage,
+          location: payload.location.trim(),
+          website: payload.website.trim(),
+          targetAudience: payload.targetCustomers.trim(),
+          overviewSummary: payload.productSummary.trim(),
+          primaryGoals: payload.primaryGoals,
+        });
+      } catch {
+        // offline fallback
+      }
+    })();
+
     showToast(
       payload.startFreshEmpty
         ? 'Clean guided workspace ready. Follow recommended next steps.'
@@ -510,6 +829,13 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const logout = () => {
+    apiClient.setAuthToken(null);
+    apiClient.setActiveWorkspaceId(null);
+    try {
+      sessionStorage.removeItem('brainwise_auth_token');
+    } catch {
+      // ignore storage access error
+    }
     setState((prev) => ({
       ...prev,
       isAuthenticated: false,
@@ -543,6 +869,10 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       },
     }));
     showToast('Business Brain updated.');
+
+    if (state.activeWorkspaceId) {
+      apiClient.updateBusinessProfile(state.activeWorkspaceId, patch).catch(() => {});
+    }
   };
 
   const confirmFact = (fieldKey: string) => {
@@ -573,6 +903,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
     });
     showToast(`Fact "${fieldKey}" confirmed as ground truth.`);
+    if (state.activeWorkspaceId) {
+      apiClient.confirmFact(state.activeWorkspaceId, fieldKey).catch(() => {});
+    }
   };
 
   const addExclusionRule = (rule: string) => {
@@ -594,6 +927,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
     });
     showToast('Prohibited claim rule added to Truth Engine.');
+    if (state.activeWorkspaceId) {
+      apiClient.addExclusionRule(state.activeWorkspaceId, trimmed).catch(() => {});
+    }
   };
 
   const removeExclusionRule = (rule: string) => {
@@ -612,6 +948,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
     });
     showToast('Exclusion rule removed.');
+    if (state.activeWorkspaceId) {
+      apiClient.removeExclusionRule(state.activeWorkspaceId, rule).catch(() => {});
+    }
   };
 
   const recordStrategicAngleUsage = (
@@ -698,6 +1037,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       selectedCompetitorId: newId,
     }));
     showToast(`${comp.name} added to Competitive Intelligence.`);
+    if (state.activeWorkspaceId) {
+      apiClient.createCompetitor(state.activeWorkspaceId, comp).catch(() => {});
+    }
   };
 
   const toggleCompetitorMonitoring = (compId: string) => {
@@ -726,6 +1068,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const target = state.competitors.find((c) => c.id === compId);
     if (!target) return;
     const prevSelected = state.selectedCompetitorId;
+    if (state.activeWorkspaceId) {
+      apiClient.deleteCompetitor(state.activeWorkspaceId, compId).catch(() => {});
+    }
     setState((prev) => {
       const remaining = prev.competitors.filter((c) => c.id !== compId);
       return {
@@ -820,6 +1165,19 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       assets: [newAsset, ...prev.assets],
     }));
     showToast(`"${asset.title}" saved to Asset Library.`);
+    if (state.activeWorkspaceId) {
+      apiClient
+        .completeAssetUpload(state.activeWorkspaceId, newAsset.id, {
+          name: newAsset.title,
+          category: 'Collateral',
+          assetType: 'svg',
+          storagePath: `workspaces/${state.activeWorkspaceId}/brand/${newAsset.id}`,
+          fileSize: 1024,
+          mimeType: 'image/svg+xml',
+          svgContent: newAsset.svgMarkup,
+        })
+        .catch(() => {});
+    }
   };
 
   const renameBrandAsset = (assetId: string, title: string) => {
@@ -866,6 +1224,10 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       tasks: prev.tasks.map((t) => (t.id === taskId ? { ...t, status: nextStatus } : t)),
     }));
 
+    if (state.activeWorkspaceId) {
+      apiClient.updateTask(state.activeWorkspaceId, taskId, { status: nextStatus }).catch(() => {});
+    }
+
     const label =
       nextStatus === 'completed'
         ? `Completed "${target.title}"`
@@ -884,11 +1246,15 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const addTask = (task: Omit<GrowthTask, 'id'>) => {
+    const id = `task-${Date.now()}`;
     setState((prev) => ({
       ...prev,
-      tasks: [{ ...task, id: `task-${Date.now()}` }, ...prev.tasks],
+      tasks: [{ ...task, id }, ...prev.tasks],
     }));
     showToast('Action task added to Growth Planner.');
+    if (state.activeWorkspaceId) {
+      apiClient.createTask(state.activeWorkspaceId, task).catch(() => {});
+    }
   };
 
   const updateTaskNotes = (taskId: string, notes: string) => {
@@ -896,14 +1262,21 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ...prev,
       tasks: prev.tasks.map((t) => (t.id === taskId ? { ...t, notes } : t)),
     }));
+    if (state.activeWorkspaceId) {
+      apiClient.updateTask(state.activeWorkspaceId, taskId, { notes }).catch(() => {});
+    }
   };
 
   const addGoal = (goal: Omit<GrowthGoal, 'id'>) => {
+    const id = `goal-${Date.now()}`;
     setState((prev) => ({
       ...prev,
-      goals: [{ ...goal, id: `goal-${Date.now()}` }, ...prev.goals],
+      goals: [{ ...goal, id }, ...prev.goals],
     }));
     showToast('Business goal added.');
+    if (state.activeWorkspaceId) {
+      apiClient.createGoal(state.activeWorkspaceId, goal).catch(() => {});
+    }
   };
 
   const updateGoalProgress = (goalId: string, currentValue: number) => {
@@ -911,14 +1284,24 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ...prev,
       goals: prev.goals.map((g) => (g.id === goalId ? { ...g, currentValue } : g)),
     }));
+    if (state.activeWorkspaceId) {
+      apiClient.updateGoal(state.activeWorkspaceId, goalId, { currentValue }).catch(() => {});
+      apiClient
+        .recordGoalObservation(state.activeWorkspaceId, goalId, { value: currentValue })
+        .catch(() => {});
+    }
   };
 
   const addExperiment = (exp: Omit<GrowthExperiment, 'id'>) => {
+    const id = `exp-${Date.now()}`;
     setState((prev) => ({
       ...prev,
-      experiments: [{ ...exp, id: `exp-${Date.now()}` }, ...prev.experiments],
+      experiments: [{ ...exp, id }, ...prev.experiments],
     }));
     showToast('Growth experiment created.');
+    if (state.activeWorkspaceId) {
+      apiClient.createExperiment(state.activeWorkspaceId, exp).catch(() => {});
+    }
   };
 
   const updateExperimentStatus = (
@@ -933,11 +1316,23 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ),
     }));
     showToast('Experiment updated.');
+    if (state.activeWorkspaceId) {
+      if (status === 'Completed') {
+        apiClient.completeExperiment(state.activeWorkspaceId, expId, { results }).catch(() => {});
+      } else {
+        apiClient
+          .updateExperiment(state.activeWorkspaceId, expId, {
+            status: status.toLowerCase() as any,
+            results,
+          })
+          .catch(() => {});
+      }
+    }
   };
 
   const convertEventToExperiment = (eventId: string) => {
+    const ev = state.marketEvents.find((e) => e.id === eventId);
     setState((prev) => {
-      const ev = prev.marketEvents.find((e) => e.id === eventId);
       if (!ev || ev.convertedToExperimentId) return prev;
       const newExpId = `exp-${Date.now()}`;
       const newExp: GrowthExperiment = {
@@ -963,6 +1358,24 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         ),
       };
     });
+    if (ev && state.activeWorkspaceId) {
+      apiClient
+        .createExperiment(state.activeWorkspaceId, {
+          title: `Counter-Test: ${ev.competitorOrSource} (${ev.category})`,
+          hypothesis: ev.aiInterpretation,
+          objective: ev.suggestedAction,
+          targetAudience: state.brain.targetAudience,
+          action: ev.suggestedAction,
+          successMetric: 'Lift in trial-to-subscriber conversion or qualified leads',
+          budget: '$150',
+          startDate: new Date().toISOString().slice(0, 10),
+          endDate: '2026-12-15',
+          status: 'Planned',
+          results: 'Queued directly from Market Watch signal.',
+          learnings: 'Pending launch.',
+        })
+        .catch(() => {});
+    }
     showToast('Counter-test queued in Growth Planner Experiments.');
   };
 
@@ -1158,6 +1571,13 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       isWidgetPinned,
       navigate,
       loginDemo,
+      loginUser,
+      registerUser,
+      verifyUserEmail,
+      resendUserVerification,
+      forgotUserPassword,
+      resetUserPassword,
+      deleteUserAccount,
       launchWorkspaceWithIdea,
       prefilledIdeaPrompt,
       setPrefilledIdeaPrompt,

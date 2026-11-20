@@ -25,6 +25,8 @@ import {
   Users,
 } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
+import { IntegrationManagerView } from '../../components/integrations/IntegrationManagerView';
+import { BillingDashboardView } from '../../components/billing/BillingDashboardView';
 import type {
   BrainWiseState,
   BusinessBrainData,
@@ -39,10 +41,8 @@ import {
   Field,
   FluidTransition,
   Input,
-  IntelligenceOrb,
   LoadingState,
   PageHeader,
-  ProgressBar,
   SearchInput,
   SectionHeader,
   Select,
@@ -105,8 +105,6 @@ export const SettingsPage: React.FC = () => {
     removeTeamMember,
     updateWorkspacePrefs,
     updateContextSharing,
-    updateSubscription,
-    toggleIntegration,
     resetDemoData,
     logout,
     showToast,
@@ -184,11 +182,6 @@ export const SettingsPage: React.FC = () => {
     brandStudio: true,
     growthDirector: true,
   };
-  const subscription = state.subscription ?? {
-    plan: 'Growth Pro',
-    billingCycle: 'annual',
-  };
-  const integrations = state.integrations ?? [];
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -769,208 +762,11 @@ export const SettingsPage: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'subscription-billing' && (
-            <div className="space-y-5">
-              <SectionHeader
-                title="Subscription & Billing"
-                description="Interactive plan comparison preview (persisted locally in workspace state)."
-                action={
-                  <div className="inline-flex p-1 bg-[#ECECE9] rounded-[8px] border border-[#E6E6E2]">
-                    {(['monthly', 'annual'] as const).map((cycle) => (
-                      <button
-                        key={cycle}
-                        type="button"
-                        onClick={() => updateSubscription({ billingCycle: cycle })}
-                        className={`px-3 py-1 text-xs font-medium rounded-[6px] capitalize cursor-pointer transition-colors ${
-                          subscription.billingCycle === cycle
-                            ? 'bg-white text-[#242424] shadow-xs'
-                            : 'text-[#686864] hover:text-[#242424]'
-                        }`}
-                      >
-                        {cycle}
-                      </button>
-                    ))}
-                  </div>
-                }
-              />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  {
-                    name: 'Starter' as const,
-                    price: subscription.billingCycle === 'annual' ? '$29' : '$39',
-                    desc: 'For solo founders validating a new business idea.',
-                    features: ['1 Business Brain', '3 Idea Dossiers / mo', '3 Tracked Competitors'],
-                  },
-                  {
-                    name: 'Growth Pro' as const,
-                    price: subscription.billingCycle === 'annual' ? '$79' : '$99',
-                    desc: 'Full intelligence, brand studio, and growth execution.',
-                    features: [
-                      'Unlimited Research',
-                      '15 Tracked Competitors',
-                      'Full Brand & Collateral Studio',
-                    ],
-                  },
-                  {
-                    name: 'Venture Team' as const,
-                    price: subscription.billingCycle === 'annual' ? '$189' : '$229',
-                    desc: 'Multi-seat collaboration and automated weekly briefings.',
-                    features: ['5 Team Seats', '50 Tracked Competitors', 'Executive PDF Digests'],
-                  },
-                ].map((plan) => {
-                  const selected = subscription.plan === plan.name;
-                  return (
-                    <div
-                      key={plan.name}
-                      className={`rounded-[12px] p-5 border flex flex-col justify-between transition-all ${
-                        selected
-                          ? 'bg-[#171717] border-[#2C2C2C] text-white bw-dark-ambient-glow'
-                          : 'border-[#E6E6E2] bg-[#FFFFFF] bw-surface-raised'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span
-                            className={`font-heading text-base font-semibold ${
-                              selected ? 'text-white' : 'text-[#242424]'
-                            }`}
-                          >
-                            {plan.name}
-                          </span>
-                          {selected && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[6px] text-[11px] font-semibold bg-[#242424] border border-[#323232] text-[#FF8A36]">
-                              <IntelligenceOrb size="xs" state="active" />
-                              Active Plan
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-3 flex items-baseline gap-1">
-                          <span
-                            className={`font-heading text-2xl font-bold tabular-nums ${
-                              selected ? 'text-white' : 'text-[#242424]'
-                            }`}
-                          >
-                            {plan.price}
-                          </span>
-                          <span
-                            className={`text-xs ${selected ? 'text-[#A8A8A2]' : 'text-[#686864]'}`}
-                          >
-                            / month
-                          </span>
-                        </div>
-                        <p
-                          className={`text-xs mt-2 leading-relaxed ${
-                            selected ? 'text-[#C8C8C2]' : 'text-[#686864]'
-                          }`}
-                        >
-                          {plan.desc}
-                        </p>
-                        <ul
-                          className={`mt-4 space-y-1.5 text-xs ${
-                            selected ? 'text-[#ECECE8]' : 'text-[#242424]'
-                          }`}
-                        >
-                          {plan.features.map((f) => (
-                            <li key={f} className="flex items-center gap-2">
-                              <CheckCircle2
-                                className={`w-3.5 h-3.5 shrink-0 ${
-                                  selected ? 'text-[#FF8A36]' : 'text-[#FF7417]'
-                                }`}
-                              />
-                              <span>{f}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      {selected ? (
-                        <button
-                          type="button"
-                          disabled
-                          className="mt-5 w-full px-3 py-2 text-xs font-semibold rounded-[8px] bg-[#242424] text-white border border-[#343434] opacity-90 cursor-default"
-                        >
-                          Current Plan
-                        </button>
-                      ) : (
-                        <Button
-                          variant="dark"
-                          size="sm"
-                          className="mt-5 w-full"
-                          onClick={() => updateSubscription({ plan: plan.name })}
-                        >
-                          Select {plan.name}
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          {activeTab === 'subscription-billing' && <BillingDashboardView />}
 
-          {activeTab === 'usage-credits' && (
-            <div className="space-y-5">
-              <SectionHeader
-                title="Usage & Credits"
-                description={`Current cycle allocation for your ${subscription.plan} workspace.`}
-              />
-              <div className="space-y-4">
-                <div className="p-4 rounded-[10px] border border-[#E6E6E2] bg-[#F5F5F4]/60">
-                  <ProgressBar
-                    label={`Idea Intelligence Dossiers (${state.reports.length} of 20 used)`}
-                    value={Math.min(100, Math.round((state.reports.length / 20) * 100))}
-                  />
-                </div>
-                <div className="p-4 rounded-[10px] border border-[#E6E6E2] bg-[#F5F5F4]/60">
-                  <ProgressBar
-                    label={`Tracked Competitors (${state.competitors.length} of 15 slots)`}
-                    value={Math.min(100, Math.round((state.competitors.length / 15) * 100))}
-                  />
-                </div>
-                <div className="p-4 rounded-[10px] border border-[#E6E6E2] bg-[#F5F5F4]/60">
-                  <ProgressBar
-                    label={`Brand Studio Generated Assets (${state.assets.length} of 100 monthly assets)`}
-                    value={Math.min(100, Math.round((state.assets.length / 100) * 100))}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === 'usage-credits' && <BillingDashboardView />}
 
-          {activeTab === 'integrations' && (
-            <div className="space-y-5">
-              <SectionHeader
-                title="Integrations"
-                description="Simulated data connectors showing how BrainWise unifies revenue, analytics, and team alerts."
-              />
-              <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
-                {integrations.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-[#242424]">{item.name}</span>
-                        <span className="text-xs text-[#8E8E88]">· {item.category}</span>
-                      </div>
-                      <p className="text-xs text-[#686864] mt-0.5">{item.description}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleIntegration(item.id)}
-                      className={`px-3.5 py-1.5 text-xs font-medium rounded-[8px] border whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
-                        item.connected
-                          ? 'bg-[#ECF7F1] text-[#24724E] border-[#CEE8DA]'
-                          : 'bg-[#FFFFFF] text-[#242424] border-[#E6E6E2] hover:bg-[#F5F5F4]'
-                      }`}
-                    >
-                      {item.connected ? 'Connected' : 'Connect'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {activeTab === 'integrations' && <IntegrationManagerView />}
 
           {activeTab === 'help-support' && (
             <div className="space-y-5">

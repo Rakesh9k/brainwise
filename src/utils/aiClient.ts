@@ -13,9 +13,20 @@ export interface AiHealthStatus {
 }
 
 async function postJson<TResponse>(url: string, body: unknown): Promise<TResponse> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  try {
+    const token =
+      typeof window !== 'undefined' ? sessionStorage.getItem('brainwise_auth_token') : null;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  } catch {
+    // ignore sessionStorage access error
+  }
+
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
   });
 
