@@ -44,7 +44,18 @@ jobs:
       - name: Execute Automated Unit & Integration Tests
         run: npm test
 
-      - name: Verify Production Client Build
-        run: npm run build
+      - name: Verify Full Production Build (Client + Server)
+        run: npm run build:all
         env:
           NODE_ENV: production
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate Production Dockerfile Build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: brainwise-backend:test

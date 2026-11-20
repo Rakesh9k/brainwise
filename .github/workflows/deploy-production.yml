@@ -1,0 +1,109 @@
+name: Deploy to Production (the-brainwise-app)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    name: Build, Containerize & Deploy to GCP Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://app.brainwise.ai
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Execute Mandatory Validation Gate
+        run: npm run validate
+
+      - name: Authenticate to Google Cloud Platform Production
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_PRODUCTION }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: the-brainwise-app
+
+      - name: Configure Docker for Google Artifact Registry
+        run: gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Production Container to Artifact Registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            asia-south1-docker.pkg.dev/the-brainwise-app/brainwise/brainwise-backend:${{ github.sha }}
+            asia-south1-docker.pkg.dev/the-brainwise-app/brainwise/brainwise-backend:prod-latest
+
+      - name: Deploy Backend Service to Cloud Run (Zero-Downtime Traffic Migration)
+        run: |
+          echo "Deploying new revision to Cloud Run..."
+          gcloud run deploy brainwise-backend \
+            --image=asia-south1-docker.pkg.dev/the-brainwise-app/brainwise/brainwise-backend:${{ github.sha }} \
+            --region=asia-south1 \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8080 \
+            --min-instances=1 \
+            --max-instances=50 \
+            --concurrency=80 \
+            --cpu=2 \
+            --memory=1Gi \
+            --set-env-vars="NODE_ENV=production,PROJECT_ID=the-brainwise-app,GCP_REGION=asia-south1" \
+            --set-secrets="GEMINI_API_KEY=GEMINI_API_KEY:latest,CASHFREE_APP_ID=CASHFREE_APP_ID:latest,CASHFREE_SECRET_KEY=CASHFREE_SECRET_KEY:latest,CASHFREE_WEBHOOK_SECRET=CASHFREE_WEBHOOK_SECRET:latest" \
+            --project=the-brainwise-app \
+            --tag=prod-candidate \
+            --no-traffic
+
+          REVISION_URL=$(gcloud run services describe brainwise-backend \
+            --region=asia-south1 \
+            --project=the-brainwise-app \
+            --format="value(status.traffic[?tag=='prod-candidate'].url)")
+          
+          echo "Validating candidate revision at $REVISION_URL/health/live..."
+          curl -f -s "$REVISION_URL/health/live" || exit 1
+          echo "Candidate revision passed health probe. Promoting to 100% traffic..."
+
+          gcloud run services update-traffic brainwise-backend \
+            --to-latest \
+            --region=asia-south1 \
+            --project=the-brainwise-app
+
+      - name: Deploy Firebase Hosting, Security Rules & Production Indexes
+        run: |
+          npx firebase-tools deploy \
+            --only hosting:app,firestore:rules,firestore:indexes,storage \
+            --project the-brainwise-app \
+            --non-interactive
+
+      - name: Post-Deployment Production Smoke Test
+        run: |
+          echo "Verifying Production Health on default web.app domain..."
+          curl -f -s https://the-brainwise-app.web.app/health/live || exit 1
+          curl -f -s https://the-brainwise-app.web.app/api/health || exit 1
+          echo "Production deployment smoke test succeeded."

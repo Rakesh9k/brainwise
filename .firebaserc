@@ -1,0 +1,31 @@
+{
+  "projects": {
+    "default": "brainwise-development",
+    "dev": "brainwise-development",
+    "staging": "brainwise-ai-marketing-engine",
+    "prod": "the-brainwise-app"
+  },
+  "targets": {
+    "the-brainwise-app": {
+      "hosting": {
+        "app": [
+          "the-brainwise-app"
+        ]
+      }
+    },
+    "brainwise-ai-marketing-engine": {
+      "hosting": {
+        "app": [
+          "brainwise-ai-marketing-engine"
+        ]
+      }
+    },
+    "brainwise-development": {
+      "hosting": {
+        "app": [
+          "brainwise-development"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,94 @@
+name: Deploy to Staging (brainwise-ai-marketing-engine)
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging:
+    name: Build, Containerize & Deploy to GCP Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: staging
+      url: https://brainwise-ai-marketing-engine.web.app
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Execute Full Validation Gate
+        run: npm run validate
+
+      - name: Authenticate to Google Cloud Platform
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: brainwise-ai-marketing-engine
+
+      - name: Configure Docker for Google Artifact Registry
+        run: gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Production Container to Artifact Registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            asia-south1-docker.pkg.dev/brainwise-ai-marketing-engine/brainwise/brainwise-backend:${{ github.sha }}
+            asia-south1-docker.pkg.dev/brainwise-ai-marketing-engine/brainwise/brainwise-backend:staging-latest
+
+      - name: Deploy Backend Service to Cloud Run
+        run: |
+          gcloud run deploy brainwise-backend \
+            --image=asia-south1-docker.pkg.dev/brainwise-ai-marketing-engine/brainwise/brainwise-backend:${{ github.sha }} \
+            --region=asia-south1 \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8080 \
+            --min-instances=0 \
+            --max-instances=10 \
+            --concurrency=80 \
+            --cpu=1 \
+            --memory=512Mi \
+            --set-env-vars="NODE_ENV=staging,PROJECT_ID=brainwise-ai-marketing-engine,GCP_REGION=asia-south1" \
+            --set-secrets="GEMINI_API_KEY=GEMINI_API_KEY:latest,CASHFREE_APP_ID=CASHFREE_APP_ID:latest,CASHFREE_SECRET_KEY=CASHFREE_SECRET_KEY:latest,CASHFREE_WEBHOOK_SECRET=CASHFREE_WEBHOOK_SECRET:latest" \
+            --project=brainwise-ai-marketing-engine
+
+      - name: Deploy Firebase Hosting, Security Rules & Indexes
+        run: |
+          npx firebase-tools deploy \
+            --only hosting:app,firestore:rules,firestore:indexes,storage \
+            --project brainwise-ai-marketing-engine \
+            --non-interactive
+
+      - name: Post-Deployment Staging Smoke Test
+        run: |
+          echo "Verifying Staging Health Probes..."
+          curl -f -s https://brainwise-ai-marketing-engine.web.app/health/live || exit 1
+          echo "Staging liveness passed."
+          curl -f -s https://brainwise-ai-marketing-engine.web.app/api/health || exit 1
+          echo "Staging API health check passed."

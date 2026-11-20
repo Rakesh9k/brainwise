@@ -27,6 +27,15 @@ export function createApp(): Express {
   // JSON Body Parser with 2MB limit
   app.use(express.json({ limit: '2mb' }));
 
+  // Direct Liveness & Readiness Probes (Cloud Run, Container Probes)
+  app.get('/health/live', (_req, res) => {
+    res.status(200).json({ status: 'UP', check: 'liveness', timestamp: new Date().toISOString() });
+  });
+
+  app.get('/health/ready', (_req, res) => {
+    res.status(200).json({ status: 'UP', check: 'readiness', timestamp: new Date().toISOString() });
+  });
+
   // Global Rate Limiting
   app.use('/api', rateLimiter({ windowMs: 60 * 1000, max: 200 }));
 

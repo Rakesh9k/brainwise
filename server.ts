@@ -30,19 +30,38 @@ async function startServer(): Promise<void> {
     app.use(vite.middlewares);
   } else {
     // In production, serve pre-built Vite assets from dist/
-    const distDir = path.resolve(__dirname, 'dist');
+    const defaultDist = path.resolve(__dirname, 'dist');
+    const distDir = process.env.CLIENT_DIST_DIR || defaultDist;
     app.use(express.static(distDir));
     app.get('*', (_req: Request, res: Response) => {
       res.sendFile(path.join(distDir, 'index.html'));
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[BRAINWISE_SERVER] Enterprise backend running at http://localhost:${PORT}`);
     console.log(
       `[BRAINWISE_SERVER] Environment: ${serverConfig.nodeEnv} | Gemini Model: ${serverConfig.geminiModel}`
     );
   });
+
+  // Graceful shutdown handling for Cloud Run & container lifecycle
+  const gracefulShutdown = (signal: string) => {
+    console.log(`[BRAINWISE_SERVER] Received ${signal}. Commencing graceful shutdown...`);
+    server.close(() => {
+      console.log('[BRAINWISE_SERVER] HTTP server terminated successfully. Exiting process.');
+      process.exit(0);
+    });
+
+    // Enforce shutdown after 10-second timeout if connections remain open
+    setTimeout(() => {
+      console.error('[BRAINWISE_SERVER] Forceful shutdown triggered after timeout.');
+      process.exit(1);
+    }, 10000).unref();
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
 startServer().catch((err) => {
