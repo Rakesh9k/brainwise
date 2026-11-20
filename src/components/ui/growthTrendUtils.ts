@@ -582,4 +582,3 @@ export function savePersistedAnnotations(
     // Non-blocking fallback on quota exceeded or restricted storage
   }
 }
-

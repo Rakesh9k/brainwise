@@ -26,27 +26,45 @@ import {
   buildEditorialTickValues,
   clampBrushRange,
   computeGrowthTrendSummary,
+  createAnnotation,
+  filterAnnotationsForPoints,
+  findAnnotationForPoint,
   findMilestoneForPoint,
   formatGrowthMetricValue,
   formatSignedDeltaPercent,
   indexFromClientX,
   isBrushActive,
+  loadPersistedAnnotations,
+  removeAnnotation,
   resolveChartMilestones,
   resolveCurveModeConfig,
   resolveTimeRangePoints,
+  savePersistedAnnotations,
   slicePointsByBrush,
+  type GrowthTrendAnnotation,
+  upsertAnnotation,
 } from './growthTrendUtils';
 
 export type {
   GrowthCurveMode,
   GrowthTimeRange,
+  GrowthTrendAnnotation,
   GrowthTrendMilestone,
   GrowthTrendMilestonesMap,
   GrowthTrendPoint,
   GrowthTrendSeriesMap,
   ResolvedGrowthMilestone,
 };
-export { findMilestoneForPoint };
+export {
+  createAnnotation,
+  filterAnnotationsForPoints,
+  findAnnotationForPoint,
+  findMilestoneForPoint,
+  loadPersistedAnnotations,
+  removeAnnotation,
+  savePersistedAnnotations,
+  upsertAnnotation,
+};
 
 export interface GrowthTrendChartProps {
   /** Base point series (used for the active range or as anchor when rangeSeries is omitted). */
@@ -120,6 +138,16 @@ export interface GrowthTrendChartProps {
   minBrushPoints?: number;
   /** Slider track height in pixels (default 32). */
   brushSliderHeight?: number;
+  /** Toggle interactive trend annotations (click data points to add sticky notes/comments) (defaults to true). */
+  allowAnnotations?: boolean;
+  /** Controlled list of user annotations / sticky notes. */
+  annotations?: GrowthTrendAnnotation[];
+  /** Initial uncontrolled list of annotations. */
+  defaultAnnotations?: GrowthTrendAnnotation[];
+  /** Callback fired whenever user annotations are added, modified, or removed. */
+  onAnnotationsChange?: (annotations: GrowthTrendAnnotation[]) => void;
+  /** Storage key for persisting annotations in localStorage. Defaults to auto-generated from ariaLabel/metricLabel. Pass `false` to disable localStorage. */
+  storageKey?: string | false;
   ariaLabel?: string;
   className?: string;
 }
@@ -140,6 +168,8 @@ interface EditorialTooltipProps {
   metricLabel: string;
   baselineLabel: string;
   milestonesByX: Map<string, ResolvedGrowthMilestone>;
+  annotationsByX?: Map<string, GrowthTrendAnnotation>;
+  allowAnnotations?: boolean;
 }
 
 const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
@@ -152,6 +182,8 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
   metricLabel,
   baselineLabel,
   milestonesByX,
+  annotationsByX,
+  allowAnnotations = true,
 }) => {
   if (!active || !payload || payload.length === 0) return null;
 
@@ -159,12 +191,13 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
   const baseline = payload.find((item) => item.dataKey === 'baseline');
   const point = primary?.payload;
   const milestone = label ? milestonesByX.get(label) : undefined;
+  const userNote = label && annotationsByX ? annotationsByX.get(label) : undefined;
 
   if (typeof primary?.value !== 'number') return null;
 
   return (
     <div
-      className={`rounded-[14px] border px-3.5 py-2.5 min-w-[152px] transition-opacity ${
+      className={`rounded-[14px] border px-3.5 py-2.5 min-w-[152px] max-w-[280px] transition-opacity ${
         dark
           ? 'bg-[#1D1D1B]/95 border-[#343430] text-white shadow-[0_14px_32px_-12px_rgba(0,0,0,0.65)]'
           : 'bg-[#FFFFFF]/96 border-[#E6E6E2] text-[#171717] bw-surface-elevated'
@@ -216,10 +249,63 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
         </div>
       )}
 
+      {userNote && (
+        <div
+          data-sticky-note-tooltip="true"
+          className={`mt-2 p-2 rounded-[8px] border text-left ${
+            userNote.color === 'accent'
+              ? dark
+                ? 'bg-[#2B1B14] border-[#8C3B14] text-white'
+                : 'bg-[#FFF7ED] border-[#FED7AA] text-[#171717]'
+              : userNote.color === 'neutral'
+                ? dark
+                  ? 'bg-white/[0.06] border-white/[0.12] text-white'
+                  : 'bg-[#F4F4F1] border-[#E2E2DC] text-[#171717]'
+                : dark
+                  ? 'bg-[#2A2318] border-[#805018] text-white'
+                  : 'bg-[#FFFBEB] border-[#FDE68A] text-[#171717]'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="text-[10px]" aria-hidden="true">
+                📝
+              </span>
+              <span
+                className={`${typeClass.overline} tracking-wider text-[9px] truncate ${
+                  userNote.color === 'accent'
+                    ? dark
+                      ? 'text-[#FF9A45]'
+                      : 'text-[#C44D00]'
+                    : dark
+                      ? 'text-[#F59E0B]'
+                      : 'text-[#B45309]'
+                }`}
+              >
+                {userNote.author || 'Trend Note'}
+              </span>
+            </div>
+            {userNote.updatedAt && (
+              <span
+                className={`text-[8.5px] font-mono-num shrink-0 ${
+                  dark ? 'text-[#858585]' : 'text-[#8A8A84]'
+                }`}
+              >
+                {new Date(userNote.updatedAt).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </span>
+            )}
+          </div>
+          <div className="text-[11px] font-normal leading-snug break-words">{userNote.text}</div>
+        </div>
+      )}
+
       {milestone ? (
         <div
           data-milestone-tooltip-card="true"
-          className={`mt-2.5 rounded-[10px] border p-2.5 transition-all ${
+          className={`mt-2 rounded-[10px] border p-2.5 transition-all ${
             dark
               ? 'bg-white/[0.05] border-white/[0.1] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
               : 'bg-[#F9F9F7] border-[#ECECE8] text-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]'
@@ -262,7 +348,7 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
             </div>
           )}
         </div>
-      ) : point?.detail ? (
+      ) : point?.detail && !userNote ? (
         <div
           className={`mt-1.5 pt-1.5 border-t text-[11px] ${
             dark ? 'border-white/[0.08] text-[#A8A8A2]' : 'border-[#EFEFEB] text-[#5C5C58]'
@@ -271,6 +357,17 @@ const EditorialChartTooltip: React.FC<EditorialTooltipProps> = ({
           {point.detail}
         </div>
       ) : null}
+
+      {allowAnnotations && (
+        <div
+          className={`mt-2 pt-1 border-t text-[9px] font-mono-num flex items-center justify-between ${
+            dark ? 'border-white/[0.06] text-[#787872]' : 'border-[#EFEFEB] text-[#9A9A94]'
+          }`}
+        >
+          <span>{userNote ? 'Click point to edit note' : 'Click point to add note'}</span>
+          <span className="text-[9px] opacity-70">✎</span>
+        </div>
+      )}
     </div>
   );
 };
@@ -370,10 +467,14 @@ interface EditorialSeriesDotProps {
   dark: boolean;
   showAllPointDots: boolean;
   milestone?: ResolvedGrowthMilestone;
+  userAnnotation?: GrowthTrendAnnotation;
+  point?: GrowthTrendPoint;
+  allowAnnotations?: boolean;
   isHovered?: boolean;
   isActive?: boolean;
   onHover?: (milestone: ResolvedGrowthMilestone | null) => void;
-  onClick?: (milestone: ResolvedGrowthMilestone) => void;
+  onClickMilestone?: (milestone: ResolvedGrowthMilestone) => void;
+  onPointSelect?: (point: GrowthTrendPoint, index: number, cx: number, cy: number) => void;
 }
 
 const EditorialSeriesDot: React.FC<EditorialSeriesDotProps> = ({
@@ -384,16 +485,103 @@ const EditorialSeriesDot: React.FC<EditorialSeriesDotProps> = ({
   dark,
   showAllPointDots,
   milestone,
+  userAnnotation,
+  point,
+  allowAnnotations = true,
   isHovered = false,
   isActive = false,
   onHover,
-  onClick,
+  onClickMilestone,
+  onPointSelect,
 }) => {
   if (typeof cx !== 'number' || typeof cy !== 'number' || typeof index !== 'number') {
     return null;
   }
 
-  // Interactive Ceramic Annotation Marker on significant data points
+  // Interactive Sticky Note Pin on user-annotated data points
+  if (userAnnotation) {
+    const isNoteAccent = userAnnotation.color === 'accent';
+    const isNoteNeutral = userAnnotation.color === 'neutral';
+    const noteToneColor = isNoteAccent
+      ? 'var(--bw-orange)'
+      : isNoteNeutral
+        ? dark
+          ? '#A8A8A2'
+          : '#71717A'
+        : '#F59E0B'; // amber default
+
+    return (
+      <g
+        tabIndex={0}
+        role="button"
+        aria-label={`Trend note on ${point?.label ?? userAnnotation.xLabel}: ${userAnnotation.text}`}
+        data-trend-annotation-pin={userAnnotation.xLabel}
+        data-annotation-tone={userAnnotation.color || 'amber'}
+        className="cursor-pointer outline-none focus:outline-none"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (point) {
+            onPointSelect?.(point, index, cx, cy);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (point) {
+              onPointSelect?.(point, index, cx, cy);
+            }
+          }
+        }}
+      >
+        {/* Soft Glowing Beacon Aura */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={13}
+          fill={noteToneColor}
+          fillOpacity={dark ? 0.35 : 0.22}
+          style={{ transition: 'all 0.15s ease' }}
+        />
+
+        {/* Tactile Pin Surface */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={6.5}
+          fill={dark ? '#1D1D1B' : '#FFFFFF'}
+          stroke={noteToneColor}
+          strokeWidth={2}
+          style={{ transition: 'all 0.15s ease' }}
+        />
+
+        {/* Core Pin Dot */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={2.5}
+          fill={noteToneColor}
+          style={{ transition: 'all 0.15s ease' }}
+        />
+
+        {/* Folded Sticky Flag Icon badge anchored slightly above */}
+        <g transform={`translate(${cx - 4}, ${cy - 16})`}>
+          <rect
+            x={0}
+            y={0}
+            width={8}
+            height={8}
+            rx={1.5}
+            fill={noteToneColor}
+            stroke={dark ? '#1D1D1B' : '#FFFFFF'}
+            strokeWidth={1}
+          />
+          <path d="M 5 0 L 8 3 L 5 3 Z" fill={dark ? '#1D1D1B' : '#FFFFFF'} fillOpacity={0.65} />
+        </g>
+      </g>
+    );
+  }
+
+  // Interactive Ceramic Milestone Annotation Marker on significant data points
   if (milestone) {
     const isAccent = milestone.tone === 'accent' || isHovered || isActive;
     const auraRadius = isHovered || isActive ? 13 : 9;
@@ -413,14 +601,20 @@ const EditorialSeriesDot: React.FC<EditorialSeriesDotProps> = ({
         onMouseLeave={() => onHover?.(null)}
         onClick={(e) => {
           e.stopPropagation();
-          onClick?.(milestone);
+          onClickMilestone?.(milestone);
+          if (allowAnnotations && point) {
+            onPointSelect?.(point, index, cx, cy);
+          }
         }}
         onFocus={() => onHover?.(milestone)}
         onBlur={() => onHover?.(null)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onClick?.(milestone);
+            onClickMilestone?.(milestone);
+            if (allowAnnotations && point) {
+              onPointSelect?.(point, index, cx, cy);
+            }
           }
         }}
       >
@@ -466,7 +660,27 @@ const EditorialSeriesDot: React.FC<EditorialSeriesDotProps> = ({
   // Terminal Point Dot
   if (index === total - 1) {
     return (
-      <g aria-hidden="true" data-terminal-dot="true">
+      <g
+        aria-hidden={!allowAnnotations}
+        tabIndex={allowAnnotations ? 0 : -1}
+        role={allowAnnotations ? 'button' : undefined}
+        aria-label={allowAnnotations && point ? `Add note on ${point.label}` : undefined}
+        data-terminal-dot="true"
+        className={allowAnnotations ? 'cursor-pointer outline-none' : ''}
+        onClick={(e) => {
+          if (allowAnnotations && point) {
+            e.stopPropagation();
+            onPointSelect?.(point, index, cx, cy);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (allowAnnotations && point && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            e.stopPropagation();
+            onPointSelect?.(point, index, cx, cy);
+          }
+        }}
+      >
         <circle cx={cx} cy={cy} r={8} fill="var(--bw-orange)" fillOpacity={dark ? 0.2 : 0.14} />
         <circle
           cx={cx}
@@ -476,24 +690,76 @@ const EditorialSeriesDot: React.FC<EditorialSeriesDotProps> = ({
           stroke={dark ? '#171717' : '#FFFFFF'}
           strokeWidth={2}
         />
+        {allowAnnotations && <circle cx={cx} cy={cy} r={14} fill="transparent" />}
       </g>
     );
   }
 
-  if (!showAllPointDots) return null;
+  if (showAllPointDots) {
+    return (
+      <g
+        aria-hidden={!allowAnnotations}
+        tabIndex={allowAnnotations ? 0 : -1}
+        role={allowAnnotations ? 'button' : undefined}
+        aria-label={allowAnnotations && point ? `Add note on ${point.label}` : undefined}
+        className={allowAnnotations ? 'cursor-pointer outline-none' : ''}
+        onClick={(e) => {
+          if (allowAnnotations && point) {
+            e.stopPropagation();
+            onPointSelect?.(point, index, cx, cy);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (allowAnnotations && point && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            e.stopPropagation();
+            onPointSelect?.(point, index, cx, cy);
+          }
+        }}
+      >
+        <circle
+          data-raw-point-dot={index}
+          cx={cx}
+          cy={cy}
+          r={3}
+          fill={dark ? '#171717' : '#FFFFFF'}
+          stroke="var(--bw-orange)"
+          strokeWidth={1.75}
+        />
+        {allowAnnotations && <circle cx={cx} cy={cy} r={12} fill="transparent" />}
+      </g>
+    );
+  }
 
-  return (
-    <circle
-      aria-hidden="true"
-      data-raw-point-dot={index}
-      cx={cx}
-      cy={cy}
-      r={3}
-      fill={dark ? '#171717' : '#FFFFFF'}
-      stroke="var(--bw-orange)"
-      strokeWidth={1.75}
-    />
-  );
+  // Clickable transparent hit area for unadorned points along the curve
+  if (allowAnnotations && point) {
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={12}
+        fill="transparent"
+        tabIndex={0}
+        role="button"
+        aria-label={`Add note on ${point.label}`}
+        data-point-hit-target={index}
+        className="cursor-pointer outline-none"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPointSelect?.(point, index, cx, cy);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            onPointSelect?.(point, index, cx, cy);
+          }
+        }}
+      />
+    );
+  }
+
+  return null;
 };
 
 /**
@@ -1102,11 +1368,266 @@ export const TactileBrushSlider: React.FC<TactileBrushSliderProps> = ({
   );
 };
 
+export interface TrendStickyNoteOverlayProps {
+  annotation?: GrowthTrendAnnotation;
+  point: GrowthTrendPoint;
+  cx: number;
+  cy: number;
+  containerWidth?: number;
+  containerHeight?: number;
+  dark?: boolean;
+  unitPrefix?: string;
+  unitSuffix?: string;
+  onSave: (text: string, color: 'amber' | 'neutral' | 'accent') => void;
+  onDelete?: () => void;
+  onClose: () => void;
+}
+
+/**
+ * Editorial floating sticky note card anchored near target chart coordinates.
+ * Allows strategists and founders to annotate inflection points, market shocks,
+ * or campaign shifts with color-coded pins and persistent storage.
+ */
+export const TrendStickyNoteOverlay: React.FC<TrendStickyNoteOverlayProps> = ({
+  annotation,
+  point,
+  cx,
+  cy,
+  containerWidth = 600,
+  containerHeight = 220,
+  dark = false,
+  unitPrefix = '',
+  unitSuffix = '',
+  onSave,
+  onDelete,
+  onClose,
+}) => {
+  const [text, setText] = useState(annotation?.text ?? '');
+  const [color, setColor] = useState<'amber' | 'neutral' | 'accent'>(annotation?.color ?? 'amber');
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const noteWidth = 270;
+  const noteHeight = 210;
+
+  // Clamped anchoring within container bounds
+  const left = Math.max(
+    8,
+    Math.min(
+      containerWidth - noteWidth - 8,
+      cx + noteWidth + 16 > containerWidth ? cx - noteWidth - 12 : cx + 12
+    )
+  );
+
+  const top = Math.max(
+    8,
+    Math.min(
+      containerHeight - noteHeight - 8,
+      cy + noteHeight + 16 > containerHeight
+        ? Math.max(8, cy - noteHeight + 10)
+        : Math.max(8, cy - 20)
+    )
+  );
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onClose();
+    } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      if (text.trim()) {
+        onSave(text.trim(), color);
+      }
+    }
+  };
+
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (text.trim()) {
+      onSave(text.trim(), color);
+    }
+  };
+
+  const colorConfig = {
+    amber: {
+      bg: dark ? 'bg-[#261E14]' : 'bg-[#FFFBEB]',
+      border: dark ? 'border-[#6B4716]' : 'border-[#FDE68A]',
+      accentText: dark ? 'text-[#F59E0B]' : 'text-[#B45309]',
+    },
+    accent: {
+      bg: dark ? 'bg-[#29170F]' : 'bg-[#FFF7ED]',
+      border: dark ? 'border-[#82330F]' : 'border-[#FED7AA]',
+      accentText: dark ? 'text-[#FF9A45]' : 'text-[#C44D00]',
+    },
+    neutral: {
+      bg: dark ? 'bg-[#1F1F1D]' : 'bg-[#FAFAF9]',
+      border: dark ? 'border-[#3D3D39]' : 'border-[#E5E5E0]',
+      accentText: dark ? 'text-[#D4D4D0]' : 'text-[#52525B]',
+    },
+  }[color];
+
+  return (
+    <div
+      data-trend-sticky-overlay="true"
+      className="absolute inset-0 z-30 pointer-events-auto"
+      onKeyDown={handleKeyDown}
+    >
+      {/* Click-catcher backdrop */}
+      <div
+        className="absolute inset-0 bg-black/15 backdrop-blur-[0.5px]"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Floating Note Card */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Trend note for ${point.label}`}
+        onClick={(e) => e.stopPropagation()}
+        className={`absolute z-40 w-[270px] rounded-[12px] border p-3 shadow-xl transition-all ${
+          colorConfig.bg
+        } ${colorConfig.border} ${
+          dark
+            ? 'text-white shadow-[0_12px_28px_rgba(0,0,0,0.6)]'
+            : 'text-[#171717] shadow-[0_12px_28px_rgba(0,0,0,0.12)]'
+        }`}
+        style={{ left, top }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 pb-2 border-b border-black/[0.06] dark:border-white/[0.08]">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[12px]" aria-hidden="true">
+              📝
+            </span>
+            <div className="min-w-0">
+              <span className={`text-[10px] font-mono-num font-semibold ${colorConfig.accentText}`}>
+                {point.label}
+              </span>
+              {typeof point.value === 'number' && (
+                <span
+                  className={`ml-1 text-[9.5px] font-mono-num ${
+                    dark ? 'text-[#A8A8A2]' : 'text-[#71716E]'
+                  }`}
+                >
+                  ({formatGrowthMetricValue(point.value, unitPrefix, unitSuffix)})
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Color Palette Chips & Close */}
+          <div className="flex items-center gap-1 shrink-0">
+            {(['amber', 'accent', 'neutral'] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Set note color to ${c}`}
+                onClick={() => setColor(c)}
+                className={`w-3.5 h-3.5 rounded-full border transition-transform cursor-pointer ${
+                  color === c
+                    ? 'scale-125 ring-1 ring-offset-1 ring-black/40 dark:ring-white/40'
+                    : 'opacity-60 hover:opacity-100'
+                } ${
+                  c === 'amber'
+                    ? 'bg-[#F59E0B] border-[#D97706]'
+                    : c === 'accent'
+                      ? 'bg-[var(--bw-orange)] border-[#EA580C]'
+                      : dark
+                        ? 'bg-[#52524E] border-[#71716A]'
+                        : 'bg-[#A1A1AA] border-[#71717A]'
+                }`}
+              />
+            ))}
+            <button
+              type="button"
+              aria-label="Close note editor"
+              onClick={onClose}
+              className={`ml-1 p-0.5 rounded text-[11px] leading-none transition-colors cursor-pointer ${
+                dark ? 'text-[#8A8A84] hover:text-white' : 'text-[#858585] hover:text-[#171717]'
+              }`}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Text Area */}
+        <div className="mt-2">
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={280}
+            rows={3}
+            placeholder="Add context, launch observation, or campaign hypothesis..."
+            className={`w-full resize-none rounded-[8px] border p-2 text-xs leading-relaxed outline-none transition-colors font-sans ${
+              dark
+                ? 'bg-black/20 border-white/[0.1] text-white placeholder-[#787872] focus:border-[#FF9A45]'
+                : 'bg-white/80 border-[#E5E5DF] text-[#171717] placeholder-[#A3A39E] focus:border-[var(--bw-orange)]'
+            }`}
+          />
+          <div className="mt-1 flex items-center justify-between text-[9px] font-mono-num text-[#8A8A84]">
+            <span>⌘/Ctrl+↵ to save</span>
+            <span className={text.length >= 260 ? 'text-[#E11D48] font-semibold' : ''}>
+              {text.length}/280
+            </span>
+          </div>
+        </div>
+
+        {/* Actions Bar */}
+        <div className="mt-2.5 pt-2 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between gap-2">
+          {annotation ? (
+            <button
+              type="button"
+              data-delete-annotation="true"
+              onClick={() => onDelete?.()}
+              className="text-[10px] font-mono-num text-[#DC2626] hover:text-[#B91C1C] dark:text-[#EF4444] dark:hover:text-[#F87171] transition-colors cursor-pointer"
+            >
+              Delete Note
+            </button>
+          ) : (
+            <span />
+          )}
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`px-2 py-1 rounded-[6px] text-[10.5px] font-mono-num transition-colors cursor-pointer ${
+                dark ? 'text-[#A8A8A2] hover:text-white' : 'text-[#686864] hover:text-[#171717]'
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              data-save-annotation="true"
+              disabled={!text.trim()}
+              onClick={handleSaveClick}
+              className={`px-2.5 py-1 rounded-[6px] text-[10.5px] font-mono-num font-medium transition-all cursor-pointer ${
+                text.trim()
+                  ? 'bg-[var(--bw-orange)] hover:opacity-90 text-white shadow-sm'
+                  : 'bg-black/10 dark:bg-white/10 text-black/30 dark:text-white/30 cursor-not-allowed'
+              }`}
+            >
+              Save Note
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /**
  * GrowthTrendChart
  * Recharts-powered business performance trend visualizer styled with `--bw-orange`,
  * editorial monotone curves, Tactile Pill 7d / 30d / 90d / YTD range toggles,
- * ultra-faint horizontal hairlines, and zero grid clutter.
+ * ultra-faint horizontal hairlines, interactive sticky note annotations, and zero grid clutter.
  */
 export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   points = [],
@@ -1142,6 +1663,11 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   onBrushChange,
   minBrushPoints = 2,
   brushSliderHeight = 32,
+  allowAnnotations = true,
+  annotations: controlledAnnotations,
+  defaultAnnotations,
+  onAnnotationsChange,
+  storageKey,
   ariaLabel = 'Business growth performance trend chart',
   className = '',
 }) => {
@@ -1157,6 +1683,12 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   const [hoveredMilestoneX, setHoveredMilestoneX] = useState<string | null>(null);
   const [selectedMilestoneX, setSelectedMilestoneX] = useState<string | null>(null);
 
+  const chartContainerRef = useRef<HTMLDivElement | null>(null);
+  const [containerBounds, setContainerBounds] = useState<{ width: number; height: number }>({
+    width: 600,
+    height,
+  });
+
   const activeRange = controlledRange ?? internalRange;
   const activeCurveMode = controlledCurveMode ?? internalCurveMode;
   const curveConfig = useMemo(() => resolveCurveModeConfig(activeCurveMode), [activeCurveMode]);
@@ -1170,6 +1702,48 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
       }),
     [activeRange, points, rangeSeries]
   );
+
+  useEffect(() => {
+    if (chartContainerRef.current) {
+      const rect = chartContainerRef.current.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setContainerBounds({ width: rect.width, height: rect.height });
+      }
+    }
+  }, [resolvedPoints, activeRange, height]);
+
+  // Storage key for persistent uncontrolled trend notes
+  const resolvedStorageKey = useMemo(() => {
+    if (storageKey === false) return null;
+    if (typeof storageKey === 'string' && storageKey.trim().length > 0) {
+      return storageKey.trim();
+    }
+    const cleanId = (metricLabel || ariaLabel || 'default')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    return `bw-trend-notes-${cleanId || 'default'}`;
+  }, [storageKey, metricLabel, ariaLabel]);
+
+  const [internalAnnotations, setInternalAnnotations] = useState<GrowthTrendAnnotation[]>(() => {
+    if (defaultAnnotations && defaultAnnotations.length > 0) {
+      return defaultAnnotations;
+    }
+    if (resolvedStorageKey) {
+      return loadPersistedAnnotations(resolvedStorageKey);
+    }
+    return [];
+  });
+
+  const currentAnnotations = controlledAnnotations ?? internalAnnotations;
+
+  const annotationsByX = useMemo(() => {
+    const map = new Map<string, GrowthTrendAnnotation>();
+    for (const a of currentAnnotations) {
+      map.set(a.xLabel, a);
+    }
+    return map;
+  }, [currentAnnotations]);
 
   const activeBrushRange: [number, number] = useMemo(() => {
     if (controlledBrushRange) {
@@ -1257,6 +1831,11 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
     [showBrushSlider, resolvedPoints, activeBrushRange, minBrushPoints]
   );
 
+  const activeVisibleAnnotations = useMemo(
+    () => filterAnnotationsForPoints(currentAnnotations, visiblePoints),
+    [currentAnnotations, visiblePoints]
+  );
+
   const resolvedMilestones = useMemo(
     () =>
       showMilestones
@@ -1294,6 +1873,73 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   const handleAnnotationClick = (milestone: ResolvedGrowthMilestone) => {
     setSelectedMilestoneX((prev) => (prev === milestone.xLabel ? null : milestone.xLabel));
     onAnnotationClick?.(milestone);
+  };
+
+  const [activeNoteTarget, setActiveNoteTarget] = useState<{
+    point: GrowthTrendPoint;
+    index: number;
+    cx: number;
+    cy: number;
+    existingAnnotation?: GrowthTrendAnnotation;
+  } | null>(null);
+
+  const handlePointSelect = (point: GrowthTrendPoint, index: number, cx: number, cy: number) => {
+    if (!allowAnnotations) return;
+    const existing = annotationsByX.get(point.label);
+    setActiveNoteTarget({
+      point,
+      index,
+      cx,
+      cy,
+      existingAnnotation: existing,
+    });
+  };
+
+  const handleSaveAnnotation = (text: string, color: 'amber' | 'neutral' | 'accent') => {
+    if (!activeNoteTarget) return;
+    const { point, existingAnnotation } = activeNoteTarget;
+    let nextAnnotations: GrowthTrendAnnotation[];
+    if (existingAnnotation) {
+      const updated: GrowthTrendAnnotation = {
+        ...existingAnnotation,
+        text: text.trim(),
+        color,
+        range: activeRange,
+        updatedAt: new Date().toISOString(),
+      };
+      nextAnnotations = upsertAnnotation(currentAnnotations, updated);
+    } else {
+      const newAnnot = createAnnotation(point.label, text, {
+        color,
+        range: activeRange,
+      });
+      nextAnnotations = upsertAnnotation(currentAnnotations, newAnnot);
+    }
+
+    if (controlledAnnotations === undefined) {
+      setInternalAnnotations(nextAnnotations);
+    }
+    if (resolvedStorageKey) {
+      savePersistedAnnotations(resolvedStorageKey, nextAnnotations);
+    }
+    onAnnotationsChange?.(nextAnnotations);
+    setActiveNoteTarget(null);
+  };
+
+  const handleDeleteAnnotation = () => {
+    if (!activeNoteTarget?.existingAnnotation) return;
+    const nextAnnotations = removeAnnotation(
+      currentAnnotations,
+      activeNoteTarget.existingAnnotation.id
+    );
+    if (controlledAnnotations === undefined) {
+      setInternalAnnotations(nextAnnotations);
+    }
+    if (resolvedStorageKey) {
+      savePersistedAnnotations(resolvedStorageKey, nextAnnotations);
+    }
+    onAnnotationsChange?.(nextAnnotations);
+    setActiveNoteTarget(null);
   };
 
   const summary = useMemo(() => computeGrowthTrendSummary(visiblePoints), [visiblePoints]);
@@ -1341,21 +1987,47 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
       data-curve-mode={activeCurveMode}
       className={`w-full min-w-0 ${className}`}
     >
-      {(showRangeSelector || showCurveToggle) && (
+      {(showRangeSelector ||
+        showCurveToggle ||
+        (allowAnnotations && activeVisibleAnnotations.length > 0)) && (
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          {showCurveToggle ? (
-            <TactileCurveModeToggle
-              value={activeCurveMode}
-              onChange={handleSelectCurveMode}
-              dark={dark}
-            />
-          ) : rangeLabel ? (
-            <span className={`${typeClass.overline} ${dark ? 'text-[#8A8A84]' : 'text-[#858585]'}`}>
-              {rangeLabel}
-            </span>
-          ) : (
-            <span />
-          )}
+          <div className="flex items-center gap-2">
+            {showCurveToggle ? (
+              <TactileCurveModeToggle
+                value={activeCurveMode}
+                onChange={handleSelectCurveMode}
+                dark={dark}
+              />
+            ) : rangeLabel ? (
+              <span
+                className={`${typeClass.overline} ${dark ? 'text-[#8A8A84]' : 'text-[#858585]'}`}
+              >
+                {rangeLabel}
+              </span>
+            ) : null}
+
+            {allowAnnotations && activeVisibleAnnotations.length > 0 && (
+              <span
+                data-trend-note-count-pill="true"
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono-num font-medium border ${
+                  dark
+                    ? 'bg-[#FF9A45]/10 border-[#FF9A45]/30 text-[#FF9A45]'
+                    : 'bg-[#FFF8F2] border-[#FED7AA] text-[#C44D00]'
+                }`}
+                title={`${activeVisibleAnnotations.length} trend note${
+                  activeVisibleAnnotations.length === 1 ? '' : 's'
+                } in this view`}
+              >
+                <span className="text-[11px] leading-none" aria-hidden="true">
+                  📝
+                </span>
+                <span>
+                  {activeVisibleAnnotations.length}{' '}
+                  {activeVisibleAnnotations.length === 1 ? 'Note' : 'Notes'}
+                </span>
+              </span>
+            )}
+          </div>
 
           {showRangeSelector && (
             <TactileRangeSelector value={activeRange} onChange={handleSelectRange} dark={dark} />
@@ -1363,7 +2035,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
         </div>
       )}
 
-      <div className="w-full min-w-0" style={{ height }}>
+      <div className="relative w-full min-w-0" style={{ height }} ref={chartContainerRef}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeRange}
@@ -1381,6 +2053,23 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                   right: 12,
                   bottom: 2,
                   left: showYAxis ? 0 : 8,
+                }}
+                onClick={(state) => {
+                  if (!allowAnnotations) return;
+                  const s = state as
+                    | { activeTooltipIndex?: number; chartX?: number; chartY?: number }
+                    | null
+                    | undefined;
+                  if (typeof s?.activeTooltipIndex === 'number') {
+                    const pt = visiblePoints[s.activeTooltipIndex];
+                    if (pt) {
+                      const cx =
+                        typeof s.chartX === 'number' ? s.chartX : containerBounds.width / 2;
+                      const cy =
+                        typeof s.chartY === 'number' ? s.chartY : containerBounds.height / 2;
+                      handlePointSelect(pt, s.activeTooltipIndex, cx, cy);
+                    }
+                  }
                 }}
                 onMouseMove={(state) => {
                   const idx =
@@ -1492,6 +2181,8 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                       metricLabel={metricLabel}
                       baselineLabel={baselineLabel}
                       milestonesByX={milestonesByX}
+                      annotationsByX={annotationsByX}
+                      allowAnnotations={allowAnnotations}
                     />
                   }
                 />
@@ -1523,6 +2214,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                     const pt =
                       dotProps.index !== undefined ? visiblePoints[dotProps.index] : undefined;
                     const m = pt ? milestonesByX.get(pt.label) : undefined;
+                    const userAnnot = pt ? annotationsByX.get(pt.label) : undefined;
                     const isHovered = Boolean(
                       m && (hoveredMilestoneX === m.xLabel || activeMilestone?.xLabel === m.xLabel)
                     );
@@ -1537,10 +2229,14 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                         dark={dark}
                         showAllPointDots={curveConfig.showAllPointDots}
                         milestone={showAnnotations ? m : undefined}
+                        userAnnotation={userAnnot}
+                        point={pt}
+                        allowAnnotations={allowAnnotations}
                         isHovered={isHovered}
                         isActive={isSelected}
                         onHover={handleAnnotationHover}
-                        onClick={handleAnnotationClick}
+                        onClickMilestone={handleAnnotationClick}
+                        onPointSelect={handlePointSelect}
                       />
                     );
                   }}
@@ -1557,6 +2253,23 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
             </ResponsiveContainer>
           </motion.div>
         </AnimatePresence>
+
+        {activeNoteTarget && (
+          <TrendStickyNoteOverlay
+            annotation={activeNoteTarget.existingAnnotation}
+            point={activeNoteTarget.point}
+            cx={activeNoteTarget.cx}
+            cy={activeNoteTarget.cy}
+            containerWidth={containerBounds.width}
+            containerHeight={containerBounds.height}
+            dark={dark}
+            unitPrefix={unitPrefix}
+            unitSuffix={unitSuffix}
+            onSave={handleSaveAnnotation}
+            onDelete={activeNoteTarget.existingAnnotation ? handleDeleteAnnotation : undefined}
+            onClose={() => setActiveNoteTarget(null)}
+          />
+        )}
       </div>
 
       {showBrushSlider && resolvedPoints.length >= minBrushPoints && (
@@ -1605,6 +2318,17 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                     — {activeMilestone.detail}
                   </span>
                 )}
+              </span>
+            ) : annotationsByX.has(activePoint.label) ? (
+              <span
+                className={`${typeClass.monoMeta} truncate ${
+                  dark ? 'text-[#FF9A45]' : 'text-[#C44D00]'
+                }`}
+              >
+                <span className="font-semibold">Note ({activePoint.label}):</span>{' '}
+                <span className={`italic ${dark ? 'text-[#D6D6D0]' : 'text-[#3D3D3A]'}`}>
+                  “{annotationsByX.get(activePoint.label)?.text}”
+                </span>
               </span>
             ) : (
               <span

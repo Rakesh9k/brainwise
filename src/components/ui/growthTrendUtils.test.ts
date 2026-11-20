@@ -15,10 +15,12 @@ import {
   formatSignedDeltaPercent,
   indexFromClientX,
   isBrushActive,
+  loadPersistedAnnotations,
   removeAnnotation,
   resolveChartMilestones,
   resolveCurveModeConfig,
   resolveTimeRangePoints,
+  savePersistedAnnotations,
   slicePointsByBrush,
   upsertAnnotation,
 } from './growthTrendUtils';
@@ -356,3 +358,30 @@ test('findAnnotationForPoint and filterAnnotationsForPoints match annotations ac
   assert.equal(filtered[0].xLabel, 'W1');
 });
 
+test('loadPersistedAnnotations and savePersistedAnnotations serialize and deserialize cleanly', () => {
+  // Mock localStorage for test environment
+  const storageMap = new Map<string, string>();
+  const originalWindow = globalThis.window;
+  (globalThis as unknown as { window: unknown }).window = {
+    localStorage: {
+      getItem: (key: string) => storageMap.get(key) ?? null,
+      setItem: (key: string, val: string) => storageMap.set(key, val),
+    },
+  };
+
+  try {
+    const annot = createAnnotation('Oct 20', 'Record signups via ProductHunt');
+    savePersistedAnnotations('test-storage-key', [annot]);
+
+    const loaded = loadPersistedAnnotations('test-storage-key');
+    assert.equal(loaded.length, 1);
+    assert.equal(loaded[0].xLabel, 'Oct 20');
+    assert.equal(loaded[0].text, 'Record signups via ProductHunt');
+
+    // Invalid or empty key handling
+    assert.deepEqual(loadPersistedAnnotations('non-existent-key'), []);
+    assert.deepEqual(loadPersistedAnnotations(''), []);
+  } finally {
+    (globalThis as unknown as { window: unknown }).window = originalWindow;
+  }
+});

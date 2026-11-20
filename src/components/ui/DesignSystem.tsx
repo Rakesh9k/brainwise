@@ -56,14 +56,24 @@ import {
   TactileBrushSlider,
   TactileCurveModeToggle,
   TactileRangeSelector,
+  TrendStickyNoteOverlay,
+  createAnnotation,
+  filterAnnotationsForPoints,
+  findAnnotationForPoint,
+  loadPersistedAnnotations,
+  removeAnnotation,
+  savePersistedAnnotations,
+  upsertAnnotation,
   type GrowthCurveMode,
   type GrowthTimeRange,
+  type GrowthTrendAnnotation,
   type GrowthTrendChartProps,
   type GrowthTrendMilestone,
   type GrowthTrendMilestonesMap,
   type GrowthTrendPoint,
   type GrowthTrendSeriesMap,
   type TactileBrushSliderProps,
+  type TrendStickyNoteOverlayProps,
 } from './GrowthTrendChart';
 
 export {
@@ -104,6 +114,14 @@ export {
   TactileCurveModeToggle,
   TactileRangeSelector,
   TopoGridOverlay,
+  TrendStickyNoteOverlay,
+  createAnnotation,
+  filterAnnotationsForPoints,
+  findAnnotationForPoint,
+  loadPersistedAnnotations,
+  removeAnnotation,
+  savePersistedAnnotations,
+  upsertAnnotation,
 };
 export type {
   DialogProps,
@@ -112,6 +130,7 @@ export type {
   EmptyStateTextProps,
   GrowthCurveMode,
   GrowthTimeRange,
+  GrowthTrendAnnotation,
   GrowthTrendChartProps,
   GrowthTrendMilestone,
   GrowthTrendMilestonesMap,
@@ -124,6 +143,7 @@ export type {
   SkeletonProps,
   TactileBrushSliderProps,
   TopoGridOverlayProps,
+  TrendStickyNoteOverlayProps,
 };
 
 export const BrandLogoMark: React.FC<{ size?: number; dark?: boolean }> = ({
