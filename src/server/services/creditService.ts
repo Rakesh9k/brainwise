@@ -20,6 +20,7 @@ export const CREDIT_FEATURE_COSTS: Record<string, { cost: number; name: string }
   'FEAT-ANL-001': { cost: 2, name: 'Executive Performance Memo' },
   'FEAT-ONB-001': { cost: 0, name: 'Document Ingestion (Onboarding)' },
   'FEAT-CAL-001': { cost: 0, name: 'Task / Calendar CRUD' },
+  'FEAT-AI-CHAT': { cost: 2, name: 'Executive AI Strategist Chat' },
 };
 
 export class CreditService {

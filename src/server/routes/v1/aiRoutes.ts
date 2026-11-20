@@ -541,10 +541,7 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
     reservation = await creditService.reserveCredits({
       workspaceId,
       userId,
-      amount: creditCost,
       featureId: 'FEAT-AI-CHAT',
-      category: 'AI_CHAT',
-      description: `Strategist Chat (${modelTier})`,
     });
   } catch (err) {
     res.status(402).json({
@@ -566,8 +563,8 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
 
     if (profile && profile.provenance) {
       for (const [key, item] of Object.entries(profile.provenance)) {
-        const val = (profile as any)[key] ?? item.sourceValue;
-        if (item.provenance === 'USER_CONFIRMED') {
+        const val = (profile as any)[key] ?? item.fieldKey;
+        if (item.source === 'USER_CONFIRMED') {
           confirmedFacts.push(`${key}: ${val}`);
         } else {
           inferredFacts.push(`${key}: ${val}`);
@@ -582,7 +579,6 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
       'GROUNDING CONTEXT (BUSINESS BRAIN):',
       profile?.businessName ? `Business Name: ${profile.businessName}` : '',
       profile?.tagline ? `Tagline: ${profile.tagline}` : '',
-      profile?.industry ? `Industry: ${profile.industry}` : '',
       profile?.location ? `Location: ${profile.location}` : '',
       profile?.stage ? `Stage: ${profile.stage}` : '',
       profile?.valueProposition ? `Value Proposition: ${profile.valueProposition}` : '',
@@ -633,31 +629,55 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
 
     // 5. Truth Check Guardrail
     const truthCheck = executeTruthCheck(replyText, {
-      businessName: profile.businessName,
-      tagline: profile.tagline,
-      industry: profile.industry,
-      stage: profile.stage as any,
-      location: profile.location,
-      website: profile.website,
-      overviewSummary: profile.overviewSummary,
-      targetAudience: profile.targetAudience,
-      brandPositioning: profile.brandPositioning,
-      valueProposition: profile.valueProposition,
+      businessName: profile.businessName || 'Business',
+      tagline: profile.tagline || '',
+      industry: 'General Business',
+      stage: profile.stage || 'Early Traction',
+      location: profile.location || '',
+      website: profile.website || '',
+      foundedYear: profile.foundedYear || '2025',
+      overviewSummary: profile.overviewSummary || '',
+      targetAudience: profile.targetAudience || '',
+      brandPositioning: profile.brandPositioning || '',
+      valueProposition: profile.valueProposition || '',
+      businessModel: profile.businessModel || '',
+      revenueModel: profile.revenueModel || '',
+      primaryGoals: profile.primaryGoals || [],
       products: [],
+      personas: [],
+      documents: [],
+      decisions: [],
+      history: [],
+      lastUpdated: new Date().toISOString(),
       strategicMemory: {
-        usedAngles: profile.strategicMemory?.usedAngles || [],
+        usedAngles: (profile.strategicMemory?.usedAngles as any) || [],
         fatiguedThemes: profile.strategicMemory?.fatiguedThemes || [],
         explicitExclusions: profile.strategicMemory?.explicitExclusions || [],
         lastUpdated: new Date().toISOString(),
       },
-      confirmedFacts: {},
-      aiInferences: {},
     });
 
-    const finalReply = truthCheck.remediatedText || replyText;
+    if (truthCheck.status === 'REJECTED') {
+      await creditService.refundCredits({
+        workspaceId,
+        reservation,
+        reason: truthCheck.refundReason || 'Truth check guardrail rejected unverified assertions',
+      });
+      res.status(422).json({
+        success: false,
+        error: {
+          code: 'TRUTH_GUARDRAIL_VIOLATION',
+          message: 'The generated strategic response violated Business Brain fact constraints. Credits refunded.',
+          category: 'AI_ORCHESTRATION_ERROR',
+        },
+      });
+      return;
+    }
+
+    const finalReply = truthCheck.remediatedContent || replyText;
 
     // 6. Settle Credit Reservation
-    const settlement = await creditService.settleReservation({
+    const settlement = await creditService.settleCredits({
       workspaceId,
       reservation,
       featureId: 'FEAT-AI-CHAT',

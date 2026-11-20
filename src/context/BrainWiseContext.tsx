@@ -366,11 +366,11 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const [profile, goalsRes, tasksRes, compsRes, subRes, assetsRes] = await Promise.all([
         apiClient.getBusinessProfile(wsId).catch(() => null),
-        apiClient.listGoals(wsId).catch(() => null),
-        apiClient.listTasks(wsId).catch(() => null),
-        apiClient.listCompetitors(wsId).catch(() => null),
+        apiClient.getGoals(wsId).catch(() => null),
+        apiClient.getTasks(wsId).catch(() => null),
+        apiClient.getCompetitors(wsId).catch(() => null),
         apiClient.getSubscription(wsId).catch(() => null),
-        apiClient.listBrandAssets(wsId).catch(() => null),
+        apiClient.getBrandAssets(wsId).catch(() => null),
       ]);
 
       setState((prev) => {
@@ -390,71 +390,42 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           };
         }
 
-        if (goalsRes?.goals && Array.isArray(goalsRes.goals) && goalsRes.goals.length > 0) {
-          next.goals = goalsRes.goals.map((g: any) => ({
-            id: g.goalId || g.id,
-            title: g.title,
-            metricKey: g.metricKey || 'MRR',
-            targetValue: Number(g.targetValue) || 10000,
-            currentValue: Number(g.currentValue) || 0,
-            unitPrefix: g.unitPrefix ?? '$',
-            unitSuffix: g.unitSuffix ?? '',
-            deadlineDate: g.deadlineDate || '2026-12-31',
-            status: g.status || 'in_progress',
-          }));
+        if (Array.isArray(goalsRes) && goalsRes.length > 0) {
+          next.goals = goalsRes;
+        } else if ((goalsRes as any)?.goals && Array.isArray((goalsRes as any).goals)) {
+          next.goals = (goalsRes as any).goals;
         }
 
-        if (tasksRes?.tasks && Array.isArray(tasksRes.tasks) && tasksRes.tasks.length > 0) {
-          next.tasks = tasksRes.tasks.map((t: any) => ({
-            id: t.taskId || t.id,
-            title: t.title,
-            department: t.department || 'GrowthDirector',
-            estimatedHours: Number(t.estimatedHours) || 2,
-            isPriority: Boolean(t.isPriority),
-            status: t.status || 'not_started',
-            notes: t.notes || '',
-          }));
+        if (Array.isArray(tasksRes) && tasksRes.length > 0) {
+          next.tasks = tasksRes;
+        } else if ((tasksRes as any)?.tasks && Array.isArray((tasksRes as any).tasks)) {
+          next.tasks = (tasksRes as any).tasks;
         }
 
-        if (
-          compsRes?.competitors &&
-          Array.isArray(compsRes.competitors) &&
-          compsRes.competitors.length > 0
-        ) {
-          next.competitors = compsRes.competitors.map((c: any) => ({
-            id: c.competitorId || c.id,
-            name: c.name,
-            domain: c.domain || '',
-            positionX: Number(c.positionX) || 50,
-            positionY: Number(c.positionY) || 50,
-            pricingMonthlyMin: Number(c.pricingMonthlyMin) || 0,
-            pricingMonthlyMax: Number(c.pricingMonthlyMax) || 0,
-            marketShare: c.marketShare || 'Direct',
-            monitoringFrequency: c.monitoringFrequency || 'weekly',
-            isMonitored: Boolean(c.isMonitored ?? true),
-            lastScannedAt: c.lastScannedAt,
-            strengths: c.strengths || [],
-            weaknesses: c.weaknesses || [],
-          }));
+        if (Array.isArray(compsRes) && compsRes.length > 0) {
+          next.competitors = compsRes;
+        } else if ((compsRes as any)?.competitors && Array.isArray((compsRes as any).competitors)) {
+          next.competitors = (compsRes as any).competitors;
         }
 
-        if (subRes) {
+        if (subRes && prev.subscription) {
+          const planMap: Record<string, SubscriptionState['plan']> = {
+            starter: 'Starter',
+            growth: 'Growth Pro',
+            scale: 'Venture Team',
+          };
+          const mappedPlan = subRes.subscription?.planId ? planMap[subRes.subscription.planId] : undefined;
           next.subscription = {
             ...prev.subscription,
-            plan: subRes.plan || prev.subscription.plan,
-            status: subRes.status || prev.subscription.status,
-            creditsRemaining: Number(subRes.creditsRemaining ?? prev.subscription.creditsRemaining),
+            ...(mappedPlan ? { plan: mappedPlan } : {}),
+            ...(subRes.subscription?.billingCycle ? { billingCycle: subRes.subscription.billingCycle } : {}),
           };
         }
 
-        if (assetsRes?.assets && Array.isArray(assetsRes.assets) && assetsRes.assets.length > 0) {
-          next.brandAssets = assetsRes.assets.map((a: any) => ({
-            id: a.assetId || a.id,
-            name: a.name,
-            category: a.category || 'Collateral',
-            svgContent: a.svgContent || '',
-            createdAt: a.createdAt || new Date().toISOString(),
-          }));
+        if (Array.isArray(assetsRes) && assetsRes.length > 0) {
+          next.assets = assetsRes;
+        } else if ((assetsRes as any)?.assets && Array.isArray((assetsRes as any).assets)) {
+          next.assets = (assetsRes as any).assets;
         }
 
         return next;

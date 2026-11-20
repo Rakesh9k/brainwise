@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
-  AlertCircle,
   ArrowRight,
   Bot,
   CheckCircle2,
@@ -69,7 +68,9 @@ export const StrategistChatDrawer: React.FC<{
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const reduced = useReducedMotion();
 
-  const businessName = state.brain?.businessName || state.user?.companyName || 'Your Business';
+  const businessName =
+    state.brain?.businessName ||
+    (state.user?.firstName ? `${state.user.firstName}'s Venture` : 'Your Business');
   const industry = state.brain?.industry || 'Commerce';
 
   // Seed initial greeting on mount
