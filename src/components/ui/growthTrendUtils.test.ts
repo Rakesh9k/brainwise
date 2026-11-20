@@ -3,14 +3,24 @@ import assert from 'node:assert/strict';
 import {
   GROWTH_CURVE_MODE_OPTIONS,
   GROWTH_TIME_RANGE_OPTIONS,
+  buildBrushSparklinePath,
   buildEditorialTickValues,
+  clampBrushRange,
   computeGrowthTrendSummary,
+  createAnnotation,
+  filterAnnotationsForPoints,
+  findAnnotationForPoint,
   findMilestoneForPoint,
   formatGrowthMetricValue,
   formatSignedDeltaPercent,
+  indexFromClientX,
+  isBrushActive,
+  removeAnnotation,
   resolveChartMilestones,
   resolveCurveModeConfig,
   resolveTimeRangePoints,
+  slicePointsByBrush,
+  upsertAnnotation,
 } from './growthTrendUtils';
 
 test('formatGrowthMetricValue formats currency, percent, and signed numbers cleanly', () => {
@@ -196,3 +206,153 @@ test('resolveChartMilestones and findMilestoneForPoint correctly extract annotat
   const missing = findMilestoneForPoint(resolved, 'Tue');
   assert.equal(missing, undefined);
 });
+
+test('clampBrushRange handles out-of-bounds, inverted ranges, and preserves minPoints', () => {
+  assert.deepEqual(clampBrushRange(0, 5, 6, 2), [0, 5]);
+  assert.deepEqual(clampBrushRange(-2, 10, 6, 2), [0, 5]);
+  assert.deepEqual(clampBrushRange(4, 2, 6, 2), [2, 4]); // inverted
+  assert.deepEqual(clampBrushRange(3, 3, 6, 2), [3, 4]); // expanded for minPoints=2
+  assert.deepEqual(clampBrushRange(5, 5, 6, 2), [4, 5]); // adjusted start at boundary
+  assert.deepEqual(clampBrushRange(0, 0, 1, 2), [0, 0]); // totalPoints < minPoints
+  assert.deepEqual(clampBrushRange(0, 0, 0, 2), [0, 0]); // empty
+});
+
+test('slicePointsByBrush returns sliced subset or full series when range is omitted', () => {
+  const points = [
+    { label: 'Jan', value: 10 },
+    { label: 'Feb', value: 20 },
+    { label: 'Mar', value: 30 },
+    { label: 'Apr', value: 40 },
+    { label: 'May', value: 50 },
+  ];
+
+  assert.deepEqual(slicePointsByBrush(points, null), points);
+  assert.deepEqual(slicePointsByBrush(points, undefined), points);
+
+  const zoomed = slicePointsByBrush(points, [1, 3]);
+  assert.equal(zoomed.length, 3);
+  assert.equal(zoomed[0].label, 'Feb');
+  assert.equal(zoomed[2].label, 'Apr');
+
+  // Single point dataset
+  assert.deepEqual(slicePointsByBrush([{ label: 'Only', value: 1 }], [0, 0]), [
+    { label: 'Only', value: 1 },
+  ]);
+  assert.deepEqual(slicePointsByBrush([], [0, 0]), []);
+});
+
+test('isBrushActive detects whether the range is zoomed in or full view', () => {
+  assert.equal(isBrushActive([0, 4], 5), false);
+  assert.equal(isBrushActive([1, 4], 5), true);
+  assert.equal(isBrushActive([0, 3], 5), true);
+  assert.equal(isBrushActive([1, 3], 5), true);
+  assert.equal(isBrushActive(null, 5), false);
+  assert.equal(isBrushActive([0, 0], 0), false);
+});
+
+test('indexFromClientX maps coordinate fractions to nearest point indices with clamping', () => {
+  // 5 points -> indices 0, 1, 2, 3, 4
+  const rectLeft = 100;
+  const rectWidth = 200;
+  const total = 5;
+
+  assert.equal(indexFromClientX(100, rectLeft, rectWidth, total), 0);
+  assert.equal(indexFromClientX(50, rectLeft, rectWidth, total), 0); // clamp left
+  assert.equal(indexFromClientX(300, rectLeft, rectWidth, total), 4);
+  assert.equal(indexFromClientX(350, rectLeft, rectWidth, total), 4); // clamp right
+  assert.equal(indexFromClientX(200, rectLeft, rectWidth, total), 2); // exactly middle (50% = index 2)
+  assert.equal(indexFromClientX(150, rectLeft, rectWidth, total), 1); // 25% = index 1
+});
+
+test('buildBrushSparklinePath generates valid SVG path commands for overview sparkline', () => {
+  const points = [
+    { label: 'W1', value: 100 },
+    { label: 'W2', value: 250 },
+    { label: 'W3', value: 180 },
+    { label: 'W4', value: 300 },
+  ];
+
+  const { areaPath, linePath } = buildBrushSparklinePath(points, 100, 32);
+  assert.ok(linePath.startsWith('M 0'));
+  assert.ok(linePath.includes('L 100'));
+  assert.ok(areaPath.includes('L 100 32 L 0 32 Z'));
+
+  // Degenerate inputs
+  const empty = buildBrushSparklinePath([], 100, 32);
+  assert.equal(empty.linePath, '');
+  assert.equal(empty.areaPath, '');
+
+  const single = buildBrushSparklinePath([{ label: 'W1', value: 100 }], 100, 32);
+  assert.ok(single.linePath.includes('M 0'));
+  assert.ok(single.areaPath.includes('Z'));
+});
+
+test('createAnnotation creates formatted trend annotation with generated id and timestamps', () => {
+  const annot = createAnnotation('Oct 15', 'Traffic spike after podcast launch', {
+    color: 'accent',
+    author: 'Growth Lead',
+  });
+
+  assert.ok(annot.id.startsWith('annot-Oct 15-'));
+  assert.equal(annot.xLabel, 'Oct 15');
+  assert.equal(annot.text, 'Traffic spike after podcast launch');
+  assert.equal(annot.color, 'accent');
+  assert.equal(annot.author, 'Growth Lead');
+  assert.ok(annot.createdAt);
+  assert.ok(annot.updatedAt);
+});
+
+test('upsertAnnotation inserts new annotations and updates existing by xLabel or id', () => {
+  const a1 = createAnnotation('Mon', 'First note');
+  const list1 = upsertAnnotation([], a1);
+  assert.equal(list1.length, 1);
+  assert.equal(list1[0].text, 'First note');
+
+  // Insert second point note
+  const a2 = createAnnotation('Wed', 'Midweek surge');
+  const list2 = upsertAnnotation(list1, a2);
+  assert.equal(list2.length, 2);
+
+  // Update existing note on 'Mon'
+  const updatedMon = { ...a1, text: 'Revised note on Monday dip' };
+  const list3 = upsertAnnotation(list2, updatedMon);
+  assert.equal(list3.length, 2);
+  assert.equal(list3[0].text, 'Revised note on Monday dip');
+  assert.equal(list3[1].text, 'Midweek surge');
+});
+
+test('removeAnnotation removes annotation by id or xLabel cleanly', () => {
+  const a1 = createAnnotation('W1', 'Note 1');
+  const a2 = createAnnotation('W2', 'Note 2');
+  const list = [a1, a2];
+
+  const removedById = removeAnnotation(list, a1.id);
+  assert.equal(removedById.length, 1);
+  assert.equal(removedById[0].xLabel, 'W2');
+
+  const removedByXLabel = removeAnnotation(list, 'W2');
+  assert.equal(removedByXLabel.length, 1);
+  assert.equal(removedByXLabel[0].xLabel, 'W1');
+
+  assert.deepEqual(removeAnnotation([], 'W1'), []);
+  assert.deepEqual(removeAnnotation(undefined, 'W1'), []);
+});
+
+test('findAnnotationForPoint and filterAnnotationsForPoints match annotations accurately', () => {
+  const a1 = createAnnotation('W1', 'Alpha test');
+  const a2 = createAnnotation('W3', 'Gamma test');
+  const list = [a1, a2];
+
+  assert.equal(findAnnotationForPoint(list, 'W1')?.text, 'Alpha test');
+  assert.equal(findAnnotationForPoint(list, 'W2'), undefined);
+  assert.equal(findAnnotationForPoint([], 'W1'), undefined);
+
+  const points = [
+    { label: 'W1', value: 10 },
+    { label: 'W2', value: 20 },
+  ];
+  const filtered = filterAnnotationsForPoints(list, points);
+  assert.equal(filtered.length, 1);
+  assert.equal(filtered[0].xLabel, 'W1');
+});
+

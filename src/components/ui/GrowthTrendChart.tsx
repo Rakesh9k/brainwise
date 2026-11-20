@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   Area,
@@ -22,14 +22,19 @@ import {
   type GrowthTrendPoint,
   type GrowthTrendSeriesMap,
   type ResolvedGrowthMilestone,
+  buildBrushSparklinePath,
   buildEditorialTickValues,
+  clampBrushRange,
   computeGrowthTrendSummary,
   findMilestoneForPoint,
   formatGrowthMetricValue,
   formatSignedDeltaPercent,
+  indexFromClientX,
+  isBrushActive,
   resolveChartMilestones,
   resolveCurveModeConfig,
   resolveTimeRangePoints,
+  slicePointsByBrush,
 } from './growthTrendUtils';
 
 export type {
@@ -98,6 +103,23 @@ export interface GrowthTrendChartProps {
   showHairlines?: boolean;
   /** Show bottom period & trajectory readout bar. */
   showFooter?: boolean;
+  /** Toggle rendering of the time-range brush slider below the chart (defaults to true). */
+  showBrushSlider?: boolean;
+  /** Controlled brush selection range `[startIndex, endIndex]`. */
+  brushRange?: [number, number];
+  /** Uncontrolled initial brush selection range `[startIndex, endIndex]`. */
+  defaultBrushRange?: [number, number];
+  /** Callback fired whenever the user adjusts the brush zoom selection. */
+  onBrushChange?: (brush: {
+    startIndex: number;
+    endIndex: number;
+    points: GrowthTrendPoint[];
+    isZoomed: boolean;
+  }) => void;
+  /** Minimum number of points that can be selected in a zoom window (default 2). */
+  minBrushPoints?: number;
+  /** Slider track height in pixels (default 32). */
+  brushSliderHeight?: number;
   ariaLabel?: string;
   className?: string;
 }
@@ -647,6 +669,439 @@ export const TactileRangeSelector: React.FC<{
   );
 };
 
+export interface TactileBrushSliderProps {
+  /** Full point series representing the macro overview horizon. */
+  points: GrowthTrendPoint[];
+  /** Current start index of the brush window. */
+  startIndex: number;
+  /** Current end index of the brush window. */
+  endIndex: number;
+  /** Callback fired when the user adjusts the brush zoom selection. */
+  onChange: (range: [number, number]) => void;
+  /** Dark obsidian variant for Performance & Execution Pulse surfaces. */
+  dark?: boolean;
+  /** Minimum selectable points span (defaults to 2). */
+  minPoints?: number;
+  /** Track height in pixels (defaults to 32). */
+  height?: number;
+  /** Value formatting prefix (e.g. "$", "+"). */
+  unitPrefix?: string;
+  /** Value formatting suffix (e.g. "%", " subs"). */
+  unitSuffix?: string;
+  /** Optional accessible label. */
+  ariaLabel?: string;
+  className?: string;
+}
+
+/**
+ * TactileBrushSlider
+ * Precision time-range overview slider allowing users to brush-select and zoom in
+ * on a subset of chart data points, with dual draggable travellers, interactive window panning,
+ * sparkline overview silhouette, and keyboard step support.
+ */
+export const TactileBrushSlider: React.FC<TactileBrushSliderProps> = ({
+  points,
+  startIndex,
+  endIndex,
+  onChange,
+  dark = false,
+  minPoints = 2,
+  height = 32,
+  unitPrefix = '',
+  unitSuffix = '',
+  ariaLabel = 'Time range zoom slider',
+  className = '',
+}) => {
+  const rawId = useId().replace(/:/g, '');
+  const sparklineGradId = `bw-sparkline-grad-${rawId}`;
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [dragMode, setDragMode] = useState<'start' | 'end' | 'window' | null>(null);
+
+  const totalPoints = points.length;
+  const [clampedStart, clampedEnd] = clampBrushRange(startIndex, endIndex, totalPoints, minPoints);
+  const isZoomed = isBrushActive([clampedStart, clampedEnd], totalPoints);
+
+  const currentBoundsRef = useRef<[number, number]>([clampedStart, clampedEnd]);
+  currentBoundsRef.current = [clampedStart, clampedEnd];
+
+  const dragRef = useRef<{
+    mode: 'start' | 'end' | 'window';
+    startX: number;
+    startIndices: [number, number];
+  } | null>(null);
+
+  const sparkline = useMemo(() => buildBrushSparklinePath(points, 100, height), [points, height]);
+
+  const startPct = totalPoints > 1 ? (clampedStart / (totalPoints - 1)) * 100 : 0;
+  const endPct = totalPoints > 1 ? (clampedEnd / (totalPoints - 1)) * 100 : 100;
+  const widthPct = Math.max(0, endPct - startPct);
+
+  // Global pointer listeners for smooth dragging outside element bounds
+  useEffect(() => {
+    if (!dragMode) return;
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragRef.current || !trackRef.current) return;
+      const rect = trackRef.current.getBoundingClientRect();
+      if (rect.width <= 0) return;
+
+      const { mode, startX, startIndices } = dragRef.current;
+      const total = points.length;
+
+      if (mode === 'start') {
+        const newStart = indexFromClientX(e.clientX, rect.left, rect.width, total);
+        const currentEnd = currentBoundsRef.current[1];
+        const next = clampBrushRange(newStart, currentEnd, total, minPoints);
+        onChange(next);
+      } else if (mode === 'end') {
+        const newEnd = indexFromClientX(e.clientX, rect.left, rect.width, total);
+        const currentStart = currentBoundsRef.current[0];
+        const next = clampBrushRange(currentStart, newEnd, total, minPoints);
+        onChange(next);
+      } else if (mode === 'window') {
+        const deltaX = e.clientX - startX;
+        const deltaIndex = Math.round((deltaX / rect.width) * (total - 1));
+        const span = startIndices[1] - startIndices[0];
+        const maxStart = total - 1 - span;
+        const targetStart = Math.max(0, Math.min(startIndices[0] + deltaIndex, maxStart));
+        const targetEnd = targetStart + span;
+        onChange([targetStart, targetEnd]);
+      }
+    };
+
+    const onPointerUp = () => {
+      dragRef.current = null;
+      setDragMode(null);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+    };
+  }, [dragMode, points.length, minPoints, onChange]);
+
+  if (totalPoints < minPoints) {
+    return null;
+  }
+
+  const handleStartPointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    dragRef.current = {
+      mode: 'start',
+      startX: e.clientX,
+      startIndices: [clampedStart, clampedEnd],
+    };
+    setDragMode('start');
+  };
+
+  const handleEndPointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    dragRef.current = {
+      mode: 'end',
+      startX: e.clientX,
+      startIndices: [clampedStart, clampedEnd],
+    };
+    setDragMode('end');
+  };
+
+  const handleWindowPointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    dragRef.current = {
+      mode: 'window',
+      startX: e.clientX,
+      startIndices: [clampedStart, clampedEnd],
+    };
+    setDragMode('window');
+  };
+
+  const handleTrackPointerDown = (e: React.PointerEvent) => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const clickedIdx = indexFromClientX(e.clientX, rect.left, rect.width, totalPoints);
+
+    if (clickedIdx < clampedStart) {
+      const next = clampBrushRange(clickedIdx, clampedEnd, totalPoints, minPoints);
+      onChange(next);
+      dragRef.current = {
+        mode: 'start',
+        startX: e.clientX,
+        startIndices: next,
+      };
+      setDragMode('start');
+    } else if (clickedIdx > clampedEnd) {
+      const next = clampBrushRange(clampedStart, clickedIdx, totalPoints, minPoints);
+      onChange(next);
+      dragRef.current = {
+        mode: 'end',
+        startX: e.clientX,
+        startIndices: next,
+      };
+      setDragMode('end');
+    }
+  };
+
+  const handleStartKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      onChange(clampBrushRange(clampedStart - 1, clampedEnd, totalPoints, minPoints));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      onChange(clampBrushRange(clampedStart + 1, clampedEnd, totalPoints, minPoints));
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      onChange(clampBrushRange(0, clampedEnd, totalPoints, minPoints));
+    }
+  };
+
+  const handleEndKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      onChange(clampBrushRange(clampedStart, clampedEnd - 1, totalPoints, minPoints));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      onChange(clampBrushRange(clampedStart, clampedEnd + 1, totalPoints, minPoints));
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      onChange(clampBrushRange(clampedStart, totalPoints - 1, totalPoints, minPoints));
+    }
+  };
+
+  const handleResetZoom = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange([0, totalPoints - 1]);
+  };
+
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      data-tactile-brush-slider={dark ? 'dark' : 'light'}
+      data-brush-is-zoomed={isZoomed ? 'true' : 'false'}
+      data-brush-start-index={clampedStart}
+      data-brush-end-index={clampedEnd}
+      className={`w-full select-none ${className}`}
+    >
+      {/* Slider Track Area */}
+      <div
+        ref={trackRef}
+        onPointerDown={handleTrackPointerDown}
+        style={{ height }}
+        className={`relative w-full rounded-[8px] overflow-hidden border cursor-crosshair touch-none transition-colors ${
+          dark
+            ? 'bg-[#151514] border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.55)]'
+            : 'bg-[#F4F4F1] border-[#E5E5DF] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]'
+        }`}
+      >
+        {/* Sparkline Overview Vector Silhouette */}
+        <svg
+          aria-hidden="true"
+          viewBox={`0 0 100 ${height}`}
+          preserveAspectRatio="none"
+          className="absolute inset-0 w-full h-full pointer-events-none select-none"
+        >
+          <defs>
+            <linearGradient id={sparklineGradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--bw-orange)" stopOpacity={dark ? 0.32 : 0.22} />
+              <stop offset="100%" stopColor="var(--bw-orange)" stopOpacity={dark ? 0.04 : 0.02} />
+            </linearGradient>
+          </defs>
+          {sparkline.areaPath && <path d={sparkline.areaPath} fill={`url(#${sparklineGradId})`} />}
+          {sparkline.linePath && (
+            <path
+              d={sparkline.linePath}
+              fill="none"
+              stroke="var(--bw-orange)"
+              strokeWidth="1.25"
+              strokeOpacity={dark ? 0.65 : 0.55}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
+        </svg>
+
+        {/* Left Unselected Dimming Mask */}
+        <div
+          aria-hidden="true"
+          className={`absolute top-0 bottom-0 left-0 pointer-events-none transition-opacity ${
+            dark ? 'bg-black/55' : 'bg-white/60'
+          }`}
+          style={{ width: `${startPct}%` }}
+        />
+
+        {/* Right Unselected Dimming Mask */}
+        <div
+          aria-hidden="true"
+          className={`absolute top-0 bottom-0 right-0 pointer-events-none transition-opacity ${
+            dark ? 'bg-black/55' : 'bg-white/60'
+          }`}
+          style={{ width: `${100 - endPct}%` }}
+        />
+
+        {/* Active Selection Zoom Window */}
+        <div
+          role="region"
+          aria-label="Zoom selection window. Drag to pan."
+          data-brush-window="true"
+          onPointerDown={handleWindowPointerDown}
+          className={`absolute top-0 bottom-0 cursor-grab active:cursor-grabbing border-y z-10 transition-colors ${
+            dark
+              ? 'border-[#FF9A45]/45 bg-[#FF9A45]/[0.08] shadow-[inset_0_0_0_1px_rgba(255,154,69,0.12)]'
+              : 'border-[var(--bw-orange)]/55 bg-[var(--bw-orange)]/[0.08] shadow-[inset_0_0_0_1px_rgba(255,116,23,0.12)]'
+          } ${dragMode === 'window' ? (dark ? '!bg-[#FF9A45]/[0.16]' : '!bg-[var(--bw-orange)]/[0.14]') : 'hover:bg-[var(--bw-orange)]/[0.12]'}`}
+          style={{
+            left: `${startPct}%`,
+            width: `${widthPct}%`,
+          }}
+        >
+          {/* Central Grip Indicator */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-1 opacity-40">
+              <div
+                className={`w-0.5 h-3 rounded-full ${dark ? 'bg-[#FF9A45]' : 'bg-[var(--bw-orange)]'}`}
+              />
+              <div
+                className={`w-0.5 h-3 rounded-full ${dark ? 'bg-[#FF9A45]' : 'bg-[var(--bw-orange)]'}`}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Start Traveller Handle (Left) */}
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label="Zoom window start"
+          aria-valuenow={clampedStart}
+          aria-valuemin={0}
+          aria-valuemax={clampedEnd - minPoints + 1}
+          aria-valuetext={points[clampedStart]?.label}
+          data-brush-handle="start"
+          onPointerDown={handleStartPointerDown}
+          onKeyDown={handleStartKeyDown}
+          className="absolute top-0 bottom-0 w-4 -ml-2 cursor-ew-resize flex items-center justify-center z-20 outline-none focus:outline-none group"
+          style={{ left: `${startPct}%` }}
+        >
+          <div
+            className={`w-2 h-5 rounded-[4px] border transition-all flex items-center justify-center shadow-sm ${
+              dark
+                ? 'bg-[#2A2A28] border-[#52524D] group-hover:border-[#FF9A45] group-focus:border-[#FF9A45] group-focus:ring-1 group-focus:ring-[#FF9A45]'
+                : 'bg-white border-[#C8C8C2] group-hover:border-[var(--bw-orange)] group-focus:border-[var(--bw-orange)] group-focus:ring-1 group-focus:ring-[var(--bw-orange)]'
+            } ${dragMode === 'start' ? (dark ? '!border-[#FF9A45] !bg-[#363632]' : '!border-[var(--bw-orange)] !bg-[#FFF8F4]') : ''}`}
+          >
+            <div className={`w-[1px] h-2.5 ${dark ? 'bg-[#A8A8A2]' : 'bg-[#686864]'}`} />
+          </div>
+        </div>
+
+        {/* End Traveller Handle (Right) */}
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label="Zoom window end"
+          aria-valuenow={clampedEnd}
+          aria-valuemin={clampedStart + minPoints - 1}
+          aria-valuemax={totalPoints - 1}
+          aria-valuetext={points[clampedEnd]?.label}
+          data-brush-handle="end"
+          onPointerDown={handleEndPointerDown}
+          onKeyDown={handleEndKeyDown}
+          className="absolute top-0 bottom-0 w-4 -ml-2 cursor-ew-resize flex items-center justify-center z-20 outline-none focus:outline-none group"
+          style={{ left: `${endPct}%` }}
+        >
+          <div
+            className={`w-2 h-5 rounded-[4px] border transition-all flex items-center justify-center shadow-sm ${
+              dark
+                ? 'bg-[#2A2A28] border-[#52524D] group-hover:border-[#FF9A45] group-focus:border-[#FF9A45] group-focus:ring-1 group-focus:ring-[#FF9A45]'
+                : 'bg-white border-[#C8C8C2] group-hover:border-[var(--bw-orange)] group-focus:border-[var(--bw-orange)] group-focus:ring-1 group-focus:ring-[var(--bw-orange)]'
+            } ${dragMode === 'end' ? (dark ? '!border-[#FF9A45] !bg-[#363632]' : '!border-[var(--bw-orange)] !bg-[#FFF8F4]') : ''}`}
+          >
+            <div className={`w-[1px] h-2.5 ${dark ? 'bg-[#A8A8A2]' : 'bg-[#686864]'}`} />
+          </div>
+        </div>
+      </div>
+
+      {/* Overview Readout & Reset Bar */}
+      <div className="mt-1 flex items-center justify-between gap-2 text-[10px] font-mono-num select-none">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ backgroundColor: 'var(--bw-orange)' }}
+          />
+          <span className={`truncate ${dark ? 'text-[#B8B8B2]' : 'text-[#686864]'}`}>
+            <span className={dark ? 'text-white font-medium' : 'text-[#171717] font-medium'}>
+              {points[clampedStart]?.label}
+              {typeof points[clampedStart]?.value === 'number' && (
+                <span
+                  className={`ml-1 text-[9px] ${dark ? 'text-[#FF9A45]' : 'text-[var(--bw-orange)]'}`}
+                >
+                  ({formatGrowthMetricValue(points[clampedStart].value, unitPrefix, unitSuffix)})
+                </span>
+              )}
+            </span>
+            {' → '}
+            <span className={dark ? 'text-white font-medium' : 'text-[#171717] font-medium'}>
+              {points[clampedEnd]?.label}
+              {typeof points[clampedEnd]?.value === 'number' && (
+                <span
+                  className={`ml-1 text-[9px] ${dark ? 'text-[#FF9A45]' : 'text-[var(--bw-orange)]'}`}
+                >
+                  ({formatGrowthMetricValue(points[clampedEnd].value, unitPrefix, unitSuffix)})
+                </span>
+              )}
+            </span>
+            <span className={`ml-1.5 ${dark ? 'text-[#858585]' : 'text-[#90908C]'}`}>
+              ({clampedEnd - clampedStart + 1} of {totalPoints} pts)
+            </span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {isZoomed ? (
+            <button
+              type="button"
+              data-brush-reset-button="true"
+              onClick={handleResetZoom}
+              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono-num font-medium transition-colors cursor-pointer focus-ring ${
+                dark
+                  ? 'bg-white/[0.08] hover:bg-white/[0.14] text-[#FF9A45] hover:text-white border border-white/[0.1]'
+                  : 'bg-[#FFF3EB] hover:bg-[#FFE6D6] text-[#C44D00] border border-[#FFD2B3]'
+              }`}
+              aria-label="Reset zoom to full range"
+            >
+              <svg
+                aria-hidden="true"
+                className="w-2.5 h-2.5 shrink-0"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path
+                  d="M2 6a4 4 0 1 1 1.17 2.83L2 10m0-4h3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Reset Zoom
+            </button>
+          ) : (
+            <span className={`text-[9.5px] ${dark ? 'text-[#70706A]' : 'text-[#94948E]'}`}>
+              Drag handles to zoom
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /**
  * GrowthTrendChart
  * Recharts-powered business performance trend visualizer styled with `--bw-orange`,
@@ -681,6 +1136,12 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   showYAxis = false,
   showHairlines = true,
   showFooter = true,
+  showBrushSlider = true,
+  brushRange: controlledBrushRange,
+  defaultBrushRange,
+  onBrushChange,
+  minBrushPoints = 2,
+  brushSliderHeight = 32,
   ariaLabel = 'Business growth performance trend chart',
   className = '',
 }) => {
@@ -689,6 +1150,9 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   const gradientId = `bw-growth-area-${rawId}`;
   const [internalRange, setInternalRange] = useState<GrowthTimeRange>(defaultRange);
   const [internalCurveMode, setInternalCurveMode] = useState<GrowthCurveMode>(defaultCurveMode);
+  const [internalBrushRange, setInternalBrushRange] = useState<[number, number] | null>(
+    defaultBrushRange ?? null
+  );
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [hoveredMilestoneX, setHoveredMilestoneX] = useState<string | null>(null);
   const [selectedMilestoneX, setSelectedMilestoneX] = useState<string | null>(null);
@@ -696,25 +1160,6 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   const activeRange = controlledRange ?? internalRange;
   const activeCurveMode = controlledCurveMode ?? internalCurveMode;
   const curveConfig = useMemo(() => resolveCurveModeConfig(activeCurveMode), [activeCurveMode]);
-
-  const handleSelectRange = (nextRange: GrowthTimeRange) => {
-    if (nextRange === activeRange) return;
-    setHoveredIndex(null);
-    setHoveredMilestoneX(null);
-    setSelectedMilestoneX(null);
-    if (controlledRange === undefined) {
-      setInternalRange(nextRange);
-    }
-    onRangeChange?.(nextRange);
-  };
-
-  const handleSelectCurveMode = (nextMode: GrowthCurveMode) => {
-    if (nextMode === activeCurveMode) return;
-    if (controlledCurveMode === undefined) {
-      setInternalCurveMode(nextMode);
-    }
-    onCurveModeChange?.(nextMode);
-  };
 
   const resolvedPoints = useMemo(
     () =>
@@ -726,17 +1171,103 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
     [activeRange, points, rangeSeries]
   );
 
+  const activeBrushRange: [number, number] = useMemo(() => {
+    if (controlledBrushRange) {
+      return clampBrushRange(
+        controlledBrushRange[0],
+        controlledBrushRange[1],
+        resolvedPoints.length,
+        minBrushPoints
+      );
+    }
+    if (internalBrushRange) {
+      return clampBrushRange(
+        internalBrushRange[0],
+        internalBrushRange[1],
+        resolvedPoints.length,
+        minBrushPoints
+      );
+    }
+    return [0, Math.max(0, resolvedPoints.length - 1)];
+  }, [controlledBrushRange, internalBrushRange, resolvedPoints.length, minBrushPoints]);
+
+  const handleBrushChange = (nextRange: [number, number]) => {
+    const clamped = clampBrushRange(
+      nextRange[0],
+      nextRange[1],
+      resolvedPoints.length,
+      minBrushPoints
+    );
+    if (controlledBrushRange === undefined) {
+      setInternalBrushRange(clamped);
+    }
+    const isZoomed = isBrushActive(clamped, resolvedPoints.length);
+    const sliced = slicePointsByBrush(resolvedPoints, clamped, minBrushPoints);
+    onBrushChange?.({
+      startIndex: clamped[0],
+      endIndex: clamped[1],
+      points: sliced,
+      isZoomed,
+    });
+  };
+
+  const handleSelectRange = (nextRange: GrowthTimeRange) => {
+    if (nextRange === activeRange) return;
+    setHoveredIndex(null);
+    setHoveredMilestoneX(null);
+    setSelectedMilestoneX(null);
+    if (controlledRange === undefined) {
+      setInternalRange(nextRange);
+    }
+    if (controlledBrushRange === undefined) {
+      setInternalBrushRange(null);
+    }
+    const nextPoints = resolveTimeRangePoints({
+      range: nextRange,
+      points,
+      rangeSeries,
+    });
+    onBrushChange?.({
+      startIndex: 0,
+      endIndex: Math.max(0, nextPoints.length - 1),
+      points: nextPoints,
+      isZoomed: false,
+    });
+    onRangeChange?.(nextRange);
+  };
+
+  const handleSelectCurveMode = (nextMode: GrowthCurveMode) => {
+    if (nextMode === activeCurveMode) return;
+    if (controlledCurveMode === undefined) {
+      setInternalCurveMode(nextMode);
+    }
+    onCurveModeChange?.(nextMode);
+  };
+
+  const isCurrentBrushZoomed = useMemo(
+    () => isBrushActive(activeBrushRange, resolvedPoints.length),
+    [activeBrushRange, resolvedPoints.length]
+  );
+
+  const visiblePoints = useMemo(
+    () =>
+      showBrushSlider
+        ? slicePointsByBrush(resolvedPoints, activeBrushRange, minBrushPoints)
+        : resolvedPoints,
+    [showBrushSlider, resolvedPoints, activeBrushRange, minBrushPoints]
+  );
+
   const resolvedMilestones = useMemo(
     () =>
       showMilestones
         ? resolveChartMilestones({
-            points: resolvedPoints,
+            points: visiblePoints,
             range: activeRange,
             milestones,
             rangeMilestones,
           })
         : [],
-    [showMilestones, resolvedPoints, activeRange, milestones, rangeMilestones]
+    [showMilestones, visiblePoints, activeRange, milestones, rangeMilestones]
   );
 
   const milestonesByX = useMemo(() => {
@@ -765,11 +1296,11 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
     onAnnotationClick?.(milestone);
   };
 
-  const summary = useMemo(() => computeGrowthTrendSummary(resolvedPoints), [resolvedPoints]);
+  const summary = useMemo(() => computeGrowthTrendSummary(visiblePoints), [visiblePoints]);
   const yTicks = useMemo(() => buildEditorialTickValues(summary.yDomain), [summary.yDomain]);
   const hasBaseline = useMemo(
-    () => resolvedPoints.some((p) => typeof p.baseline === 'number'),
-    [resolvedPoints]
+    () => visiblePoints.some((p) => typeof p.baseline === 'number'),
+    [visiblePoints]
   );
   const hasMilestones = resolvedMilestones.length > 0;
 
@@ -792,9 +1323,9 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
   }
 
   const activePoint =
-    hoveredIndex !== null && resolvedPoints[hoveredIndex]
-      ? resolvedPoints[hoveredIndex]
-      : (summary.latest ?? resolvedPoints[resolvedPoints.length - 1]);
+    hoveredIndex !== null && visiblePoints[hoveredIndex]
+      ? visiblePoints[hoveredIndex]
+      : (summary.latest ?? visiblePoints[visiblePoints.length - 1]);
   const signedDeltaPct = formatSignedDeltaPercent(summary.deltaPercent);
 
   const axisTickColor = dark ? '#8A8A84' : '#858585';
@@ -844,7 +1375,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
           >
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={resolvedPoints}
+                data={visiblePoints}
                 margin={{
                   top: hasMilestones ? 28 : 10,
                   right: 12,
@@ -990,7 +1521,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                   fill={`url(#${gradientId})`}
                   dot={(dotProps) => {
                     const pt =
-                      dotProps.index !== undefined ? resolvedPoints[dotProps.index] : undefined;
+                      dotProps.index !== undefined ? visiblePoints[dotProps.index] : undefined;
                     const m = pt ? milestonesByX.get(pt.label) : undefined;
                     const isHovered = Boolean(
                       m && (hoveredMilestoneX === m.xLabel || activeMilestone?.xLabel === m.xLabel)
@@ -1002,7 +1533,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                         cx={dotProps.cx}
                         cy={dotProps.cy}
                         index={dotProps.index}
-                        total={resolvedPoints.length}
+                        total={visiblePoints.length}
                         dark={dark}
                         showAllPointDots={curveConfig.showAllPointDots}
                         milestone={showAnnotations ? m : undefined}
@@ -1027,6 +1558,23 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {showBrushSlider && resolvedPoints.length >= minBrushPoints && (
+        <div className="mt-3" data-brush-slider-wrapper="true">
+          <TactileBrushSlider
+            points={resolvedPoints}
+            startIndex={activeBrushRange[0]}
+            endIndex={activeBrushRange[1]}
+            onChange={handleBrushChange}
+            dark={dark}
+            minPoints={minBrushPoints}
+            height={brushSliderHeight}
+            unitPrefix={unitPrefix}
+            unitSuffix={unitSuffix}
+            ariaLabel={`Time-range zoom slider for ${metricLabel}`}
+          />
+        </div>
+      )}
 
       {showFooter && activePoint && (
         <div
@@ -1083,7 +1631,7 @@ export const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({
                       : 'text-[#858585]'
                 }`}
               >
-                {signedDeltaPct} ({activeRange.toUpperCase()})
+                {signedDeltaPct} ({isCurrentBrushZoomed ? 'ZOOM' : activeRange.toUpperCase()})
               </span>
             )}
             <span

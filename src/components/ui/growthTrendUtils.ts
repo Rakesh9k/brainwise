@@ -334,3 +334,252 @@ export function findMilestoneForPoint(
   if (!milestones || milestones.length === 0) return undefined;
   return milestones.find((m) => m.xLabel === pointLabel);
 }
+
+/**
+ * Clamps brush start and end index bounds safely within `[0, totalPoints - 1]`.
+ * Ensures `startIndex <= endIndex` and preserves the minimum selection span `minPoints`.
+ */
+export function clampBrushRange(
+  startIndex: number,
+  endIndex: number,
+  totalPoints: number,
+  minPoints = 2
+): [number, number] {
+  if (totalPoints <= 0) return [0, 0];
+  const maxIdx = totalPoints - 1;
+  const effectiveMin = Math.min(Math.max(1, minPoints), totalPoints);
+
+  let start = Math.max(0, Math.min(startIndex, maxIdx));
+  let end = Math.max(0, Math.min(endIndex, maxIdx));
+
+  if (start > end) {
+    [start, end] = [end, start];
+  }
+
+  if (end - start + 1 < effectiveMin) {
+    if (start + effectiveMin - 1 <= maxIdx) {
+      end = start + effectiveMin - 1;
+    } else {
+      end = maxIdx;
+      start = Math.max(0, end - effectiveMin + 1);
+    }
+  }
+
+  return [start, end];
+}
+
+/**
+ * Slices the active point series according to the brush selection window.
+ * Returns the full dataset when brushRange is omitted or null.
+ */
+export function slicePointsByBrush(
+  points: GrowthTrendPoint[],
+  brushRange: [number, number] | null | undefined,
+  minPoints = 2
+): GrowthTrendPoint[] {
+  if (!points || points.length === 0) return [];
+  if (!brushRange) return points;
+  const [start, end] = clampBrushRange(brushRange[0], brushRange[1], points.length, minPoints);
+  return points.slice(start, end + 1);
+}
+
+/**
+ * Determines whether the brush range represents an active zoomed subset
+ * rather than the full span of data points.
+ */
+export function isBrushActive(
+  brushRange: [number, number] | null | undefined,
+  totalPoints: number
+): boolean {
+  if (!brushRange || totalPoints <= 0) return false;
+  return brushRange[0] > 0 || brushRange[1] < totalPoints - 1;
+}
+
+/**
+ * Maps an interactive pointer clientX position on a slider track to the nearest point index.
+ */
+export function indexFromClientX(
+  clientX: number,
+  rectLeft: number,
+  rectWidth: number,
+  totalPoints: number
+): number {
+  if (totalPoints <= 1 || rectWidth <= 0) return 0;
+  const ratio = Math.max(0, Math.min(1, (clientX - rectLeft) / rectWidth));
+  return Math.min(totalPoints - 1, Math.round(ratio * (totalPoints - 1)));
+}
+
+/**
+ * Generates lightweight SVG path strings (area and stroke line) for the mini-overview
+ * sparkline inside the brush slider track.
+ */
+export function buildBrushSparklinePath(
+  points: GrowthTrendPoint[],
+  width = 100,
+  height = 32,
+  padding = { top: 3, bottom: 3 }
+): { areaPath: string; linePath: string } {
+  if (!points || points.length === 0 || width <= 0 || height <= 0) {
+    return { areaPath: '', linePath: '' };
+  }
+
+  if (points.length === 1) {
+    const y = Number((height / 2).toFixed(2));
+    return {
+      linePath: `M 0 ${y} L ${width} ${y}`,
+      areaPath: `M 0 ${y} L ${width} ${y} L ${width} ${height} L 0 ${height} Z`,
+    };
+  }
+
+  const values = points.map((p) => p.value);
+  const minVal = Math.min(...values);
+  const maxVal = Math.max(...values);
+  const span = maxVal - minVal || 1;
+  const effectiveHeight = Math.max(1, height - padding.top - padding.bottom);
+
+  const coords = points.map((p, idx) => {
+    const x = (idx / (points.length - 1)) * width;
+    const y = height - padding.bottom - ((p.value - minVal) / span) * effectiveHeight;
+    return { x: Number(x.toFixed(2)), y: Number(y.toFixed(2)) };
+  });
+
+  const linePath = coords.reduce(
+    (acc, pt, i) => (i === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`),
+    ''
+  );
+  const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
+
+  return { areaPath, linePath };
+}
+
+export interface GrowthTrendAnnotation {
+  id: string;
+  xLabel: string;
+  text: string;
+  createdAt?: string;
+  updatedAt?: string;
+  author?: string;
+  color?: 'amber' | 'neutral' | 'accent';
+  range?: GrowthTimeRange;
+}
+
+/**
+ * Creates a new trend annotation with a generated unique ID and ISO timestamp.
+ */
+export function createAnnotation(
+  xLabel: string,
+  text: string,
+  options?: Partial<Omit<GrowthTrendAnnotation, 'id' | 'xLabel' | 'text'>>
+): GrowthTrendAnnotation {
+  const timestamp = new Date().toISOString();
+  return {
+    id: `annot-${xLabel}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    xLabel: xLabel.trim(),
+    text: text.trim(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    color: options?.color ?? 'amber',
+    range: options?.range,
+    author: options?.author ?? 'Strategist',
+  };
+}
+
+/**
+ * Inserts or updates an annotation for a given xLabel.
+ * If an annotation for this xLabel already exists, it updates its text and updatedAt.
+ * Otherwise, it appends the new annotation.
+ */
+export function upsertAnnotation(
+  annotations: readonly GrowthTrendAnnotation[] | undefined,
+  annotation: GrowthTrendAnnotation
+): GrowthTrendAnnotation[] {
+  const current = annotations ? [...annotations] : [];
+  const existingIdx = current.findIndex(
+    (a) => a.id === annotation.id || a.xLabel === annotation.xLabel
+  );
+
+  if (existingIdx >= 0) {
+    current[existingIdx] = {
+      ...current[existingIdx],
+      ...annotation,
+      updatedAt: new Date().toISOString(),
+    };
+    return current;
+  }
+
+  return [...current, annotation];
+}
+
+/**
+ * Removes an annotation by ID or xLabel.
+ */
+export function removeAnnotation(
+  annotations: readonly GrowthTrendAnnotation[] | undefined,
+  idOrXLabel: string
+): GrowthTrendAnnotation[] {
+  if (!annotations || annotations.length === 0) return [];
+  return annotations.filter((a) => a.id !== idOrXLabel && a.xLabel !== idOrXLabel);
+}
+
+/**
+ * Finds an annotation matching a point's xLabel.
+ */
+export function findAnnotationForPoint(
+  annotations: readonly GrowthTrendAnnotation[] | undefined,
+  pointLabel: string
+): GrowthTrendAnnotation | undefined {
+  if (!annotations || annotations.length === 0) return undefined;
+  return annotations.find((a) => a.xLabel === pointLabel);
+}
+
+/**
+ * Filters annotations that match any point in the provided points series.
+ */
+export function filterAnnotationsForPoints(
+  annotations: readonly GrowthTrendAnnotation[] | undefined,
+  points: readonly GrowthTrendPoint[] | undefined
+): GrowthTrendAnnotation[] {
+  if (!annotations || !points || annotations.length === 0 || points.length === 0) return [];
+  const labelSet = new Set(points.map((p) => p.label));
+  return annotations.filter((a) => labelSet.has(a.xLabel));
+}
+
+/**
+ * Safely loads persisted annotations from localStorage.
+ */
+export function loadPersistedAnnotations(storageKey: string): GrowthTrendAnnotation[] {
+  if (typeof window === 'undefined' || !storageKey) return [];
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(
+        (item): item is GrowthTrendAnnotation =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof item.xLabel === 'string' &&
+          typeof item.text === 'string'
+      );
+    }
+  } catch {
+    // Non-blocking fallback on storage read errors or corrupted JSON
+  }
+  return [];
+}
+
+/**
+ * Safely saves annotations to localStorage.
+ */
+export function savePersistedAnnotations(
+  storageKey: string,
+  annotations: GrowthTrendAnnotation[]
+): void {
+  if (typeof window === 'undefined' || !storageKey) return;
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(annotations));
+  } catch {
+    // Non-blocking fallback on quota exceeded or restricted storage
+  }
+}
+

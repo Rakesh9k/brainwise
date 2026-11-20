@@ -53,6 +53,7 @@ import {
 } from './PremiumSkeleton';
 import {
   GrowthTrendChart,
+  TactileBrushSlider,
   TactileCurveModeToggle,
   TactileRangeSelector,
   type GrowthCurveMode,
@@ -62,6 +63,7 @@ import {
   type GrowthTrendMilestonesMap,
   type GrowthTrendPoint,
   type GrowthTrendSeriesMap,
+  type TactileBrushSliderProps,
 } from './GrowthTrendChart';
 
 export {
@@ -98,6 +100,7 @@ export {
   StaggeredLiquidContainer,
   StaggeredLiquidItem,
   SuccessTransition,
+  TactileBrushSlider,
   TactileCurveModeToggle,
   TactileRangeSelector,
   TopoGridOverlay,
@@ -119,6 +122,7 @@ export type {
   PremiumSkeletonVariant,
   PremiumSkeletonWaveTone,
   SkeletonProps,
+  TactileBrushSliderProps,
   TopoGridOverlayProps,
 };
 
