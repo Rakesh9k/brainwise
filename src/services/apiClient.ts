@@ -1204,6 +1204,39 @@ export class BrainWiseApiClient {
       'GET'
     );
   }
+
+  public async sendStrategistChat(payload: {
+    workspaceId?: string;
+    message: string;
+    threadId?: string;
+    modelTier?: 'fast' | 'deep_reasoning' | 'search_grounded';
+    history?: Array<{ role: 'user' | 'model'; parts: string }>;
+  }): Promise<{
+    reply: string;
+    threadId: string;
+    citations: Array<{ title?: string; url?: string; sourceText?: string }>;
+    modelUsed: string;
+    groundingQueries?: string[];
+    meta?: {
+      creditsDeducted: number;
+      creditBalanceRemaining: number;
+    };
+  }> {
+    const wsId = payload.workspaceId || this.activeWorkspaceId;
+    if (!wsId) {
+      throw new Error('Workspace ID is required to execute strategist chat.');
+    }
+    return this.request(
+      `/api/v1/workspaces/${wsId}/ai/chat`,
+      'POST',
+      {
+        message: payload.message,
+        threadId: payload.threadId,
+        modelTier: payload.modelTier || 'fast',
+        history: payload.history || [],
+      }
+    );
+  }
 }
 
 /**

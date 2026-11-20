@@ -4,6 +4,7 @@
  */
 
 import 'dotenv/config';
+import fs from 'fs';
 import dns from 'node:dns';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -29,9 +30,16 @@ async function startServer(): Promise<void> {
     });
     app.use(vite.middlewares);
   } else {
-    // In production, serve pre-built Vite assets from dist/
-    const defaultDist = path.resolve(__dirname, 'dist');
-    const distDir = process.env.CLIENT_DIST_DIR || defaultDist;
+    // In production, locate the static client assets directory
+    const candidates = [
+      process.env.CLIENT_DIST_DIR,
+      path.resolve(__dirname),
+      path.resolve(__dirname, 'dist'),
+      path.resolve(process.cwd(), 'dist'),
+    ].filter(Boolean) as string[];
+
+    const distDir = candidates.find((dir) => fs.existsSync(path.join(dir, 'index.html'))) || path.resolve(__dirname, 'dist');
+    console.log(`[BRAINWISE_SERVER] Serving production frontend from: ${distDir}`);
     app.use(express.static(distDir));
     app.get('*', (_req: Request, res: Response) => {
       res.sendFile(path.join(distDir, 'index.html'));

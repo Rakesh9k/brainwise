@@ -258,6 +258,17 @@ export interface AiToolExecutionEntity {
   errorMessage?: string;
 }
 
+export interface GroundingCitation {
+  title?: string;
+  url?: string;
+  sourceText?: string;
+}
+
+export interface GroundingMetadata {
+  webSearchQueries?: string[];
+  citations?: GroundingCitation[];
+}
+
 export interface AiProviderRequest {
   model: string;
   prompt: string;
@@ -265,6 +276,7 @@ export interface AiProviderRequest {
   temperature?: number;
   responseSchema?: Record<string, unknown>;
   timeoutMs?: number;
+  enableGoogleSearch?: boolean;
 }
 
 export interface AiProviderResponse {
@@ -275,6 +287,7 @@ export interface AiProviderResponse {
   model: string;
   provider: string;
   latencyMs: number;
+  groundingMetadata?: GroundingMetadata;
 }
 
 export interface AiProvider {

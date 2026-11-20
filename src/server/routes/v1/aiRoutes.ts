@@ -13,6 +13,9 @@ import { aiOrchestrationService } from '../../services/aiOrchestrationService';
 import { creditService } from '../../services/creditService';
 import { businessBrainService } from '../../services/businessBrainService';
 import { db } from '../../db/firestore';
+import { GeminiProviderAdapter } from '../../ai/modelRouter';
+import { serverConfig } from '../../config/index';
+import { executeTruthCheck } from '../../../utils/truthCheck';
 import type { AiExecutionEntity, AiWorkflowRequest, MemoryCategory } from '../../ai/types';
 
 const router = Router({ mergeParams: true });
@@ -499,6 +502,229 @@ router.post('/brand-asset', async (req: Request, res: Response): Promise<void> =
       creditBalanceRemaining: result.creditBalanceRemaining,
     },
   });
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/ai/chat
+ * Multi-Turn Gemini Strategist Partner Chatbot
+ * Enriched with dynamic Business Brain grounding, live Google Search grounding option,
+ * Truth Check guardrail, and strict video exclusion.
+ */
+router.post('/chat', async (req: Request, res: Response): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
+  const userId = req.user!.uid;
+  const {
+    message,
+    threadId = `thread_${Date.now()}`,
+    modelTier = 'fast',
+    history = [],
+  } = req.body;
+
+  if (!message || typeof message !== 'string' || !message.trim()) {
+    res.status(400).json({
+      success: false,
+      error: {
+        code: 'MISSING_MESSAGE',
+        message: 'message is required and must be a non-empty string',
+        category: 'VALIDATION_ERROR',
+      },
+    });
+    return;
+  }
+
+  // 1. Credit Reservation (2 for fast, 5 for search_grounded, 8 for deep_reasoning)
+  const creditCost =
+    modelTier === 'deep_reasoning' ? 8 : modelTier === 'search_grounded' ? 5 : 2;
+
+  let reservation: any = null;
+  try {
+    reservation = await creditService.reserveCredits({
+      workspaceId,
+      userId,
+      amount: creditCost,
+      featureId: 'FEAT-AI-CHAT',
+      category: 'AI_CHAT',
+      description: `Strategist Chat (${modelTier})`,
+    });
+  } catch (err) {
+    res.status(402).json({
+      success: false,
+      error: {
+        code: 'INSUFFICIENT_CREDITS',
+        message: err instanceof Error ? err.message : 'Insufficient credits for chat',
+        category: 'BILLING_ERROR',
+      },
+    });
+    return;
+  }
+
+  try {
+    // 2. Fetch authoritative Business Brain for Grounding
+    const profile = await businessBrainService.getProfile(workspaceId);
+    const confirmedFacts: string[] = [];
+    const inferredFacts: string[] = [];
+
+    if (profile && profile.provenance) {
+      for (const [key, item] of Object.entries(profile.provenance)) {
+        const val = (profile as any)[key] ?? item.sourceValue;
+        if (item.provenance === 'USER_CONFIRMED') {
+          confirmedFacts.push(`${key}: ${val}`);
+        } else {
+          inferredFacts.push(`${key}: ${val}`);
+        }
+      }
+    }
+
+    // 3. Compile System Instruction with Strict Directives
+    const systemInstruction = [
+      'You are the BrainWise Chief Strategy Partner, an elite AI advisor specializing in B2B/B2C venture strategy, growth acceleration, brand positioning, and market analysis.',
+      '',
+      'GROUNDING CONTEXT (BUSINESS BRAIN):',
+      profile?.businessName ? `Business Name: ${profile.businessName}` : '',
+      profile?.tagline ? `Tagline: ${profile.tagline}` : '',
+      profile?.industry ? `Industry: ${profile.industry}` : '',
+      profile?.location ? `Location: ${profile.location}` : '',
+      profile?.stage ? `Stage: ${profile.stage}` : '',
+      profile?.valueProposition ? `Value Proposition: ${profile.valueProposition}` : '',
+      profile?.targetAudience ? `Target Audience: ${profile.targetAudience}` : '',
+      confirmedFacts.length > 0
+        ? `Authoritative Confirmed Facts:\n- ${confirmedFacts.join('\n- ')}`
+        : '',
+      inferredFacts.length > 0
+        ? `Hypothetical Working Inferences:\n- ${inferredFacts.join('\n- ')}`
+        : '',
+      '',
+      'CORE GUARDRAILS:',
+      '1. FACTUAL GROUNDING: Rely strictly on the confirmed facts above. Never fabricate unverified company prices, nonexistent features, or forbidden claims.',
+      '2. STRICT VIDEO EXCLUSION: BrainWise EXPLICITLY EXCLUDES ALL AI VIDEO GENERATION, VIDEO EDITING, REEL GENERATION, OR VIDEO SCRIPTS. Never recommend, script, or suggest creating video reels, TikToks, or FFmpeg pipelines. Visual recommendations must be static carousels, SVG vector collateral, or high-DPI print collateral.',
+      '3. EDITORIAL STYLE: Deliver concise, high-signal, actionable executive guidance formatted in GitHub-style Markdown with clear section headers and bullet points.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    // 4. Model Routing
+    const model =
+      modelTier === 'deep_reasoning'
+        ? 'gemini-2.5-pro'
+        : serverConfig.geminiModel;
+
+    const enableGoogleSearch = modelTier === 'search_grounded';
+
+    // Format conversation history
+    const conversationPrompt = [
+      ...(Array.isArray(history)
+        ? history.map((h: any) => `${h.role === 'user' ? 'Founder' : 'Strategist'}: ${h.parts}`)
+        : []),
+      `Founder: ${message.trim()}`,
+      'Strategist:',
+    ].join('\n\n');
+
+    const provider = new GeminiProviderAdapter();
+    const result = await provider.generate({
+      model,
+      prompt: conversationPrompt,
+      systemInstruction,
+      temperature: modelTier === 'deep_reasoning' ? 0.2 : 0.4,
+      enableGoogleSearch,
+    });
+
+    const replyText =
+      result.text || 'I have analyzed your request based on your current Business Brain.';
+
+    // 5. Truth Check Guardrail
+    const truthCheck = executeTruthCheck(replyText, {
+      businessName: profile.businessName,
+      tagline: profile.tagline,
+      industry: profile.industry,
+      stage: profile.stage as any,
+      location: profile.location,
+      website: profile.website,
+      overviewSummary: profile.overviewSummary,
+      targetAudience: profile.targetAudience,
+      brandPositioning: profile.brandPositioning,
+      valueProposition: profile.valueProposition,
+      products: [],
+      strategicMemory: {
+        usedAngles: profile.strategicMemory?.usedAngles || [],
+        fatiguedThemes: profile.strategicMemory?.fatiguedThemes || [],
+        explicitExclusions: profile.strategicMemory?.explicitExclusions || [],
+        lastUpdated: new Date().toISOString(),
+      },
+      confirmedFacts: {},
+      aiInferences: {},
+    });
+
+    const finalReply = truthCheck.remediatedText || replyText;
+
+    // 6. Settle Credit Reservation
+    const settlement = await creditService.settleReservation({
+      workspaceId,
+      reservation,
+      featureId: 'FEAT-AI-CHAT',
+      notes: `Strategist Chat (${modelTier})`,
+    });
+
+    // 7. Persist chat message in Firestore subcollection (non-blocking)
+    try {
+      const threadRef = db
+        .collection('workspaces')
+        .doc(workspaceId)
+        .collection('chatThreads')
+        .doc(threadId);
+
+      await threadRef.set(
+        {
+          threadId,
+          workspaceId,
+          lastMessageAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
+      await threadRef.collection('messages').add({
+        userMessage: message.trim(),
+        reply: finalReply,
+        modelTier,
+        citations: result.groundingMetadata?.citations || [],
+        createdAt: new Date().toISOString(),
+        userId,
+      });
+    } catch (saveErr) {
+      console.warn('Non-blocking chat history persistence warning:', saveErr);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        reply: finalReply,
+        threadId,
+        citations: result.groundingMetadata?.citations || [],
+        modelUsed: result.model,
+        groundingQueries: result.groundingMetadata?.webSearchQueries || [],
+        meta: {
+          creditsDeducted: creditCost,
+          creditBalanceRemaining: settlement.remainingBalance,
+        },
+      },
+    });
+  } catch (err) {
+    if (reservation) {
+      await creditService.refundCredits({
+        workspaceId,
+        reservation,
+        reason: err instanceof Error ? err.message : 'Chat generation failed',
+      });
+    }
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'GENERATION_ERROR',
+        message: err instanceof Error ? err.message : 'Chat processing failed',
+        category: 'AI_EXECUTION_ERROR',
+      },
+    });
+  }
 });
 
 export const aiRoutes = router;

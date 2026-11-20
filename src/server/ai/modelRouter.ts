@@ -9,6 +9,8 @@ import type {
   AiProvider,
   AiProviderRequest,
   AiProviderResponse,
+  GroundingCitation,
+  GroundingMetadata,
   ModelRoutingConfig,
 } from './types';
 
@@ -57,18 +59,48 @@ export class GeminiProviderAdapter implements AiProvider {
     }
 
     try {
+      const generateConfig: Record<string, unknown> = {
+        systemInstruction: req.systemInstruction,
+        temperature: req.temperature ?? 0.3,
+      };
+
+      if (req.enableGoogleSearch) {
+        generateConfig.tools = [{ googleSearch: {} }];
+      }
+
       const response = await this.client.models.generateContent({
         model: req.model || serverConfig.geminiModel,
         contents: req.prompt,
-        config: {
-          systemInstruction: req.systemInstruction,
-          temperature: req.temperature ?? 0.3,
-        },
+        config: generateConfig,
       });
 
       this.consecutiveFailures = 0;
       const text = response.text || '';
       const latencyMs = Date.now() - startMs;
+
+      // Extract Google Search grounding metadata if present
+      let groundingMetadata: GroundingMetadata | undefined;
+      const candidate = response.candidates?.[0] as any;
+      const gm = candidate?.groundingMetadata;
+      if (gm) {
+        const webSearchQueries: string[] = Array.isArray(gm.webSearchQueries)
+          ? gm.webSearchQueries
+          : [];
+        const citations: GroundingCitation[] = [];
+        if (Array.isArray(gm.groundingChunks)) {
+          for (const chunk of gm.groundingChunks) {
+            if (chunk?.web?.uri) {
+              citations.push({
+                title: chunk.web.title || chunk.web.uri,
+                url: chunk.web.uri,
+              });
+            }
+          }
+        }
+        if (webSearchQueries.length > 0 || citations.length > 0) {
+          groundingMetadata = { webSearchQueries, citations };
+        }
+      }
 
       return {
         text,
@@ -77,6 +109,7 @@ export class GeminiProviderAdapter implements AiProvider {
         model: req.model || serverConfig.geminiModel,
         provider: this.name,
         latencyMs,
+        groundingMetadata,
       };
     } catch (err) {
       this.recordFailure();

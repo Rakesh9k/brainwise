@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { INITIAL_BRAINWISE_STATE } from '../data/mockData';
 import { apiClient } from '../services/apiClient';
+import { signInWithGoogle, signOutClient } from '../services/firebaseClient';
 import { recordStrategicAngle, ensureStrategicMemory } from '../utils/strategicMemory';
 import type {
   AnyRoute,
@@ -47,6 +48,20 @@ interface BrainWiseContextValue {
     options?: { settingsTab?: SettingsTabId; competitorId?: string; reportId?: string }
   ) => void;
   loginDemo: (firstName?: string, email?: string) => void;
+  loginWithGoogle: () => Promise<{ success: boolean; nextRoute?: string; error?: string }>;
+  hydrateWorkspaceState: (workspaceId?: string) => Promise<void>;
+  sendChatToStrategist: (
+    message: string,
+    options?: {
+      threadId?: string;
+      modelTier?: 'fast' | 'deep_reasoning' | 'search_grounded';
+      history?: Array<{ role: 'user' | 'model'; parts: string }>;
+    }
+  ) => Promise<{
+    reply: string;
+    citations: Array<{ title?: string; url?: string }>;
+    modelUsed: string;
+  }>;
   loginUser: (
     email: string,
     password: string
