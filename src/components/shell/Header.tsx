@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Bell, HelpCircle, LogOut, Menu, Search, Settings, User } from 'lucide-react';
+import { Bell, HelpCircle, LogOut, Menu, Search, Settings, Sparkles, User } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import { BW_EASE } from '../motion/LiquidMotion';
 import { Breadcrumbs } from './Breadcrumbs';
@@ -8,7 +8,8 @@ import { Breadcrumbs } from './Breadcrumbs';
 export const Header: React.FC<{
   onOpenMobileNav: () => void;
   onOpenNotifications: () => void;
-}> = ({ onOpenMobileNav, onOpenNotifications }) => {
+  onOpenStrategist?: () => void;
+}> = ({ onOpenMobileNav, onOpenNotifications, onOpenStrategist }) => {
   const { state, navigate, logout, setGlobalSearchOpen } = useBrainWise();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const reduced = useReducedMotion();
@@ -55,6 +56,19 @@ export const Header: React.FC<{
           <Search className="w-3.5 h-3.5 text-[#858585]" />
           <kbd className="text-[10px] font-mono-num text-[#686864]">⌘K</kbd>
         </button>
+
+        {/* Tactile Ceramic Strategist Trigger */}
+        {onOpenStrategist && (
+          <button
+            type="button"
+            onClick={onOpenStrategist}
+            aria-label="Open AI Strategist"
+            className="h-8 px-2.5 rounded-full bg-[#FFFFFF] hover:bg-[#FFFFFF] border border-[#EAEAE5] hover:border-[#FFD0B3] bw-ceramic-control text-xs text-[#252525] hover:text-[#C44D00] flex items-center gap-1.5 transition-all cursor-pointer focus-ring"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+            <span className="hidden sm:inline font-medium text-xs">Strategist</span>
+          </button>
+        )}
 
         {/* Quiet Circular Notification Trigger */}
         <button

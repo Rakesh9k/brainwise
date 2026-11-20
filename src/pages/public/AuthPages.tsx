@@ -10,6 +10,7 @@ export const AuthPages: React.FC<{
   const {
     navigate,
     loginDemo,
+    loginWithGoogle,
     loginUser,
     registerUser,
     verifyUserEmail,
@@ -148,13 +149,28 @@ export const AuthPages: React.FC<{
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await loginWithGoogle();
+      setIsSubmitting(false);
+      if (res.success) {
+        navigate((res.nextRoute as any) || (mode === 'signup' ? 'onboarding' : 'dashboard'));
+      } else {
+        setError(res.error || 'Google Sign-In failed or was cancelled.');
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      setError(err instanceof Error ? err.message : 'Google Sign-In failed.');
+    }
+  };
+
   const GoogleButton = () => (
     <button
       type="button"
       disabled={isSubmitting}
-      onClick={() =>
-        mode === 'signup' ? navigate('onboarding') : loginDemo('Vishesh', 'vishesh.kakar@gmail.com')
-      }
+      onClick={handleGoogleSignIn}
       className="w-full h-10 px-4 rounded-[10px] border border-[#E6E6E2] bg-[#FFFFFF] hover:bg-[#F5F5F4] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-[#242424] flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
     >
       <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
@@ -175,7 +191,7 @@ export const AuthPages: React.FC<{
           d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0 7.565 0 3.515 2.7 1.545 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
         />
       </svg>
-      <span>Continue with Google</span>
+      <span>{isSubmitting ? 'Signing in with Google…' : 'Continue with Google'}</span>
     </button>
   );
 

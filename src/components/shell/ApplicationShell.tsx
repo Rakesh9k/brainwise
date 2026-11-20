@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { RotateCcw, X } from 'lucide-react';
+import { RotateCcw, Sparkles, X } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import { MorphingPanel, SuccessTransition } from '../motion/LiquidMotion';
 import { GlobalSearchModal, NotificationPanel } from '../ui/Overlay';
 import { TopoGridOverlay } from '../ui/TopoGridOverlay';
+import { StrategistChatDrawer } from '../chat/StrategistChatDrawer';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 
@@ -16,6 +17,7 @@ export const ApplicationShell: React.FC<{
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [strategistOpen, setStrategistOpen] = useState(false);
   const compact = Boolean(state.workspacePrefs?.compactDensity);
 
   return (
@@ -42,6 +44,7 @@ export const ApplicationShell: React.FC<{
         <Header
           onOpenMobileNav={() => setMobileNavOpen(true)}
           onOpenNotifications={() => setNotificationsOpen(true)}
+          onOpenStrategist={() => setStrategistOpen(true)}
         />
 
         <div className="relative flex-1 flex min-w-0">
@@ -67,6 +70,20 @@ export const ApplicationShell: React.FC<{
       <NotificationPanel open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
 
       <GlobalSearchModal />
+
+      <StrategistChatDrawer open={strategistOpen} onClose={() => setStrategistOpen(false)} />
+
+      {/* Floating Executive Strategist Button */}
+      <button
+        type="button"
+        onClick={() => setStrategistOpen(true)}
+        aria-label="Ask Executive AI Strategist"
+        className="fixed bottom-6 right-6 z-40 h-10 px-3.5 rounded-full bg-[#171717] hover:bg-[#262626] text-white shadow-xl flex items-center gap-2 text-xs font-semibold cursor-pointer border border-[#333333] transition-all hover:scale-105 active:scale-95 no-print"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FF7417] animate-pulse" />
+        <span>Ask Strategist</span>
+        <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+      </button>
 
       <AnimatePresence>
         {toast && (

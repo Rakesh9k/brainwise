@@ -359,6 +359,188 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => window.removeEventListener('brainwise-navigate', onRemoteNav);
   }, [navigate]);
 
+  const hydrateWorkspaceState = useCallback(async (targetWorkspaceId?: string): Promise<void> => {
+    const wsId = targetWorkspaceId || state.activeWorkspaceId;
+    if (!wsId) return;
+
+    try {
+      const [profile, goalsRes, tasksRes, compsRes, subRes, assetsRes] = await Promise.all([
+        apiClient.getBusinessProfile(wsId).catch(() => null),
+        apiClient.listGoals(wsId).catch(() => null),
+        apiClient.listTasks(wsId).catch(() => null),
+        apiClient.listCompetitors(wsId).catch(() => null),
+        apiClient.getSubscription(wsId).catch(() => null),
+        apiClient.listBrandAssets(wsId).catch(() => null),
+      ]);
+
+      setState((prev) => {
+        const next = { ...prev };
+        if (profile && profile.businessName) {
+          next.brain = {
+            ...prev.brain,
+            businessName: profile.businessName || prev.brain.businessName,
+            tagline: profile.tagline || prev.brain.tagline,
+            stage: profile.stage || prev.brain.stage,
+            location: profile.location || prev.brain.location,
+            website: profile.website || prev.brain.website,
+            overviewSummary: profile.overviewSummary || prev.brain.overviewSummary,
+            targetAudience: profile.targetAudience || prev.brain.targetAudience,
+            brandPositioning: profile.brandPositioning || prev.brain.brandPositioning,
+            valueProposition: profile.valueProposition || prev.brain.valueProposition,
+          };
+        }
+
+        if (goalsRes?.goals && Array.isArray(goalsRes.goals) && goalsRes.goals.length > 0) {
+          next.goals = goalsRes.goals.map((g: any) => ({
+            id: g.goalId || g.id,
+            title: g.title,
+            metricKey: g.metricKey || 'MRR',
+            targetValue: Number(g.targetValue) || 10000,
+            currentValue: Number(g.currentValue) || 0,
+            unitPrefix: g.unitPrefix ?? '$',
+            unitSuffix: g.unitSuffix ?? '',
+            deadlineDate: g.deadlineDate || '2026-12-31',
+            status: g.status || 'in_progress',
+          }));
+        }
+
+        if (tasksRes?.tasks && Array.isArray(tasksRes.tasks) && tasksRes.tasks.length > 0) {
+          next.tasks = tasksRes.tasks.map((t: any) => ({
+            id: t.taskId || t.id,
+            title: t.title,
+            department: t.department || 'GrowthDirector',
+            estimatedHours: Number(t.estimatedHours) || 2,
+            isPriority: Boolean(t.isPriority),
+            status: t.status || 'not_started',
+            notes: t.notes || '',
+          }));
+        }
+
+        if (
+          compsRes?.competitors &&
+          Array.isArray(compsRes.competitors) &&
+          compsRes.competitors.length > 0
+        ) {
+          next.competitors = compsRes.competitors.map((c: any) => ({
+            id: c.competitorId || c.id,
+            name: c.name,
+            domain: c.domain || '',
+            positionX: Number(c.positionX) || 50,
+            positionY: Number(c.positionY) || 50,
+            pricingMonthlyMin: Number(c.pricingMonthlyMin) || 0,
+            pricingMonthlyMax: Number(c.pricingMonthlyMax) || 0,
+            marketShare: c.marketShare || 'Direct',
+            monitoringFrequency: c.monitoringFrequency || 'weekly',
+            isMonitored: Boolean(c.isMonitored ?? true),
+            lastScannedAt: c.lastScannedAt,
+            strengths: c.strengths || [],
+            weaknesses: c.weaknesses || [],
+          }));
+        }
+
+        if (subRes) {
+          next.subscription = {
+            ...prev.subscription,
+            plan: subRes.plan || prev.subscription.plan,
+            status: subRes.status || prev.subscription.status,
+            creditsRemaining: Number(subRes.creditsRemaining ?? prev.subscription.creditsRemaining),
+          };
+        }
+
+        if (assetsRes?.assets && Array.isArray(assetsRes.assets) && assetsRes.assets.length > 0) {
+          next.brandAssets = assetsRes.assets.map((a: any) => ({
+            id: a.assetId || a.id,
+            name: a.name,
+            category: a.category || 'Collateral',
+            svgContent: a.svgContent || '',
+            createdAt: a.createdAt || new Date().toISOString(),
+          }));
+        }
+
+        return next;
+      });
+    } catch (err) {
+      console.warn('Workspace state hydration completed with fallbacks:', err);
+    }
+  }, [state.activeWorkspaceId]);
+
+  const loginWithGoogle: BrainWiseContextValue['loginWithGoogle'] = async () => {
+    try {
+      const session = await signInWithGoogle();
+      apiClient.setAuthToken(session.idToken);
+      try {
+        sessionStorage.setItem('brainwise_auth_token', session.idToken);
+      } catch {
+        // ignore storage access error
+      }
+
+      let wsId = 'ws_vishesh_growth';
+      let userDisplayName = session.displayName;
+
+      try {
+        const currentUserData = await apiClient.getCurrentUser();
+        if (currentUserData.user) {
+          userDisplayName = currentUserData.user.displayName || userDisplayName;
+        }
+        if (currentUserData.activeWorkspace?.workspaceId) {
+          wsId = currentUserData.activeWorkspace.workspaceId;
+        } else if (currentUserData.workspaces && currentUserData.workspaces.length > 0) {
+          wsId = currentUserData.workspaces[0].workspaceId;
+        }
+      } catch {
+        // Fallback to default workspace in development
+      }
+
+      apiClient.setActiveWorkspaceId(wsId);
+
+      const fullName = userDisplayName || 'Vishesh Kakar';
+      const firstName = fullName.split(' ')[0] || 'Vishesh';
+      const lastName = fullName.split(' ').slice(1).join(' ') || 'Kakar';
+      const email = session.email || 'vishesh.kakar@gmail.com';
+
+      setState((prev) => ({
+        ...prev,
+        isAuthenticated: true,
+        activeWorkspaceId: wsId,
+        currentRoute: prev.workspacePrefs?.defaultLandingView ?? 'dashboard',
+        user: {
+          ...prev.user,
+          firstName,
+          lastName,
+          email,
+          avatarInitials: (firstName[0] || 'V').toUpperCase() + (lastName[0] || 'K').toUpperCase(),
+        },
+      }));
+
+      // Hydrate state from backend
+      void hydrateWorkspaceState(wsId);
+
+      showToast(`Welcome back, ${firstName}.`);
+      return { success: true, nextRoute: 'dashboard' };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Google sign-in failed';
+      return { success: false, error: msg };
+    }
+  };
+
+  const sendChatToStrategist: BrainWiseContextValue['sendChatToStrategist'] = async (
+    message,
+    options
+  ) => {
+    const res = await apiClient.sendStrategistChat({
+      workspaceId: state.activeWorkspaceId || undefined,
+      message,
+      threadId: options?.threadId,
+      modelTier: options?.modelTier || 'fast',
+      history: options?.history,
+    });
+    return {
+      reply: res.reply,
+      citations: res.citations || [],
+      modelUsed: res.modelUsed,
+    };
+  };
+
   useEffect(() => {
     try {
       const savedToken = sessionStorage.getItem('brainwise_auth_token');
@@ -371,6 +553,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               const wsId = activeWorkspace?.workspaceId || workspaces?.[0]?.workspaceId;
               if (wsId) {
                 apiClient.setActiveWorkspaceId(wsId);
+                void hydrateWorkspaceState(wsId);
               }
               const firstName = user.displayName?.split(' ')[0] || user.email.split('@')[0];
               const lastName = user.displayName?.split(' ').slice(1).join(' ') || '';
@@ -397,7 +580,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch {
       // ignore storage access error
     }
-  }, []);
+  }, [hydrateWorkspaceState]);
 
   const loginUser: BrainWiseContextValue['loginUser'] = async (email, password) => {
     try {
@@ -844,6 +1027,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const logout = () => {
+    signOutClient().catch(() => {});
     apiClient.setAuthToken(null);
     apiClient.setActiveWorkspaceId(null);
     try {
@@ -1586,6 +1770,9 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       isWidgetPinned,
       navigate,
       loginDemo,
+      loginWithGoogle,
+      hydrateWorkspaceState,
+      sendChatToStrategist,
       loginUser,
       registerUser,
       verifyUserEmail,
