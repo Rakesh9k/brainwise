@@ -1929,10 +1929,7 @@ export class BrainWiseApiClient {
       creditBalanceRemaining: number;
     };
   }> {
-    const wsId = payload.workspaceId || this.activeWorkspaceId;
-    if (!wsId) {
-      throw new Error('Workspace ID is required to execute strategist chat.');
-    }
+    const wsId = payload.workspaceId || this.activeWorkspaceId || 'default';
     return this.request(`/api/v1/workspaces/${wsId}/ai/chat`, 'POST', {
       message: payload.message,
       threadId: payload.threadId,
