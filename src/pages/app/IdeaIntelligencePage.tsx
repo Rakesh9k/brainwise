@@ -79,7 +79,6 @@ import {
   type ValidationTabKey,
 } from '../../components/intelligence/ValidationTabNavigation';
 import { KillSwitchesSection } from '../../components/intelligence/KillSwitchesSection';
-import { InteractiveWaitingSuite } from '../../components/intelligence/InteractiveWaitingSuite';
 
 const RESEARCH_STAGES = [
   'Understanding the idea',
@@ -1177,8 +1176,6 @@ export const IdeaIntelligencePage: React.FC = () => {
           )}
 
           <DossierPreviewSkeleton />
-
-          <InteractiveWaitingSuite />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {RESEARCH_STAGES.map((stage, idx) => {
