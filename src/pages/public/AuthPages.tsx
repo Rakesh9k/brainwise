@@ -221,9 +221,8 @@ export const AuthPages: React.FC<{
         direction="fade"
         className="w-full max-w-[420px] mx-auto my-8 bg-[#FFFFFF] border border-[#E6E6E2] rounded-[14px] p-6 sm:p-8 bw-surface-raised"
       >
-        <div className="flex items-center gap-2.5 mb-6">
-          <BrandLogoMark size={28} />
-          <span className="font-heading text-lg font-bold text-[#252525]">BrainWise</span>
+        <div className="flex items-center mb-6">
+          <img src="/brainwise-logo.png" alt="BrainWise" className="h-8 w-auto object-contain" />
         </div>
 
         {mode === 'signup' && (

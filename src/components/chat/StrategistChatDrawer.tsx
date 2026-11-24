@@ -382,9 +382,11 @@ export const StrategistChatDrawer: React.FC<{
             {/* Header */}
             <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-[#EFEFEB] bg-[#FFFFFF]/80 backdrop-blur-md shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-[10px] bg-[#171717] text-white flex items-center justify-center shadow-sm">
-                  <Bot className="w-5 h-5 text-[#FF7417]" />
-                </div>
+                <img
+                  src="/brainwise-icon.png"
+                  alt="BrainWise AI Strategist"
+                  className="w-9 h-9 rounded-[10px] object-contain shadow-xs shrink-0"
+                />
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className={`${typeClass.h4} text-[#171717]`}>Executive AI Strategist</h3>
@@ -638,11 +640,18 @@ export const StrategistChatDrawer: React.FC<{
               {isSending && (
                 <div className="flex flex-col items-start w-full max-w-[85%]">
                   <div className="rounded-[16px] p-4 bg-[#FFFFFF] border border-[#E6E6E2] shadow-xs w-full space-y-3">
-                    <AgentStatusBadge
-                      state="thinking"
-                      label={`Synthesizing brief with ${TIER_CONFIG[modelTier].modelName}…`}
-                      size="sm"
-                    />
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src="/brainwise-loader.png"
+                        alt="Synthesizing..."
+                        className="w-7 h-7 object-contain animate-bounce shrink-0"
+                      />
+                      <AgentStatusBadge
+                        state="thinking"
+                        label={`Synthesizing brief with ${TIER_CONFIG[modelTier].modelName}…`}
+                        size="sm"
+                      />
+                    </div>
                     <AgentReasoningDrawer
                       isStreaming={true}
                       modelTierName={TIER_CONFIG[modelTier].modelName}

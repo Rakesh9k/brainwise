@@ -1702,12 +1702,9 @@ export const HelpSupportPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FAFAF9] p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <BrandLogoMark size={36} />
-                  <div>
-                    <div className="font-heading text-lg font-bold text-[#171717]">BrainWise</div>
-                    <div className="text-[11px] font-mono-num text-[#858585]">
-                      LIGHT SURFACE LOCK
-                    </div>
+                  <img src="/brainwise-logo.png" alt="BrainWise" className="h-8 w-auto object-contain" />
+                  <div className="text-[11px] font-mono-num text-[#858585] border-l border-[#E6E6E2] pl-3">
+                    OFFICIAL HORIZONTAL LOGO
                   </div>
                 </div>
                 <span className="text-[11px] font-mono-num text-[#5C5C58]">Clearspace ≥ 12px</span>

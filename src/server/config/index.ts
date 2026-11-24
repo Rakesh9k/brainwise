@@ -55,7 +55,14 @@ export function loadServerConfig(): ServerConfig {
 
   const corsOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
-    : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173'];
+    : [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:5173',
+        'https://brain-wise.com',
+        'https://www.brain-wise.com',
+        'https://brainwise-ai-marketing-engine.web.app',
+      ];
 
   // In production, DEV_BYPASS_AUTH must NEVER be true
   const devBypassAuth = !isProduction && process.env.DEV_BYPASS_AUTH === 'true';

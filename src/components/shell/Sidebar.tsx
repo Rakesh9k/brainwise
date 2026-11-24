@@ -122,11 +122,10 @@ export const Sidebar: React.FC<{
             onClick={() => handleNav('dashboard')}
             className="flex items-center gap-2.5 text-left cursor-pointer min-w-0 rounded-[10px] focus-ring"
           >
-            <BrandLogoMark size={26} />
-            {!isCompact && (
-              <span className="font-heading text-[15px] font-bold tracking-tight text-[#171717] whitespace-nowrap">
-                BrainWise
-              </span>
+            {isCompact ? (
+              <BrandLogoMark size={28} />
+            ) : (
+              <img src="/brainwise-logo.png" alt="BrainWise" className="h-7 max-w-[150px] object-contain" />
             )}
           </button>
 

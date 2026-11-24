@@ -246,10 +246,9 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-[1240px] mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4 sm:gap-8">
           <a
             href="#top"
-            className="flex items-center gap-2.5 font-heading text-lg font-bold tracking-tight text-[#171717] whitespace-nowrap shrink-0"
+            className="flex items-center font-heading text-lg font-bold tracking-tight text-[#171717] whitespace-nowrap shrink-0"
           >
-            <BrandLogoMark size={28} />
-            <span>BrainWise</span>
+            <img src="/brainwise-logo.png" alt="BrainWise" className="h-8 w-auto object-contain" />
           </a>
 
           <nav
@@ -327,8 +326,7 @@ export const LandingPage: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#E6E6E2]">
                   <div className="flex items-center gap-2 font-heading font-bold text-base">
-                    <BrandLogoMark size={24} />
-                    <span>BrainWise</span>
+                    <img src="/brainwise-logo.png" alt="BrainWise" className="h-6 w-auto object-contain" />
                   </div>
                   <button
                     type="button"
@@ -1149,8 +1147,7 @@ export const LandingPage: React.FC = () => {
       <footer className="py-12 bg-[#FFFFFF]">
         <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
-            <BrandLogoMark size={24} />
-            <span className="font-heading text-sm font-bold text-[#242424]">BrainWise</span>
+            <img src="/brainwise-logo.png" alt="BrainWise" className="h-6 w-auto object-contain" />
             <span className="text-xs text-[#686864]">
               · AI Business Intelligence &amp; Growth Partner
             </span>

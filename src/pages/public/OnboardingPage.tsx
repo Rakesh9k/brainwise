@@ -348,10 +348,9 @@ export const OnboardingPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAFAF9] flex flex-col justify-between p-4 sm:p-8">
       {/* Shell Header */}
       <div className="max-w-3xl w-full mx-auto flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2.5">
-          <BrandLogoMark size={26} />
-          <span className="font-heading text-base font-bold text-[#252525]">BrainWise</span>
-          <span className="text-xs text-[#8E8E88] border-l border-[#E6E6E2] pl-2.5">
+        <div className="flex items-center gap-3">
+          <img src="/brainwise-logo.png" alt="BrainWise" className="h-7 w-auto object-contain" />
+          <span className="text-xs text-[#8E8E88] border-l border-[#E6E6E2] pl-3">
             Conversational Onboarding
           </span>
         </div>

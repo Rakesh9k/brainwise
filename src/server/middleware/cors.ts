@@ -6,6 +6,9 @@
 import cors from 'cors';
 import { serverConfig } from '../config/index';
 
+const ALLOWED_ORIGIN_REGEX =
+  /^https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:brain-wise\.com|hosted\.app|web\.app|firebaseapp\.com|run\.app)(?::\d+)?$/;
+
 export const configureCors = () =>
   cors({
     origin: (origin, callback) => {
@@ -15,12 +18,16 @@ export const configureCors = () =>
       if (
         !serverConfig.isProduction ||
         serverConfig.corsOrigins.includes(origin) ||
-        origin.endsWith('.brain-wise.com')
+        origin === 'https://brain-wise.com' ||
+        origin === 'https://www.brain-wise.com' ||
+        origin === 'http://brain-wise.com' ||
+        origin === 'http://www.brain-wise.com' ||
+        ALLOWED_ORIGIN_REGEX.test(origin)
       ) {
         return callback(null, true);
       }
 
-      callback(new Error(`Origin '${origin}' blocked by CORS policy.`));
+      callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

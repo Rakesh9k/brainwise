@@ -26,12 +26,11 @@ const AnalyticsReportsPage = React.lazy(() => import('./pages/app/AnalyticsRepor
 const SettingsPage = React.lazy(() => import('./pages/app/SettingsHelpPages').then((m) => ({ default: m.SettingsPage })));
 const HelpSupportPage = React.lazy(() => import('./pages/app/SettingsHelpPages').then((m) => ({ default: m.HelpSupportPage })));
 
+import { BrainWiseLoader } from './components/ui/DesignSystem';
+
 const RouteLoadingFallback: React.FC = () => (
   <div className="flex items-center justify-center min-h-[400px] w-full">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-8 h-8 border-2 border-[#E6E6E2] border-t-[#FF7417] rounded-full animate-spin" />
-      <span className="text-xs font-medium text-[#737373]">Loading module...</span>
-    </div>
+    <BrainWiseLoader size={72} label="Loading module…" />
   </div>
 );
 

@@ -146,29 +146,53 @@ export type {
   TrendStickyNoteOverlayProps,
 };
 
-export const BrandLogoMark: React.FC<{ size?: number; dark?: boolean }> = ({
-  size = 28,
-  dark = false,
-}) => (
-  <svg
+export const BrandLogoMark: React.FC<{
+  size?: number;
+  dark?: boolean;
+  className?: string;
+}> = ({ size = 28, className = '' }) => (
+  <img
+    src="/brainwise-icon.png"
+    alt="BrainWise"
     width={size}
     height={size}
-    viewBox="0 0 32 32"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-    className="shrink-0"
-  >
-    <rect width="32" height="32" rx="9" fill={dark ? '#252525' : '#171717'} />
-    <path
-      d="M8.5 21.5V10.5L13.5 16L16 12.5L18.5 16L23.5 10.5V21.5"
-      stroke="#FF7417"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <circle cx="16" cy="9" r="1.5" fill="#FFFFFF" />
-  </svg>
+    className={`shrink-0 object-contain aspect-square rounded-[6px] ${className}`}
+  />
+);
+
+export const BrandLogo: React.FC<{
+  height?: number;
+  className?: string;
+}> = ({ height = 32, className = '' }) => (
+  <img
+    src="/brainwise-logo.png"
+    alt="BrainWise"
+    style={{ height: `${height}px`, width: 'auto' }}
+    className={`shrink-0 object-contain ${className}`}
+  />
+);
+
+export const BrainWiseLoader: React.FC<{
+  size?: number;
+  label?: string;
+  className?: string;
+}> = ({ size = 64, label = 'Processing…', className = '' }) => (
+  <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
+    <div className="relative flex items-center justify-center">
+      <div className="absolute inset-0 rounded-full bg-[#FF7417]/20 blur-xl animate-pulse" />
+      <img
+        src="/brainwise-loader.png"
+        alt="Loading..."
+        style={{ width: `${size}px`, height: 'auto' }}
+        className="relative z-10 animate-bounce duration-1000 object-contain drop-shadow-md select-none pointer-events-none"
+      />
+    </div>
+    {label && (
+      <span className="text-xs font-medium text-[#737373] tracking-wide animate-pulse">
+        {label}
+      </span>
+    )}
+  </div>
 );
 
 /**
