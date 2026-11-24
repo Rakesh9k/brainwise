@@ -493,3 +493,25 @@ test('formatDossierFinancialModelCsv generates RFC-compliant CSV with sizing, se
   assert.ok(csv.includes('PERSISTENT PITCH SCENARIOS & BENCHMARKS'));
   assert.ok(csv.includes('Regional Expansion (4-City Rollout)'));
 });
+
+test('buildDynamicDossier generates deep authentic domain research for premium chocolate', () => {
+  const dossier = buildDynamicDossier({
+    ideaSummary: 'premium chocolate',
+    industry: 'Specialty Confectionery',
+    targetMarket: 'Gourmet buyers and corporate gifting',
+    geography: 'United States',
+    depth: 'Deep Market Dossier',
+    brain: INITIAL_BRAINWISE_STATE.brain,
+  });
+
+  assert.equal(dossier.title, 'premium chocolate');
+  assert.ok(dossier.validationScorecard?.verdictLabel.includes('Artisanal Gifting'));
+  assert.ok(dossier.validationScorecard?.willingnessToPay.estimatedPriceRange.includes('$9.50 – $14.00'));
+  assert.ok(dossier.executiveSummary.includes('bean-to-bar'));
+  assert.ok(dossier.customerPainPoints.some((p) => p.title.includes('bloomed') || p.title.includes('melting')));
+  assert.ok(dossier.pricingAnalysis.tiers[0].tier.includes('Single-Origin'));
+  assert.ok(dossier.competitorLandscapeSummary.includes('Tony\'s Chocolonely') || dossier.competitorLandscapeSummary.includes('Valrhona'));
+  assert.ok(dossier.validationExperiments.some((e) => e.title.includes('Corporate Gifting') || e.title.includes('Thermal')));
+  assert.ok(dossier.criticalAssumptions?.some((a) => a.assumption.includes('Thermal barrier') || a.assumption.includes('craft bar')));
+});
+

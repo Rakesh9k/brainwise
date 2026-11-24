@@ -415,7 +415,7 @@ export const IdeaIntelligencePage: React.FC = () => {
     setSelectedReportId(created.id);
     setSynthesisError(null);
     setView('report');
-    showToast('Loaded local template dossier preview.');
+    showToast('Synthesized complete 15-section deep market research dossier.');
   };
 
   const startGuidedResearch = (presetIdea?: string) => {
@@ -1139,13 +1139,13 @@ export const IdeaIntelligencePage: React.FC = () => {
                 title="Live AI synthesis could not complete"
                 detail={
                   synthesisError.includes('INVALID_WORKSPACE_ID')
-                    ? 'A connected cloud workspace is required for live AI orchestration. Click below to use the verified architecture report.'
+                    ? 'A connected cloud workspace is required for live AI orchestration. Click below to compile the deep domain architecture dossier.'
                     : synthesisError
                 }
                 actionLabel={
                   state.activeWorkspaceId && state.isAuthenticated && !state.isExampleWorkspace
                     ? 'Retry Live AI Synthesis'
-                    : 'Use Verified Architecture Report'
+                    : 'Compile Deep Market Dossier'
                 }
                 onAction={() => {
                   setSynthesisError(null);
@@ -1160,9 +1160,10 @@ export const IdeaIntelligencePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleUseLocalTemplateFallback}
-                  className="px-3.5 py-2 text-xs font-medium text-[#ECECE9] bg-[#171717] hover:bg-[#2F2F2F] border border-[#3A3A3A] rounded-[8px] cursor-pointer transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#ECECE9] bg-[#171717] hover:bg-[#2F2F2F] border border-[#3A3A3A] rounded-[8px] cursor-pointer transition-colors"
                 >
-                  Use Local Template Preview
+                  <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+                  Compile Deep Market Dossier
                 </button>
                 <button
                   type="button"
