@@ -10,6 +10,7 @@ import { ContextualActionLedgerProvider } from './components/ui/ContextualAction
 import { ApplicationShell } from './components/shell/ApplicationShell';
 import { DepartmentTransition } from './components/motion/LiquidMotion';
 import { LandingPage } from './pages/public/LandingPage';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 // Lazy-loaded routes for code splitting and initial load performance
 const AuthPages = React.lazy(() => import('./pages/public/AuthPages').then((m) => ({ default: m.AuthPages })));
@@ -97,9 +98,11 @@ const BrainWiseRouter: React.FC = () => {
     <ApplicationShell>
       <AnimatePresence mode="wait" initial={false}>
         <DepartmentTransition key={route} routeKey={route}>
-          <Suspense fallback={<RouteLoadingFallback />}>
-            {renderAppRoute()}
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingFallback />}>
+              {renderAppRoute()}
+            </Suspense>
+          </ErrorBoundary>
         </DepartmentTransition>
       </AnimatePresence>
     </ApplicationShell>
