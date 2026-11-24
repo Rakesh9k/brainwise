@@ -183,12 +183,12 @@ const FAQS = [
   },
   {
     q: 'Can I explore the full workspace before creating an account?',
-    a: 'Yes. Click "Explore Live Demo" to step straight into a populated demonstration workspace for Solstice Craft Coffee, or complete the 3-step onboarding with your own business idea.',
+    a: 'Yes. Click "Explore Live Demo" to step straight into a preloaded example workspace for Solstice Craft Coffee (clearly marked as sample data), or sign up to create your own business workspace.',
   },
 ];
 
 export const LandingPage: React.FC = () => {
-  const { navigate, loginDemo, launchWorkspaceWithIdea } = useBrainWise();
+  const { navigate, openExampleWorkspace, launchWorkspaceWithIdea } = useBrainWise();
   const reduced = useReducedMotion();
   const [activeStep, setActiveStep] = useState<ShowcaseStepId>('01');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
@@ -228,7 +228,7 @@ export const LandingPage: React.FC = () => {
   };
 
   const handleOpenDemo = () => {
-    loginDemo('Vishesh', 'vishesh.kakar@gmail.com');
+    openExampleWorkspace();
   };
 
   const handleRunIdeaSandbox = (e: React.FormEvent) => {

@@ -485,6 +485,18 @@ export interface KillSwitchAssumption {
   status?: 'pending' | 'tested_pass' | 'tested_killed';
 }
 
+export interface GoSignalItem {
+  id: string;
+  text: string;
+  tag?: string; // e.g. "DEMAND" | "REVENUE" | "MARKET" | "FEASIBILITY"
+}
+
+export interface StopSignalItem {
+  id: string;
+  text: string;
+  tag?: string; // e.g. "REGULATORY" | "MARKET" | "RISK" | "COMPLIANCE"
+}
+
 export interface ValidationScorecard {
   viabilityScore: number; // 0 - 100 e.g. 70
   verdictLabel: string; // e.g. "Promising — build only after test 1 passes"
@@ -500,6 +512,14 @@ export interface ValidationScorecard {
     paymentModel: string;
   };
   bottomLine: string;
+  goSignals?: {
+    positiveSignals: GoSignalItem[];
+    keyStrengths: GoSignalItem[];
+  };
+  stopSignals?: {
+    criticalRisks: StopSignalItem[];
+    areasOfConcern: StopSignalItem[];
+  };
 }
 
 export interface ResearchReport {
@@ -1077,6 +1097,7 @@ export interface BrainWiseState {
   activeWorkspaceId?: string;
   workspaceId?: string;
   prototypeNoticeDismissed: boolean;
+  isExampleWorkspace?: boolean;
 }
 
 // =============================================================================

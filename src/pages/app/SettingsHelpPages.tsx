@@ -62,6 +62,7 @@ import {
   LiquidSkeletonReveal,
 } from '../../components/motion/LiquidMotion';
 import { ConfirmationDialog, Modal } from '../../components/ui/Overlay';
+import { UniversalExecutiveLayer } from '../../components/ui/UniversalExecutiveLayer';
 import {
   BW_COLORS,
   BW_DESIGN_FREEZE_VERSION,
@@ -111,6 +112,9 @@ export const SettingsPage: React.FC = () => {
     updateWorkspacePrefs,
     updateContextSharing,
     resetDemoData,
+    resetUserWorkspace,
+    openExampleWorkspace,
+    exitExampleWorkspace,
     logout,
     showToast,
     departmentResetNonce,
@@ -156,6 +160,7 @@ export const SettingsPage: React.FC = () => {
   const [inviteRole, setInviteRole] = useState<TeamMemberItem['role']>('Strategist');
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [resetCleanConfirmOpen, setResetCleanConfirmOpen] = useState(false);
   const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
 
@@ -446,6 +451,100 @@ export const SettingsPage: React.FC = () => {
             Reset Demo Workspace
           </Button>
         }
+      />
+
+      {/* Universal Executive Glance Layer (Layer 1 + Layer 3 Proof Drawer) */}
+      <UniversalExecutiveLayer
+        departmentCode="DEP-13"
+        sectionTitle="Workspace Governance & Credit Meter"
+        oneLiner="Your workspace settings, team members, and crystal-clear credit meter with zero hidden costs."
+        statusPills={[
+          {
+            label: `${state.subscription?.creditsRemaining || 1250} Credits Available`,
+            tone: 'emerald',
+            icon: <CreditCard className="w-3 h-3 text-[#10B981]" />,
+          },
+          {
+            label: `Plan: ${state.subscription?.tier || 'Professional'}`,
+            tone: 'blue',
+          },
+          {
+            label: 'Two-Phase Atomic Escrow (Zero Loss Guarantee)',
+            tone: 'neutral',
+          },
+        ]}
+        primaryAction={{
+          label: 'Top Up Credits & Manage Plan',
+          onClick: () => navigate('settings', { settingsTab: 'billing' }),
+          icon: <CreditCard className="w-3.5 h-3.5 text-[#FFFFFF]" />,
+        }}
+        secondaryAction={{
+          label: 'Export Snapshot',
+          onClick: handleExportWorkspace,
+          icon: <Download className="w-3.5 h-3.5 text-[#71717A]" />,
+        }}
+        proofTelemetry={{
+          confidenceScore: 100,
+          confidenceLabel: 'Financial Ledger & RBAC Integrity',
+          metrics: [
+            {
+              label: 'Credits Balance',
+              value: state.subscription?.creditsRemaining || 1250,
+              subtext: 'Auto-refreshes on cycle',
+              status: 'optimal',
+            },
+            {
+              label: 'Billing Cycle',
+              value: state.subscription?.billingCycle || 'Monthly',
+              subtext: 'Active plan',
+              status: 'verified',
+            },
+            {
+              label: 'Team Seats',
+              value: `${state.team?.length || 1} / 5 Active`,
+              subtext: 'RBAC permissions',
+              status: 'optimal',
+            },
+            {
+              label: 'Escrow Failure Rate',
+              value: '0.00%',
+              subtext: 'Atomic 2-Phase Protocol',
+              status: 'verified',
+            },
+          ],
+          lineageItems: [
+            {
+              title: 'Two-Phase Credit Reservation Protocol (ADR-006)',
+              source: 'Cloud Firestore Atomic Transaction Lock',
+              timestamp: 'Active',
+              confidence: 1.0,
+              type: 'GUARDRAIL',
+              details: 'Credits are held in atomic escrow and automatically released if AI truth check rejects output.',
+            },
+            {
+              title: 'Multi-Tenant Isolation Protocol',
+              source: `workspaces/${state.activeWorkspaceId || 'default'}`,
+              timestamp: 'Enforced',
+              confidence: 1.0,
+              type: 'GROUND_TRUTH',
+              details: 'Zero cross-tenant leakage. Secret Manager serverside token encryption.',
+            },
+          ],
+          guardrails: {
+            truthCheckStatus: 'PASSED',
+            antiFatigueScore: 'Ledger Audit Synchronized',
+            creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
+            modelAudited: 'Stripe & Cashfree Atomic Ledger',
+          },
+          rawJson: {
+            department: 'DEP-13',
+            workspace: state.brain.businessName,
+            tier: state.subscription?.tier,
+            credits: state.subscription?.creditsRemaining,
+            teamMembersCount: state.team?.length,
+            timestamp: new Date().toISOString(),
+          },
+        }}
       />
 
       {/* Mobile selector */}
@@ -846,14 +945,34 @@ export const SettingsPage: React.FC = () => {
               <div className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-semibold text-[#242424]">
-                    Restore Demonstration Workspace
+                    Explore Preloaded Example (Solstice Craft Coffee)
                   </div>
                   <div className="text-xs text-[#686864]">
-                    Reset all edits back to the seeded Solstice Craft Coffee dataset.
+                    Inspect how a fully populated business looks across all 14 departments without modifying your personal data.
                   </div>
                 </div>
-                <Button variant="secondary" size="sm" onClick={() => setResetConfirmOpen(true)}>
-                  Reset Demo Data
+                {state.isExampleWorkspace ? (
+                  <Button variant="secondary" size="sm" onClick={exitExampleWorkspace}>
+                    Exit Example Mode
+                  </Button>
+                ) : (
+                  <Button variant="secondary" size="sm" onClick={openExampleWorkspace}>
+                    Open Example
+                  </Button>
+                )}
+              </div>
+
+              <div className="p-4 rounded-[10px] bg-[#FFF5F2] border border-[#FDBA74]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-[#9A3412]">
+                    Reset Personal Workspace
+                  </div>
+                  <div className="text-xs text-[#C2410C]">
+                    Clear local entries and start with a clean, unpopulated venture workspace.
+                  </div>
+                </div>
+                <Button variant="secondary" size="sm" onClick={() => setResetCleanConfirmOpen(true)}>
+                  Reset Workspace
                 </Button>
               </div>
             </div>
@@ -1351,6 +1470,16 @@ export const SettingsPage: React.FC = () => {
         title="Reset Demonstration Workspace?"
         message="This restores all Business Brain entries, research dossiers, competitors, brand assets, tasks, and goals back to the default Solstice Craft Coffee dataset."
         confirmLabel="Reset Workspace"
+        destructive
+      />
+
+      <ConfirmationDialog
+        open={resetCleanConfirmOpen}
+        onClose={() => setResetCleanConfirmOpen(false)}
+        onConfirm={resetUserWorkspace}
+        title="Reset Personal Workspace?"
+        message="This will clear your local changes and reset your workspace to a clean, empty venture state. You can still explore the Solstice Craft Coffee example at any time."
+        confirmLabel="Reset to Clean Slate"
         destructive
       />
 

@@ -1797,3 +1797,176 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     },
   ],
 };
+
+export const SOLSTICE_EXAMPLE_STATE: BrainWiseState = {
+  ...INITIAL_BRAINWISE_STATE,
+  isAuthenticated: true,
+  currentRoute: 'dashboard',
+  isExampleWorkspace: true,
+};
+
+export const createCleanWorkspaceState = (
+  user?: Partial<BrainWiseState['user']>,
+  businessName?: string
+): BrainWiseState => {
+  const resolvedName = businessName?.trim() || 'My Venture';
+  const firstName = user?.firstName?.trim() || 'Founder';
+  const lastName = user?.lastName?.trim() || '';
+  const initials = firstName ? (firstName[0] + (lastName ? lastName[0] : '')).toUpperCase() : 'BW';
+
+  return {
+    isAuthenticated: true,
+    currentRoute: 'dashboard',
+    settingsTab: 'personal-profile',
+    prototypeNoticeDismissed: true,
+    aiTonePreference: 'Executive & Concise',
+    customScenarioB: null,
+    isExampleWorkspace: false,
+    teamMembers: [
+      {
+        id: `tm-${Date.now()}`,
+        name: [firstName, lastName].filter(Boolean).join(' ') || 'Founder',
+        email: user?.email || '',
+        role: 'Owner',
+        status: 'Active',
+      },
+    ],
+    workspacePrefs: {
+      dateFormat: 'YYYY-MM-DD',
+      defaultLandingView: 'dashboard',
+      compactDensity: false,
+    },
+    contextSharing: {
+      ideaIntelligence: true,
+      competitiveIntelligence: true,
+      brandStudio: true,
+      growthDirector: true,
+    },
+    subscription: {
+      plan: 'Growth Pro',
+      billingCycle: 'annual',
+    },
+    integrations: [
+      {
+        id: 'int-shopify',
+        name: 'Shopify',
+        category: 'Commerce & Subscriptions',
+        description: 'Sync order velocity and customer cohorts.',
+        connected: false,
+      },
+      {
+        id: 'int-stripe',
+        name: 'Stripe',
+        category: 'Revenue & Billing',
+        description: 'Track recurring revenue and billing metrics.',
+        connected: false,
+      },
+      {
+        id: 'int-ga4',
+        name: 'Google Analytics 4',
+        category: 'Traffic & Funnel',
+        description: 'Attribute organic and referral conversions.',
+        connected: false,
+      },
+      {
+        id: 'int-meta',
+        name: 'Meta Ads Manager',
+        category: 'Paid Acquisition',
+        description: 'Compare ad creative performance.',
+        connected: false,
+      },
+      {
+        id: 'int-slack',
+        name: 'Slack',
+        category: 'Team Alerts',
+        description: 'Route alerts to your team channels.',
+        connected: false,
+      },
+    ],
+    user: {
+      firstName,
+      lastName,
+      email: user?.email || '',
+      role: user?.role || 'Founder & Managing Director',
+      avatarInitials: initials,
+      timezone: user?.timezone || 'UTC',
+    },
+    onboarding: {
+      completed: true,
+      personaRole: 'Founder',
+      primaryGoals: ['Validate an idea', 'Build a brand', 'Grow an existing business'],
+    },
+    brain: {
+      businessName: resolvedName,
+      tagline: '',
+      industry: '',
+      stage: 'Idea Stage',
+      activationState: 'DORMANT_SANDBOX',
+      location: '',
+      website: '',
+      foundedYear: new Date().getFullYear().toString(),
+      overviewSummary: '',
+      targetAudience: '',
+      brandPositioning: '',
+      businessModel: '',
+      revenueModel: '',
+      valueProposition: '',
+      primaryGoals: [],
+      products: [],
+      personas: [],
+      documents: [],
+      decisions: [],
+      history: [
+        {
+          id: `hist-${Date.now()}`,
+          date: new Date().toISOString().slice(0, 10),
+          event: 'Workspace initialized',
+          department: 'Business Brain',
+        },
+      ],
+      lastUpdated: new Date().toISOString().slice(0, 10),
+    },
+    reports: [],
+    activeReportId: '',
+    competitors: [],
+    selectedCompetitorId: '',
+    gapAnalysis: [],
+    competitiveStrategy: {
+      whereToCompete: '',
+      whereToDifferentiate: '',
+      whatToAvoid: '',
+      targetSegment: '',
+      potentialMoat: '',
+      nextMoves: [],
+      savedToBrain: false,
+    },
+    brand: {
+      status: 'Not Started',
+      brandName: resolvedName,
+      tagline: '',
+      industry: '',
+      positioningStatement: '',
+      targetAudience: '',
+      personalityTraits: [],
+      attributes: [],
+      visualDirection: '',
+      selectedConceptId: '',
+      concepts: [],
+    },
+    assets: [],
+    marketEvents: [],
+    archivedEventIds: [],
+    scheduledReports: {
+      dailyDigest: false,
+      weeklyIntelligence: false,
+      monthlyReview: false,
+      deliveryEmail: user?.email || '',
+      includeCompetitorDiffs: false,
+    },
+    goals: [],
+    tasks: [],
+    experiments: [],
+    recommendations: [],
+    notifications: [],
+  };
+};

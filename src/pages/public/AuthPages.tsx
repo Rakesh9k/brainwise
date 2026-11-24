@@ -9,7 +9,7 @@ export const AuthPages: React.FC<{
 }> = ({ mode }) => {
   const {
     navigate,
-    loginDemo,
+    openExampleWorkspace,
     loginWithGoogle,
     loginUser,
     registerUser,
@@ -209,10 +209,10 @@ export const AuthPages: React.FC<{
 
         <button
           type="button"
-          onClick={() => loginDemo('Vishesh', 'vishesh.kakar@gmail.com')}
+          onClick={() => openExampleWorkspace()}
           className="text-xs font-semibold text-[#C44D00] hover:text-[#A33E00] cursor-pointer"
         >
-          Launch Demo Workspace →
+          Explore Sample Showcase →
         </button>
       </div>
 

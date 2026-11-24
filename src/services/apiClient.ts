@@ -189,6 +189,10 @@ export class BrainWiseApiClient {
       }
 
       if (!response.ok) {
+        if (response.status === 401) {
+          this.currentToken = null;
+          setStoredAuthToken(null);
+        }
         const errObj = payload as {
           error?: { message?: string; code?: string; details?: unknown };
         } | null;

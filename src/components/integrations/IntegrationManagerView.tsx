@@ -33,9 +33,12 @@ import { Drawer, Modal } from '../ui/Overlay';
 
 export const IntegrationManagerView: React.FC = () => {
   const { state, showToast } = useBrainWise();
-  const workspaceId = state.brain.businessName
-    ? state.brain.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')
-    : 'default-workspace';
+  const workspaceId =
+    state.activeWorkspaceId ||
+    state.workspaceId ||
+    (state.brain.businessName
+      ? state.brain.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')
+      : 'workspace');
 
   const [activeSubTab, setActiveSubTab] = useState<'catalog' | 'automations' | 'telemetry'>(
     'catalog'

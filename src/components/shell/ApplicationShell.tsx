@@ -13,7 +13,7 @@ export const ApplicationShell: React.FC<{
   children: React.ReactNode;
   rightPanel?: React.ReactNode;
 }> = ({ children, rightPanel }) => {
-  const { state, toast, dismissToast } = useBrainWise();
+  const { state, toast, dismissToast, exitExampleWorkspace } = useBrainWise();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -41,6 +41,33 @@ export const ApplicationShell: React.FC<{
       />
 
       <div className="relative z-10 flex-1 min-w-0 flex flex-col">
+        {state.isExampleWorkspace && (
+          <div
+            role="status"
+            aria-label="Example workspace notice"
+            className="sticky top-0 z-40 bg-[#FFF7ED] border-b border-[#FDBA74]/80 px-4 sm:px-8 py-2 flex items-center justify-between gap-3 text-xs text-[#9A3412] shadow-2xs no-print"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-[#EA580C] shrink-0 animate-pulse" />
+              <span className="font-semibold uppercase tracking-[0.06em] text-[10px] bg-[#FFEDD5] text-[#C2410C] px-2 py-0.5 rounded-full border border-[#FDBA74]/50 shrink-0">
+                Sample Showcase
+              </span>
+              <span className="truncate">
+                Viewing preloaded demonstration data for <strong>Solstice Craft Coffee</strong>. Your personal workspace is kept separate.
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={exitExampleWorkspace}
+                className="h-7 px-3 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-medium text-xs shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 focus-ring"
+              >
+                <span>Return to My Workspace</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <Header
           onOpenMobileNav={() => setMobileNavOpen(true)}
           onOpenNotifications={() => setNotificationsOpen(true)}

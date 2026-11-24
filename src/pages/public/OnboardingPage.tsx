@@ -306,6 +306,7 @@ export const OnboardingPage: React.FC = () => {
         productSummary,
         website,
         targetCustomers: targetAudienceType,
+        startFreshEmpty: true,
       });
 
       navigate('dashboard');

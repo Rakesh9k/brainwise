@@ -101,7 +101,7 @@ export async function generateAiDossier(params: {
   depth: ResearchReport['depth'];
   brain: BusinessBrainData;
 }): Promise<{ report: ResearchReport; model: string }> {
-  const wsId = validateWorkspaceId(params.workspaceId);
+  const wsId = validateWorkspaceId(params.workspaceId || apiClient.getActiveWorkspaceId() || 'default');
   return postJson<{ report: ResearchReport; model: string }>(
     `/api/v1/workspaces/${wsId}/research/orchestrate`,
     {
@@ -120,7 +120,11 @@ export async function generateAiDossier(params: {
       },
     },
     wsId
-  ).catch(async () => {
+  ).catch(async (err) => {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    if (errMsg.includes('401') || errMsg.includes('404') || errMsg.includes('UNAUTHENTICATED')) {
+      throw err;
+    }
     // Fallback to backward-compatible workspace route alias
     return postJson<{ report: ResearchReport; model: string }>(
       `/api/v1/workspaces/${wsId}/ai/dossier`,
@@ -142,7 +146,7 @@ export async function generateAiPlaybookAngle(
   question: string,
   workspaceId?: string
 ): Promise<{ angle: string; model: string }> {
-  const wsId = validateWorkspaceId(workspaceId);
+  const wsId = validateWorkspaceId(workspaceId || apiClient.getActiveWorkspaceId() || 'default');
   return postJson<{ angle: string; model: string }>(
     `/api/v1/workspaces/${wsId}/ai/playbook`,
     {
@@ -162,7 +166,7 @@ export async function generateAiRecommendations(
   recommendations: Omit<StrategyRecommendation, 'id' | 'status'>[];
   model: string;
 }> {
-  const wsId = validateWorkspaceId(workspaceId || state.activeWorkspaceId);
+  const wsId = validateWorkspaceId(workspaceId || state.activeWorkspaceId || apiClient.getActiveWorkspaceId() || 'default');
   return postJson<{
     recommendations: Omit<StrategyRecommendation, 'id' | 'status'>[];
     model: string;
@@ -204,7 +208,7 @@ export async function understandIdeaApi(
   ideaPrompt: string,
   workspaceId?: string
 ): Promise<IdeaUnderstandingResult> {
-  const wsId = validateWorkspaceId(workspaceId);
+  const wsId = validateWorkspaceId(workspaceId || apiClient.getActiveWorkspaceId() || 'default');
   const res = await postJson<{ success: boolean; data: IdeaUnderstandingResult }>(
     `/api/v1/workspaces/${wsId}/research/understand-idea`,
     {
@@ -233,7 +237,7 @@ export async function sendConversationalResearchApi(params: {
     notes: string;
   };
 }> {
-  const wsId = validateWorkspaceId(params.workspaceId);
+  const wsId = validateWorkspaceId(params.workspaceId || apiClient.getActiveWorkspaceId() || 'default');
   const res = await postJson<{ success: boolean; data: any }>(
     `/api/v1/workspaces/${wsId}/research/${params.reportId}/conversation`,
     {
@@ -251,7 +255,7 @@ export async function finalizeIdeaApi(params: {
   selectedOpportunityId?: string;
   customizedDirection?: Partial<FinalizedBusinessBlueprint>;
 }): Promise<FinalizedBusinessBlueprint> {
-  const wsId = validateWorkspaceId(params.workspaceId);
+  const wsId = validateWorkspaceId(params.workspaceId || apiClient.getActiveWorkspaceId() || 'default');
   const res = await postJson<{ success: boolean; data: FinalizedBusinessBlueprint }>(
     `/api/v1/workspaces/${wsId}/research/${params.reportId}/finalize`,
     {

@@ -22,12 +22,15 @@ export interface AnalyticsOverviewData {
   activeExperimentsCount: number;
 }
 
-export function useAnalyticsIntelligence(workspaceId: string = 'default') {
+export function useAnalyticsIntelligence(workspaceId?: string, enabled: boolean = true) {
   const [data, setData] = useState<AnalyticsOverviewData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchOverview = useCallback(async () => {
+    if (!workspaceId || workspaceId === 'default' || workspaceId === 'ws_vishesh_growth' || !enabled) {
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -39,13 +42,14 @@ export function useAnalyticsIntelligence(workspaceId: string = 'default') {
     } finally {
       setLoading(false);
     }
-  }, [workspaceId]);
+  }, [workspaceId, enabled]);
 
   useEffect(() => {
     fetchOverview();
   }, [fetchOverview]);
 
   const askAssistant = async (question: string) => {
+    if (!workspaceId || workspaceId === 'default' || workspaceId === 'ws_vishesh_growth') return null;
     return apiClient.askAnalyticsAssistant(workspaceId, question);
   };
 

@@ -94,7 +94,7 @@ export const Sidebar: React.FC<{
   mobileOpen: boolean;
   onCloseMobile: () => void;
 }> = ({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) => {
-  const { state, navigate } = useBrainWise();
+  const { state, navigate, openExampleWorkspace, exitExampleWorkspace } = useBrainWise();
   const reduced = useReducedMotion();
 
   const handleNav = (route: AppRoute) => {
@@ -156,26 +156,53 @@ export const Sidebar: React.FC<{
 
         {/* Quiet Active Workspace Anchor */}
         {!isCompact && (
-          <div className="px-4 py-3.5 border-b border-[#E6E6E2]/70 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <div className="text-[10px] font-mono-num uppercase tracking-[0.08em] text-[#858585]">
-                Workspace
+          <div className="px-4 py-3 border-b border-[#E6E6E2]/70 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[10px] font-mono-num uppercase tracking-[0.08em] text-[#858585]">
+                  {state.isExampleWorkspace ? 'Sample Showcase' : 'Workspace'}
+                </div>
+                <div className="text-xs font-semibold text-[#171717] truncate mt-0.5">
+                  {state.brain.businessName}
+                </div>
               </div>
-              <div className="text-xs font-semibold text-[#171717] truncate mt-0.5">
-                {state.brain.businessName}
-              </div>
+              {state.isExampleWorkspace ? (
+                <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#FF7417]/15 text-[#C44D00] rounded">
+                  EXAMPLE
+                </span>
+              ) : (
+                <span
+                  aria-hidden="true"
+                  title={
+                    state.brain.activationState === 'DORMANT_SANDBOX'
+                      ? 'Idea Sandbox Mode (Dormant Brain)'
+                      : 'Business Brain synced'
+                  }
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    state.brain.activationState === 'DORMANT_SANDBOX' ? 'bg-[#FF9A45]' : 'bg-[#24724E]'
+                  }`}
+                />
+              )}
             </div>
-            <span
-              aria-hidden="true"
-              title={
-                state.brain.activationState === 'DORMANT_SANDBOX'
-                  ? 'Idea Sandbox Mode (Dormant Brain)'
-                  : 'Business Brain synced'
-              }
-              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                state.brain.activationState === 'DORMANT_SANDBOX' ? 'bg-[#FF9A45]' : 'bg-[#24724E]'
-              }`}
-            />
+
+            {state.isExampleWorkspace ? (
+              <button
+                type="button"
+                onClick={exitExampleWorkspace}
+                className="text-[11px] text-[#C44D00] hover:text-[#9E3E00] font-medium text-left underline underline-offset-2 cursor-pointer transition-colors"
+              >
+                ← Return to My Workspace
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={openExampleWorkspace}
+                className="text-[11px] text-[#858585] hover:text-[#171717] text-left hover:underline cursor-pointer transition-colors flex items-center justify-between"
+              >
+                <span>Explore Solstice Example</span>
+                <span className="text-[10px] text-[#FF7417]">↗</span>
+              </button>
+            )}
           </div>
         )}
 
