@@ -168,8 +168,14 @@ export const Sidebar: React.FC<{
             </div>
             <span
               aria-hidden="true"
-              title="Business Brain synced"
-              className="w-1.5 h-1.5 rounded-full bg-[#24724E] shrink-0"
+              title={
+                state.brain.activationState === 'DORMANT_SANDBOX'
+                  ? 'Idea Sandbox Mode (Dormant Brain)'
+                  : 'Business Brain synced'
+              }
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                state.brain.activationState === 'DORMANT_SANDBOX' ? 'bg-[#FF9A45]' : 'bg-[#24724E]'
+              }`}
             />
           </div>
         )}
@@ -218,7 +224,15 @@ export const Sidebar: React.FC<{
                       {item.icon}
                     </span>
                     {!isCompact && (
-                      <span className="relative z-10 truncate whitespace-nowrap">{item.label}</span>
+                      <span className="relative z-10 truncate whitespace-nowrap flex-1 text-left flex items-center justify-between">
+                        <span>{item.label}</span>
+                        {item.id === 'business-brain' &&
+                          state.brain.activationState === 'DORMANT_SANDBOX' && (
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#C44D00] bg-[#FFF0E5] px-1.5 py-0.5 rounded-full border border-[#FED7AA] ml-1.5">
+                              Idea Mode
+                            </span>
+                          )}
+                      </span>
                     )}
                   </button>
                 );

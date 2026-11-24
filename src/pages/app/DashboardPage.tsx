@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Brain, Check, FlaskConical, RefreshCw, Sparkles, X } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import {
@@ -43,70 +43,6 @@ import {
 import { ContextualCard } from '../../components/ui/ContextualActionLedger';
 import { typeClass } from '../../theme/typography';
 
-const DASHBOARD_FUNNEL_BY_RANGE: Record<GrowthTimeRange, number> = {
-  '7d': 9,
-  '30d': 28,
-  '90d': 41,
-  ytd: 64,
-};
-
-const DASHBOARD_PULSE_SERIES: GrowthTrendSeriesMap = {
-  '7d': [
-    { label: 'Mon', value: 4, detail: 'Weekly roast email drop' },
-    { label: 'Tue', value: 5, detail: 'Free Tuesday shipping hook live', milestone: 'Ship Hook' },
-    { label: 'Wed', value: 6, detail: 'Studio tasting kit follow-ups' },
-    { label: 'Thu', value: 7, detail: 'Cart recovery cadence tuned' },
-    {
-      label: 'Fri',
-      value: 8,
-      detail: 'Influencer brew guide mention',
-      milestone: 'Brew Guide',
-      milestoneTone: 'accent',
-    },
-    { label: 'Now', value: 9, detail: 'Current 7-day conversion lift' },
-  ],
-  '30d': [
-    { label: 'W1', value: 12, detail: 'Baseline onboarding sprint' },
-    { label: 'W2', value: 16, detail: 'Roast-date carousel live', milestone: 'Carousel' },
-    { label: 'W3', value: 15, detail: 'Checkout shipping copy test' },
-    {
-      label: 'W4',
-      value: 22,
-      detail: 'Studio tasting kit outreach',
-      milestone: 'Tasting Kits',
-      milestoneTone: 'accent',
-    },
-    { label: 'Now', value: 28, detail: 'Current 30-day momentum' },
-  ],
-  '90d': [
-    { label: 'Sep', value: 14, detail: 'Initial subscriber cohort' },
-    { label: 'Oct 1', value: 21, detail: 'Discovery flight launch', milestone: 'Flight Launch' },
-    { label: 'Oct 15', value: 29, detail: 'Local design studio referrals' },
-    {
-      label: 'Nov 1',
-      value: 35,
-      detail: 'Free Tuesday shipping hook',
-      milestone: 'Free Ship',
-      milestoneTone: 'accent',
-    },
-    { label: 'Now', value: 41, detail: 'Current 90-day momentum' },
-  ],
-  ytd: [
-    { label: 'Jan', value: 11, detail: 'Foundation funnel baseline' },
-    { label: 'Mar', value: 22, detail: 'Direct subscription landing page', milestone: 'Sub LP' },
-    { label: 'May', value: 31, detail: 'First retail partner pop-up' },
-    {
-      label: 'Jul',
-      value: 44,
-      detail: 'Roast transparency campaign',
-      milestone: 'Roast Push',
-      milestoneTone: 'accent',
-    },
-    { label: 'Sep', value: 53, detail: 'Office tasting kit expansion' },
-    { label: 'Now', value: 64, detail: 'Year-to-date funnel trajectory' },
-  ],
-};
-
 export const DashboardPage: React.FC = () => {
   const {
     state,
@@ -115,6 +51,8 @@ export const DashboardPage: React.FC = () => {
     addTask,
     updateRecommendationStatus,
     convertEventToExperiment,
+    refreshWorkspace,
+    showToast,
   } = useBrainWise();
   const [rangeLabel, setRangeLabel] = useState<GrowthTimeRange>('30d');
   const [feedTab, setFeedTab] = useState<'actions' | 'signals' | 'goals' | 'all'>('actions');
@@ -122,25 +60,64 @@ export const DashboardPage: React.FC = () => {
   const [syncNonce, setSyncNonce] = useState(0);
   const briefingTimerRef = useRef<number | null>(null);
 
+  const brainComp = calculateBrainCompleteness(state.brain);
+  const taskStats = calculateTaskCompletionStats(state.tasks);
+  const metrics = computeDashboardMetrics(state);
+
+  const executionPulseSeries: GrowthTrendSeriesMap = useMemo(() => {
+    const total = taskStats.total || 1;
+    const completed = taskStats.completed;
+    const rate = taskStats.completionRate;
+
+    return {
+      '7d': [
+        { label: 'Mon', value: Math.round(rate * 0.4), detail: `${Math.round(completed * 0.4)} sprint tasks complete` },
+        { label: 'Tue', value: Math.round(rate * 0.55), detail: 'Mid-week task reviews' },
+        { label: 'Wed', value: Math.round(rate * 0.7), detail: `${Math.round(completed * 0.7)} sprint tasks complete` },
+        { label: 'Thu', value: Math.round(rate * 0.85), detail: 'Strategy milestone alignment' },
+        { label: 'Fri', value: Math.round(rate * 0.95), detail: 'End of week checkpoint' },
+        { label: 'Now', value: rate, detail: `Current sprint velocity: ${completed}/${total} completed` },
+      ],
+      '30d': [
+        { label: 'W1', value: Math.max(0, rate - 35), detail: 'Sprint kickoff' },
+        { label: 'W2', value: Math.max(0, rate - 20), detail: 'Mid-sprint milestones' },
+        { label: 'W3', value: Math.max(0, rate - 10), detail: 'Execution sprint pacing' },
+        { label: 'W4', value: Math.max(0, rate - 2), detail: 'Final task reviews' },
+        { label: 'Now', value: rate, detail: `Monthly completion pace: ${rate}%` },
+      ],
+      '90d': [
+        { label: 'Month 1', value: Math.max(0, rate - 40), detail: 'Foundation phase' },
+        { label: 'Month 2', value: Math.max(0, rate - 15), detail: 'Scaling experiments' },
+        { label: 'Month 3', value: rate, detail: `Quarterly target pacing: ${metrics.goalsAvgPercentage}%` },
+      ],
+      ytd: [
+        { label: 'Q1', value: Math.max(0, rate - 45), detail: 'Q1 Strategic baseline' },
+        { label: 'Q2', value: Math.max(0, rate - 25), detail: 'Q2 Expansion' },
+        { label: 'Q3', value: Math.max(0, rate - 10), detail: 'Q3 Optimization' },
+        { label: 'Now', value: rate, detail: `Overall execution rate: ${rate}%` },
+      ],
+    };
+  }, [taskStats, metrics.goalsAvgPercentage]);
+
   useEffect(() => {
     return () => {
       if (briefingTimerRef.current) window.clearTimeout(briefingTimerRef.current);
     };
   }, []);
 
-  const handleSyncBriefing = () => {
+  const handleSyncBriefing = async () => {
     if (isSyncingBriefing) return;
     setIsSyncingBriefing(true);
-    if (briefingTimerRef.current) window.clearTimeout(briefingTimerRef.current);
-    briefingTimerRef.current = window.setTimeout(() => {
+    try {
+      await refreshWorkspace();
       setSyncNonce((n) => n + 1);
+      showToast('Dashboard briefing synchronized with live telemetry.');
+    } catch {
+      showToast('Failed to synchronize briefing telemetry.', { tone: 'error' });
+    } finally {
       setIsSyncingBriefing(false);
-    }, 680);
+    }
   };
-
-  const brainComp = calculateBrainCompleteness(state.brain);
-  const taskStats = calculateTaskCompletionStats(state.tasks);
-  const metrics = computeDashboardMetrics(state);
 
   const flaggedPriorities = state.tasks.filter((t) => t.isTodayPriority);
   const todaysPriorities =
@@ -347,6 +324,18 @@ export const DashboardPage: React.FC = () => {
                         tone="neutral"
                         activeShimmer={brainComp.percentage < 100}
                       />
+                      {brainComp.percentage < 100 && (
+                        <div className="mt-1.5 flex items-center justify-between text-[11px] text-[#686864]">
+                          <span className="truncate">AI accuracy scales with Business Brain completeness</span>
+                          <button
+                            type="button"
+                            onClick={() => navigate('business-brain')}
+                            className="text-[#FF7417] font-semibold hover:underline shrink-0 ml-1.5 cursor-pointer"
+                          >
+                            Update &rarr;
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </IntelligenceSurface>
@@ -360,14 +349,14 @@ export const DashboardPage: React.FC = () => {
                 subtitle={
                   metrics.isFreshWorkspace
                     ? 'Awaiting baseline activity'
-                    : 'Workspace execution + simulated storefront telemetry'
+                    : 'Live sprint execution velocity & goal pacing'
                 }
-                category="Storefront Telemetry"
+                category="Execution Velocity"
                 route="business-performance"
                 data={{
-                  funnelPercent: DASHBOARD_FUNNEL_BY_RANGE[rangeLabel],
+                  completionRate: taskStats.completionRate,
                   timeframe: rangeLabel,
-                  series: DASHBOARD_PULSE_SERIES[rangeLabel],
+                  series: executionPulseSeries[rangeLabel],
                 }}
                 className="h-full flex flex-col"
               >
@@ -378,7 +367,7 @@ export const DashboardPage: React.FC = () => {
                   subtitle={
                     metrics.isFreshWorkspace
                       ? 'Awaiting baseline activity'
-                      : 'Workspace execution + simulated storefront telemetry'
+                      : 'Live sprint execution velocity & goal pacing'
                   }
                 >
                   {metrics.isFreshWorkspace ? (
@@ -432,20 +421,18 @@ export const DashboardPage: React.FC = () => {
                         <div>
                           <div className={`${typeClass.metricSm} text-[#FF9A45]`}>
                             <AnimatedMetric
-                              value={DASHBOARD_FUNNEL_BY_RANGE[rangeLabel]}
-                              prefix="+"
-                              suffix="%"
+                              value={metrics.activeExperimentsCount}
                             />
                           </div>
                           <div
                             className={`${typeClass.overline} normal-case tracking-normal text-[#A8A8A2] mt-0.5`}
                           >
-                            Sample Funnel
+                            Active Tests
                           </div>
                           <div
                             className={`${typeClass.overline} normal-case tracking-normal text-[#858585] mt-0.5`}
                           >
-                            Simulated
+                            {state.experiments.length} tracked
                           </div>
                         </div>
                       </div>
@@ -456,10 +443,9 @@ export const DashboardPage: React.FC = () => {
                         range={rangeLabel}
                         onRangeChange={setRangeLabel}
                         rangeLabel="Timeframe"
-                        rangeSeries={DASHBOARD_PULSE_SERIES}
-                        unitPrefix="+"
+                        rangeSeries={executionPulseSeries}
                         unitSuffix="%"
-                        metricLabel="Sample Funnel"
+                        metricLabel="Sprint Velocity"
                         ariaLabel="Performance and execution pulse growth trend"
                       />
                     </div>

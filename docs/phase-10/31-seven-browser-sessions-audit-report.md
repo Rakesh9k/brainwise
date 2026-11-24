@@ -26,7 +26,7 @@ All 7 customer environments passed verification with **zero uncaught exceptions,
 | **04** | **Incomplete Business** | Unconfigured (`Draft Ventures`) | `dashboard`, `business-brain` | Graceful empty-state rendering, zero unhandled null pointer exceptions, guided onboarding CTA. | **PASS** |
 | **05** | **Zero Credits** | Depleted Quota (`LeanOps Tools`) | `dashboard`, `settings` | Zero-balance warning, credit pack purchase modal, zero unhandled rejections or negative deductions. | **PASS** |
 | **06** | **Failed Payment** | Declined Billing (`Global Ventures`) | `settings` (Subscription) | Un-upgraded plan preserved, zero unverified credit activation, retry CTA rendered. | **PASS** |
-| **07** | **Multi-Member Team** | Multi-Role (`Team Enterprise Inc.`) | `settings` (Team Members) | Multi-role roster (Owner, Member, Viewer) active, RBAC boundary separation verified. | **PASS** |
+| **07** | **Multi-Member Team** | Multi-Role (`Team Enterprise Inc.`) | `settings` (Team Members) | Multi-role roster (Owner, Strategist, Viewer) active, RBAC boundary separation verified. | **PASS** |
 
 ---
 

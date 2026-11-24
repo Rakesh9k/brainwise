@@ -25,12 +25,12 @@ As required by testing directives, a realistic multi-tier concurrent user stress
 
 | Workload Tier | Concurrency Level | Total Operations | Success Rate | P50 (ms) | P90 (ms) | P95 (ms) | P99 (ms) | Max (ms) | Throughput (ops/sec) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Dashboard Navigation** | 100 users | 100 | 100.0% | 0 | 0.01 | 0.02 | 0.03 | 0.19 | 100000 |
-| **Concurrent AI Analysis & Truth Check** | 25 users | 25 | 100.0% | 0.02 | 0.06 | 0.15 | 1.2 | 1.2 | 12500 |
-| **Deep Market Research & Scenario Engine** | 10 users | 10 | 100.0% | 0.02 | 0.05 | 0.26 | 0.26 | 0.26 | 10000 |
-| **Executive Report Compilation** | 15 users | 15 | 100.0% | 0.04 | 0.09 | 0.5 | 0.5 | 0.5 | 15000 |
-| **Concurrent Credit Reservations (Two-Phase Commit)** | 50 users | 50 | 100.0% | 11.32 | 14.9 | 15.48 | 15.7 | 15.7 | 3125 |
-| **Payment Webhook Signature Verification** | 20 users | 20 | 100.0% | 0.01 | 0.02 | 0.03 | 0.23 | 0.23 | 20000 |
+| **Dashboard Navigation** | 100 users | 100 | 100.0% | 0.02 | 0.08 | 0.12 | 0.32 | 1.31 | 16666.7 |
+| **Concurrent AI Analysis & Truth Check** | 25 users | 25 | 100.0% | 0.04 | 0.1 | 0.69 | 2.82 | 2.82 | 5000 |
+| **Deep Market Research & Scenario Engine** | 10 users | 10 | 100.0% | 0.02 | 0.06 | 0.27 | 0.27 | 0.27 | 10000 |
+| **Executive Report Compilation** | 15 users | 15 | 100.0% | 0.18 | 0.3 | 1.25 | 1.25 | 1.25 | 3750 |
+| **Concurrent Credit Reservations (Two-Phase Commit)** | 50 users | 50 | 100.0% | 10.52 | 14.92 | 15.45 | 15.64 | 15.64 | 2941.2 |
+| **Payment Webhook Signature Verification** | 20 users | 20 | 100.0% | 0.01 | 0.02 | 0.03 | 0.26 | 0.26 | 20000 |
 
 ---
 

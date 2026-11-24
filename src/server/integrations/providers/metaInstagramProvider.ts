@@ -96,24 +96,29 @@ export class MetaInstagramProvider implements IIntegrationProvider {
     };
   }
 
-  public async getAccountInfo(_credentials: IntegrationCredentials): Promise<ExternalAccountInfo> {
+  public async getAccountInfo(credentials: IntegrationCredentials): Promise<ExternalAccountInfo> {
+    if (!credentials?.accessToken && !credentials?.apiKey) {
+      throw new Error('UNCONNECTED: Meta / Instagram account is not connected');
+    }
     return {
-      accountId: 'ig_act_178414002819',
-      accountName: '@solsticecraftcoffee',
-      organizationName: 'Solstice Roasters Meta Page',
+      accountId: (credentials.extra?.accountId as string) || 'ig_act_primary',
+      accountName: (credentials.extra?.accountName as string) || 'Instagram Professional Account',
+      organizationName: (credentials.extra?.organizationName as string) || 'Connected Meta Page',
       metadata: {
-        followersCount: 14200,
-        mediaCount: 184,
         approvalStatus: 'awaiting_approval',
       },
     };
   }
 
-  public async getResources(_credentials: IntegrationCredentials): Promise<ExternalResource[]> {
+  public async getResources(credentials: IntegrationCredentials): Promise<ExternalResource[]> {
+    if (!credentials?.accessToken && !credentials?.apiKey) {
+      return [];
+    }
+    const accountId = (credentials.extra?.accountId as string) || 'ig_act_primary';
     return [
       {
-        resourceId: 'ig_act_178414002819',
-        name: '@solsticecraftcoffee (Instagram Professional)',
+        resourceId: accountId,
+        name: (credentials.extra?.accountName as string) || 'Instagram Professional Profile',
         type: 'instagram_account',
         selected: true,
       },
@@ -121,47 +126,91 @@ export class MetaInstagramProvider implements IIntegrationProvider {
   }
 
   public async fetchData(
-    _credentials: IntegrationCredentials,
+    credentials: IntegrationCredentials,
     options: FetchDataOptions
   ): Promise<ExternalDataPackage> {
-    const now = new Date().toISOString();
-    return {
-      records: [
-        {
-          recordId: `rec_meta_${Date.now()}`,
-          workspaceId: (options.params?.workspaceId as string) || 'default',
-          integrationId: this.id,
-          provider: this.id,
-          category: 'social_media',
-          retrievedAt: now,
-          sourceTimestamp: now,
-          sourceReference: 'https://graph.facebook.com/v19.0/ig_insights',
-          syncJobId: `sync_meta_${Date.now()}`,
-          dataVersion: 1,
-          provenance: {
-            sourceType: 'META_GRAPH_API_V19',
-            verified: true,
-            confidenceScore: 0.95,
+    if (!credentials?.accessToken && !credentials?.apiKey) {
+      return {
+        records: [],
+        summary: {},
+        hasMore: false,
+        state: 'UNCONNECTED',
+        stateReason: 'Meta / Instagram account is not connected.',
+      };
+    }
+
+    const isTestMode = Boolean(
+      options.params?.allowMockInTest ||
+      credentials?.apiKey === 'mock_key' ||
+      credentials?.accessToken === 'mock_token' ||
+      process.env.TEST_MODE ||
+      process.env.NODE_ENV === 'test'
+    );
+
+    if (this.metadata.isApprovalRequired && this.metadata.approvalStatus === 'awaiting_approval') {
+      // In production, until Meta App Review is granted, return honest PERMISSION_REQUIRED state
+      if (!isTestMode) {
+        return {
+          records: [],
+          summary: {
+            approvalStatus: 'awaiting_meta_app_review',
           },
-          metrics: {
-            totalFollowers: 14200,
-            impressions30Days: 84200,
-            reach30Days: 41800,
-            engagementRate: 0.048, // 4.8%
+          hasMore: false,
+          state: 'PERMISSION_REQUIRED',
+          stateReason:
+            'Meta Graph API integration is pending production Meta App Review approval. Data telemetry is unavailable until certified.',
+        };
+      }
+    }
+
+    // Controlled test fixture support
+    if (isTestMode) {
+      const now = new Date().toISOString();
+      return {
+        records: [
+          {
+            recordId: `rec_meta_${Date.now()}`,
+            workspaceId: (options.params?.workspaceId as string) || 'default',
+            integrationId: this.id,
+            provider: this.id,
+            category: 'social_media',
+            retrievedAt: now,
+            sourceTimestamp: now,
+            sourceReference: 'https://graph.facebook.com/v19.0/ig_insights',
+            syncJobId: `sync_meta_${Date.now()}`,
+            dataVersion: 1,
+            provenance: {
+              sourceType: 'TEST_FIXTURE_META',
+              verified: true,
+              confidenceScore: 0.85,
+            },
+            metrics: {
+              totalFollowers: 14200,
+              impressions30Days: 84200,
+              reach30Days: 41800,
+              engagementRate: 0.048,
+            },
+            dimensions: {
+              topContentType: 'Static Carousel & Single Vector Slide',
+            },
           },
-          dimensions: {
-            handle: '@solsticecraftcoffee',
-            topContentType: 'Static Carousel & Single Vector Slide',
-          },
+        ],
+        summary: {
+          totalFollowers: 14200,
+          monthlyReach: 41800,
+          engagementRate: 0.048,
         },
-      ],
-      summary: {
-        totalFollowers: 14200,
-        monthlyReach: 41800,
-        engagementRate: 0.048,
-        approvalStatus: 'awaiting_approval',
-      },
+        hasMore: false,
+        state: 'CONNECTED',
+      };
+    }
+
+    return {
+      records: [],
+      summary: {},
       hasMore: false,
+      state: 'INSUFFICIENT_DATA',
+      stateReason: 'No live telemetry retrieved from Meta Graph API.',
     };
   }
 
@@ -199,7 +248,16 @@ export class MetaInstagramProvider implements IIntegrationProvider {
     _credentials?: IntegrationCredentials
   ): Promise<void> {}
 
-  public async checkHealth(_credentials: IntegrationCredentials): Promise<IntegrationHealthStatus> {
+  public async checkHealth(credentials: IntegrationCredentials): Promise<IntegrationHealthStatus> {
+    if (!credentials?.accessToken && !credentials?.apiKey) {
+      return {
+        healthy: false,
+        latencyMs: 0,
+        lastCheckedAt: new Date().toISOString(),
+        status: 'not_connected',
+        message: 'Meta / Instagram account is not connected.',
+      };
+    }
     return {
       healthy: true,
       latencyMs: 22,

@@ -105,6 +105,7 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
     tagline: 'Single-origin specialty roasts, delivered within 48 hours of roasting.',
     industry: 'Specialty Food & Beverage / D2C Coffee',
     stage: 'Early Traction',
+    activationState: 'ACTIVE_ESTABLISHED',
     location: 'Hyderabad & Bengaluru, India',
     website: 'https://solsticecoffee.example.com',
     foundedYear: '2026',
@@ -360,6 +361,69 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       overallConfidence: 'High',
       viabilitySignal: 'Strong Fit',
       savedToBrain: true,
+      validationScorecard: {
+        viabilityScore: 82,
+        verdictLabel: 'Strong Fit — launch with tasting flight wedge',
+        summaryContext:
+          'High-margin roast-to-order model addressing urban specialty coffee consumers dissatisfied with stale aggregator inventory.',
+        goodNews:
+          'Specialty bean consumption in Tier-1 metros is growing +24% YoY with high retention among domestic espresso and pour-over brewers.',
+        badNews:
+          'Incumbents like Blue Tokai and Roastery House have physical cafés that build strong baseline brand awareness.',
+        strategicWedge:
+          'Tasting flight discovery box (3x100g) that converts buyers into recurring Tuesday roast-to-order subscriptions.',
+        theCatch:
+          'Requires disciplined 48-hour roast-to-dispatch logistics; stale roast dates kill repeat subscription retention.',
+        willingnessToPay: {
+          viable: true,
+          estimatedPriceRange: '$12 – $16 / 250g',
+          targetBuyer: 'Urban remote professionals & boutique design studios',
+          paymentModel: 'Recurring bi-weekly or monthly subscription',
+        },
+        bottomLine:
+          'Solstice avoids the heavy capital expense of opening retail cafes by dominating fresh roast-to-order online subscriptions and boutique B2B studio supply.',
+      },
+      criticalAssumptions: [
+        {
+          id: 'solstice-crit-01',
+          riskLevel: 'HIGH RISK',
+          assumption:
+            'Urban home brewers will pay $13–$16 per 250g bag online over Amazon aggregator coffee for a verified roast date within 48 hours.',
+          howToTest:
+            'Launch a 100-box tasting flight pre-order landing page with roast-date clock countdown.',
+          timeline: '2 weeks',
+          successSignal:
+            '>= 4.2% click-to-order conversion rate and >= 35 tasting flight deposits.',
+          stopIfCondition:
+            'Less than 10 pre-orders after 800 targeted local coffee enthusiast visits.',
+          status: 'pending',
+        },
+        {
+          id: 'solstice-crit-02',
+          riskLevel: 'MEDIUM RISK',
+          assumption:
+            'Tasting flight purchasers will convert to a recurring bi-weekly subscription at >= 30% rate.',
+          howToTest:
+            'Deliver tasting boxes with custom QR code offering a $5 subscription credit on Day 7.',
+          timeline: '3 weeks',
+          successSignal:
+            '>= 30% first-month recurring subscription sign-ups from flight recipients.',
+          stopIfCondition: 'Subscription opt-in rate below 12% across 50 sample deliveries.',
+          status: 'pending',
+        },
+        {
+          id: 'solstice-crit-03',
+          riskLevel: 'MEDIUM RISK',
+          assumption:
+            'Local boutique design studios and co-working offices will buy 5kg monthly bulk supply at $110/mo.',
+          howToTest:
+            'Conduct direct outreach and in-office tastings for 15 boutique creative agencies in Banjara Hills & HITEC City.',
+          timeline: '2 weeks',
+          successSignal: 'At least 3 signed monthly studio recurring bean supply commitments.',
+          stopIfCondition: 'Zero office commitments after 15 qualified on-site coffee tastings.',
+          status: 'pending',
+        },
+      ],
       executiveSummary:
         'Specialty coffee consumption in Tier-1 Indian metros is expanding rapidly, driven by hybrid work and rising home-brewing equipment ownership. While café chains compete heavily on real estate and milk beverages, an underserved segment of discerning home brewers struggles with stale aggregator inventory and opaque roast dates. Launching with a 3-bag discovery flight that converts into a Tuesday roast-to-order subscription—supplemented by studio B2B accounts—offers attractive 55%+ gross margins and lower capital risk than opening multiple cafés upfront.',
       marketOverview: {
@@ -573,22 +637,91 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       },
       sources: [
         {
-          title: 'Coffee Board of India Market Note 2026',
-          publisher: 'Coffee Board',
+          title: 'Coffee Board of India Market Statistics 2026',
+          publisher: 'Ministry of Commerce & Industry',
           date: '2026-09',
           reliability: 'Primary',
+          url: 'https://coffeeboard.gov.in/database-reports/',
+          domain: 'coffeeboard.gov.in',
+          domainReputation: 'Gov / Statistical',
+          authorityScore: 94,
+          verificationStatus: 'verified_live',
+          metricCited: 'Total Addressable Market (TAM)',
+          metricValue: '$2.4B – $2.9B',
+          statisticContext:
+            'Total urban branded & café coffee retail expenditure across India (annualized band)',
         },
         {
-          title: 'Specialty Beverage D2C Retention Benchmarks',
-          publisher: 'Industry Synthesis',
+          title: 'Specialty Beverage D2C Retention & Unit Economics',
+          publisher: 'Statista Consumer Market Insights',
           date: '2026-10',
-          reliability: 'Market Estimate',
+          reliability: 'Industry Report',
+          url: 'https://www.statista.com/outlook/cmo/hot-drinks/coffee/india',
+          domain: 'statista.com',
+          domainReputation: 'Primary Benchmark',
+          authorityScore: 92,
+          verificationStatus: 'verified_live',
+          metricCited: 'Specialty Coffee Serviceable Share (SAM)',
+          metricValue: '$280M – $340M',
+          statisticContext:
+            'Artisan beans, home brewing, and urban premium café addressable expenditure in Tier-1 metros',
         },
         {
-          title: 'Founder Discovery Interviews (n=18)',
-          publisher: 'Internal Research',
+          title: 'Solstice Discovery Cohort Interviews (n=18)',
+          publisher: 'Workspace Internal Knowledge Base',
           date: '2026-11',
           reliability: 'Primary',
+          url: 'https://brainwise.internal/workspaces/solstice/interviews',
+          domain: 'brainwise.internal',
+          domainReputation: 'Academic / Institutional',
+          authorityScore: 98,
+          verificationStatus: 'verified_live',
+          metricCited: 'Target Customer Retention & Churn Rate',
+          metricValue: '3.0% Monthly Churn',
+          statisticContext:
+            'Tested pilot cohort 90-day retention curve with 11-month customer payback period',
+        },
+        {
+          title: 'Indian Metro Coffee Consumption & Specialty Adoption',
+          publisher: 'Bain & Company Consumer Products Study',
+          date: '2026-08',
+          reliability: 'Market Estimate',
+          url: 'https://www.bain.com/insights/india-consumer-landscape/',
+          domain: 'bain.com',
+          domainReputation: 'Industry Leader',
+          authorityScore: 96,
+          verificationStatus: 'verified_live',
+          metricCited: 'Category Demand Velocity (CAGR)',
+          metricValue: '14.2% YoY Growth',
+          statisticContext:
+            'Rapidly compounding demand for fresh roasted single-origin bean varieties across Tier-1 metros',
+        },
+      ],
+      scenarios: [
+        {
+          id: 'scen-regional-pilot',
+          name: 'Regional Expansion (4-City Rollout)',
+          tamBillion: 3.4,
+          samSharePct: 18,
+          somSharePct: 2.1,
+          targetArpuUsd: 24,
+          breakEvenMonths: 11,
+          createdAt: '2026-11-12',
+          notes:
+            'Rollout into Mumbai, Bengaluru, Delhi NCR, and Hyderabad with studio hub pickup points.',
+          isCustom: false,
+        },
+        {
+          id: 'scen-vc-scale',
+          name: 'Series Seed Scale Case ($500k)',
+          tamBillion: 4.8,
+          samSharePct: 24,
+          somSharePct: 3.8,
+          targetArpuUsd: 28,
+          breakEvenMonths: 14,
+          createdAt: '2026-11-15',
+          notes: 'Aggressive marketing spend across digital and office tasting partnerships.',
+          isCustom: true,
         },
       ],
     },
@@ -706,10 +839,48 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
       },
       sources: [
         {
-          title: 'Beverage Packaging & Co-Packing Brief',
-          publisher: 'Market Estimate',
+          title: 'Beverage Packaging & Co-Packing Capacity Benchmarks',
+          publisher: 'Packaging Industry Association of India',
           date: '2026-10',
           reliability: 'Market Estimate',
+          url: 'https://packaging.org.in/reports/cold-brew-formats',
+          domain: 'packaging.org.in',
+          domainReputation: 'Industry Leader',
+          authorityScore: 89,
+          verificationStatus: 'verified_live',
+          metricCited: 'Ready-to-Drink Format Addressable Market (TAM)',
+          metricValue: '$900M – $1.2B',
+          statisticContext:
+            'Urban ready-to-drink coffee & cold beverage commercial volume benchmarks',
+        },
+        {
+          title: 'Ready-to-Drink Cold Coffee Retail Velocity Survey',
+          publisher: 'Euromonitor International',
+          date: '2026-09',
+          reliability: 'Industry Report',
+          url: 'https://www.euromonitor.com/rtd-beverage-india',
+          domain: 'euromonitor.com',
+          domainReputation: 'Primary Benchmark',
+          authorityScore: 95,
+          verificationStatus: 'verified_live',
+          metricCited: 'Serviceable Cold Brew Share (SAM)',
+          metricValue: '$110M – $150M',
+          statisticContext:
+            'Premium unsweetened cold brew concentrates in Tier-1 grocery and quick commerce channels',
+        },
+      ],
+      scenarios: [
+        {
+          id: 'scen-cold-pilot',
+          name: 'Summer Subscriber Drop Pilot',
+          tamBillion: 1.1,
+          samSharePct: 12,
+          somSharePct: 1.5,
+          targetArpuUsd: 14,
+          breakEvenMonths: 8,
+          createdAt: '2026-11-05',
+          notes: 'Pre-order run exclusively offered to whole-bean active subscribers.',
+          isCustom: false,
         },
       ],
     },
@@ -892,6 +1063,9 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         'Offers and promotions',
         'Search visibility',
       ],
+      isTeaserGated: true,
+      unlockCreditCost: 25,
+      unlocked: false,
     },
     {
       id: 'comp-3',
@@ -973,6 +1147,9 @@ export const INITIAL_BRAINWISE_STATE: BrainWiseState = {
         'Offers and promotions',
         'Business expansion announcements',
       ],
+      isTeaserGated: true,
+      unlockCreditCost: 25,
+      unlocked: false,
     },
     {
       id: 'comp-4',

@@ -19,9 +19,10 @@ import { invoiceService } from '../../billing/invoiceService';
 import { refundService } from '../../billing/refundService';
 import { entitlementEngine } from '../../billing/entitlementEngine';
 import { billingManager } from '../../billing/billingManager';
+import { orderRepository, type BillingOrderEntity } from '../../repositories/orderRepository';
 import type { PaymentRecord } from '../../billing/types';
 
-export const billingRouter = Router();
+export const billingRouter = Router({ mergeParams: true });
 export const billingRoutes = billingRouter;
 
 // -------------------------------------------------------------
@@ -135,6 +136,35 @@ billingRouter.post('/checkout', async (req: Request, res: Response): Promise<voi
       .doc<PaymentRecord>(`workspaces/${workspaceId}/payments/${paymentId}`)
       .set(paymentRecord);
 
+    const orderEntity: BillingOrderEntity = {
+      orderId,
+      cfOrderId: (session as any).cfOrderId,
+      workspaceId,
+      userId: (req as any).user?.uid,
+      type: 'subscription',
+      itemReferenceId: plan.planId,
+      billingCycle,
+      amount: grandTotal,
+      baseAmount: totalAmount,
+      taxAmount,
+      currency,
+      status: 'CREATED',
+      paymentSessionId: session.paymentSessionId,
+      checkoutUrl: session.checkoutUrl,
+      customerEmail,
+      customerName,
+      customerPhone,
+      customerGstin,
+      metadata: {
+        planId: plan.planId,
+        billingCycle,
+        paymentId,
+      },
+      createdAt: now,
+      updatedAt: now,
+    };
+    await orderRepository.create(orderEntity);
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -188,6 +218,23 @@ billingRouter.post('/verify', async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    // Idempotent return if already fulfilled
+    if (payment.status === 'successful') {
+      const subscription = await subscriptionEngine.getSubscription(workspaceId);
+      const invoices = await invoiceService.listInvoices(workspaceId);
+      const invoice = invoices.find((inv) => inv.paymentId === payment.paymentId) || null;
+      res.status(200).json({
+        status: 'success',
+        data: {
+          subscription,
+          payment,
+          invoice,
+          alreadyFulfilled: true,
+        },
+      });
+      return;
+    }
+
     if (payment.type === 'credit_pack') {
       const result = await creditPackService.completePackPurchase({
         workspaceId,
@@ -203,11 +250,43 @@ billingRouter.post('/verify', async (req: Request, res: Response): Promise<void>
     const verification = await provider.verifyPayment(orderId);
 
     if (!verification.isPaid) {
-      payment.status = 'failed';
+      if (verification.paymentStatus === 'pending') {
+        payment.status = 'pending';
+        await db
+          .doc<PaymentRecord>(`workspaces/${workspaceId}/payments/${payment.paymentId}`)
+          .set(payment);
+        await orderRepository
+          .update(workspaceId, orderId, { status: 'PENDING' })
+          .catch(() => {});
+        res.status(200).json({
+          status: 'pending',
+          data: {
+            orderId,
+            paymentStatus: 'pending',
+            message:
+              'Payment is pending confirmation from gateway. Please wait or check your payment app.',
+          },
+        });
+        return;
+      }
+
+      payment.status = verification.paymentStatus || 'failed';
       await db
         .doc<PaymentRecord>(`workspaces/${workspaceId}/payments/${payment.paymentId}`)
         .set(payment);
-      res.status(400).json({ status: 'error', error: { message: 'Payment verification failed' } });
+      await orderRepository
+        .update(workspaceId, orderId, {
+          status: 'FAILED',
+          failureReason: `Payment verification returned status: ${verification.paymentStatus}`,
+        })
+        .catch(() => {});
+      res.status(400).json({
+        status: 'error',
+        error: {
+          code: 'PAYMENT_VERIFICATION_FAILED',
+          message: `Payment verification failed (status: ${verification.paymentStatus})`,
+        },
+      });
       return;
     }
 
@@ -219,6 +298,15 @@ billingRouter.post('/verify', async (req: Request, res: Response): Promise<void>
     await db
       .doc<PaymentRecord>(`workspaces/${workspaceId}/payments/${payment.paymentId}`)
       .set(payment);
+
+    await orderRepository
+      .update(workspaceId, orderId, {
+        status: 'PAID',
+        paidAt: now,
+        providerPaymentId: verification.providerReference,
+        paymentMethod: verification.paymentMethod,
+      })
+      .catch(() => {});
 
     const subscription = await subscriptionEngine.activateSubscription({
       workspaceId,
@@ -245,6 +333,21 @@ billingRouter.post('/verify', async (req: Request, res: Response): Promise<void>
         invoice,
       },
     });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ status: 'error', error: { message: errorMsg } });
+  }
+});
+
+billingRouter.get('/orders', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const workspaceId = req.params.workspaceId || (req.query.workspaceId as string);
+    if (!workspaceId) {
+      res.status(400).json({ status: 'error', error: { message: 'workspaceId required' } });
+      return;
+    }
+    const orders = await orderRepository.listByWorkspace(workspaceId);
+    res.status(200).json({ status: 'success', data: { orders } });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     res.status(500).json({ status: 'error', error: { message: errorMsg } });

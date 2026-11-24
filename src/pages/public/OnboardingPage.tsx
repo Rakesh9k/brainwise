@@ -440,6 +440,44 @@ export const OnboardingPage: React.FC = () => {
                   </div>
                 )}
 
+                {/* Zero-Friction Idea Sandbox Option */}
+                <div className="rounded-[12px] border border-[#FFD3B3] bg-[#FFF8F2] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-bold text-[#C44D00] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Don't have a business yet? Just exploring an idea?
+                    </span>
+                    <p className="text-xs text-[#70706B] leading-relaxed">
+                      Skip company profile setup. Jump straight into Idea Intelligence to research
+                      market size, demand, and unit economics. Your Business Brain will hatch
+                      automatically once validated.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      completeOnboarding({
+                        personaRole: 'Idea Stage Founder',
+                        primaryGoals: ['Validate an idea'],
+                        businessName: 'Idea Exploration Workspace',
+                        industry: businessType || 'General Consumer & B2B',
+                        stage: 'Idea Stage',
+                        location: 'Global',
+                        productSummary: 'Exploring initial product concepts',
+                        website: '',
+                        targetCustomers: 'Early adopters',
+                        startFreshEmpty: true,
+                        sandboxIdeaMode: true,
+                      });
+                      navigate('idea-intelligence');
+                    }}
+                    className="h-9 px-4 rounded-[8px] bg-[#FF7417] hover:bg-[#E55F08] text-white text-xs font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <span>Start in Idea Sandbox Mode</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
                 <div className="pt-4 flex justify-end">
                   <button
                     type="button"

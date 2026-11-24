@@ -4,7 +4,13 @@
  */
 
 export type IntegrationCategory =
-  'research' | 'website_seo' | 'local_business' | 'social_media' | 'communication' | 'storage_docs';
+  | 'research'
+  | 'website_seo'
+  | 'local_business'
+  | 'social_media'
+  | 'communication'
+  | 'storage_docs'
+  | 'payments_finance';
 
 export type IntegrationStatus =
   | 'not_connected'
@@ -129,15 +135,24 @@ export interface NormalizedDataRecord {
     confidenceScore: number;
   };
   metrics: Record<string, number>;
-  dimensions: Record<string, string>;
+  dimensions?: Record<string, string>;
   rawPayload?: Record<string, unknown>;
 }
+
+export type ProviderDataState =
+  | 'CONNECTED'
+  | 'UNCONNECTED'
+  | 'PERMISSION_REQUIRED'
+  | 'PROVIDER_UNAVAILABLE'
+  | 'INSUFFICIENT_DATA';
 
 export interface ExternalDataPackage {
   records: NormalizedDataRecord[];
   summary: Record<string, unknown>;
   hasMore: boolean;
   nextCursor?: string;
+  state?: ProviderDataState;
+  stateReason?: string;
 }
 
 export interface ExternalActionRequest {

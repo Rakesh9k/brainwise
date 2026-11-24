@@ -8,13 +8,14 @@ import { getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { userRepository } from '../repositories/userRepository';
 import { serverConfig } from '../config/index';
-import type { AuthenticatedUser, StandardApiError } from '../types/api';
+import type { AuthenticatedUser, StandardApiError, WorkspaceMemberEntity } from '../types/api';
 
 /* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {
     interface Request {
       user?: AuthenticatedUser;
+      workspaceMember?: WorkspaceMemberEntity;
     }
   }
 }
@@ -88,6 +89,7 @@ export async function authenticateToken(
       const existingUser = await userRepository.findById(uid);
       req.user = {
         uid,
+        userId: uid,
         email: existingUser ? existingUser.email : `${uid}@brain-wise.com`,
         displayName: existingUser
           ? existingUser.displayName
@@ -105,6 +107,7 @@ export async function authenticateToken(
       const decoded = await getAuth().verifyIdToken(token);
       req.user = {
         uid: decoded.uid,
+        userId: decoded.uid,
         email: decoded.email || `${decoded.uid}@user.brain-wise.com`,
         displayName: decoded.name || decoded.email?.split('@')[0],
         isSuperAdmin: Boolean(decoded.admin || decoded.isSuperAdmin),
@@ -134,6 +137,7 @@ export async function authenticateToken(
   if (!serverConfig.isProduction) {
     req.user = {
       uid: 'dev_user_default',
+      userId: 'dev_user_default',
       email: 'dev@brain-wise.com',
       displayName: 'Developer',
       isSuperAdmin: true,

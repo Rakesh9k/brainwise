@@ -74,6 +74,33 @@ export const BillingDashboardView: React.FC = () => {
 
   useEffect(() => {
     loadBillingData();
+
+    // Check for return from Cashfree checkout with order_id in query parameters
+    const params = new URLSearchParams(window.location.search);
+    const orderIdParam = params.get('order_id') || params.get('orderId');
+    if (orderIdParam) {
+      (async () => {
+        try {
+          setActionLoading(true);
+          const verifyResult = await apiClient.verifyPayment(workspaceId, orderIdParam);
+          if (verifyResult?.status === 'pending') {
+            showToast('Payment is pending confirmation from Cashfree. It will reflect once settled.');
+          } else {
+            showToast('Payment verified successfully! Your subscription/credits are now active.');
+          }
+          await loadBillingData();
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          showToast(`Payment verification status: ${msg}`);
+        } finally {
+          setActionLoading(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete('order_id');
+          url.searchParams.delete('orderId');
+          window.history.replaceState({}, document.title, url.toString());
+        }
+      })();
+    }
   }, [workspaceId]);
 
   // Handle plan upgrade or change
@@ -89,11 +116,16 @@ export const BillingDashboardView: React.FC = () => {
         currency: 'INR',
         customerEmail: state.user?.email || 'founder@workspace.com',
         customerName,
+        returnUrl: window.location.href,
       });
 
-      // Verify and activate immediately for seamless prototype demo
-      await apiClient.verifyPayment(workspaceId, checkoutRes.orderId);
-      showToast(`Successfully upgraded to ${plan.name} (${billingCycle})!`);
+      // Verify payment with backend gateway reconciliation
+      const verifyRes = await apiClient.verifyPayment(workspaceId, checkoutRes.orderId);
+      if (verifyRes?.status === 'pending') {
+        showToast('Cashfree checkout order created. Awaiting payment completion.');
+      } else {
+        showToast(`Successfully upgraded to ${plan.name} (${billingCycle})!`);
+      }
       await loadBillingData();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -113,11 +145,16 @@ export const BillingDashboardView: React.FC = () => {
         currency: 'INR',
         customerEmail: state.user?.email || 'founder@workspace.com',
         customerName,
+        returnUrl: window.location.href,
       });
 
-      // Complete pack purchase
-      await apiClient.verifyPayment(workspaceId, checkoutRes.orderId);
-      showToast(`Purchased ${pack.name} (+${pack.creditQuantity} credits)!`);
+      // Complete pack purchase with backend gateway reconciliation
+      const verifyRes = await apiClient.verifyPayment(workspaceId, checkoutRes.orderId);
+      if (verifyRes?.status === 'pending') {
+        showToast('Cashfree checkout order created. Awaiting payment completion.');
+      } else {
+        showToast(`Purchased ${pack.name} (+${pack.creditQuantity} credits)!`);
+      }
       setSelectedPackModal(null);
       await loadBillingData();
     } catch (err: unknown) {

@@ -3,42 +3,62 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { BrainWiseProvider, useBrainWise } from './context/BrainWiseContext';
 import { ContextualActionLedgerProvider } from './components/ui/ContextualActionLedger';
 import { ApplicationShell } from './components/shell/ApplicationShell';
 import { DepartmentTransition } from './components/motion/LiquidMotion';
 import { LandingPage } from './pages/public/LandingPage';
-import { AuthPages } from './pages/public/AuthPages';
-import { OnboardingPage } from './pages/public/OnboardingPage';
-import { DashboardPage } from './pages/app/DashboardPage';
-import { BusinessBrainPage } from './pages/app/BusinessBrainPage';
-import { IdeaIntelligencePage } from './pages/app/IdeaIntelligencePage';
-import { CompetitiveIntelligencePage } from './pages/app/CompetitiveIntelligencePage';
-import { MarketWatchPage } from './pages/app/MarketWatchPage';
-import { BrandStudioPage } from './pages/app/BrandStudioPage';
-import { AssetLibraryPage } from './pages/app/AssetLibraryPage';
-import { GrowthDirectorPage } from './pages/app/GrowthDirectorPage';
-import { AnalyticsReportsPage } from './pages/app/AnalyticsReportsPage';
-import { HelpSupportPage, SettingsPage } from './pages/app/SettingsHelpPages';
+
+// Lazy-loaded routes for code splitting and initial load performance
+const AuthPages = React.lazy(() => import('./pages/public/AuthPages').then((m) => ({ default: m.AuthPages })));
+const OnboardingPage = React.lazy(() => import('./pages/public/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
+const DashboardPage = React.lazy(() => import('./pages/app/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const BusinessBrainPage = React.lazy(() => import('./pages/app/BusinessBrainPage').then((m) => ({ default: m.BusinessBrainPage })));
+const IdeaIntelligencePage = React.lazy(() => import('./pages/app/IdeaIntelligencePage').then((m) => ({ default: m.IdeaIntelligencePage })));
+const CompetitiveIntelligencePage = React.lazy(() => import('./pages/app/CompetitiveIntelligencePage').then((m) => ({ default: m.CompetitiveIntelligencePage })));
+const MarketWatchPage = React.lazy(() => import('./pages/app/MarketWatchPage').then((m) => ({ default: m.MarketWatchPage })));
+const BrandStudioPage = React.lazy(() => import('./pages/app/BrandStudioPage').then((m) => ({ default: m.BrandStudioPage })));
+const AssetLibraryPage = React.lazy(() => import('./pages/app/AssetLibraryPage').then((m) => ({ default: m.AssetLibraryPage })));
+const GrowthDirectorPage = React.lazy(() => import('./pages/app/GrowthDirectorPage').then((m) => ({ default: m.GrowthDirectorPage })));
+const AnalyticsReportsPage = React.lazy(() => import('./pages/app/AnalyticsReportsPage').then((m) => ({ default: m.AnalyticsReportsPage })));
+const SettingsPage = React.lazy(() => import('./pages/app/SettingsHelpPages').then((m) => ({ default: m.SettingsPage })));
+const HelpSupportPage = React.lazy(() => import('./pages/app/SettingsHelpPages').then((m) => ({ default: m.HelpSupportPage })));
+
+const RouteLoadingFallback: React.FC = () => (
+  <div className="flex items-center justify-center min-h-[400px] w-full">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-8 h-8 border-2 border-[#E6E6E2] border-t-[#FF7417] rounded-full animate-spin" />
+      <span className="text-xs font-medium text-[#737373]">Loading module...</span>
+    </div>
+  </div>
+);
 
 const BrainWiseRouter: React.FC = () => {
   const { state } = useBrainWise();
   const route = state.currentRoute;
 
   if (!state.isAuthenticated) {
-    if (route === 'signup') return <AuthPages mode="signup" />;
-    if (route === 'verify-email') return <AuthPages mode="verify-email" />;
-    if (route === 'login') return <AuthPages mode="login" />;
-    if (route === 'forgot-password') return <AuthPages mode="forgot-password" />;
-    if (route === 'reset-password') return <AuthPages mode="reset-password" />;
-    if (route === 'onboarding') return <OnboardingPage />;
-    return <LandingPage />;
+    return (
+      <Suspense fallback={<RouteLoadingFallback />}>
+        {route === 'signup' && <AuthPages mode="signup" />}
+        {route === 'verify-email' && <AuthPages mode="verify-email" />}
+        {route === 'login' && <AuthPages mode="login" />}
+        {route === 'forgot-password' && <AuthPages mode="forgot-password" />}
+        {route === 'reset-password' && <AuthPages mode="reset-password" />}
+        {route === 'onboarding' && <OnboardingPage />}
+        {!['signup', 'verify-email', 'login', 'forgot-password', 'reset-password', 'onboarding'].includes(route) && <LandingPage />}
+      </Suspense>
+    );
   }
 
   if (route === 'onboarding') {
-    return <OnboardingPage />;
+    return (
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <OnboardingPage />
+      </Suspense>
+    );
   }
 
   const renderAppRoute = () => {
@@ -78,7 +98,9 @@ const BrainWiseRouter: React.FC = () => {
     <ApplicationShell>
       <AnimatePresence mode="wait" initial={false}>
         <DepartmentTransition key={route} routeKey={route}>
-          {renderAppRoute()}
+          <Suspense fallback={<RouteLoadingFallback />}>
+            {renderAppRoute()}
+          </Suspense>
         </DepartmentTransition>
       </AnimatePresence>
     </ApplicationShell>

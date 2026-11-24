@@ -9,6 +9,7 @@ import { getCreditPack, GST_RATE } from './pricingConfig';
 import { billingManager } from './billingManager';
 import { creditEngine } from './creditEngine';
 import { invoiceService } from './invoiceService';
+import { orderRepository, type BillingOrderEntity } from '../repositories/orderRepository';
 
 export class CreditPackService {
   public async createPackOrder(params: {
@@ -83,6 +84,33 @@ export class CreditPackService {
     await db
       .doc<PaymentRecord>(`workspaces/${workspaceId}/payments/${paymentId}`)
       .set(paymentRecord);
+
+    const orderEntity: BillingOrderEntity = {
+      orderId,
+      cfOrderId: (session as any).cfOrderId,
+      workspaceId,
+      type: 'credit_pack',
+      itemReferenceId: packId,
+      amount: totalAmount,
+      baseAmount,
+      taxAmount,
+      currency: pack.currency,
+      status: 'CREATED',
+      paymentSessionId: session.paymentSessionId,
+      checkoutUrl: session.checkoutUrl,
+      customerEmail,
+      customerName,
+      customerPhone,
+      customerGstin,
+      metadata: {
+        packId,
+        creditQuantity: pack.creditQuantity,
+        paymentId,
+      },
+      createdAt: now,
+      updatedAt: now,
+    };
+    await orderRepository.create(orderEntity);
 
     return {
       paymentSessionId: session.paymentSessionId,
@@ -159,6 +187,15 @@ export class CreditPackService {
     await db
       .doc<PaymentRecord>(`workspaces/${workspaceId}/payments/${payment.paymentId}`)
       .set(payment);
+
+    await orderRepository
+      .update(workspaceId, orderId, {
+        status: 'PAID',
+        paidAt: now,
+        providerPaymentId: verification.providerReference,
+        paymentMethod: verification.paymentMethod,
+      })
+      .catch(() => {});
 
     // Grant purchased credits (permanent rollover, never expires)
     const updatedAccount = await creditEngine.grantCredits({

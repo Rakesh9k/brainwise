@@ -155,7 +155,7 @@ router.post(
   '/connect-managed',
   requireWorkspaceRole(['owner', 'admin']),
   async (req: Request, res: Response): Promise<void> => {
-    const { providerId, apiKey } = req.body;
+    const { providerId, apiKey, extra } = req.body;
     if (!providerId) {
       res.status(400).json({
         success: false,
@@ -169,6 +169,7 @@ router.post(
         workspaceId: req.workspace!.workspaceId,
         providerId,
         apiKey,
+        extra,
         actorId: req.user?.uid,
       });
 

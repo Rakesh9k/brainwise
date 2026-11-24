@@ -3,8 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { createHash } from 'crypto';
 import { db } from '../db/firestore';
 import type { NormalizedDataRecord, ExternalDataPackage } from './types';
+import { dataHealthService } from '../services/analytics/dataHealthService';
+import type { ConnectorHealthEntity } from '../services/analytics/dataIngestionTypes';
+
+/**
+ * Computes a deterministic SHA-256 fingerprint for a data record
+ * to guarantee atomic, idempotent deduplication across ingestion syncs.
+ */
+export function computeRecordFingerprint(
+  workspaceId: string,
+  integrationId: string,
+  category: string,
+  sourceTimestamp?: string,
+  sourceReference?: string,
+  metrics?: Record<string, any>
+): string {
+  const content = [
+    workspaceId,
+    integrationId,
+    category,
+    sourceTimestamp || '',
+    sourceReference || '',
+    metrics ? JSON.stringify(metrics) : '',
+  ].join('|');
+  return createHash('sha256').update(content).digest('hex').substring(0, 24);
+}
 
 /**
  * Centralized Data Ingestion & Normalization Layer
@@ -14,6 +40,7 @@ import type { NormalizedDataRecord, ExternalDataPackage } from './types';
 export class DataIngestionService {
   /**
    * Persists normalized records into the workspace-isolated subcollection.
+   * Guarantees idempotent deduplication via deterministic fingerprint IDs.
    */
   public async ingestRecords(
     workspaceId: string,
@@ -24,8 +51,18 @@ export class DataIngestionService {
     let duplicateCount = 0;
 
     for (const record of dataPackage.records) {
+      const fp = computeRecordFingerprint(
+        workspaceId,
+        integrationId,
+        record.category,
+        record.sourceTimestamp,
+        record.sourceReference || record.recordId,
+        record.metrics
+      );
+      const recordDocId = `rec_fp_${fp}`;
+
       const recordRef = db.doc<NormalizedDataRecord>(
-        `workspaces/${workspaceId}/imported_data/${record.recordId}`
+        `workspaces/${workspaceId}/imported_data/${recordDocId}`
       );
 
       const existing = await recordRef.get();
@@ -36,10 +73,37 @@ export class DataIngestionService {
 
       await recordRef.set({
         ...record,
+        recordId: recordDocId,
         workspaceId,
         integrationId,
       });
       ingestedCount++;
+    }
+
+    // Map integrationId to ConnectorHealth provider if compatible
+    const providerMap: Record<string, ConnectorHealthEntity['provider']> = {
+      'google-analytics-4': 'GA4',
+      'meta-instagram': 'META_ADS',
+      'stripe': 'STRIPE',
+      'shopify': 'SHOPIFY',
+    };
+
+    const healthProvider = providerMap[integrationId];
+    if (healthProvider) {
+      try {
+        await dataHealthService.recordSyncResult({
+          workspaceId,
+          provider: healthProvider,
+          status: dataPackage.state === 'CONNECTED' ? 'SYNCHRONIZED' : 'PARTIALLY_SYNCHRONIZED',
+          authValid: dataPackage.state !== 'PERMISSION_REQUIRED' && dataPackage.state !== 'UNCONNECTED',
+          recordsReceived: dataPackage.records.length,
+          recordsProcessed: ingestedCount,
+          recordsRejected: 0,
+          recordsDuplicated: duplicateCount,
+        });
+      } catch (err) {
+        console.warn(`[DATA_INGESTION] Non-fatal health tracking error for ${integrationId}:`, err);
+      }
     }
 
     return { ingestedCount, duplicateCount };

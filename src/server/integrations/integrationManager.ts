@@ -213,8 +213,9 @@ export class IntegrationManager {
     providerId: string;
     apiKey?: string;
     actorId?: string;
+    extra?: Record<string, unknown>;
   }): Promise<IntegrationConnectionEntity> {
-    const { workspaceId, providerId, apiKey, actorId = 'system' } = params;
+    const { workspaceId, providerId, apiKey, actorId = 'system', extra } = params;
     const provider = providerRegistry.getProvider(providerId);
     if (!provider) {
       throw new Error(`Provider '${providerId}' not found`);
@@ -223,6 +224,7 @@ export class IntegrationManager {
     const credentials: IntegrationCredentials = {
       apiKey: apiKey || 'system_managed_key',
       scopes: provider.metadata.requiredScopes,
+      extra,
     };
 
     const integrationId = providerId;
@@ -263,9 +265,6 @@ export class IntegrationManager {
       result: 'SUCCESS',
       metadata: { providerId },
     });
-
-    // Initial sync
-    await this.syncIntegration(workspaceId, integrationId, actorId);
 
     return entity;
   }

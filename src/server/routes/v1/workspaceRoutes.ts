@@ -106,12 +106,14 @@ router.patch(
   requireWorkspaceMember,
   requireWorkspaceRole(['owner', 'admin']),
   async (req: Request, res: Response): Promise<void> => {
-    const { workspaceName, industry, timezone, currency } = req.body;
+    const { workspaceName, industry, timezone, currency, preferences, webhooks } = req.body;
     const updated = await workspaceRepository.update(req.workspace!.workspaceId, {
       ...(workspaceName ? { workspaceName: workspaceName.trim() } : {}),
       ...(industry ? { industry } : {}),
       ...(timezone ? { timezone } : {}),
       ...(currency ? { currency } : {}),
+      ...(preferences ? { preferences } : {}),
+      ...(webhooks ? { webhooks } : {}),
     });
 
     await auditService.log({
@@ -178,13 +180,17 @@ router.post(
   requireWorkspaceMember,
   requireWorkspaceRole(['owner', 'admin']),
   async (req: Request, res: Response): Promise<void> => {
-    const { userId, role } = req.body;
-    if (!userId || !role) {
+    const { userId, email, name, role } = req.body;
+    const resolvedUserId =
+      userId ||
+      (email ? `usr_${email.toLowerCase().replace(/[^a-z0-9]/g, '_')}` : `usr_${Date.now()}`);
+
+    if (!role) {
       res.status(400).json({
         success: false,
         error: {
           code: 'MISSING_FIELDS',
-          message: 'userId and role are required',
+          message: 'role is required',
           category: 'VALIDATION_ERROR',
           retryable: false,
         },
@@ -193,18 +199,56 @@ router.post(
     }
 
     const member = await memberRepository.addMember({
-      membershipId: `mem_${userId}_${req.workspace!.workspaceId}`,
+      membershipId: `mem_${resolvedUserId}_${req.workspace!.workspaceId}`,
       workspaceId: req.workspace!.workspaceId,
-      userId,
+      userId: resolvedUserId,
       role,
-      membershipStatus: 'active',
+      name: name?.trim() || undefined,
+      email: email?.trim() || undefined,
+      membershipStatus: userId ? 'active' : 'invited',
       invitedBy: req.user!.uid,
       joinedAt: new Date().toISOString(),
+    });
+
+    await auditService.log({
+      workspaceId: req.workspace!.workspaceId,
+      actorUserId: req.user!.uid,
+      action: 'WORKSPACE_MEMBER_INVITED',
+      resourceType: 'workspace_member',
+      resourceId: member.membershipId,
+      metadata: { invitedEmail: email, role },
     });
 
     res.status(201).json({
       success: true,
       data: member,
+    });
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/invitations
+ * Generates an authorized shareable invitation link
+ */
+router.post(
+  '/:workspaceId/invitations',
+  requireWorkspaceMember,
+  requireWorkspaceRole(['owner', 'admin']),
+  async (req: Request, res: Response): Promise<void> => {
+    const { email, role = 'Strategist' } = req.body;
+    const token = `inv_${Buffer.from(`${req.workspace!.workspaceId}:${email || 'open'}:${Date.now()}`).toString('base64url')}`;
+    const inviteLink = `${req.protocol}://${req.get('host') || 'brainwise.app'}/join?inviteToken=${token}&ws=${req.workspace!.workspaceId}`;
+
+    res.json({
+      success: true,
+      data: {
+        inviteToken: token,
+        inviteLink,
+        workspaceId: req.workspace!.workspaceId,
+        workspaceName: req.workspace!.workspaceName,
+        role,
+        expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+      },
     });
   }
 );
@@ -432,52 +476,11 @@ router.delete(
   requireWorkspaceRole(['owner']),
   async (req: Request, res: Response): Promise<void> => {
     const workspaceId = req.workspace!.workspaceId;
-    const now = new Date().toISOString();
-
-    // 1. Purge business data
-    await businessBrainService.deleteProfile(workspaceId).catch(() => {});
-    const competitors = await competitorRepository.listByWorkspace(workspaceId);
-    for (const c of competitors) {
-      await competitorRepository.delete(workspaceId, c.competitorId).catch(() => {});
-    }
-    const goals = await goalRepository.listByWorkspace(workspaceId);
-    for (const g of goals) {
-      await goalRepository.delete(workspaceId, g.goalId).catch(() => {});
-    }
-    const tasks = await taskRepository.listByWorkspace(workspaceId);
-    for (const t of tasks) {
-      await taskRepository.delete(workspaceId, t.taskId).catch(() => {});
-    }
-
-    // 2. Update workspace status to archived / DPDPA erased
-    await workspaceRepository.archive(workspaceId);
-
-    // 3. Log cryptographic security audit event
-    await auditService.logSecurityEvent({
-      workspaceId,
-      userId: req.user!.uid,
-      action: 'DPDPA_RIGHT_TO_ERASURE_EXECUTED',
-      resource: `workspaces/${workspaceId}`,
-      details: {
-        purgedCategories: ['businessBrain', 'competitors', 'goals', 'tasks', 'researchData'],
-        retainedCategories: ['taxInvoices', 'statutoryAuditLedger'],
-        retentionStatutoryBasis:
-          'Section 128 Companies Act & Section 35(1) CGST Act 2017 (72-month statutory retention)',
-        timestamp: now,
-      },
-    });
+    const result = await workspaceService.executeDpdpaDataErasure(workspaceId, req.user!.uid);
 
     res.json({
       success: true,
-      data: {
-        workspaceId,
-        erasedAt: now,
-        status: 'DATA_PURGED_DPDPA_COMPLIANT',
-        purgedCategories: ['businessBrain', 'competitors', 'goals', 'tasks', 'researchData'],
-        retainedCategories: ['taxInvoices', 'statutoryAuditLedger'],
-        legalNotice:
-          'Statutory tax and financial records are retained in compliance with Indian CGST and Companies Act provisions.',
-      },
+      data: result,
     });
   }
 );

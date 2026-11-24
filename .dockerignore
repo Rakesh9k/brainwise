@@ -30,6 +30,7 @@ playwright-report
 # Test suites and documentation
 tests
 docs
+public/assets/aistudio
 *.spec.ts
 *.test.ts
 

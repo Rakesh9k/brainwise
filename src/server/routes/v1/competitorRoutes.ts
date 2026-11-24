@@ -13,6 +13,8 @@ import { marketWatchRepository } from '../../repositories/marketWatchRepository'
 import { departmentEventBus } from '../../events/eventBus';
 import { creditService } from '../../services/creditService';
 import { validateSafeExternalUrl } from '../../utils/ssrfValidator';
+import { competitiveIntelligenceService } from '../../services/competitiveIntelligenceService';
+import { db } from '../../db/firestore';
 import type {
   CompetitorEntity,
   CompetitorSnapshotEntity,
@@ -95,7 +97,7 @@ router.post(
       industry: industry || req.workspace!.industry,
       location: location || '',
       positioning: positioning || '',
-      marketShare: marketShare || '5%',
+      marketShare: marketShare && typeof marketShare === 'string' && marketShare.trim() ? marketShare.trim() : 'UNKNOWN',
       strengths: Array.isArray(strengths) ? strengths : [],
       weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
       pricingRange: pricingRange || '',
@@ -372,5 +374,233 @@ router.delete(
     });
   }
 );
+
+// =============================================================================
+// PHASE 4: COMPETITIVE INTELLIGENCE & COMPETITOR WATCH (DEPARTMENT 3)
+// =============================================================================
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/detailed
+ * Retrieves comprehensive competitor intelligence profiles
+ */
+router.get('/detailed', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const competitors = await competitiveIntelligenceService.getCompetitors(req.workspace!.workspaceId);
+    res.json({
+      success: true,
+      data: competitors,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/competitors/positioning-matrix
+ * Computes 2D Euclidean Positioning Matrix (Price vs. Depth)
+ */
+router.post('/positioning-matrix', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userCoordinates } = req.body;
+    const competitors = await competitiveIntelligenceService.getCompetitors(req.workspace!.workspaceId);
+
+    const matrix = competitiveIntelligenceService.calculatePositioningMatrix(
+      userCoordinates || { price: 45, depth: 70, label: 'Your Business' },
+      competitors
+    );
+
+    res.json({
+      success: true,
+      data: matrix,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/competitors/watch/run
+ * Executes an operational Competitor Watch monitoring run
+ */
+router.post(
+  '/watch/run',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await competitiveIntelligenceService.executeCompetitorWatchRun(
+        req.workspace!.workspaceId
+      );
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/watch/alerts
+ * Lists active Competitor Watch change alerts
+ */
+router.get('/watch/alerts', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const snap = await db
+      .collection(`workspaces/${req.workspace!.workspaceId}/competitor_alerts`)
+      .get();
+
+    const alerts = snap.docs.map((d) => d.data());
+    res.json({
+      success: true,
+      data: alerts,
+      count: alerts.length,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// =============================================================================
+// AUTONOMOUS COMPETITIVE INTELLIGENCE & RESEARCH ORCHESTRATOR
+// =============================================================================
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/competitors/discover
+ * Triggers autonomous end-to-end competitive research from a 1-sentence prompt
+ */
+router.post(
+  '/discover',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const prompt =
+        req.body.prompt ||
+        req.body.businessPrompt ||
+        req.body.idea ||
+        req.workspace?.industry ||
+        'Premium specialty brand';
+
+      const result = await competitiveIntelligenceService.orchestrateCompetitiveResearch({
+        workspaceId: req.workspace!.workspaceId,
+        businessPrompt: prompt,
+        userId: req.user!.uid,
+        idempotencyKey: req.headers['x-idempotency-key'] as string,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: result,
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/report/latest
+ * Retrieves the latest 24-section comprehensive competitive intelligence report
+ */
+router.get('/report/latest', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const report = await db
+      .collection(`workspaces/${req.workspace!.workspaceId}/competitive_reports`)
+      .orderBy('generatedAt', 'desc')
+      .limit(1)
+      .get();
+
+    const doc = report.docs[0]?.data();
+    if (!doc) {
+      res.status(404).json({ success: false, error: 'No competitive report found for this workspace' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: doc,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/report/:reportId
+ * Retrieves a specific competitive report
+ */
+router.get('/report/:reportId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const snap = await db
+      .doc(`workspaces/${req.workspace!.workspaceId}/competitive_reports/${req.params.reportId}`)
+      .get();
+
+    if (!snap.exists || !snap.data()) {
+      res.status(404).json({ success: false, error: 'Report not found' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: snap.data(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/competitors/advisor/chat
+ * Conversational Competitive Intelligence Advisor
+ */
+router.post(
+  '/advisor/chat',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { query, projectId } = req.body;
+      if (!query || typeof query !== 'string' || !query.trim()) {
+        res.status(400).json({ success: false, error: 'Query text is required' });
+        return;
+      }
+
+      const answer = await competitiveIntelligenceService.askAdvisor({
+        workspaceId: req.workspace!.workspaceId,
+        projectId,
+        query: query.trim(),
+      });
+
+      res.json({
+        success: true,
+        data: answer,
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/evidence
+ * Lists verified evidence claims for workspace competitors
+ */
+router.get('/evidence', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const snap = await db
+      .collection(`workspaces/${req.workspace!.workspaceId}/competitive_evidence`)
+      .orderBy('collectionDate', 'desc')
+      .get();
+
+    const claims = snap.docs.map((d) => d.data());
+    res.json({
+      success: true,
+      data: claims,
+      count: claims.length,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 export const competitorRoutes = router;

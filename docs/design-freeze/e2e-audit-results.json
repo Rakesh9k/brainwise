@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-20T03:41:35.606Z",
+  "timestamp": "2026-11-24T03:35:58.303Z",
   "results": [
     {
       "screen": "Marketing Landing Page",
@@ -37,8 +37,8 @@
       "screen": "Marketing Landing Page",
       "viewport": "tablet-portrait-768",
       "dimensions": "768x1024",
-      "hasOverflow": true,
-      "overflowDetails": "scrollWidth 778 > clientWidth 768",
+      "hasOverflow": false,
+      "overflowDetails": "None",
       "screenshot": "landing-tablet-portrait-768.png"
     },
     {

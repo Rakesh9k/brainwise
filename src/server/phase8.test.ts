@@ -23,6 +23,7 @@ import { metaInstagramProvider } from './integrations/providers/metaInstagramPro
 import { linkedinProvider } from './integrations/providers/linkedinProvider';
 import { youtubeProvider } from './integrations/providers/youtubeProvider';
 import { googleDriveProvider } from './integrations/providers/googleDriveProvider';
+import { cashfreePaymentProvider } from './integrations/providers/cashfreePaymentProvider';
 
 test('PHASE 8 — SUITE 1: Credential Security & AES-256-GCM Encryption', async (t) => {
   const workspaceId = 'ws_sec_test_' + Date.now();
@@ -56,8 +57,10 @@ test('PHASE 8 — SUITE 1: Credential Security & AES-256-GCM Encryption', async 
     const rawTokens = { apiKey: 'top_secret_api_key' };
     const encrypted = credentialManager.encrypt(rawTokens);
 
-    // Tamper with ciphertext by altering characters
-    const tamperedCiphertext = 'ff' + encrypted.ciphertext.substring(2);
+    // Tamper with ciphertext by altering characters reliably
+    const firstChar = encrypted.ciphertext[0];
+    const replacementChar = firstChar === 'a' ? 'b' : 'a';
+    const tamperedCiphertext = replacementChar + encrypted.ciphertext.substring(1);
     const tampered = { ...encrypted, ciphertext: tamperedCiphertext };
 
     assert.throws(
@@ -127,9 +130,9 @@ test('PHASE 8 — SUITE 2: OAuth 2.0 Security, PKCE & Anti-CSRF Verification', a
 });
 
 test('PHASE 8 — SUITE 3: Provider Registry & Multi-Provider Ingestion Capabilities', async (t) => {
-  await t.test('Registers all 9 production provider adapters across core categories', () => {
+  await t.test('Registers all production provider adapters across core categories', () => {
     const allProviders = providerRegistry.listProviders();
-    assert.equal(allProviders.length, 9, 'All 9 production providers must be registered');
+    assert.ok(allProviders.length >= 10, 'All production providers must be registered');
 
     const ids = allProviders.map((p) => p.id);
     assert.ok(ids.includes('google-research'));
@@ -141,6 +144,7 @@ test('PHASE 8 — SUITE 3: Provider Registry & Multi-Provider Ingestion Capabili
     assert.ok(ids.includes('linkedin-marketing'));
     assert.ok(ids.includes('youtube-data'));
     assert.ok(ids.includes('google-drive'));
+    assert.ok(ids.includes('cashfree-payments'));
   });
 
   await t.test('Categorizes providers accurately', () => {
@@ -152,6 +156,9 @@ test('PHASE 8 — SUITE 3: Provider Registry & Multi-Provider Ingestion Capabili
 
     const research = providerRegistry.listByCategory('research');
     assert.ok(research.length >= 1, 'Must include Google Research');
+
+    const finance = providerRegistry.listByCategory('payments_finance');
+    assert.ok(finance.length >= 1, 'Must include Cashfree Payments');
   });
 });
 
@@ -276,6 +283,22 @@ test('PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters', asyn
       });
       assert.equal(exportResult.success, true);
       assert.ok(exportResult.actionId);
+    }
+  );
+
+  await t.test(
+    '10. Cashfree Payment Provider: Ingests verified revenue transactions and telemetry',
+    async () => {
+      const pkg = await cashfreePaymentProvider.fetchData(credentials, { limit: 10 });
+      assert.ok(pkg.records.length > 0);
+      assert.equal(pkg.records[0].provider, 'cashfree-payments');
+      assert.equal(pkg.records[0].category, 'payments_finance');
+      assert.ok(pkg.records[0].metrics.net_revenue > 0);
+      assert.equal(pkg.summary.provider, 'cashfree-payments');
+      assert.ok((pkg.summary.netRevenue as number) > 0);
+
+      const health = await cashfreePaymentProvider.checkHealth(credentials);
+      assert.equal(health.healthy, true);
     }
   );
 });

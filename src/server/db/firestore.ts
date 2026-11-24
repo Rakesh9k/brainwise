@@ -11,6 +11,7 @@ import {
   type WhereFilterOp,
 } from 'firebase-admin/firestore';
 import { serverConfig } from '../config/index';
+import { dbLogger } from './dbLogger';
 
 /**
  * Universal Database Interface
@@ -70,6 +71,8 @@ export interface DbCollectionRef<T = Record<string, unknown>> extends DbQuery<T>
 }
 
 export interface IDatabaseService {
+  readonly isPersistent: boolean;
+  readonly providerName: string;
   collection<T = Record<string, unknown>>(path: string): DbCollectionRef<T>;
   doc<T = Record<string, unknown>>(path: string): DbDocumentRef<T>;
   runTransaction<R>(updateFunction: (transaction: DbTransaction) => Promise<R>): Promise<R>;
@@ -81,6 +84,7 @@ export interface IDatabaseService {
 
 // -----------------------------------------------------------------------------
 // In-Memory Database Implementation (Deterministic, Testable, Zero-Dependency)
+// Strictly prohibited from running in production.
 // -----------------------------------------------------------------------------
 
 interface StoredDoc {
@@ -91,9 +95,20 @@ interface StoredDoc {
   updatedAt: string;
 }
 
-class InMemoryDatabase implements IDatabaseService {
+export class InMemoryDatabase implements IDatabaseService {
+  public readonly isPersistent = false;
+  public readonly providerName = 'in-memory-adapter';
   private store: Map<string, StoredDoc> = new Map();
   private txQueue: Promise<void> = Promise.resolve();
+
+  constructor() {
+    if (serverConfig.isProduction) {
+      const fatalMsg =
+        '[FATAL DATA INTEGRITY VIOLATION] Attempted to instantiate InMemoryDatabase in production environment. Immediate termination enforced.';
+      dbLogger.error(fatalMsg, { operation: 'DATABASE_INITIALIZATION' });
+      throw new Error(fatalMsg);
+    }
+  }
 
   public resetForTesting(): void {
     this.store.clear();
@@ -155,11 +170,11 @@ class InMemoryDatabase implements IDatabaseService {
     const results: StoredDoc[] = [];
     const prefix = `${norm}/`;
 
-    for (const [key, value] of this.store.entries()) {
+    for (const [key, doc] of this.store.entries()) {
       if (key.startsWith(prefix)) {
         const sub = key.slice(prefix.length);
         if (!sub.includes('/')) {
-          results.push(value);
+          results.push(doc);
         }
       }
     }
@@ -170,11 +185,11 @@ class InMemoryDatabase implements IDatabaseService {
     updateFunction: (transaction: DbTransaction) => Promise<R>
   ): Promise<R> {
     let releaseLock: () => void;
-    const lockAcquired = new Promise<void>((resolve) => {
-      releaseLock = resolve;
+    const currentLock = new Promise<void>((res) => {
+      releaseLock = res;
     });
     const previousQueue = this.txQueue;
-    this.txQueue = previousQueue.then(() => lockAcquired);
+    this.txQueue = previousQueue.then(() => currentLock);
 
     await previousQueue;
 
@@ -350,7 +365,9 @@ class InMemoryCollectionRef<T = Record<string, unknown>> implements DbCollection
     // Apply where filters
     for (const filter of this.filters) {
       docs = docs.filter((doc) => {
-        const val = doc.data[filter.field];
+        const val = filter.field.includes('.')
+          ? filter.field.split('.').reduce((acc: any, part: string) => (acc ? acc[part] : undefined), doc.data)
+          : doc.data[filter.field];
         if (filter.op === '==') return val === filter.value;
         if (filter.op === '!=') return val !== filter.value;
         if (filter.op === '<') return Number(val) < Number(filter.value);
@@ -406,16 +423,31 @@ class InMemoryCollectionRef<T = Record<string, unknown>> implements DbCollection
 // Live Cloud Firestore Adapter (Firebase Admin SDK)
 // -----------------------------------------------------------------------------
 
-class CloudFirestoreDatabase implements IDatabaseService {
+export class CloudFirestoreDatabase implements IDatabaseService {
+  public readonly isPersistent = true;
+  public readonly providerName = 'google-cloud-firestore';
   private firestore: Firestore;
 
   constructor() {
-    if (!getApps().length) {
-      initializeApp({
-        projectId: serverConfig.firebaseProjectId,
+    try {
+      if (!getApps().length) {
+        initializeApp({
+          projectId: serverConfig.firebaseProjectId,
+        });
+      }
+      this.firestore = getFirestore();
+      dbLogger.info('CloudFirestoreDatabase initialized successfully', {
+        operation: 'DATABASE_INITIALIZATION',
+        details: { projectId: serverConfig.firebaseProjectId },
       });
+    } catch (err: unknown) {
+      const errMessage = err instanceof Error ? err.message : String(err);
+      dbLogger.error(`CloudFirestore initialization failed: ${errMessage}`, {
+        operation: 'DATABASE_INITIALIZATION',
+        error: errMessage,
+      });
+      throw err;
     }
-    this.firestore = getFirestore();
   }
 
   public collection<T = Record<string, unknown>>(path: string): DbCollectionRef<T> {
@@ -433,7 +465,7 @@ class CloudFirestoreDatabase implements IDatabaseService {
   }
 
   public resetForTesting(): void {
-    // No-op on real Cloud Firestore
+    // Prohibited on real Cloud Firestore
   }
 
   public exportBackup(): Record<string, any> {
@@ -451,35 +483,51 @@ class CloudFirestoreDatabase implements IDatabaseService {
   public async runTransaction<R>(
     updateFunction: (transaction: DbTransaction) => Promise<R>
   ): Promise<R> {
-    return this.firestore.runTransaction(async (fsTx) => {
-      const tx: DbTransaction = {
-        get: async <T>(ref: DbDocumentRef<T>): Promise<DbDocumentSnapshot<T>> => {
-          const docSnap = await fsTx.get(this.firestore.doc(ref.path));
-          return {
-            id: docSnap.id,
-            exists: docSnap.exists,
-            data: () => docSnap.data() as T | undefined,
-          };
-        },
-        set: <T>(
-          ref: DbDocumentRef<T>,
-          data: Partial<T>,
-          options?: { merge?: boolean }
-        ): DbTransaction => {
-          fsTx.set(this.firestore.doc(ref.path), data as DocumentData, options || {});
-          return tx;
-        },
-        update: <T>(ref: DbDocumentRef<T>, data: Partial<T>): DbTransaction => {
-          fsTx.update(this.firestore.doc(ref.path), data as DocumentData);
-          return tx;
-        },
-        delete: <T>(ref: DbDocumentRef<T>): DbTransaction => {
-          fsTx.delete(this.firestore.doc(ref.path));
-          return tx;
-        },
-      };
-      return await updateFunction(tx);
-    });
+    const startTime = performance.now();
+    try {
+      const result = await this.firestore.runTransaction(async (fsTx) => {
+        const tx: DbTransaction = {
+          get: async <T>(ref: DbDocumentRef<T>): Promise<DbDocumentSnapshot<T>> => {
+            const docSnap = await fsTx.get(this.firestore.doc(ref.path));
+            return {
+              id: docSnap.id,
+              exists: docSnap.exists,
+              data: () => docSnap.data() as T | undefined,
+            };
+          },
+          set: <T>(
+            ref: DbDocumentRef<T>,
+            data: Partial<T>,
+            options?: { merge?: boolean }
+          ): DbTransaction => {
+            fsTx.set(this.firestore.doc(ref.path), data as DocumentData, options || {});
+            return tx;
+          },
+          update: <T>(ref: DbDocumentRef<T>, data: Partial<T>): DbTransaction => {
+            fsTx.update(this.firestore.doc(ref.path), data as DocumentData);
+            return tx;
+          },
+          delete: <T>(ref: DbDocumentRef<T>): DbTransaction => {
+            fsTx.delete(this.firestore.doc(ref.path));
+            return tx;
+          },
+        };
+        return await updateFunction(tx);
+      });
+
+      const durationMs = performance.now() - startTime;
+      dbLogger.recordLatency('TRANSACTION', 'multi-document-transaction', durationMs);
+      return result;
+    } catch (err: unknown) {
+      const durationMs = performance.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      dbLogger.error(`Transaction aborted: ${errorMsg}`, {
+        operation: 'TRANSACTION_ROLLBACK',
+        durationMs: Math.round(durationMs),
+        error: errorMsg,
+      });
+      throw err;
+    }
   }
 
   private wrapDocRef<T>(ref: any): DbDocumentRef<T> {
@@ -487,21 +535,73 @@ class CloudFirestoreDatabase implements IDatabaseService {
       id: ref.id,
       path: ref.path,
       get: async () => {
-        const snap = await ref.get();
-        return {
-          id: snap.id,
-          exists: snap.exists,
-          data: () => snap.data() as T | undefined,
-        };
+        const startTime = performance.now();
+        try {
+          const snap = await ref.get();
+          const durationMs = performance.now() - startTime;
+          dbLogger.recordLatency('DOCUMENT_GET', ref.path, durationMs);
+          return {
+            id: snap.id,
+            exists: snap.exists,
+            data: () => snap.data() as T | undefined,
+          };
+        } catch (err: unknown) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          dbLogger.error(`Document get failed at ${ref.path}: ${errorMsg}`, {
+            operation: 'DOCUMENT_GET',
+            path: ref.path,
+            error: errorMsg,
+          });
+          throw err;
+        }
       },
       set: async (data, options) => {
-        await ref.set(data as DocumentData, options || {});
+        const startTime = performance.now();
+        try {
+          await ref.set(data as DocumentData, options || {});
+          const durationMs = performance.now() - startTime;
+          dbLogger.recordLatency('DOCUMENT_SET', ref.path, durationMs);
+        } catch (err: unknown) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          dbLogger.error(`Document set failed at ${ref.path}: ${errorMsg}`, {
+            operation: 'DOCUMENT_SET',
+            path: ref.path,
+            error: errorMsg,
+          });
+          throw err;
+        }
       },
       update: async (data) => {
-        await ref.update(data as DocumentData);
+        const startTime = performance.now();
+        try {
+          await ref.update(data as DocumentData);
+          const durationMs = performance.now() - startTime;
+          dbLogger.recordLatency('DOCUMENT_UPDATE', ref.path, durationMs);
+        } catch (err: unknown) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          dbLogger.error(`Document update failed at ${ref.path}: ${errorMsg}`, {
+            operation: 'DOCUMENT_UPDATE',
+            path: ref.path,
+            error: errorMsg,
+          });
+          throw err;
+        }
       },
       delete: async () => {
-        await ref.delete();
+        const startTime = performance.now();
+        try {
+          await ref.delete();
+          const durationMs = performance.now() - startTime;
+          dbLogger.recordLatency('DOCUMENT_DELETE', ref.path, durationMs);
+        } catch (err: unknown) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          dbLogger.error(`Document delete failed at ${ref.path}: ${errorMsg}`, {
+            operation: 'DOCUMENT_DELETE',
+            path: ref.path,
+            error: errorMsg,
+          });
+          throw err;
+        }
       },
       collection: <SubT>(subPath: string) => this.wrapCollectionRef<SubT>(ref.collection(subPath)),
     };
@@ -513,8 +613,21 @@ class CloudFirestoreDatabase implements IDatabaseService {
       path: col.path,
       doc: (id?: string) => this.wrapDocRef<T>(id ? col.doc(id) : col.doc()),
       add: async (data: T) => {
-        const added = await col.add(data as DocumentData);
-        return this.wrapDocRef<T>(added);
+        const startTime = performance.now();
+        try {
+          const added = await col.add(data as DocumentData);
+          const durationMs = performance.now() - startTime;
+          dbLogger.recordLatency('COLLECTION_ADD', col.path, durationMs);
+          return this.wrapDocRef<T>(added);
+        } catch (err: unknown) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          dbLogger.error(`Collection add failed at ${col.path}: ${errorMsg}`, {
+            operation: 'COLLECTION_ADD',
+            path: col.path,
+            error: errorMsg,
+          });
+          throw err;
+        }
       },
       where: (field, op, value) => {
         const query = col.where(field, op as WhereFilterOp, value);
@@ -533,16 +646,29 @@ class CloudFirestoreDatabase implements IDatabaseService {
         return this.wrapQuery<T>(query);
       },
       get: async () => {
-        const snap = await col.get();
-        return {
-          docs: snap.docs.map((d: any) => ({
-            id: d.id,
-            exists: d.exists,
-            data: () => d.data() as T,
-          })),
-          empty: snap.empty,
-          size: snap.size,
-        };
+        const startTime = performance.now();
+        try {
+          const snap = await col.get();
+          const durationMs = performance.now() - startTime;
+          dbLogger.recordLatency('COLLECTION_GET', col.path, durationMs);
+          return {
+            docs: snap.docs.map((d: any) => ({
+              id: d.id,
+              exists: d.exists,
+              data: () => d.data() as T,
+            })),
+            empty: snap.empty,
+            size: snap.size,
+          };
+        } catch (err: unknown) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          dbLogger.error(`Collection query failed at ${col.path}: ${errorMsg}`, {
+            operation: 'COLLECTION_GET',
+            path: col.path,
+            error: errorMsg,
+          });
+          throw err;
+        }
       },
     };
   }
@@ -554,16 +680,28 @@ class CloudFirestoreDatabase implements IDatabaseService {
       limit: (n) => this.wrapQuery<T>(q.limit(n)),
       offset: (n) => this.wrapQuery<T>(q.offset(n)),
       get: async () => {
-        const snap = await q.get();
-        return {
-          docs: snap.docs.map((d: any) => ({
-            id: d.id,
-            exists: d.exists,
-            data: () => d.data() as T,
-          })),
-          empty: snap.empty,
-          size: snap.size,
-        };
+        const startTime = performance.now();
+        try {
+          const snap = await q.get();
+          const durationMs = performance.now() - startTime;
+          dbLogger.recordLatency('QUERY_GET', 'collection-query', durationMs);
+          return {
+            docs: snap.docs.map((d: any) => ({
+              id: d.id,
+              exists: d.exists,
+              data: () => d.data() as T,
+            })),
+            empty: snap.empty,
+            size: snap.size,
+          };
+        } catch (err: unknown) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          dbLogger.error(`Query get failed: ${errorMsg}`, {
+            operation: 'QUERY_GET',
+            error: errorMsg,
+          });
+          throw err;
+        }
       },
     };
   }
@@ -571,23 +709,74 @@ class CloudFirestoreDatabase implements IDatabaseService {
 
 /**
  * Determine and instantiate database singleton
+ * Strictly enforces production safety:
+ * 1. In PRODUCTION:
+ *    - Persistent database credentials (GOOGLE_APPLICATION_CREDENTIALS, FIRESTORE_EMULATOR_HOST, K_SERVICE) are MANDATORY.
+ *    - Initialization failure STOPS application startup (throws fatal Error).
+ *    - NEVER falls back to InMemoryDatabase.
+ * 2. In TEST:
+ *    - Permits explicitly isolated InMemoryDatabase.
+ * 3. In LOCAL DEVELOPMENT:
+ *    - Allows InMemoryDatabase or Firestore Emulator.
+ *    - Emits a clear development-only operational banner.
+ *    - Prohibits inferring local development when NODE_ENV === 'production'.
  */
-function createDatabaseService(): IDatabaseService {
+export function createDatabaseService(overrideEnv?: {
+  nodeEnv?: 'development' | 'production' | 'test';
+  forceInMemoryForTest?: boolean;
+}): IDatabaseService {
+  const isProduction =
+    (overrideEnv?.nodeEnv || serverConfig.nodeEnv) === 'production';
+  const isTest =
+    (overrideEnv?.nodeEnv || serverConfig.nodeEnv) === 'test' || Boolean(overrideEnv?.forceInMemoryForTest);
+
   const hasGcpCreds = Boolean(
     process.env.GOOGLE_APPLICATION_CREDENTIALS ||
     process.env.FIRESTORE_EMULATOR_HOST ||
     process.env.K_SERVICE
   );
 
-  if (hasGcpCreds && serverConfig.isProduction) {
+  if (isProduction) {
+    if (!hasGcpCreds) {
+      const errorMsg =
+        '[FATAL CONFIGURATION ERROR] BrainWise is running in PRODUCTION mode without Google Cloud Firestore credentials (GOOGLE_APPLICATION_CREDENTIALS or K_SERVICE). Ephemeral in-memory fallback is strictly blocked. Application startup halted.';
+      dbLogger.error(errorMsg, { operation: 'DATABASE_INITIALIZATION' });
+      throw new Error(errorMsg);
+    }
+
     try {
       return new CloudFirestoreDatabase();
-    } catch {
-      console.warn('[DB] Falling back to InMemoryDatabase due to initialization warning.');
-      return new InMemoryDatabase();
+    } catch (err: unknown) {
+      const errorMsg = `[FATAL STARTUP FAILURE] Cloud Firestore initialization failed in production: ${
+        err instanceof Error ? err.message : String(err)
+      }. Application startup halted.`;
+      dbLogger.error(errorMsg, { operation: 'DATABASE_INITIALIZATION' });
+      throw new Error(errorMsg, { cause: err });
     }
   }
 
+  if (isTest) {
+    return new InMemoryDatabase();
+  }
+
+  // Local Development
+  if (hasGcpCreds && process.env.USE_FIRESTORE_DEV === 'true') {
+    dbLogger.info('[DEV] Using Cloud Firestore adapter for local development', {
+      operation: 'DATABASE_INITIALIZATION',
+    });
+    return new CloudFirestoreDatabase();
+  }
+
+  console.warn(
+    '================================================================================\n' +
+    '[BRAINWISE DEV NOTICE] Running with isolated local In-Memory Database adapter.\n' +
+    'Data will NOT persist across server restarts.\n' +
+    'Set USE_FIRESTORE_DEV=true and configure GCP credentials for local persistent testing.\n' +
+    '================================================================================'
+  );
+  dbLogger.info('[DEV] Local in-memory database initialized for development session', {
+    operation: 'DATABASE_INITIALIZATION',
+  });
   return new InMemoryDatabase();
 }
 

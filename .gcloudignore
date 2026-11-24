@@ -1,0 +1,15 @@
+.gcloudignore
+.git
+.gitignore
+.github
+node_modules/
+dist/
+dist-ssr/
+coverage/
+test-results/
+playwright-report/
+.cache/
+tests/
+docs/
+public/assets/aistudio/
+*.log

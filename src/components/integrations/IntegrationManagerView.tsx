@@ -10,6 +10,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  CreditCard,
   FolderKanban,
   Instagram,
   Linkedin,
@@ -21,6 +22,7 @@ import {
   ShieldCheck,
   Store,
   Trash2,
+  TrendingUp,
   Youtube,
   Zap,
 } from 'lucide-react';
@@ -53,6 +55,8 @@ export const IntegrationManagerView: React.FC = () => {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<any | null>(null);
   const [consentAgreed, setConsentAgreed] = useState(false);
+  const [cashfreeAppId, setCashfreeAppId] = useState('');
+  const [cashfreeSecretKey, setCashfreeSecretKey] = useState('');
   const [connectingStep, setConnectingStep] = useState<'consent' | 'authorizing' | 'success'>(
     'consent'
   );
@@ -99,6 +103,8 @@ export const IntegrationManagerView: React.FC = () => {
   const handleOpenConnect = (provider: any) => {
     setSelectedProvider(provider);
     setConsentAgreed(false);
+    setCashfreeAppId('');
+    setCashfreeSecretKey('');
     setConnectingStep('consent');
     setConnectModalOpen(true);
   };
@@ -122,10 +128,15 @@ export const IntegrationManagerView: React.FC = () => {
         await loadData();
         setTimeout(() => setConnectModalOpen(false), 1200);
       } else {
-        // Managed API key connection
-        await apiClient.connectManagedIntegration(workspaceId, {
+        // Managed API key or custom credentials
+        const payload: { providerId: string; apiKey?: string; extra?: Record<string, unknown> } = {
           providerId: selectedProvider.id,
-        });
+        };
+        if (selectedProvider.id === 'cashfree-payments' && cashfreeAppId.trim()) {
+          payload.apiKey = cashfreeAppId.trim();
+          payload.extra = { secretKey: cashfreeSecretKey.trim() };
+        }
+        await apiClient.connectManagedIntegration(workspaceId, payload);
 
         setConnectingStep('success');
         showToast(`Activated ${selectedProvider.name}.`);
@@ -254,6 +265,8 @@ export const IntegrationManagerView: React.FC = () => {
         return <Youtube className="w-5 h-5 text-[#E53E3E]" />;
       case 'FolderKanban':
         return <FolderKanban className="w-5 h-5 text-[#D69E2E]" />;
+      case 'CreditCard':
+        return <CreditCard className="w-5 h-5 text-[#24724E]" />;
       default:
         return <Zap className="w-5 h-5 text-[#FF7417]" />;
     }
@@ -355,10 +368,160 @@ export const IntegrationManagerView: React.FC = () => {
       {/* Subtab 1: Integration Registry */}
       {activeSubTab === 'catalog' && (
         <div className="space-y-5">
+          {/* Live Financial & Traffic Intelligence Guide */}
+          <div className="p-4 sm:p-5 rounded-[12px] bg-gradient-to-r from-[#FFFBF8] to-[#F7FBF9] border border-[#E8E2D9] space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E8E2D9]/70 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#FF7417]/10 flex items-center justify-center text-[#FF7417]">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-sm font-bold text-[#171717]">
+                    Live Financial &amp; Traffic Intelligence Guide
+                  </h3>
+                  <p className="text-xs text-[#5C5C58]">
+                    For maximum accuracy, link your Cashfree and Google Analytics 4 accounts. Connected telemetry feeds directly into Analytics &amp; Reports, replacing unverified estimates with true revenue, GMV, and verified visitor funnels.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              {/* Cashfree Quick Status Tile */}
+              {(() => {
+                const cfIntegration = integrations.find((i) => i.id === 'cashfree-payments');
+                const isCfConnected = cfIntegration?.connection?.status === 'connected';
+                return (
+                  <div className={`p-3.5 rounded-[10px] border flex flex-col justify-between gap-3 ${
+                    isCfConnected ? 'border-[#CDE5D7] bg-[#F7FBF9]' : 'border-[#E6E6E2] bg-white'
+                  }`}>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-[#171717]">
+                          <CreditCard className="w-4 h-4 text-[#24724E]" />
+                          Cashfree Payments
+                        </span>
+                        <StatusBadge
+                          status={isCfConnected ? 'Connected' : 'Not Connected'}
+                          tone={isCfConnected ? 'success' : 'neutral'}
+                        />
+                      </div>
+                      <p className="text-[11px] text-[#686864]">
+                        {isCfConnected
+                          ? `Streaming verified transactions & net revenue. Last synced: ${cfIntegration?.connection?.lastSyncAt ? new Date(cfIntegration.connection.lastSyncAt).toLocaleTimeString() : 'Active'}`
+                          : 'Connect Cashfree to stream verified revenue, transaction volumes, and average basket sizes.'}
+                      </p>
+                    </div>
+                    <div>
+                      {isCfConnected ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full text-xs"
+                          disabled={syncingProvider === 'cashfree-payments'}
+                          onClick={() => handleSync('cashfree-payments')}
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${syncingProvider === 'cashfree-payments' ? 'animate-spin' : ''}`} />
+                          Sync Revenue Stream
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="w-full text-xs"
+                          onClick={() =>
+                            handleOpenConnect(
+                              cfIntegration || {
+                                id: 'cashfree-payments',
+                                name: 'Cashfree Payments',
+                                authType: 'api_key',
+                                category: 'payments_finance',
+                                description:
+                                  'Connect Cashfree to stream verified revenue transactions and settlements.',
+                              }
+                            )
+                          }
+                        >
+                          <CreditCard className="w-3.5 h-3.5" />
+                          Connect Cashfree
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* GA4 Quick Status Tile */}
+              {(() => {
+                const gaIntegration = integrations.find((i) => i.id === 'google-analytics-4');
+                const isGaConnected = gaIntegration?.connection?.status === 'connected';
+                return (
+                  <div className={`p-3.5 rounded-[10px] border flex flex-col justify-between gap-3 ${
+                    isGaConnected ? 'border-[#CDE5D7] bg-[#F7FBF9]' : 'border-[#E6E6E2] bg-white'
+                  }`}>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-[#171717]">
+                          <BarChart3 className="w-4 h-4 text-[#2B6CB0]" />
+                          Google Analytics 4
+                        </span>
+                        <StatusBadge
+                          status={isGaConnected ? 'Connected' : 'Not Connected'}
+                          tone={isGaConnected ? 'success' : 'neutral'}
+                        />
+                      </div>
+                      <p className="text-[11px] text-[#686864]">
+                        {isGaConnected
+                          ? `Streaming visitor sessions & conversion channels. Last synced: ${gaIntegration?.connection?.lastSyncAt ? new Date(gaIntegration.connection.lastSyncAt).toLocaleTimeString() : 'Active'}`
+                          : 'Connect GA4 to stream active users, engagement rates, traffic channels, and top landing pages.'}
+                      </p>
+                    </div>
+                    <div>
+                      {isGaConnected ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full text-xs"
+                          disabled={syncingProvider === 'google-analytics-4'}
+                          onClick={() => handleSync('google-analytics-4')}
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${syncingProvider === 'google-analytics-4' ? 'animate-spin' : ''}`} />
+                          Sync Traffic Stream
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="w-full text-xs"
+                          onClick={() =>
+                            handleOpenConnect(
+                              gaIntegration || {
+                                id: 'google-analytics-4',
+                                name: 'Google Analytics 4',
+                                authType: 'oauth2',
+                                category: 'website_seo',
+                                description:
+                                  'Connect GA4 to stream visitor traffic, engagement, and conversion events.',
+                              }
+                            )
+                          }
+                        >
+                          <BarChart3 className="w-3.5 h-3.5" />
+                          Connect GA4
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
           {/* Category Filter Pills */}
           <div className="flex flex-wrap gap-2 pt-1">
             {[
               { id: 'all', label: 'All Providers' },
+              { id: 'payments_finance', label: 'Payments & Revenue' },
               { id: 'research', label: 'Research & Intelligence' },
               { id: 'website_seo', label: 'Website & SEO' },
               { id: 'local_business', label: 'Local Business' },
@@ -728,6 +891,40 @@ export const IntegrationManagerView: React.FC = () => {
                   Verification or Meta App Review). Connecting will activate developer sandbox read
                   mode.
                 </span>
+              </div>
+            )}
+
+            {selectedProvider.id === 'cashfree-payments' && (
+              <div className="space-y-3 p-3.5 rounded-[10px] bg-[#F8F8F7] border border-[#E6E6E2]">
+                <div className="text-xs font-semibold text-[#171717] flex items-center justify-between">
+                  <span>Merchant API Credentials</span>
+                  <span className="text-[10px] text-[#8E8E88] font-normal">Optional for Sandbox Test Mode</span>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-[11px] font-medium text-[#5C5C58]">Cashfree App ID</label>
+                    <input
+                      type="text"
+                      value={cashfreeAppId}
+                      onChange={(e) => setCashfreeAppId(e.target.value)}
+                      placeholder="e.g. CF123456... (Leave blank for Sandbox)"
+                      className="w-full mt-1 px-3 py-1.5 text-xs rounded border border-[#E6E6E2] bg-white font-mono text-[#171717] focus:outline-none focus:border-[#FF7417]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-[#5C5C58]">Cashfree Secret Key</label>
+                    <input
+                      type="password"
+                      value={cashfreeSecretKey}
+                      onChange={(e) => setCashfreeSecretKey(e.target.value)}
+                      placeholder="e.g. cfsk_ma_prod_... (Encrypted with AES-256-GCM)"
+                      className="w-full mt-1 px-3 py-1.5 text-xs rounded border border-[#E6E6E2] bg-white font-mono text-[#171717] focus:outline-none focus:border-[#FF7417]"
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-[#8E8E88]">
+                  Keys are stored using AES-256-GCM authenticated encryption and never exposed to client browsers.
+                </p>
               </div>
             )}
 

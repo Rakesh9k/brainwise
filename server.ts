@@ -11,6 +11,9 @@ import { fileURLToPath } from 'url';
 import express, { type Request, type Response } from 'express';
 import { createApp } from './src/server/app';
 import { serverConfig } from './src/server/config/index';
+import { db } from './src/server/db/firestore';
+import { MigrationManager, SYSTEM_MIGRATIONS } from './src/server/db/migrations';
+import { dbLogger } from './src/server/db/dbLogger';
 
 dns.setDefaultResultOrder('ipv4first');
 
@@ -18,6 +21,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function startServer(): Promise<void> {
+  // Execute database bootstrap & schema migrations before listening
+  try {
+    dbLogger.info('Verifying database initialization and applying pending migrations...', {
+      operation: 'STARTUP_PRECHECK',
+      details: { provider: db.providerName, persistent: db.isPersistent },
+    });
+    await MigrationManager.applyMigrations(db, SYSTEM_MIGRATIONS);
+  } catch (err: unknown) {
+    dbLogger.error('Failed to apply database migrations on startup', {
+      operation: 'STARTUP_PRECHECK',
+      error: err instanceof Error ? err.message : String(err),
+    });
+    if (serverConfig.isProduction) {
+      throw err; // Stop application startup in production
+    }
+  }
+
   const app = createApp();
   const PORT = serverConfig.port;
 
@@ -38,7 +58,9 @@ async function startServer(): Promise<void> {
       path.resolve(process.cwd(), 'dist'),
     ].filter(Boolean) as string[];
 
-    const distDir = candidates.find((dir) => fs.existsSync(path.join(dir, 'index.html'))) || path.resolve(__dirname, 'dist');
+    const distDir =
+      candidates.find((dir) => fs.existsSync(path.join(dir, 'index.html'))) ||
+      path.resolve(__dirname, 'dist');
     console.log(`[BRAINWISE_SERVER] Serving production frontend from: ${distDir}`);
     app.use(express.static(distDir));
     app.get('*', (_req: Request, res: Response) => {

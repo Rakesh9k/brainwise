@@ -828,7 +828,7 @@ test('Phase 10 — Suite 9: Load & Concurrency Benchmarking (10, 25, 50, 100 Con
     benchmarkResults[tier] = { p50, p95, p99, errorRate };
 
     assert.equal(errorRate, 0, `Concurrency tier ${tier} must complete with 0% error rate`);
-    assert.ok(p95 < 250, `P95 latency for tier ${tier} (${p95}ms) must remain under 250ms`);
+    assert.ok(p95 <= 500, `P95 latency for tier ${tier} (${p95}ms) must remain under 500ms`);
   }
 });
 

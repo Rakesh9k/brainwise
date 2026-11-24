@@ -455,12 +455,12 @@ export const Tooltip: React.FC<{
 
 export const Button: React.FC<
   React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: 'primary' | 'secondary' | 'ghost' | 'dark' | 'danger';
-    size?: 'sm' | 'md';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'dark' | 'danger' | 'outline';
+    size?: 'sm' | 'md' | 'lg';
     loading?: boolean;
     success?: boolean;
   }
-> = (props) => <LiquidButton {...props} />;
+> = (props) => <LiquidButton {...props} variant={props.variant === 'outline' ? 'secondary' : props.variant} />;
 
 export const Field: React.FC<{
   label: string;
@@ -682,6 +682,7 @@ export const MetricCard: React.FC<{
 export const StatusBadge: React.FC<{
   status: string;
   tone?: 'neutral' | 'success' | 'warning' | 'error' | 'accent';
+  size?: 'sm' | 'md' | 'lg' | string;
 }> = ({ status, tone = 'neutral' }) => {
   const styles: Record<string, { text: string; dot: string }> = {
     neutral: { text: 'text-[#5C5C58]', dot: 'bg-[#858585]' },

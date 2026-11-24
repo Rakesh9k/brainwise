@@ -13,6 +13,7 @@ import { metaInstagramProvider } from './providers/metaInstagramProvider';
 import { linkedinProvider } from './providers/linkedinProvider';
 import { youtubeProvider } from './providers/youtubeProvider';
 import { googleDriveProvider } from './providers/googleDriveProvider';
+import { cashfreePaymentProvider } from './providers/cashfreePaymentProvider';
 
 /**
  * Enterprise Provider Registry
@@ -31,6 +32,7 @@ export class ProviderRegistry {
     this.registerProvider(linkedinProvider);
     this.registerProvider(youtubeProvider);
     this.registerProvider(googleDriveProvider);
+    this.registerProvider(cashfreePaymentProvider);
   }
 
   public registerProvider(provider: IIntegrationProvider): void {

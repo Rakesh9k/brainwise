@@ -91,19 +91,28 @@ export class LinkedInProvider implements IIntegrationProvider {
     };
   }
 
-  public async getAccountInfo(_credentials: IntegrationCredentials): Promise<ExternalAccountInfo> {
+  public async getAccountInfo(credentials: IntegrationCredentials): Promise<ExternalAccountInfo> {
+    if (!credentials?.accessToken && !credentials?.apiKey) {
+      throw new Error('UNCONNECTED: LinkedIn account is not connected');
+    }
     return {
-      accountId: 'urn:li:organization:1082914',
-      accountName: 'Solstice Roasters (LinkedIn Page)',
-      metadata: { followersCount: 3840, industry: 'Specialty Food & Beverage' },
+      accountId: (credentials.extra?.accountId as string) || 'urn:li:organization:primary',
+      accountName: (credentials.extra?.accountName as string) || 'LinkedIn Organization Page',
+      metadata: {
+        industry: 'B2B',
+      },
     };
   }
 
-  public async getResources(_credentials: IntegrationCredentials): Promise<ExternalResource[]> {
+  public async getResources(credentials: IntegrationCredentials): Promise<ExternalResource[]> {
+    if (!credentials?.accessToken && !credentials?.apiKey) {
+      return [];
+    }
+    const orgId = (credentials.extra?.accountId as string) || 'urn:li:organization:primary';
     return [
       {
-        resourceId: 'urn:li:organization:1082914',
-        name: 'Solstice Roasters (Official Page)',
+        resourceId: orgId,
+        name: (credentials.extra?.accountName as string) || 'LinkedIn Organization',
         type: 'linkedin_organization',
         selected: true,
       },
@@ -111,46 +120,87 @@ export class LinkedInProvider implements IIntegrationProvider {
   }
 
   public async fetchData(
-    _credentials: IntegrationCredentials,
+    credentials: IntegrationCredentials,
     options: FetchDataOptions
   ): Promise<ExternalDataPackage> {
-    const now = new Date().toISOString();
-    return {
-      records: [
-        {
-          recordId: `rec_li_${Date.now()}`,
-          workspaceId: (options.params?.workspaceId as string) || 'default',
-          integrationId: this.id,
-          provider: this.id,
-          category: 'social_media',
-          retrievedAt: now,
-          sourceTimestamp: now,
-          sourceReference: 'https://api.linkedin.com/v2/organizationalEntityAcls',
-          syncJobId: `sync_li_${Date.now()}`,
-          dataVersion: 1,
-          provenance: {
-            sourceType: 'LINKEDIN_MARKETING_API_V2',
-            verified: true,
-            confidenceScore: 0.95,
+    if (!credentials?.accessToken && !credentials?.apiKey) {
+      return {
+        records: [],
+        summary: {},
+        hasMore: false,
+        state: 'UNCONNECTED',
+        stateReason: 'LinkedIn account is not connected.',
+      };
+    }
+
+    const isTestMode = Boolean(
+      options.params?.allowMockInTest ||
+      credentials?.apiKey === 'mock_key' ||
+      credentials?.accessToken === 'mock_token' ||
+      process.env.TEST_MODE ||
+      process.env.NODE_ENV === 'test'
+    );
+
+    if (this.metadata.isApprovalRequired && this.metadata.approvalStatus === 'developer_preview') {
+      if (!isTestMode) {
+        return {
+          records: [],
+          summary: {},
+          hasMore: false,
+          state: 'PERMISSION_REQUIRED',
+          stateReason: 'LinkedIn Developer Portal verification required for company page telemetry.',
+        };
+      }
+    }
+
+    if (isTestMode) {
+      const now = new Date().toISOString();
+      return {
+        records: [
+          {
+            recordId: `rec_li_${Date.now()}`,
+            workspaceId: (options.params?.workspaceId as string) || 'default',
+            integrationId: this.id,
+            provider: this.id,
+            category: 'social_media',
+            retrievedAt: now,
+            sourceTimestamp: now,
+            sourceReference: 'https://api.linkedin.com/v2/organizationalEntityAcls',
+            syncJobId: `sync_li_${Date.now()}`,
+            dataVersion: 1,
+            provenance: {
+              sourceType: 'TEST_FIXTURE_LINKEDIN',
+              verified: true,
+              confidenceScore: 0.85,
+            },
+            metrics: {
+              totalFollowers: 3840,
+              impressions30Days: 19800,
+              clickThroughRate: 0.038,
+              engagementRate: 0.052,
+            },
+            dimensions: {
+              topIndustryFollowers: 'Commercial Real Estate',
+              topSeniority: 'Director / Founder',
+            },
           },
-          metrics: {
-            totalFollowers: 3840,
-            impressions30Days: 19800,
-            clickThroughRate: 0.038,
-            engagementRate: 0.052,
-          },
-          dimensions: {
-            topIndustryFollowers: 'Hospitality & Commercial Real Estate (42%)',
-            topSeniority: 'Director / Founder (34%)',
-          },
+        ],
+        summary: {
+          totalFollowers: 3840,
+          monthlyImpressions: 19800,
+          engagementRate: 0.052,
         },
-      ],
-      summary: {
-        totalFollowers: 3840,
-        monthlyImpressions: 19800,
-        engagementRate: 0.052,
-      },
+        hasMore: false,
+        state: 'CONNECTED',
+      };
+    }
+
+    return {
+      records: [],
+      summary: {},
       hasMore: false,
+      state: 'INSUFFICIENT_DATA',
+      stateReason: 'No live telemetry retrieved from LinkedIn Marketing API.',
     };
   }
 
@@ -183,7 +233,16 @@ export class LinkedInProvider implements IIntegrationProvider {
     _credentials?: IntegrationCredentials
   ): Promise<void> {}
 
-  public async checkHealth(_credentials: IntegrationCredentials): Promise<IntegrationHealthStatus> {
+  public async checkHealth(credentials: IntegrationCredentials): Promise<IntegrationHealthStatus> {
+    if (!credentials?.accessToken && !credentials?.apiKey) {
+      return {
+        healthy: false,
+        latencyMs: 0,
+        lastCheckedAt: new Date().toISOString(),
+        status: 'not_connected',
+        message: 'LinkedIn account is not connected.',
+      };
+    }
     return {
       healthy: true,
       latencyMs: 25,

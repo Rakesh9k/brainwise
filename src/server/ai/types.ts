@@ -69,6 +69,9 @@ export interface AiSource {
   evidenceExcerpt: string;
   relevanceScore: number;
   verificationStatus: VerificationStatus;
+  evidenceClassification?: import('../types/evidence').EvidenceClassification;
+  geographicScope?: string;
+  isHypothesis?: boolean;
 }
 
 export interface AiClaim {
@@ -307,4 +310,30 @@ export interface ModelRoutingConfig {
   maxTokens: number;
   temperature: number;
   estimatedCredits: number;
+}
+
+export type ResearchDepthTier = 'RAPID_SCAN' | 'DEEP_INTELLIGENCE';
+
+export interface ExtractedResearchFact {
+  fieldKey: string;
+  metric: string;
+  value: string;
+  sourceUrl: string;
+  domain: string;
+  provenance: 'AI_INFERRED';
+  confidence: number;
+}
+
+export interface DeepResearchDossier {
+  dossierId: string;
+  workspaceId: string;
+  query: string;
+  depthTier: ResearchDepthTier;
+  subQueriesExecuted: string[];
+  sources: AiSource[];
+  synthesis: string;
+  extractedFacts: ExtractedResearchFact[];
+  unsupportedClaims: string[];
+  creditsConsumed: number;
+  completedAt: string;
 }

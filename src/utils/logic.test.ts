@@ -5,6 +5,7 @@ import {
   calculateGoalProgress,
   calculateTaskCompletionStats,
   estimateMarketSizing,
+  calculateCacChurnSensitivityMatrix,
   filterGlobalSearch,
   getNextJourneyStep,
   buildShellBreadcrumbs,
@@ -19,6 +20,7 @@ import {
   formatCountdownSeconds,
   computeDashboardMetrics,
   buildDynamicDossier,
+  formatDossierFinancialModelCsv,
   buildWeeklyGrowthPlan,
   buildRoadmapPhases,
   buildExecutiveReportNarrative,
@@ -402,4 +404,92 @@ test('buildLocalLogoConcepts, buildLocalBrandAssetVariations, buildLocalSocialCr
   );
   assert.ok(slideSvg.includes('width="1080" height="1350"'));
   assert.ok(slideSvg.includes('SLIDE 01'));
+});
+
+test('calculateCacChurnSensitivityMatrix generates 2D matrix with sound unit economics and health zones', () => {
+  const matrix = calculateCacChurnSensitivityMatrix(5.2, 22, 75, 3.0);
+  assert.equal(matrix.cacTiers.length, 5);
+  assert.equal(matrix.churnTiers.length, 5);
+  assert.equal(matrix.grid.length, 5);
+  assert.equal(matrix.grid[0].length, 5);
+
+  // Check base cell
+  assert.equal(matrix.baseCell.cac, 75);
+  assert.equal(matrix.baseCell.churnPct, 3.0);
+  assert.ok(matrix.baseCell.breakEvenMonths > 0);
+  assert.ok(matrix.baseCell.ltvCacRatio > 0);
+
+  // Check low CAC + low churn produces healthy payback and high LTV/CAC
+  const healthyCell = matrix.grid[0][0]; // 1.5% churn, lowest CAC
+  assert.equal(healthyCell.health, 'healthy');
+  assert.ok(healthyCell.breakEvenMonths <= 12);
+  assert.ok(healthyCell.ltvCacRatio >= 3.0);
+
+  // Check high CAC + high churn produces high_risk
+  const riskyCell = matrix.grid[4][4]; // 7.5% churn, highest CAC
+  assert.equal(riskyCell.health, 'high_risk');
+
+  // Verify institutional takeaway mentions ARPU and break-even
+  assert.ok(matrix.insight.includes('$22/mo ARPU'));
+  assert.ok(matrix.insight.includes('customer acquisition cost'));
+});
+
+test('buildDynamicDossier includes rich live search grounding metadata and persistent scenarios', () => {
+  const dossier = buildDynamicDossier({
+    ideaSummary: 'AI-guided legal document review for SMBs',
+    industry: 'LegalTech & B2B SaaS',
+    targetMarket: 'Mid-sized law firms and corporate legal counsels',
+    geography: 'United States & Tier-1 Metro Metros',
+    depth: 'Deep Market Dossier',
+    brain: INITIAL_BRAINWISE_STATE.brain,
+  });
+
+  // Verify scenarios
+  assert.ok(dossier.scenarios && dossier.scenarios.length >= 2);
+  assert.ok(
+    dossier.scenarios[0].name.includes('Rollout') || dossier.scenarios[0].name.includes('Regional')
+  );
+  assert.ok(dossier.scenarios[0].tamBillion > 0);
+  assert.ok(dossier.scenarios[0].samSharePct > 0);
+  assert.ok(dossier.scenarios[0].somSharePct > 0);
+
+  // Verify Live Search Grounding Deck & Direct Web Search Source Badges
+  assert.ok(dossier.sources.length >= 3);
+  assert.ok(dossier.sources.every((s) => Boolean(s.url && s.domain && s.domainReputation)));
+  assert.ok(dossier.sources.some((s) => s.verificationStatus === 'verified_live'));
+  assert.ok(dossier.sources.some((s) => (s.authorityScore ?? 0) >= 90));
+  assert.ok(
+    dossier.sources.every((s) => Boolean(s.metricCited && s.metricValue && s.statisticContext))
+  );
+});
+
+test('formatDossierFinancialModelCsv generates RFC-compliant CSV with sizing, sensitivity, and scenario tables', () => {
+  const dossier = buildDynamicDossier({
+    ideaSummary: 'Artisanal nitro cold brew subscription',
+    industry: 'Specialty Food & Beverage',
+    targetMarket: 'Remote tech workers in Austin',
+    geography: 'Austin, Texas',
+    depth: 'Deep Market Dossier',
+    brain: INITIAL_BRAINWISE_STATE.brain,
+  });
+
+  const sizing = estimateMarketSizing(6.4, 14, 1.2);
+  const sensitivity = calculateCacChurnSensitivityMatrix(sizing.somMidpointMillion, 24, 65, 3.5);
+
+  const csv = formatDossierFinancialModelCsv({
+    report: dossier,
+    dynamicBands: sizing,
+    sensitivity,
+    scenarios: dossier.scenarios,
+  });
+
+  assert.ok(csv.includes('BrainWise Idea Intelligence Financial Model Export'));
+  assert.ok(csv.includes('Dossier Title,"Artisanal nitro cold brew subscription"'));
+  assert.ok(csv.includes('MARKET SIZING (TAM / SAM / SOM RANGE BANDS)'));
+  assert.ok(csv.includes('Total Addressable Market (TAM)'));
+  assert.ok(csv.includes('UNIT ECONOMICS SENSITIVITY MATRIX (CAC vs. MONTHLY CHURN)'));
+  assert.ok(csv.includes('Break-Even Payback Period (Months) Grid'));
+  assert.ok(csv.includes('LTV to CAC Multiplier Grid'));
+  assert.ok(csv.includes('PERSISTENT PITCH SCENARIOS & BENCHMARKS'));
+  assert.ok(csv.includes('Regional Expansion (4-City Rollout)'));
 });

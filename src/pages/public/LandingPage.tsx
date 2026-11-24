@@ -237,7 +237,7 @@ export const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] text-[#242424]">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#242424] overflow-x-hidden w-full">
       {/* Strict 3-Zone Frosted Top Bar */}
       <header
         data-frosted-nav="landing-header"

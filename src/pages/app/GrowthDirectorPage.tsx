@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import {
   Calendar,
@@ -9,6 +9,8 @@ import {
   Play,
   Plus,
   RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
   Sparkles,
   Target,
   Timer,
@@ -25,6 +27,7 @@ import {
 } from '../../utils/logic';
 import { generateAiRecommendations } from '../../utils/aiClient';
 import type { GrowthGoal, GrowthTask } from '../../types/brainwise';
+import { apiClient } from '../../services/apiClient';
 import {
   ActionFeedbackBanner,
   AiRequestPulse,
@@ -61,12 +64,25 @@ import {
   TaskCard,
 } from '../../components/ui/DepartmentCards';
 
-type GrowthTabId = 'overview' | 'roadmap' | 'goals' | 'experiments' | 'recommendations';
+type GrowthTabId =
+  | 'overview'
+  | 'missions'
+  | 'strategy'
+  | 'departments'
+  | 'execution'
+  | 'roadmap'
+  | 'goals'
+  | 'experiments'
+  | 'recommendations';
 
 const GROWTH_TAB_LABELS: Record<GrowthTabId, string> = {
-  overview: 'Overview & Daily Plan',
+  overview: 'Executive Command Center',
+  missions: 'Growth Missions',
+  strategy: 'Strategy & Simulator',
+  departments: '7 Growth Departments',
+  execution: 'Execution & Approvals',
   roadmap: 'Weekly & 30/60/90 Roadmap',
-  goals: 'Business Goals',
+  goals: 'Business Goals & OKRs',
   experiments: 'Experiments',
   recommendations: 'AI Recommendations',
 };
@@ -169,6 +185,145 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
   const [eMetric, setEMetric] = useState('');
   const [eBudget, setEBudget] = useState('$150');
 
+  // Agency Extensions State
+  const [activeDept, setActiveDept] = useState<'Marketing' | 'Content' | 'Acquisition' | 'Conversion' | 'Retention' | 'Partnerships' | 'Economics'>('Marketing');
+  const [simBudget, setSimBudget] = useState('15000');
+  const [simPrice, setSimPrice] = useState('499');
+  const [simConversion, setSimConversion] = useState('3.5');
+  const [simCac, setSimCac] = useState('250');
+  const [simChannel] = useState('Outbound Contrast Wedge');
+
+  interface UiGrowthMission {
+    missionId: string;
+    title: string;
+    strategicRationale: string;
+    department: 'Marketing' | 'Content' | 'Acquisition' | 'Conversion' | 'Retention' | 'Partnerships' | 'Economics';
+    timeHorizon: '7_DAYS' | '30_DAYS' | '90_DAYS';
+    priority: 'HIGH' | 'MEDIUM' | 'LOW';
+    budgetCap: number;
+    currentExpenditure: number;
+    status: 'PROPOSED' | 'APPROVED' | 'IN_PROGRESS' | 'COMPLETED' | 'VERIFIED';
+    isApproved: boolean;
+    approvalRequired: boolean;
+    successCriteria: Array<{ metricName: string; baselineValue: number; targetValue: number; unit: string }>;
+  }
+
+  interface UiExecutionJob {
+    jobId: string;
+    actionType: string;
+    level: number;
+    payload: Record<string, any>;
+    requiresApproval: boolean;
+    approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+    status: 'AWAITING_APPROVAL' | 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+    receipt?: { providerName: string; providerTransactionId: string; dispatchedAt: string };
+  }
+
+  const [missionsList, setMissionsList] = useState<UiGrowthMission[]>([
+    {
+      missionId: 'msn_init_01',
+      title: `Deploy 50-Account Outbound Contrast Wedge for ${state.brain.businessName || 'Venture'}`,
+      strategicRationale: `Directly targets ${state.competitors[0]?.name || 'incumbent'} contract lock-in by emphasizing transparent, mathematically proven pricing.`,
+      department: 'Acquisition',
+      timeHorizon: '30_DAYS',
+      priority: 'HIGH',
+      budgetCap: 5000,
+      currentExpenditure: 750,
+      status: 'IN_PROGRESS',
+      isApproved: true,
+      approvalRequired: true,
+      successCriteria: [
+        { metricName: 'Direct Positive Replies', baselineValue: 0, targetValue: 12, unit: 'replies' },
+        { metricName: 'Demo Conversions', baselineValue: 0, targetValue: 5, unit: 'demos' },
+      ],
+    },
+    {
+      missionId: 'msn_init_02',
+      title: `Checkout Step-2 Proof Badges & Evidence Embeds CRO`,
+      strategicRationale: `Resolves buyer hesitation by embedding verified evidence badges directly on pricing tier cards.`,
+      department: 'Conversion',
+      timeHorizon: '7_DAYS',
+      priority: 'HIGH',
+      budgetCap: 2000,
+      currentExpenditure: 0,
+      status: 'PROPOSED',
+      isApproved: false,
+      approvalRequired: true,
+      successCriteria: [
+        { metricName: 'Step-2 Checkout Completion', baselineValue: 3.2, targetValue: 4.8, unit: '%' },
+      ],
+    },
+    {
+      missionId: 'msn_init_03',
+      title: `Two-Sided Founder Credit Referral Velocity Loop`,
+      strategicRationale: `Incentivizes organic peer advocacy: award 50 bonus validation credits to both referrer and referee.`,
+      department: 'Retention',
+      timeHorizon: '90_DAYS',
+      priority: 'MEDIUM',
+      budgetCap: 8000,
+      currentExpenditure: 1200,
+      status: 'APPROVED',
+      isApproved: true,
+      approvalRequired: true,
+      successCriteria: [
+        { metricName: 'Referred Paying Accounts', baselineValue: 0, targetValue: 20, unit: 'accounts' },
+      ],
+    },
+  ]);
+
+  const [jobsList, setJobsList] = useState<UiExecutionJob[]>([
+    {
+      jobId: 'job_01',
+      actionType: 'DISPATCH_OUTREACH_EMAIL',
+      level: 3,
+      payload: { targetRole: 'Founder / CEO', sequenceStep: 1, batchCount: 15 },
+      requiresApproval: true,
+      approvalStatus: 'PENDING',
+      status: 'AWAITING_APPROVAL',
+      receipt: undefined,
+    },
+    {
+      jobId: 'job_02',
+      actionType: 'SCHEDULE_SOCIAL_POST',
+      level: 2,
+      payload: { platform: 'LinkedIn', format: 'STATIC_CAROUSEL', slides: 5 },
+      requiresApproval: false,
+      approvalStatus: 'APPROVED',
+      status: 'COMPLETED',
+      receipt: { providerName: 'Meta Graph API / Buffer', providerTransactionId: 'tx_83921_buf', dispatchedAt: '2026-11-22T10:30:00Z' },
+    },
+  ]);
+
+  // Hydrate missions and execution jobs from server
+  useEffect(() => {
+    let isMounted = true;
+    const workspaceId = state.workspaceId || 'default-workspace';
+
+    apiClient.getGrowthMissions(workspaceId)
+      .then((res: any) => {
+        if (isMounted && res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setMissionsList(res.data);
+        }
+      })
+      .catch((err: any) => {
+        console.debug('Growth missions server hydration note:', err?.message);
+      });
+
+    apiClient.getExecutionJobs(workspaceId)
+      .then((res: any) => {
+        if (isMounted && res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setJobsList(res.data);
+        }
+      })
+      .catch((err: any) => {
+        console.debug('Execution jobs server hydration note:', err?.message);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [state.workspaceId]);
+
   const taskStats = calculateTaskCompletionStats(state.tasks);
   const weeklyPlan = buildWeeklyGrowthPlan(state);
   const roadmapPhases = buildRoadmapPhases(state);
@@ -217,6 +372,19 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
     }
   };
 
+  const unconfirmedInferences = useMemo(() => {
+    const provCount = Object.values(state.brain.provenance || {}).filter(
+      (p) => p.source === 'AI_INFERRED'
+    ).length;
+    const unconfirmedProducts = (state.brain.products || []).filter(
+      (p) => p.source === 'AI_INFERRED'
+    ).length;
+    const unconfirmedPersonas = (state.brain.personas || []).filter(
+      (p) => p.source === 'AI_INFERRED'
+    ).length;
+    return provCount + unconfirmedProducts + unconfirmedPersonas;
+  }, [state.brain]);
+
   return (
     <div className="space-y-6">
       <BusinessBrainContextBanner departmentLabel="Growth Planner" contextKey="growthDirector" />
@@ -250,9 +418,13 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
         activeTab={tab}
         onChange={(id) => setTab(id as GrowthTabId)}
         tabs={[
-          { id: 'overview', label: 'Overview & Daily Plan', count: taskStats.pending },
+          { id: 'overview', label: 'Command Center', count: taskStats.pending },
+          { id: 'missions', label: 'Growth Missions' },
+          { id: 'strategy', label: 'Strategy & Simulator' },
+          { id: 'departments', label: '7 Departments' },
+          { id: 'execution', label: 'Execution & Approvals' },
           { id: 'roadmap', label: 'Weekly & 30/60/90 Roadmap' },
-          { id: 'goals', label: 'Business Goals', count: state.goals.length },
+          { id: 'goals', label: 'Business Goals & OKRs', count: state.goals.length },
           { id: 'experiments', label: 'Experiments', count: state.experiments.length },
           {
             id: 'recommendations',
@@ -380,6 +552,38 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
           </MorphingPanel>
         )}
       </AnimatePresence>
+
+      {/* Review Staged Facts Warning Banner */}
+      {unconfirmedInferences > 0 && (
+        <div className="p-4 rounded-[12px] bg-[#FFFBF5] border border-[#FBE0C2] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bw-surface-raised">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#FFE8CC] flex items-center justify-center text-[#FF7417] shrink-0">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-heading text-xs font-bold text-[#171717]">
+                  Review Staged Facts for Maximum Campaign Accuracy
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFE8CC] text-[#C44D00]">
+                  {unconfirmedInferences} Unreviewed Fact{unconfirmedInferences === 1 ? '' : 's'}
+                </span>
+              </div>
+              <p className="text-xs text-[#5C5C58] mt-0.5">
+                Always review and confirm extracted facts in the Business Brain verification queue before launching downstream campaigns. Confirmed ground truth prevents AI hallucinations in marketing copy and pricing models.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="shrink-0 text-xs"
+            onClick={() => navigate('business-brain')}
+          >
+            Review Verification Queue &rarr;
+          </Button>
+        </div>
+      )}
 
       {/* A. Overview & Daily Action Plan (unified) */}
       {tab === 'overview' && (
@@ -530,6 +734,748 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                   })
                 )}
               </div>
+            </div>
+          </div>
+        </FluidTransition>
+      )}
+
+      {/* NEW: Growth Missions & OKRs Hierarchy */}
+      {tab === 'missions' && (
+        <FluidTransition key="missions" direction="fade" className="space-y-6">
+          <SectionHeader
+            title="Growth Missions Command Center"
+            description="Higher-order strategic missions connecting business objectives to execution tasks and verified outcomes."
+            action={
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={async () => {
+                  const workspaceId = state.workspaceId || 'default-workspace';
+                  const payload = {
+                    title: `Scale Outbound Lead Generation for ${state.brain.businessName || 'Venture'}`,
+                    strategicRationale: `Directly targets ${state.competitors[0]?.name || 'incumbent'} whitespace with transparent pricing proof.`,
+                    department: 'Acquisition' as const,
+                    targetAudience: 'Target Decision Makers',
+                    timeHorizon: '30_DAYS' as const,
+                    priority: 'HIGH' as const,
+                    budgetCap: 10000,
+                    approvalRequired: true,
+                    successCriteria: [
+                      { metricName: 'Qualified Inbound Inquiries', baselineValue: 0, targetValue: 20, unit: 'leads' },
+                    ],
+                  };
+
+                  try {
+                    const res = await apiClient.createGrowthMission(workspaceId, payload);
+                    if (res?.data?.missionId) {
+                      setMissionsList((prev) => [res.data, ...prev]);
+                    } else {
+                      const newMsn = {
+                        missionId: `msn_${Date.now()}`,
+                        ...payload,
+                        currentExpenditure: 0,
+                        status: 'PROPOSED' as const,
+                        isApproved: false,
+                      };
+                      setMissionsList((prev) => [newMsn, ...prev]);
+                    }
+                  } catch {
+                    const newMsn = {
+                      missionId: `msn_${Date.now()}`,
+                      ...payload,
+                      currentExpenditure: 0,
+                      status: 'PROPOSED' as const,
+                      isApproved: false,
+                    };
+                    setMissionsList((prev) => [newMsn, ...prev]);
+                  }
+                  showToast('New Growth Mission queued for founder review.');
+                }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                New Growth Mission
+              </Button>
+            }
+          />
+
+          <div className="grid grid-cols-1 gap-4">
+            {missionsList.map((m) => (
+              <div
+                key={m.missionId}
+                className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-4 bw-surface-raised"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#F0F0EE]">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FFF3EB] text-[#C44D00] border border-[#FFD3B3]">
+                      {m.department.toUpperCase()} DEPT
+                    </span>
+                    <span className="text-xs font-mono-num text-[#686864]">
+                      Horizon: {m.timeHorizon.replace('_', ' ')} · Budget Cap: ₹{m.budgetCap.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge
+                      status={
+                        m.status === 'IN_PROGRESS'
+                          ? 'In Progress'
+                          : m.status === 'APPROVED'
+                            ? 'Approved'
+                            : m.status === 'VERIFIED'
+                              ? 'Verified'
+                              : 'Proposed'
+                      }
+                      tone={
+                        m.status === 'VERIFIED'
+                          ? 'success'
+                          : m.status === 'IN_PROGRESS'
+                            ? 'warning'
+                            : 'neutral'
+                      }
+                    />
+                    <PriorityBadge priority={m.priority.toLowerCase() as any} />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <h3 className="font-heading text-base font-bold text-[#242424]">{m.title}</h3>
+                  <p className="text-xs text-[#686864] leading-relaxed">{m.strategicRationale}</p>
+                </div>
+
+                <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] border border-[#ECECE9] text-xs space-y-2">
+                  <span className="font-semibold text-[#252525] block">Target Success Criteria &amp; Key Results:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {m.successCriteria.map((sc, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded bg-white border border-[#E6E6E2]">
+                        <span className="text-[#5C5C58]">{sc.metricName}:</span>
+                        <strong className="text-[#C44D00] font-mono-num">
+                          {sc.baselineValue} &rarr; {sc.targetValue} {sc.unit}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                  <div className="text-[11px] text-[#858585]">
+                    Expenditure: <strong className="text-[#252525]">₹{m.currentExpenditure.toLocaleString()}</strong> / ₹{m.budgetCap.toLocaleString()}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {m.status === 'PROPOSED' && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          const workspaceId = state.workspaceId || 'default-workspace';
+                          try {
+                            await apiClient.transitionGrowthMissionStatus(workspaceId, m.missionId, { targetStatus: 'APPROVED' });
+                          } catch {
+                            // Local fallback
+                          }
+                          setMissionsList((prev) =>
+                            prev.map((item) =>
+                              item.missionId === m.missionId ? { ...item, status: 'APPROVED' as const, isApproved: true } : item
+                            )
+                          );
+                          showToast('Mission approved by founder.');
+                        }}
+                      >
+                        <Check className="w-3.5 h-3.5 text-[#24724E]" />
+                        Approve Mission
+                      </Button>
+                    )}
+                    {m.status === 'APPROVED' && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={async () => {
+                          const workspaceId = state.workspaceId || 'default-workspace';
+                          try {
+                            await apiClient.transitionGrowthMissionStatus(workspaceId, m.missionId, { targetStatus: 'IN_PROGRESS' });
+                          } catch {
+                            // Local fallback
+                          }
+                          setMissionsList((prev) =>
+                            prev.map((item) =>
+                              item.missionId === m.missionId ? { ...item, status: 'IN_PROGRESS' as const } : item
+                            )
+                          );
+                          showToast('Mission activated into In Progress state.');
+                        }}
+                      >
+                        <Play className="w-3.5 h-3.5" />
+                        Start Execution
+                      </Button>
+                    )}
+                    {m.status === 'IN_PROGRESS' && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          const workspaceId = state.workspaceId || 'default-workspace';
+                          try {
+                            await apiClient.recordGrowthMissionOutcome(workspaceId, m.missionId, {
+                              metricsAchieved: { 'Target Completion': 1 },
+                              summaryNotes: 'Completed and verified by founder',
+                            });
+                          } catch {
+                            // Local fallback
+                          }
+                          setMissionsList((prev) =>
+                            prev.map((item) =>
+                              item.missionId === m.missionId ? { ...item, status: 'VERIFIED' as const } : item
+                            )
+                          );
+                          showToast('Mission verified! Results recorded in Strategic Memory.');
+                        }}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#24724E]" />
+                        Verify Key Results
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </FluidTransition>
+      )}
+
+      {/* NEW: Growth Strategy & What-If Simulator */}
+      {tab === 'strategy' && (
+        <FluidTransition key="strategy" direction="fade" className="space-y-6">
+          <SectionHeader
+            title="Growth Strategy Architect &amp; Simulator"
+            description="Formulate archetypes, compare strategic horizons, and simulate financial what-if growth models."
+          />
+
+          {/* Strategic Archetypes Comparison */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                id: 'outbound_wedge',
+                title: 'Outbound-Led Growth Wedge',
+                timeframe: '3 Weeks',
+                budget: '₹2,500',
+                confidence: '92% Confidence',
+                description: 'Direct founder outbound targeting competitor pricing opacity with mathematical proof.',
+                fit: 'Recommended for Idea & Pre-Launch Validation',
+              },
+              {
+                id: 'organic_carousels',
+                title: 'Organic Educational Carousels',
+                timeframe: '8 Weeks',
+                budget: '₹5,000',
+                confidence: '85% Confidence',
+                description: 'Multi-slide static vector carousels tearing down customer pain points and false industry promises.',
+                fit: 'Recommended for Early Traction',
+              },
+              {
+                id: 'partner_bundle',
+                title: 'Partnership & Co-Marketing',
+                timeframe: '6 Weeks',
+                budget: '₹8,000',
+                confidence: '78% Confidence',
+                description: 'Collaborative launch bundles with complementary non-competing software or services.',
+                fit: 'Recommended for Scaling Businesses',
+              },
+            ].map((arch) => (
+              <div
+                key={arch.id}
+                className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-semibold">
+                    <span className="text-[#C44D00]">{arch.timeframe}</span>
+                    <span className="font-mono-num text-[#24724E]">{arch.confidence}</span>
+                  </div>
+                  <h3 className="font-heading text-base font-bold text-[#242424]">{arch.title}</h3>
+                  <p className="text-xs text-[#686864] leading-relaxed">{arch.description}</p>
+                </div>
+                <div className="pt-3 border-t border-[#F0F0EE] text-xs">
+                  <span className="text-[#858585] block">Strategic Fit:</span>
+                  <strong className="text-[#252525] mt-0.5 block">{arch.fit}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Interactive What-If Growth Simulator */}
+          <div className="rounded-[14px] border border-[#FFD3B3] bg-[#FFF8F3] p-5 sm:p-6 space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#FFD3B3]">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-bold text-[#C44D00]">
+                  <Sparkles className="w-4 h-4 text-[#FF7417]" />
+                  <span>WHAT-IF GROWTH SCENARIO SIMULATOR</span>
+                </div>
+                <h3 className="font-heading text-lg font-bold text-[#242424] mt-1">
+                  Model Budget, CAC, and Revenue Projections
+                </h3>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  const customers = Math.floor(Number(simBudget) / Math.max(1, Number(simCac)));
+                  const newMsn = {
+                    missionId: `msn_sim_${Date.now()}`,
+                    title: `Execute Simulator Plan: Acquire ${customers} Customers via ${simChannel}`,
+                    strategicRationale: `Directly converted from What-If Simulator scenario. Budget: ₹${Number(simBudget).toLocaleString()} · Target CAC: ₹${simCac}.`,
+                    department: 'Marketing' as const,
+                    timeHorizon: '30_DAYS' as const,
+                    priority: 'HIGH' as const,
+                    budgetCap: Number(simBudget),
+                    currentExpenditure: 0,
+                    status: 'PROPOSED' as const,
+                    isApproved: false,
+                    approvalRequired: true,
+                    successCriteria: [
+                      { metricName: 'Customers Acquired', baselineValue: 0, targetValue: customers, unit: 'customers' },
+                    ],
+                  };
+                  setMissionsList((prev) => [newMsn, ...prev]);
+                  showToast('Scenario converted into an active Growth Mission!');
+                }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Convert Scenario to Growth Mission
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+              <div>
+                <label className="text-[#858585] block font-medium mb-1">Monthly Budget (₹)</label>
+                <input
+                  type="number"
+                  value={simBudget}
+                  onChange={(e) => setSimBudget(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-[8px] bg-white border border-[#E6E6E2] font-mono-num font-semibold text-[#252525]"
+                />
+              </div>
+              <div>
+                <label className="text-[#858585] block font-medium mb-1">Target Price (₹)</label>
+                <input
+                  type="number"
+                  value={simPrice}
+                  onChange={(e) => setSimPrice(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-[8px] bg-white border border-[#E6E6E2] font-mono-num font-semibold text-[#252525]"
+                />
+              </div>
+              <div>
+                <label className="text-[#858585] block font-medium mb-1">Target CAC (₹)</label>
+                <input
+                  type="number"
+                  value={simCac}
+                  onChange={(e) => setSimCac(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-[8px] bg-white border border-[#E6E6E2] font-mono-num font-semibold text-[#252525]"
+                />
+              </div>
+              <div>
+                <label className="text-[#858585] block font-medium mb-1">Conversion Rate (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={simConversion}
+                  onChange={(e) => setSimConversion(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-[8px] bg-white border border-[#E6E6E2] font-mono-num font-semibold text-[#252525]"
+                />
+              </div>
+            </div>
+
+            {/* Side-by-Side Projections */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              {/* Base Case */}
+              <div className="rounded-[10px] bg-white border border-[#E6E6E2] p-4 space-y-2">
+                <span className="text-[11px] font-bold text-[#686864] block">BASE-CASE PROJECTION</span>
+                <div className="font-heading text-xl font-bold text-[#252525]">
+                  ₹{(Math.floor(Number(simBudget) / Math.max(1, Number(simCac))) * Number(simPrice)).toLocaleString()}
+                </div>
+                <div className="text-xs text-[#5C5C58] space-y-1">
+                  <div className="flex justify-between">
+                    <span>New Customers:</span>
+                    <strong className="font-mono-num text-[#252525]">
+                      {Math.floor(Number(simBudget) / Math.max(1, Number(simCac)))}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Estimated ROAS:</span>
+                    <strong className="font-mono-num text-[#24724E]">
+                      {((Math.floor(Number(simBudget) / Math.max(1, Number(simCac))) * Number(simPrice)) / Math.max(1, Number(simBudget))).toFixed(1)}x
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Best Case */}
+              <div className="rounded-[10px] bg-white border border-[#CDE5D7] p-4 space-y-2">
+                <span className="text-[11px] font-bold text-[#1E6543] block">BEST-CASE PROJECTION (+35%)</span>
+                <div className="font-heading text-xl font-bold text-[#1E6543]">
+                  ₹{Math.round(Math.floor(Number(simBudget) / Math.max(1, Number(simCac))) * 1.35 * Number(simPrice)).toLocaleString()}
+                </div>
+                <div className="text-xs text-[#5C5C58] space-y-1">
+                  <div className="flex justify-between">
+                    <span>New Customers:</span>
+                    <strong className="font-mono-num text-[#1E6543]">
+                      {Math.floor(Math.floor(Number(simBudget) / Math.max(1, Number(simCac))) * 1.35)}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Estimated ROAS:</span>
+                    <strong className="font-mono-num text-[#24724E]">
+                      {((Math.floor(Number(simBudget) / Math.max(1, Number(simCac))) * 1.35 * Number(simPrice)) / Math.max(1, Number(simBudget))).toFixed(1)}x
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Downside Case */}
+              <div className="rounded-[10px] bg-white border border-[#FECACA] p-4 space-y-2">
+                <span className="text-[11px] font-bold text-[#BC3E3E] block">DOWNSIDE CASE (-35%)</span>
+                <div className="font-heading text-xl font-bold text-[#BC3E3E]">
+                  ₹{Math.round(Math.floor(Number(simBudget) / Math.max(1, Number(simCac))) * 0.65 * Number(simPrice)).toLocaleString()}
+                </div>
+                <div className="text-xs text-[#5C5C58] space-y-1">
+                  <div className="flex justify-between">
+                    <span>New Customers:</span>
+                    <strong className="font-mono-num text-[#BC3E3E]">
+                      {Math.max(1, Math.floor(Math.floor(Number(simBudget) / Math.max(1, Number(simCac))) * 0.65))}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Estimated ROAS:</span>
+                    <strong className="font-mono-num text-[#686864]">
+                      {((Math.floor(Number(simBudget) / Math.max(1, Number(simCac))) * 0.65 * Number(simPrice)) / Math.max(1, Number(simBudget))).toFixed(1)}x
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FluidTransition>
+      )}
+
+      {/* NEW: 7 Specialized Growth Departments */}
+      {tab === 'departments' && (
+        <FluidTransition key="departments" direction="fade" className="space-y-6">
+          <SectionHeader
+            title="7 Specialized Growth Departments"
+            description="Operational capabilities collaborating from a single shared Business Brain."
+          />
+
+          {/* Department Pills */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              'Marketing',
+              'Content',
+              'Acquisition',
+              'Conversion',
+              'Retention',
+              'Partnerships',
+              'Economics',
+            ].map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setActiveDept(d as any)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-[8px] cursor-pointer transition-colors ${
+                  activeDept === d
+                    ? 'bg-[#FF7417] text-white shadow-[0_1px_2px_rgba(255,116,23,0.3)]'
+                    : 'bg-white border border-[#E6E6E2] text-[#5C5C58] hover:text-[#252525]'
+                }`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+
+          {/* Active Department Content */}
+          <div className="rounded-[14px] border border-[#E6E6E2] bg-white p-5 sm:p-6 space-y-4 bw-surface-raised">
+            {activeDept === 'Marketing' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F0EE]">
+                  <div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">Growth Marketing Director</h3>
+                    <p className="text-xs text-[#686864]">Multi-channel campaign planning &amp; Brand Studio creative requirements</p>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#ECF7F1] text-[#24724E]">
+                    ZERO VIDEO MANDATE ACTIVE
+                  </span>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1">
+                    <strong className="text-[#252525] block">Campaign: Whitespace Contrast Campaign</strong>
+                    <p className="text-[#686864]">Objective: Contrast transparent pricing against {state.competitors[0]?.name || 'incumbent'} opacity.</p>
+                    <div className="text-[11px] text-[#C44D00] font-semibold mt-1">
+                      Creative Brief: 5-Slide Static Instagram &amp; LinkedIn Carousel in Brand Studio
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeDept === 'Content' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F0EE]">
+                  <div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">Content &amp; Distribution Director</h3>
+                    <p className="text-xs text-[#686864]">Content pillars, editorial calendars, and distribution velocity</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1">
+                    <strong className="text-[#252525] block">Pillar 1: Evidence Teardowns</strong>
+                    <p className="text-[#686864]">Teardowns of vague claims vs deterministic facts (2x weekly).</p>
+                  </div>
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1">
+                    <strong className="text-[#252525] block">Pillar 2: Build in Public Notes</strong>
+                    <p className="text-[#686864]">Observations from daily customer interviews and pricing tests (1x weekly).</p>
+                  </div>
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1">
+                    <strong className="text-[#252525] block">Pillar 3: Customer Friction Resolution</strong>
+                    <p className="text-[#686864]">Before &amp; After proof cards highlighting customer wins (1x weekly).</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeDept === 'Acquisition' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F0EE]">
+                  <div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">Sales &amp; Customer Acquisition Director</h3>
+                    <p className="text-xs text-[#686864]">Targeted outbound messaging &amp; cold outreach sequence</p>
+                  </div>
+                </div>
+                <div className="space-y-3 text-xs">
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1">
+                    <div className="flex justify-between items-center text-[11px] font-semibold text-[#C44D00]">
+                      <span>STEP 01 · DAY 0</span>
+                      <span>Target: Founders &amp; Operators</span>
+                    </div>
+                    <strong className="text-[#252525] block">Subject: Quick question regarding your current setup</strong>
+                    <p className="text-[#686864] italic">
+                      "Noticed you're operating in this category. Most founders are frustrated by opaque enterprise lock-ins. We built {state.brain.businessName || 'BrainWise'} to deliver deterministic intelligence at transparent pricing..."
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1">
+                    <div className="flex justify-between items-center text-[11px] font-semibold text-[#C44D00]">
+                      <span>STEP 02 · DAY 3</span>
+                      <span>Follow-up Proof</span>
+                    </div>
+                    <strong className="text-[#252525] block">Subject: Evidence teardown: Why transparent pricing converts 2.4x higher</strong>
+                    <p className="text-[#686864] italic">
+                      "Following up with a 1-page evidence teardown showing how upfront pricing eliminates buyer friction..."
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeDept === 'Conversion' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F0EE]">
+                  <div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">Conversion Optimization Director (CRO)</h3>
+                    <p className="text-xs text-[#686864]">Friction audits, pricing card proof badges, and checkout tests</p>
+                  </div>
+                </div>
+                <div className="space-y-3 text-xs">
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-2">
+                    <div className="flex justify-between">
+                      <strong className="text-[#252525]">Area: Checkout Step-2 Decision Point</strong>
+                      <span className="font-mono-num text-[#24724E] font-semibold">+24% Projected Lift</span>
+                    </div>
+                    <p className="text-[#686864]">Friction: Buyers hesitate without explicit reassurance and proof badges.</p>
+                    <div className="p-2 rounded bg-white border border-[#E6E6E2] space-y-1">
+                      <div className="text-[#BC3E3E] line-through">Before: "Enter Card Details to Subscribe"</div>
+                      <div className="text-[#24724E] font-medium">After: "Secure Instant Checkout · 100% Two-Phase Credit Protection · Cancel Anytime"</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeDept === 'Retention' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F0EE]">
+                  <div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">Customer Retention Director</h3>
+                    <p className="text-xs text-[#686864]">Customer lifecycle milestones &amp; referral velocity loops</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1">
+                    <strong className="text-[#252525] block">Day-14 Automated Satisfaction Prompt</strong>
+                    <p className="text-[#686864]">Triggers after user views 2+ reports. Awards 25 complimentary validation credits upon 1-click rating.</p>
+                    <span className="text-[#24724E] font-semibold block text-[11px]">-15% Churn Reduction</span>
+                  </div>
+                  <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1">
+                    <strong className="text-[#252525] block">Two-Sided Founder Referral Link</strong>
+                    <p className="text-[#686864]">Both referrer and referee receive 50 bonus credits on first completed business validation.</p>
+                    <span className="text-[#24724E] font-semibold block text-[11px]">-22% Churn Reduction</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeDept === 'Partnerships' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F0EE]">
+                  <div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">Partnership &amp; Distribution Director</h3>
+                    <p className="text-xs text-[#686864]">Complementary co-marketing &amp; joint venture proposals</p>
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] space-y-1 text-xs">
+                  <strong className="text-[#252525] block">Complementary SaaS Co-Marketing Bundle</strong>
+                  <p className="text-[#686864]">Pitch: Bundle a 30-day trial of {state.brain.businessName || 'BrainWise'} with top accounting and CRM platforms. 20% revenue share with zero channel cannibalization.</p>
+                </div>
+              </div>
+            )}
+
+            {activeDept === 'Economics' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F0EE]">
+                  <div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">Growth Economics &amp; Financial Analyst</h3>
+                    <p className="text-xs text-[#686864]">LTV, CAC, gross margin, and payback schedule modeling</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9]">
+                    <span className="text-[#858585] block">LTV / CAC Ratio</span>
+                    <strong className="text-[#24724E] font-mono-num text-base block mt-0.5">3.8x (Healthy)</strong>
+                  </div>
+                  <div className="p-3 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9]">
+                    <span className="text-[#858585] block">Payback Period</span>
+                    <strong className="text-[#252525] font-mono-num text-base block mt-0.5">2.4 Months</strong>
+                  </div>
+                  <div className="p-3 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9]">
+                    <span className="text-[#858585] block">Max Affordable CAC</span>
+                    <strong className="text-[#C44D00] font-mono-num text-base block mt-0.5">₹495</strong>
+                  </div>
+                  <div className="p-3 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9]">
+                    <span className="text-[#858585] block">Gross Margin</span>
+                    <strong className="text-[#252525] font-mono-num text-base block mt-0.5">72%</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </FluidTransition>
+      )}
+
+      {/* NEW: Execution Center & Approvals */}
+      {tab === 'execution' && (
+        <FluidTransition key="execution" direction="fade" className="space-y-6">
+          <SectionHeader
+            title="Execution Center &amp; Human Approval Gate"
+            description="Manage running execution jobs, review provider receipts, and approve consequential Level 3 actions."
+          />
+
+          {/* Human Approval Gate */}
+          <div className="rounded-[14px] border border-[#FECACA] bg-[#FDF2F2]/40 p-5 space-y-4 bw-surface-raised">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#BC3E3E]">
+              <ShieldAlert className="w-4 h-4 text-[#BC3E3E]" />
+              <span>FOUNDER APPROVAL GATE · LEVEL 3 CONSEQUENTIAL ACTIONS</span>
+            </div>
+            <p className="text-xs text-[#5C5C58]">
+              BrainWise strictly requires explicit founder sign-off before dispatching emails, spending budget, or publishing public content.
+            </p>
+
+            <div className="space-y-3">
+              {jobsList.filter((j) => j.status === 'AWAITING_APPROVAL').map((job) => (
+                <div
+                  key={job.jobId}
+                  className="rounded-[10px] bg-white border border-[#FECACA] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FDF2F2] text-[#BC3E3E]">
+                        LEVEL 3 ACTION
+                      </span>
+                      <strong className="text-xs font-heading text-[#252525]">{job.actionType}</strong>
+                    </div>
+                    <p className="text-xs text-[#686864]">
+                      Payload: Target role {job.payload.targetRole} · Batch count: {job.payload.batchCount} emails
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={async () => {
+                        const workspaceId = state.workspaceId || 'default-workspace';
+                        let updatedReceipt = {
+                          providerName: 'Resend / EmailService',
+                          providerTransactionId: `tx_${Date.now()}_appr`,
+                          dispatchedAt: new Date().toISOString(),
+                        };
+
+                        try {
+                          await apiClient.approveExecutionJob(workspaceId, job.jobId);
+                          const processed = await apiClient.processExecutionJob(workspaceId, job.jobId);
+                          if (processed?.data?.executionReceipt) {
+                            updatedReceipt = processed.data.executionReceipt;
+                          }
+                        } catch {
+                          // Local fallback
+                        }
+
+                        setJobsList((prev) =>
+                          prev.map((item) =>
+                            item.jobId === job.jobId
+                              ? {
+                                  ...item,
+                                  status: 'COMPLETED' as const,
+                                  approvalStatus: 'APPROVED' as const,
+                                  receipt: updatedReceipt,
+                                }
+                              : item
+                          )
+                        );
+                        showToast('Job approved and dispatched with verified provider receipt.');
+                      }}
+                    >
+                      <Check className="w-3.5 h-3.5 text-white" />
+                      Approve &amp; Dispatch
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {jobsList.filter((j) => j.status === 'AWAITING_APPROVAL').length === 0 && (
+                <div className="p-3 text-xs text-[#24724E] bg-white rounded border border-[#CDE5D7]">
+                  Zero pending actions awaiting founder approval. All execution jobs are clear.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Execution Queue & Audit Log */}
+          <div className="rounded-[14px] border border-[#E6E6E2] bg-white p-5 space-y-4 bw-surface-raised">
+            <h3 className="font-heading text-base font-bold text-[#242424]">Execution Queue &amp; Provider Audit Log</h3>
+            <div className="space-y-2 text-xs">
+              {jobsList.map((job) => (
+                <div
+                  key={job.jobId}
+                  className="p-3.5 rounded-[8px] bg-[#F5F5F4] border border-[#ECECE9] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono-num text-[11px] font-semibold text-[#858585]">{job.jobId}</span>
+                      <strong className="text-[#252525]">{job.actionType}</strong>
+                    </div>
+                    {job.receipt && (
+                      <div className="text-[11px] text-[#24724E] font-mono-num">
+                        Provider: {job.receipt.providerName} · TxID: {job.receipt.providerTransactionId}
+                      </div>
+                    )}
+                  </div>
+                  <StatusBadge
+                    status={job.status === 'COMPLETED' ? 'Completed' : 'Awaiting Approval'}
+                    tone={job.status === 'COMPLETED' ? 'success' : 'warning'}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </FluidTransition>

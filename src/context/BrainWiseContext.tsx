@@ -8,22 +8,25 @@ import React, {
   useState,
 } from 'react';
 import { INITIAL_BRAINWISE_STATE } from '../data/mockData';
-import { apiClient } from '../services/apiClient';
+import { apiClient, getStoredAuthToken, setStoredAuthToken } from '../services/apiClient';
 import { signInWithGoogle, signOutClient } from '../services/firebaseClient';
 import { recordStrategicAngle, ensureStrategicMemory } from '../utils/strategicMemory';
 import type {
   AnyRoute,
   AppRoute,
+  BrainActivationState,
   BrainWiseState,
   BrandAsset,
   BreadcrumbSegment,
   BusinessBrainData,
   CompetitorProfileData,
   ContextSharingConfig,
+  CustomerPersona,
   GrowthExperiment,
   GrowthGoal,
   GrowthTask,
   MarketScenarioPreset,
+  ProductServiceItem,
   ResearchReport,
   SettingsTabId,
   StrategyRecommendation,
@@ -39,6 +42,7 @@ export interface ToastPayload {
   message: string;
   undoLabel?: string;
   onUndo?: () => void;
+  tone?: 'default' | 'error' | 'success' | 'info';
 }
 
 interface BrainWiseContextValue {
@@ -50,6 +54,7 @@ interface BrainWiseContextValue {
   loginDemo: (firstName?: string, email?: string) => void;
   loginWithGoogle: () => Promise<{ success: boolean; nextRoute?: string; error?: string }>;
   hydrateWorkspaceState: (workspaceId?: string) => Promise<void>;
+  refreshWorkspace: (workspaceId?: string) => Promise<void>;
   sendChatToStrategist: (
     message: string,
     options?: {
@@ -102,8 +107,10 @@ interface BrainWiseContextValue {
     initialCompetitors?: string[];
     useDemoIfBlank?: boolean;
     startFreshEmpty?: boolean;
+    sandboxIdeaMode?: boolean;
   }) => void;
   logout: () => void;
+  switchWorkspace: (workspaceId: string) => Promise<void>;
   resetDemoData: () => void;
   updateBrain: (patch: Partial<BusinessBrainData>) => void;
   confirmFact: (fieldKey: string) => void;
@@ -116,7 +123,15 @@ interface BrainWiseContextValue {
   ) => void;
   addReport: (report: ResearchReport) => void;
   toggleSaveReportToBrain: (reportId: string) => void;
+  graduateIdeaToBrain: (reportId: string) => void;
+  setBrainActivationState: (activationState: BrainActivationState) => void;
   updateReportAssumption: (reportId: string, assumptionId: string, newValue: number) => void;
+  saveReportScenario: (
+    reportId: string,
+    scenario: Omit<MarketScenarioPreset, 'id' | 'createdAt'> & { id?: string }
+  ) => void;
+  deleteReportScenario: (reportId: string, scenarioId: string) => void;
+  selectReportScenario: (reportId: string, scenarioId: string) => void;
   addCompetitor: (comp: Omit<CompetitorProfileData, 'id'>) => void;
   toggleCompetitorMonitoring: (compId: string) => void;
   updateCompetitorFrequency: (
@@ -131,6 +146,36 @@ interface BrainWiseContextValue {
   addBrandAsset: (asset: Omit<BrandAsset, 'id' | 'createdAt'>) => void;
   renameBrandAsset: (assetId: string, title: string) => void;
   archiveBrandAsset: (assetId: string) => void;
+  duplicateBrandAsset: (assetId: string) => Promise<BrandAsset | null>;
+  bulkArchiveBrandAssets: (assetIds: string[]) => Promise<void>;
+  bulkRestoreBrandAssets: (assetIds: string[], targetSection?: string) => Promise<void>;
+  bulkTagBrandAssets: (assetIds: string[], tagsToAdd: string[], tagsToRemove?: string[]) => Promise<void>;
+  bulkMoveBrandAssets: (assetIds: string[], targetSection: 'Active' | 'Identity' | 'Print & Packaging' | 'Social Media' | 'Archived') => Promise<void>;
+  deleteBrandAssetPermanently: (assetId: string) => Promise<void>;
+  uploadAssetFiles: (files: File[], options?: { section?: string; category?: string; onProgress?: (pct: number) => void }) => Promise<void>;
+  getAuthoritativeBrandIdentity: () => Promise<any>;
+  syncBrandWithBusinessBrain: () => Promise<any>;
+  evaluateBrandCompliance: (params: Record<string, any>) => Promise<any>;
+  getBrandDriftReport: () => Promise<any>;
+  listBrandIdentityVersions: () => Promise<any[]>;
+  createPackagingAsset: (payload: Record<string, any>) => Promise<any>;
+  listPackagingAssets: (filter?: Record<string, any>) => Promise<any[]>;
+  evaluatePrintReadiness: (assetId: string) => Promise<any>;
+  extractPackagingContentIntelligence: (assetId: string, rawText?: string) => Promise<any>;
+  advancePackagingWorkflow: (assetId: string, payload: { targetStatus: string; notes?: string; vendorName?: string }) => Promise<any>;
+  analyzeAssetIntelligence: (assetId: string, bypassCredits?: boolean) => Promise<any>;
+  semanticAssetSearch: (query: string, filters?: any) => Promise<any[]>;
+  recommendAssets: (payload: any) => Promise<any[]>;
+  checkAssetDuplicates: (payload: any) => Promise<any>;
+  applyHumanClassificationOverride: (payload: any) => Promise<any>;
+  chatAssetAssistant: (payload: { query: string; conversationId?: string; confirmationToken?: string; context?: any }) => Promise<any>;
+  confirmAssetAssistantAction: (payload: { confirmationToken: string; conversationId?: string }) => Promise<any>;
+  bindAssetsToCampaign: (payload: any) => Promise<any>;
+  createAssetDerivative: (payload: any) => Promise<any>;
+  getCompetitiveCreativeOpportunities: (params?: any) => Promise<any[]>;
+  recordAssetPerformance: (payload: any) => Promise<any>;
+  getAssetPerformanceSummary: (assetId: string) => Promise<any>;
+  listTopPerformingAssets: (params?: any) => Promise<any[]>;
   toggleTaskStatus: (taskId: string, status?: GrowthTask['status']) => void;
   addTask: (task: Omit<GrowthTask, 'id'>) => void;
   updateTaskNotes: (taskId: string, notes: string) => void;
@@ -164,7 +209,7 @@ interface BrainWiseContextValue {
   isWidgetPinned: (widgetId: string) => boolean;
   toast: ToastPayload | null;
   toastMessage: string | null;
-  showToast: (msg: string, options?: { undoLabel?: string; onUndo?: () => void }) => void;
+  showToast: (msg: string, options?: { undoLabel?: string; onUndo?: () => void; tone?: 'default' | 'error' | 'success' | 'info' }) => void;
   dismissToast: () => void;
   globalSearchOpen: boolean;
   setGlobalSearchOpen: (open: boolean) => void;
@@ -300,7 +345,10 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setToast(null);
   };
 
-  const showToast = (msg: string, options?: { undoLabel?: string; onUndo?: () => void }) => {
+  const showToast = (
+    msg: string,
+    options?: { undoLabel?: string; onUndo?: () => void; tone?: 'default' | 'error' | 'success' | 'info' }
+  ) => {
     if (toastTimerRef.current) {
       window.clearTimeout(toastTimerRef.current);
     }
@@ -310,6 +358,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       message: msg,
       undoLabel: options?.undoLabel ?? (options?.onUndo ? 'Undo' : undefined),
       onUndo: options?.onUndo,
+      tone: options?.tone || 'default',
     });
     toastTimerRef.current = window.setTimeout(() => {
       setToast((curr) => (curr?.id === id ? null : curr));
@@ -359,91 +408,127 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => window.removeEventListener('brainwise-navigate', onRemoteNav);
   }, [navigate]);
 
-  const hydrateWorkspaceState = useCallback(async (targetWorkspaceId?: string): Promise<void> => {
-    const wsId = targetWorkspaceId || state.activeWorkspaceId;
-    if (!wsId) return;
+  const hydrateWorkspaceState = useCallback(
+    async (targetWorkspaceId?: string): Promise<void> => {
+      const wsId = targetWorkspaceId || state.activeWorkspaceId;
+      if (!wsId) return;
 
-    try {
-      const [profile, goalsRes, tasksRes, compsRes, subRes, assetsRes] = await Promise.all([
-        apiClient.getBusinessProfile(wsId).catch(() => null),
-        apiClient.getGoals(wsId).catch(() => null),
-        apiClient.getTasks(wsId).catch(() => null),
-        apiClient.getCompetitors(wsId).catch(() => null),
-        apiClient.getSubscription(wsId).catch(() => null),
-        apiClient.getBrandAssets(wsId).catch(() => null),
-      ]);
+      try {
+        const [profile, goalsRes, tasksRes, compsRes, subRes, assetsRes, brandRes, reportsRes, productsRes] = await Promise.all([
+          apiClient.getBusinessProfile(wsId).catch(() => null),
+          apiClient.getGoals(wsId).catch(() => null),
+          apiClient.getTasks(wsId).catch(() => null),
+          apiClient.getCompetitors(wsId).catch(() => null),
+          apiClient.getSubscription(wsId).catch(() => null),
+          apiClient.getBrandAssets(wsId).catch(() => null),
+          apiClient.getBrandIdentity(wsId).catch(() => null),
+          apiClient.getResearchReports(wsId).catch(() => null),
+          apiClient.getProducts(wsId).catch(() => null),
+        ]);
 
-      setState((prev) => {
-        const next = { ...prev };
-        if (profile && profile.businessName) {
-          next.brain = {
-            ...prev.brain,
-            businessName: profile.businessName || prev.brain.businessName,
-            tagline: profile.tagline || prev.brain.tagline,
-            stage: profile.stage || prev.brain.stage,
-            location: profile.location || prev.brain.location,
-            website: profile.website || prev.brain.website,
-            overviewSummary: profile.overviewSummary || prev.brain.overviewSummary,
-            targetAudience: profile.targetAudience || prev.brain.targetAudience,
-            brandPositioning: profile.brandPositioning || prev.brain.brandPositioning,
-            valueProposition: profile.valueProposition || prev.brain.valueProposition,
-          };
-        }
+        setState((prev) => {
+          const next = { ...prev };
+          if (profile && profile.businessName) {
+            next.brain = {
+              ...prev.brain,
+              businessName: profile.businessName || prev.brain.businessName,
+              tagline: profile.tagline || prev.brain.tagline,
+              stage: profile.stage || prev.brain.stage,
+              location: profile.location || prev.brain.location,
+              website: profile.website || prev.brain.website,
+              overviewSummary: profile.overviewSummary || prev.brain.overviewSummary,
+              targetAudience: profile.targetAudience || prev.brain.targetAudience,
+              brandPositioning: profile.brandPositioning || prev.brain.brandPositioning,
+              valueProposition: profile.valueProposition || prev.brain.valueProposition,
+            };
+          }
 
-        if (Array.isArray(goalsRes) && goalsRes.length > 0) {
-          next.goals = goalsRes;
-        } else if ((goalsRes as any)?.goals && Array.isArray((goalsRes as any).goals)) {
-          next.goals = (goalsRes as any).goals;
-        }
+          if (Array.isArray(goalsRes) && goalsRes.length > 0) {
+            next.goals = goalsRes;
+          } else if ((goalsRes as any)?.goals && Array.isArray((goalsRes as any).goals)) {
+            next.goals = (goalsRes as any).goals;
+          }
 
-        if (Array.isArray(tasksRes) && tasksRes.length > 0) {
-          next.tasks = tasksRes;
-        } else if ((tasksRes as any)?.tasks && Array.isArray((tasksRes as any).tasks)) {
-          next.tasks = (tasksRes as any).tasks;
-        }
+          if (Array.isArray(tasksRes) && tasksRes.length > 0) {
+            next.tasks = tasksRes;
+          } else if ((tasksRes as any)?.tasks && Array.isArray((tasksRes as any).tasks)) {
+            next.tasks = (tasksRes as any).tasks;
+          }
 
-        if (Array.isArray(compsRes) && compsRes.length > 0) {
-          next.competitors = compsRes;
-        } else if ((compsRes as any)?.competitors && Array.isArray((compsRes as any).competitors)) {
-          next.competitors = (compsRes as any).competitors;
-        }
+          if (Array.isArray(compsRes) && compsRes.length > 0) {
+            next.competitors = compsRes;
+          } else if (
+            (compsRes as any)?.competitors &&
+            Array.isArray((compsRes as any).competitors)
+          ) {
+            next.competitors = (compsRes as any).competitors;
+          }
 
-        if (subRes && prev.subscription) {
-          const planMap: Record<string, SubscriptionState['plan']> = {
-            starter: 'Starter',
-            growth: 'Growth Pro',
-            scale: 'Venture Team',
-          };
-          const mappedPlan = subRes.subscription?.planId ? planMap[subRes.subscription.planId] : undefined;
-          next.subscription = {
-            ...prev.subscription,
-            ...(mappedPlan ? { plan: mappedPlan } : {}),
-            ...(subRes.subscription?.billingCycle ? { billingCycle: subRes.subscription.billingCycle } : {}),
-          };
-        }
+          if (Array.isArray(reportsRes) && reportsRes.length > 0) {
+            next.reports = reportsRes;
+            if (!next.activeReportId && reportsRes[0]?.id) {
+              next.activeReportId = reportsRes[0].id;
+            }
+          }
 
-        if (Array.isArray(assetsRes) && assetsRes.length > 0) {
-          next.assets = assetsRes;
-        } else if ((assetsRes as any)?.assets && Array.isArray((assetsRes as any).assets)) {
-          next.assets = (assetsRes as any).assets;
-        }
+          if (Array.isArray(productsRes) && productsRes.length > 0) {
+            next.brain = {
+              ...next.brain,
+              products: productsRes,
+            };
+          }
 
-        return next;
-      });
-    } catch (err) {
-      console.warn('Workspace state hydration completed with fallbacks:', err);
-    }
-  }, [state.activeWorkspaceId]);
+          if (subRes && prev.subscription) {
+            const planMap: Record<string, SubscriptionState['plan']> = {
+              starter: 'Starter',
+              growth: 'Growth Pro',
+              scale: 'Venture Team',
+            };
+            const mappedPlan = subRes.subscription?.planId
+              ? planMap[subRes.subscription.planId]
+              : undefined;
+            next.subscription = {
+              ...prev.subscription,
+              ...(mappedPlan ? { plan: mappedPlan } : {}),
+              ...(subRes.subscription?.billingCycle
+                ? { billingCycle: subRes.subscription.billingCycle }
+                : {}),
+            };
+          }
+
+          if (Array.isArray(assetsRes) && assetsRes.length > 0) {
+            next.assets = assetsRes;
+          } else if ((assetsRes as any)?.assets && Array.isArray((assetsRes as any).assets)) {
+            next.assets = (assetsRes as any).assets;
+          }
+
+          if (brandRes && brandRes.brandName) {
+            next.brand = {
+              ...prev.brand,
+              brandName: brandRes.brandName || prev.brand.brandName,
+              tagline: brandRes.tagline || prev.brand.tagline,
+              positioningStatement: brandRes.mission || prev.brand.positioningStatement,
+              status: (brandRes.approvalStatus === 'APPROVED' ? 'Approved' : prev.brand.status) as any,
+              palette: brandRes.palette && typeof brandRes.palette === 'object' && !Array.isArray(brandRes.palette)
+                ? Object.entries(brandRes.palette).map(([role, hex]) => ({ name: role.charAt(0).toUpperCase() + role.slice(1), hex: String(hex), role }))
+                : prev.brand.palette,
+            };
+          }
+
+          return next;
+        });
+      } catch (err) {
+        console.warn('Workspace state hydration completed with fallbacks:', err);
+      }
+    },
+    [state.activeWorkspaceId]
+  );
 
   const loginWithGoogle: BrainWiseContextValue['loginWithGoogle'] = async () => {
     try {
       const session = await signInWithGoogle();
       apiClient.setAuthToken(session.idToken);
-      try {
-        sessionStorage.setItem('brainwise_auth_token', session.idToken);
-      } catch {
-        // ignore storage access error
-      }
+      setStoredAuthToken(session.idToken);
 
       let wsId = 'ws_vishesh_growth';
       let userDisplayName = session.displayName;
@@ -514,7 +599,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     try {
-      const savedToken = sessionStorage.getItem('brainwise_auth_token');
+      const savedToken = getStoredAuthToken();
       if (savedToken) {
         apiClient.setAuthToken(savedToken);
         apiClient
@@ -545,7 +630,8 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             }
           })
           .catch(() => {
-            sessionStorage.removeItem('brainwise_auth_token');
+            setStoredAuthToken(null);
+            apiClient.setAuthToken(null);
           });
       }
     } catch {
@@ -557,11 +643,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const res = await apiClient.authLogin({ email, password });
       apiClient.setAuthToken(res.token);
-      try {
-        sessionStorage.setItem('brainwise_auth_token', res.token);
-      } catch {
-        // ignore storage access error
-      }
+      setStoredAuthToken(res.token);
 
       if (res.activeWorkspaceId) {
         apiClient.setActiveWorkspaceId(res.activeWorkspaceId);
@@ -596,11 +678,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const res = await apiClient.authRegister({ fullName, email, password });
       apiClient.setAuthToken(res.token);
-      try {
-        sessionStorage.setItem('brainwise_auth_token', res.token);
-      } catch {
-        // ignore storage access error
-      }
+      setStoredAuthToken(res.token);
 
       const firstName = fullName.split(' ')[0] || email.split('@')[0];
       const lastName = fullName.split(' ').slice(1).join(' ') || '';
@@ -628,11 +706,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const targetEmail = email || state.user.email;
       const res = await apiClient.authVerifyEmail({ email: targetEmail, code: codeOrToken });
       apiClient.setAuthToken(res.token);
-      try {
-        sessionStorage.setItem('brainwise_auth_token', res.token);
-      } catch {
-        // ignore storage access error
-      }
+      setStoredAuthToken(res.token);
 
       setState((prev) => ({
         ...prev,
@@ -687,11 +761,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       await apiClient.authDeleteAccount();
       apiClient.setAuthToken(null);
       apiClient.setActiveWorkspaceId(null);
-      try {
-        sessionStorage.removeItem('brainwise_auth_token');
-      } catch {
-        // ignore storage access error
-      }
+      setStoredAuthToken(null);
       setState({
         ...INITIAL_BRAINWISE_STATE,
         isAuthenticated: false,
@@ -775,6 +845,32 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               },
             }));
           }
+
+          // Authoritative workspace team members
+          const serverMembers = await apiClient.getWorkspaceMembers(wsId).catch(() => []);
+          if (Array.isArray(serverMembers) && serverMembers.length > 0) {
+            setState((prev) => ({
+              ...prev,
+              teamMembers: serverMembers.map((m: any) => ({
+                id: m.userId || m.membershipId,
+                name: m.name || m.userId,
+                email:
+                  m.email ||
+                  (m.userId && m.userId.includes('@')
+                    ? m.userId
+                    : `${m.userId || 'collaborator'}@workspace.internal`),
+                role:
+                  m.role === 'owner'
+                    ? 'Owner'
+                    : m.role === 'admin'
+                      ? 'Strategist'
+                      : m.role === 'designer'
+                        ? 'Brand Designer'
+                        : 'Viewer',
+                status: m.membershipStatus === 'invited' ? 'Invited' : 'Active',
+              })),
+            }));
+          }
         }
       } catch {
         // Fallback gracefully in offline mode
@@ -804,25 +900,29 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const completeOnboarding: BrainWiseContextValue['completeOnboarding'] = (payload) => {
     setState((prev) => {
       const customName = payload.businessName.trim();
-      const useCustom = Boolean(customName) || Boolean(payload.startFreshEmpty);
-      const baseBrain = payload.startFreshEmpty
+      const useCustom =
+        Boolean(customName) || Boolean(payload.startFreshEmpty) || Boolean(payload.sandboxIdeaMode);
+      const baseBrain: BusinessBrainData = payload.sandboxIdeaMode
         ? {
-            businessName: customName || 'New Venture Workspace',
-            tagline: 'Define your core positioning in Brand Studio',
-            industry: payload.industry.trim() || 'Technology & Consumer Goods',
-            stage: payload.stage || 'Idea Stage',
-            location: payload.location.trim() || 'Remote / Global',
-            website: payload.website.trim() || '',
+            businessName: customName || 'Idea Exploration Workspace',
+            tagline:
+              'Idea Sandbox — Validate a concept in Idea Intelligence to hatch your Business Brain',
+            industry: payload.industry.trim() || 'Idea Sandbox & Research',
+            stage: 'Idea Stage',
+            activationState: 'DORMANT_SANDBOX',
+            location: payload.location.trim() || 'Global',
+            website: '',
             foundedYear: '2026',
-            overviewSummary: payload.productSummary.trim()
-              ? `${customName || 'This venture'} is exploring ${payload.productSummary.trim()} for ${payload.targetCustomers || 'early adopters'}.`
-              : '',
-            targetAudience: payload.targetCustomers.trim() || '',
-            brandPositioning: '',
-            businessModel: '',
-            revenueModel: '',
-            valueProposition: '',
-            primaryGoals: payload.primaryGoals.length ? payload.primaryGoals : [],
+            overviewSummary:
+              'Idea Exploration Workspace. Business Brain is currently dormant and will activate upon idea validation.',
+            targetAudience: payload.targetCustomers.trim() || 'Target Market to be validated',
+            brandPositioning: 'Positioning will be synthesized upon idea validation.',
+            businessModel: 'Model to be validated in Idea Intelligence',
+            revenueModel: 'Pricing ladder to be validated',
+            valueProposition: 'Value proposition under active research.',
+            primaryGoals: payload.primaryGoals.length
+              ? payload.primaryGoals
+              : ['Validate startup idea'],
             products: [],
             personas: [],
             documents: [],
@@ -831,27 +931,62 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               {
                 id: `hist-${Date.now()}`,
                 date: new Date().toISOString().slice(0, 10),
-                event: 'Initialized clean Business Brain workspace',
+                event:
+                  'Entered Idea Sandbox Mode — Business Brain set to dormant until concept validation',
                 department: 'Business Brain' as const,
               },
             ],
             lastUpdated: new Date().toISOString().slice(0, 10),
           }
-        : useCustom
+        : payload.startFreshEmpty
           ? {
-              ...prev.brain,
-              businessName: customName,
-              industry: payload.industry.trim() || prev.brain.industry,
-              stage: payload.stage || prev.brain.stage,
-              location: payload.location.trim() || prev.brain.location,
+              businessName: customName || 'New Venture Workspace',
+              tagline: 'Define your core positioning in Brand Studio',
+              industry: payload.industry.trim() || 'Technology & Consumer Goods',
+              stage: payload.stage || 'Idea Stage',
+              activationState: 'ACTIVE_ESTABLISHED',
+              location: payload.location.trim() || 'Remote / Global',
               website: payload.website.trim() || '',
-              targetAudience: payload.targetCustomers.trim() || prev.brain.targetAudience,
+              foundedYear: '2026',
               overviewSummary: payload.productSummary.trim()
-                ? `${customName} operates in ${payload.industry || 'its target market'}, delivering ${payload.productSummary.trim()} for ${payload.targetCustomers || 'modern customers'}.`
-                : prev.brain.overviewSummary,
+                ? `${customName || 'This venture'} is exploring ${payload.productSummary.trim()} for ${payload.targetCustomers || 'early adopters'}.`
+                : '',
+              targetAudience: payload.targetCustomers.trim() || '',
+              brandPositioning: '',
+              businessModel: '',
+              revenueModel: '',
+              valueProposition: '',
+              primaryGoals: payload.primaryGoals.length ? payload.primaryGoals : [],
+              products: [],
+              personas: [],
+              documents: [],
+              decisions: [],
+              history: [
+                {
+                  id: `hist-${Date.now()}`,
+                  date: new Date().toISOString().slice(0, 10),
+                  event: 'Initialized clean Business Brain workspace',
+                  department: 'Business Brain' as const,
+                },
+              ],
               lastUpdated: new Date().toISOString().slice(0, 10),
             }
-          : prev.brain;
+          : useCustom
+            ? {
+                ...prev.brain,
+                businessName: customName,
+                industry: payload.industry.trim() || prev.brain.industry,
+                stage: payload.stage || prev.brain.stage,
+                activationState: 'ACTIVE_ESTABLISHED',
+                location: payload.location.trim() || prev.brain.location,
+                website: payload.website.trim() || '',
+                targetAudience: payload.targetCustomers.trim() || prev.brain.targetAudience,
+                overviewSummary: payload.productSummary.trim()
+                  ? `${customName} operates in ${payload.industry || 'its target market'}, delivering ${payload.productSummary.trim()} for ${payload.targetCustomers || 'modern customers'}.`
+                  : prev.brain.overviewSummary,
+                lastUpdated: new Date().toISOString().slice(0, 10),
+              }
+            : prev.brain;
 
       const seededCompetitors: CompetitorProfileData[] = (payload.initialCompetitors ?? [])
         .map((c) => c.trim())
@@ -1001,16 +1136,34 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     signOutClient().catch(() => {});
     apiClient.setAuthToken(null);
     apiClient.setActiveWorkspaceId(null);
-    try {
-      sessionStorage.removeItem('brainwise_auth_token');
-    } catch {
-      // ignore storage access error
-    }
+    setStoredAuthToken(null);
     setState((prev) => ({
       ...prev,
       isAuthenticated: false,
       currentRoute: 'landing',
     }));
+  };
+
+  const switchWorkspace: BrainWiseContextValue['switchWorkspace'] = async (workspaceId: string) => {
+    if (!workspaceId || workspaceId === state.activeWorkspaceId) return;
+    try {
+      await apiClient.switchActiveWorkspace(workspaceId);
+      apiClient.setActiveWorkspaceId(workspaceId);
+      setState((prev) => ({
+        ...prev,
+        activeWorkspaceId: workspaceId,
+        goals: [],
+        tasks: [],
+        competitors: [],
+        assets: [],
+        reports: [],
+        activeReportId: '',
+      }));
+      await hydrateWorkspaceState(workspaceId);
+      showToast('Workspace switched successfully.');
+    } catch (err: any) {
+      showToast(`Failed to switch workspace: ${err?.message || 'Error'}`, { tone: 'error' });
+    }
   };
 
   const resetDemoData = () => {
@@ -1024,6 +1177,8 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const updateBrain = (patch: Partial<BusinessBrainData>) => {
+    const prevBrain = state.brain;
+    const prevBrand = state.brand;
     setState((prev) => ({
       ...prev,
       brain: {
@@ -1041,11 +1196,22 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Business Brain updated.');
 
     if (state.activeWorkspaceId) {
-      apiClient.updateBusinessProfile(state.activeWorkspaceId, patch).catch(() => {});
+      apiClient.updateBusinessProfile(state.activeWorkspaceId, patch).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          brain: prevBrain,
+          brand: prevBrand,
+        }));
+        showToast(`Failed to persist Business Brain changes: ${err?.message || 'Error'}`, {
+          tone: 'error',
+        });
+      });
     }
   };
 
   const confirmFact = (fieldKey: string) => {
+    const prevProv = state.brain.provenance;
+    const prevUpdated = state.brain.lastUpdated;
     setState((prev) => {
       const today = new Date().toISOString().slice(0, 10);
       const existingProv = prev.brain.provenance || {};
@@ -1074,13 +1240,24 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
     showToast(`Fact "${fieldKey}" confirmed as ground truth.`);
     if (state.activeWorkspaceId) {
-      apiClient.confirmFact(state.activeWorkspaceId, fieldKey).catch(() => {});
+      apiClient.confirmFact(state.activeWorkspaceId, fieldKey).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          brain: {
+            ...prev.brain,
+            provenance: prevProv,
+            lastUpdated: prevUpdated,
+          },
+        }));
+        showToast(`Failed to confirm fact: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
   const addExclusionRule = (rule: string) => {
     const trimmed = rule.trim();
     if (!trimmed) return;
+    const prevMemory = state.brain.strategicMemory;
     setState((prev) => {
       const currentMemory = ensureStrategicMemory(prev.brain);
       if (currentMemory.explicitExclusions.includes(trimmed)) return prev;
@@ -1098,11 +1275,21 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
     showToast('Prohibited claim rule added to Truth Engine.');
     if (state.activeWorkspaceId) {
-      apiClient.addExclusionRule(state.activeWorkspaceId, trimmed).catch(() => {});
+      apiClient.addExclusionRule(state.activeWorkspaceId, trimmed).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          brain: {
+            ...prev.brain,
+            strategicMemory: prevMemory,
+          },
+        }));
+        showToast(`Failed to add exclusion rule: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
   const removeExclusionRule = (rule: string) => {
+    const prevMemory = state.brain.strategicMemory;
     setState((prev) => {
       const currentMemory = ensureStrategicMemory(prev.brain);
       return {
@@ -1119,7 +1306,16 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
     showToast('Exclusion rule removed.');
     if (state.activeWorkspaceId) {
-      apiClient.removeExclusionRule(state.activeWorkspaceId, rule).catch(() => {});
+      apiClient.removeExclusionRule(state.activeWorkspaceId, rule).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          brain: {
+            ...prev.brain,
+            strategicMemory: prevMemory,
+          },
+        }));
+        showToast(`Failed to remove exclusion rule: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
@@ -1150,10 +1346,198 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Idea research dossier generated.');
   };
 
+  const graduateIdeaToBrain = (reportId: string) => {
+    setState((prev) => {
+      const target = prev.reports.find((r) => r.id === reportId);
+      if (!target) return prev;
+
+      const isDormant =
+        prev.brain.activationState === 'DORMANT_SANDBOX' ||
+        prev.brain.stage === 'Idea Stage' ||
+        prev.brain.businessName === 'Idea Exploration Workspace' ||
+        prev.brain.businessName === 'New Venture Workspace';
+
+      const graduatedProducts: ProductServiceItem[] = (target.pricingAnalysis?.tiers ?? []).map(
+        (t, idx) => ({
+          id: `prod-grad-${Date.now()}-${idx}`,
+          name: t.tier,
+          category: target.industry || 'Core Offering',
+          priceRange: t.range,
+          pricingStructure: 'tiered',
+          description: `${t.positioning}. Researched in Idea Intelligence dossier "${target.title}".`,
+          marginEstimate: '65% - 80%',
+          isCoreOffering: idx === 0,
+          status: 'active',
+        })
+      );
+
+      const graduatedPersonas: CustomerPersona[] = (target.customerSegments ?? []).map(
+        (seg, idx) => ({
+          id: `persona-grad-${Date.now()}-${idx}`,
+          name: seg.name,
+          segment: seg.name,
+          type: 'B2C',
+          ageOrFirmographics: `${target.geography} (Target Share: ${seg.share})`,
+          painPoints: [
+            seg.need,
+            ...(target.customerPainPoints ?? []).slice(0, 2).map((p) => p.title),
+          ],
+          needs: [seg.need],
+          buyingTriggers: [`Urgency level: ${seg.urgency}`],
+          estimatedShare: seg.share,
+          willingnessToPay: (seg as any).willingnessToPay || 'Medium / Market standard',
+          urgency: seg.urgency.toLowerCase().includes('high')
+            ? 'High'
+            : seg.urgency.toLowerCase().includes('low')
+              ? 'Low'
+              : 'Medium',
+        })
+      );
+
+      const nextBrain: BusinessBrainData = {
+        ...prev.brain,
+        businessName: isDormant ? target.title : prev.brain.businessName,
+        tagline:
+          prev.brain.tagline &&
+          prev.brain.tagline !== 'Define your core positioning in Brand Studio' &&
+          prev.brain.tagline !==
+            'Idea Sandbox — Validate a concept in Idea Intelligence to hatch your Business Brain'
+            ? prev.brain.tagline
+            : target.validationScorecard?.strategicWedge || target.executiveSummary.slice(0, 90),
+        industry: target.industry || prev.brain.industry,
+        stage: 'Pre-Launch',
+        location: target.geography || prev.brain.location,
+        targetAudience: target.targetMarket || prev.brain.targetAudience,
+        brandPositioning: target.validationScorecard?.strategicWedge || target.executiveSummary,
+        valueProposition:
+          target.validationScorecard?.bottomLine ||
+          target.marketDemand?.summary ||
+          prev.brain.valueProposition,
+        overviewSummary: target.executiveSummary,
+        products: prev.brain.products.length > 0 ? prev.brain.products : graduatedProducts,
+        personas: prev.brain.personas.length > 0 ? prev.brain.personas : graduatedPersonas,
+        activationState: 'ACTIVE_ESTABLISHED',
+        graduatedFromReportId: target.id,
+        graduatedAt: new Date().toISOString(),
+        history: [
+          {
+            id: `hist-${Date.now()}`,
+            date: new Date().toISOString().slice(0, 10),
+            event: `Graduated from Idea Intelligence dossier "${target.title}" (Viability Score: ${target.validationScorecard?.viabilityScore ?? 75}/100) — Business Brain officially hatched & activated`,
+            department: 'Idea Intelligence',
+          },
+          ...prev.brain.history,
+        ],
+        lastUpdated: new Date().toISOString().slice(0, 10),
+      };
+
+      return {
+        ...prev,
+        reports: prev.reports.map((r) => (r.id === reportId ? { ...r, savedToBrain: true } : r)),
+        brain: nextBrain,
+      };
+    });
+    showToast('🚀 Idea Validated! Your Business Brain has been officially hatched & activated.');
+  };
+
+  const setBrainActivationState = (activationState: BrainActivationState) => {
+    setState((prev) => ({
+      ...prev,
+      brain: {
+        ...prev.brain,
+        activationState,
+        lastUpdated: new Date().toISOString().slice(0, 10),
+      },
+    }));
+  };
+
   const toggleSaveReportToBrain = (reportId: string) => {
     setState((prev) => {
       const target = prev.reports.find((r) => r.id === reportId);
       const nextSaved = target ? !target.savedToBrain : true;
+
+      const isDormant =
+        prev.brain.activationState === 'DORMANT_SANDBOX' ||
+        prev.brain.stage === 'Idea Stage' ||
+        prev.brain.businessName === 'Idea Exploration Workspace' ||
+        prev.brain.businessName === 'New Venture Workspace';
+
+      if (nextSaved && target && isDormant) {
+        // Run full graduation when committing an idea to a dormant brain
+        const graduatedProducts: ProductServiceItem[] = (target.pricingAnalysis?.tiers ?? []).map(
+          (t, idx) => ({
+            id: `prod-grad-${Date.now()}-${idx}`,
+            name: t.tier,
+            category: target.industry || 'Core Offering',
+            priceRange: t.range,
+            pricingStructure: 'tiered',
+            description: `${t.positioning}. Researched in Idea Intelligence dossier "${target.title}".`,
+            marginEstimate: '65% - 80%',
+            isCoreOffering: idx === 0,
+            status: 'active',
+          })
+        );
+
+        const graduatedPersonas: CustomerPersona[] = (target.customerSegments ?? []).map(
+          (seg, idx) => ({
+            id: `persona-grad-${Date.now()}-${idx}`,
+            name: seg.name,
+            segment: seg.name,
+            type: 'B2C',
+            ageOrFirmographics: `${target.geography} (Target Share: ${seg.share})`,
+            painPoints: [
+              seg.need,
+              ...(target.customerPainPoints ?? []).slice(0, 2).map((p) => p.title),
+            ],
+            needs: [seg.need],
+            buyingTriggers: [`Urgency level: ${seg.urgency}`],
+            estimatedShare: seg.share,
+            willingnessToPay: (seg as any).willingnessToPay || 'Medium / Market standard',
+            urgency: seg.urgency.toLowerCase().includes('high')
+              ? 'High'
+              : seg.urgency.toLowerCase().includes('low')
+                ? 'Low'
+                : 'Medium',
+          })
+        );
+
+        return {
+          ...prev,
+          reports: prev.reports.map((r) => (r.id === reportId ? { ...r, savedToBrain: true } : r)),
+          brain: {
+            ...prev.brain,
+            businessName: target.title,
+            tagline:
+              target.validationScorecard?.strategicWedge || target.executiveSummary.slice(0, 90),
+            industry: target.industry || prev.brain.industry,
+            stage: 'Pre-Launch',
+            location: target.geography || prev.brain.location,
+            targetAudience: target.targetMarket || prev.brain.targetAudience,
+            brandPositioning: target.validationScorecard?.strategicWedge || target.executiveSummary,
+            valueProposition:
+              target.validationScorecard?.bottomLine ||
+              target.marketDemand?.summary ||
+              prev.brain.valueProposition,
+            overviewSummary: target.executiveSummary,
+            products: prev.brain.products.length > 0 ? prev.brain.products : graduatedProducts,
+            personas: prev.brain.personas.length > 0 ? prev.brain.personas : graduatedPersonas,
+            activationState: 'ACTIVE_ESTABLISHED',
+            graduatedFromReportId: target.id,
+            graduatedAt: new Date().toISOString(),
+            history: [
+              {
+                id: `hist-${Date.now()}`,
+                date: new Date().toISOString().slice(0, 10),
+                event: `Graduated from Idea Intelligence dossier "${target.title}" (Viability Score: ${target.validationScorecard?.viabilityScore ?? 75}/100) — Business Brain officially hatched & activated`,
+                department: 'Idea Intelligence',
+              },
+              ...prev.brain.history,
+            ],
+            lastUpdated: new Date().toISOString().slice(0, 10),
+          },
+        };
+      }
+
       return {
         ...prev,
         reports: prev.reports.map((r) =>
@@ -1199,8 +1583,83 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   };
 
+  const saveReportScenario = (
+    reportId: string,
+    scenario: Omit<MarketScenarioPreset, 'id' | 'createdAt'> & { id?: string }
+  ) => {
+    const scenarioId = scenario.id || `scen-${Date.now()}`;
+    const fullScenario: MarketScenarioPreset = {
+      ...scenario,
+      id: scenarioId,
+      createdAt: new Date().toISOString().slice(0, 10),
+      isCustom: true,
+    };
+
+    setState((prev) => ({
+      ...prev,
+      reports: prev.reports.map((r) => {
+        if (r.id !== reportId) return r;
+        const currentScenarios = r.scenarios ?? [];
+        const existingIdx = currentScenarios.findIndex((s) => s.id === scenarioId);
+        const updatedScenarios =
+          existingIdx >= 0
+            ? currentScenarios.map((s, idx) => (idx === existingIdx ? fullScenario : s))
+            : [...currentScenarios, fullScenario];
+
+        return {
+          ...r,
+          scenarios: updatedScenarios,
+          activeScenarioId: scenarioId,
+        };
+      }),
+    }));
+
+    if (state.activeWorkspaceId) {
+      apiClient.saveReportScenario(state.activeWorkspaceId, reportId, fullScenario).catch(() => {
+        // Fallback gracefully in offline / mock mode
+      });
+    }
+
+    showToast(`Saved "${fullScenario.name}" to report scenarios.`);
+  };
+
+  const deleteReportScenario = (reportId: string, scenarioId: string) => {
+    setState((prev) => ({
+      ...prev,
+      reports: prev.reports.map((r) => {
+        if (r.id !== reportId) return r;
+        const nextScenarios = (r.scenarios ?? []).filter((s) => s.id !== scenarioId);
+        return {
+          ...r,
+          scenarios: nextScenarios,
+          activeScenarioId:
+            r.activeScenarioId === scenarioId ? nextScenarios[0]?.id : r.activeScenarioId,
+        };
+      }),
+    }));
+
+    if (state.activeWorkspaceId) {
+      apiClient.deleteReportScenario(state.activeWorkspaceId, reportId, scenarioId).catch(() => {
+        // Fallback gracefully
+      });
+    }
+
+    showToast('Scenario removed from report.');
+  };
+
+  const selectReportScenario = (reportId: string, scenarioId: string) => {
+    setState((prev) => ({
+      ...prev,
+      reports: prev.reports.map((r) =>
+        r.id === reportId ? { ...r, activeScenarioId: scenarioId } : r
+      ),
+    }));
+  };
+
   const addCompetitor = (comp: Omit<CompetitorProfileData, 'id'>) => {
     const newId = `comp-${Date.now()}`;
+    const prevCompetitors = state.competitors;
+    const prevSelected = state.selectedCompetitorId;
     setState((prev) => ({
       ...prev,
       competitors: [{ ...comp, id: newId }, ...prev.competitors],
@@ -1208,7 +1667,14 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
     showToast(`${comp.name} added to Competitive Intelligence.`);
     if (state.activeWorkspaceId) {
-      apiClient.createCompetitor(state.activeWorkspaceId, comp).catch(() => {});
+      apiClient.createCompetitor(state.activeWorkspaceId, comp).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          competitors: prevCompetitors,
+          selectedCompetitorId: prevSelected,
+        }));
+        showToast(`Failed to persist competitor: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
@@ -1237,9 +1703,19 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const removeCompetitor = (compId: string) => {
     const target = state.competitors.find((c) => c.id === compId);
     if (!target) return;
+    const prevCompetitors = state.competitors;
     const prevSelected = state.selectedCompetitorId;
     if (state.activeWorkspaceId) {
-      apiClient.deleteCompetitor(state.activeWorkspaceId, compId).catch(() => {});
+      apiClient.deleteCompetitor(state.activeWorkspaceId, compId).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          competitors: prevCompetitors,
+          selectedCompetitorId: prevSelected,
+        }));
+        showToast(`Failed to remove competitor from server: ${err?.message || 'Error'}`, {
+          tone: 'error',
+        });
+      });
     }
     setState((prev) => {
       const remaining = prev.competitors.filter((c) => c.id !== compId);
@@ -1298,30 +1774,69 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const selectBrandConcept = (conceptId: string) => {
-    setState((prev) => ({
-      ...prev,
-      brand: {
+    const prevBrand = state.brand;
+    setState((prev) => {
+      const nextBrand = {
         ...prev.brand,
-        status: 'Approved',
+        status: 'Approved' as const,
         selectedConceptId: conceptId,
-      },
-    }));
+      };
+      if (prev.activeWorkspaceId) {
+        apiClient
+          .saveBrandIdentity(prev.activeWorkspaceId, {
+            brandName: nextBrand.brandName,
+            tagline: nextBrand.tagline,
+            mission: nextBrand.positioningStatement,
+            approvalStatus: 'APPROVED',
+          })
+          .catch((err: any) => {
+            setState((p) => ({ ...p, brand: prevBrand }));
+            showToast(`Failed to persist brand concept: ${err?.message || 'Error'}`, {
+              tone: 'error',
+            });
+          });
+      }
+      return {
+        ...prev,
+        brand: nextBrand,
+      };
+    });
     showToast('Approved brand concept updated across collateral studios.');
   };
 
   const updateBrandIdentity = (patch: Partial<BrainWiseState['brand']>) => {
-    setState((prev) => ({
-      ...prev,
-      brand: { ...prev.brand, ...patch },
-      brain: {
-        ...prev.brain,
-        ...(patch.brandName !== undefined ? { businessName: patch.brandName } : {}),
-        ...(patch.tagline !== undefined ? { tagline: patch.tagline } : {}),
-        ...(patch.brandName !== undefined || patch.tagline !== undefined
-          ? { lastUpdated: new Date().toISOString().slice(0, 10) }
-          : {}),
-      },
-    }));
+    const prevBrand = state.brand;
+    const prevBrain = state.brain;
+    setState((prev) => {
+      const nextBrand = { ...prev.brand, ...patch };
+      if (prev.activeWorkspaceId) {
+        apiClient
+          .saveBrandIdentity(prev.activeWorkspaceId, {
+            brandName: nextBrand.brandName,
+            tagline: nextBrand.tagline,
+            mission: nextBrand.positioningStatement,
+            approvalStatus: nextBrand.status === 'Approved' ? 'APPROVED' : 'DRAFT',
+          })
+          .catch((err: any) => {
+            setState((p) => ({ ...p, brand: prevBrand, brain: prevBrain }));
+            showToast(`Failed to persist brand identity: ${err?.message || 'Error'}`, {
+              tone: 'error',
+            });
+          });
+      }
+      return {
+        ...prev,
+        brand: nextBrand,
+        brain: {
+          ...prev.brain,
+          ...(patch.brandName !== undefined ? { businessName: patch.brandName } : {}),
+          ...(patch.tagline !== undefined ? { tagline: patch.tagline } : {}),
+          ...(patch.brandName !== undefined || patch.tagline !== undefined
+            ? { lastUpdated: new Date().toISOString().slice(0, 10) }
+            : {}),
+        },
+      };
+    });
   };
 
   const addBrandAsset = (asset: Omit<BrandAsset, 'id' | 'createdAt'>) => {
@@ -1330,6 +1845,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       id: `asset-${Date.now()}`,
       createdAt: new Date().toISOString().slice(0, 10),
     };
+    const prevAssets = state.assets;
     setState((prev) => ({
       ...prev,
       assets: [newAsset, ...prev.assets],
@@ -1346,17 +1862,30 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           mimeType: 'image/svg+xml',
           svgContent: newAsset.svgMarkup,
         })
-        .catch(() => {});
+        .catch((err: any) => {
+          setState((prev) => ({ ...prev, assets: prevAssets }));
+          showToast(`Failed to upload asset: ${err?.message || 'Error'}`, { tone: 'error' });
+        });
     }
   };
 
   const renameBrandAsset = (assetId: string, title: string) => {
     if (!title.trim()) return;
+    const cleanTitle = title.trim();
+    const prevAssets = state.assets;
     setState((prev) => ({
       ...prev,
-      assets: prev.assets.map((a) => (a.id === assetId ? { ...a, title: title.trim() } : a)),
+      assets: prev.assets.map((a) => (a.id === assetId ? { ...a, title: cleanTitle } : a)),
     }));
     showToast('Asset renamed.');
+    if (state.activeWorkspaceId) {
+      apiClient
+        .updateBrandAsset(state.activeWorkspaceId, assetId, { title: cleanTitle, name: cleanTitle })
+        .catch((err: any) => {
+          setState((prev) => ({ ...prev, assets: prevAssets }));
+          showToast(`Failed to rename asset: ${err?.message || 'Error'}`, { tone: 'error' });
+        });
+    }
   };
 
   const archiveBrandAsset = (assetId: string) => {
@@ -1377,9 +1906,361 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             ...prev,
             assets: prev.assets.map((a) => (a.id === assetId ? { ...a, status: prevStatus } : a)),
           }));
+          if (state.activeWorkspaceId) {
+            if (prevStatus === 'Archived') {
+              apiClient.archiveBrandAsset(state.activeWorkspaceId, assetId).catch(() => {});
+            } else {
+              apiClient.restoreBrandAsset(state.activeWorkspaceId, assetId).catch(() => {});
+            }
+          }
         },
       }
     );
+
+    if (state.activeWorkspaceId) {
+      if (nextStatus === 'Archived') {
+        apiClient.archiveBrandAsset(state.activeWorkspaceId, assetId).catch(() => {});
+      } else {
+        apiClient.restoreBrandAsset(state.activeWorkspaceId, assetId).catch(() => {});
+      }
+    }
+  };
+
+  const duplicateBrandAsset = async (assetId: string): Promise<BrandAsset | null> => {
+    const target = state.assets.find((a) => a.id === assetId);
+    if (!target) return null;
+    const cloneName = `${target.title} (Copy)`;
+    const newId = `asset-${Date.now()}`;
+    const clonedAsset: BrandAsset = {
+      ...target,
+      id: newId,
+      title: cloneName,
+      headlineText: target.headlineText ? `${target.headlineText} (Copy)` : cloneName,
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+
+    setState((prev) => ({
+      ...prev,
+      assets: [clonedAsset, ...prev.assets],
+    }));
+    showToast(`Duplicated "${target.title}".`);
+
+    if (state.activeWorkspaceId) {
+      try {
+        const res = await apiClient.duplicateBrandAsset(state.activeWorkspaceId, assetId);
+        if (res && res.id) {
+          const finalClone: BrandAsset = { ...clonedAsset, id: res.id, title: res.title || cloneName };
+          setState((prev) => ({
+            ...prev,
+            assets: prev.assets.map((a) => (a.id === newId ? finalClone : a)),
+          }));
+          return finalClone;
+        }
+      } catch {
+        // Optimistic clone preserved
+      }
+    }
+    return clonedAsset;
+  };
+
+  const bulkArchiveBrandAssets = async (assetIds: string[]) => {
+    if (!assetIds.length) return;
+    setState((prev) => ({
+      ...prev,
+      assets: prev.assets.map((a) => (assetIds.includes(a.id) ? { ...a, status: 'Archived' } : a)),
+    }));
+    showToast(`Archived ${assetIds.length} assets.`);
+    if (state.activeWorkspaceId) {
+      apiClient.bulkArchiveBrandAssets(state.activeWorkspaceId, assetIds).catch(() => {});
+    }
+  };
+
+  const bulkRestoreBrandAssets = async (assetIds: string[], targetSection = 'Active') => {
+    if (!assetIds.length) return;
+    setState((prev) => ({
+      ...prev,
+      assets: prev.assets.map((a) => (assetIds.includes(a.id) ? { ...a, status: 'Approved', folder: targetSection as any } : a)),
+    }));
+    showToast(`Restored ${assetIds.length} assets.`);
+    if (state.activeWorkspaceId) {
+      apiClient.bulkRestoreBrandAssets(state.activeWorkspaceId, assetIds, targetSection).catch(() => {});
+    }
+  };
+
+  const bulkTagBrandAssets = async (assetIds: string[], tagsToAdd: string[], tagsToRemove: string[] = []) => {
+    if (!assetIds.length) return;
+    showToast(`Updated tags on ${assetIds.length} assets.`);
+    if (state.activeWorkspaceId) {
+      apiClient.bulkTagBrandAssets(state.activeWorkspaceId, assetIds, tagsToAdd, tagsToRemove).catch(() => {});
+    }
+  };
+
+  const bulkMoveBrandAssets = async (
+    assetIds: string[],
+    targetSection: 'Active' | 'Identity' | 'Print & Packaging' | 'Social Media' | 'Archived'
+  ) => {
+    if (!assetIds.length) return;
+    setState((prev) => ({
+      ...prev,
+      assets: prev.assets.map((a) => (assetIds.includes(a.id) ? { ...a, folder: targetSection } : a)),
+    }));
+    showToast(`Moved ${assetIds.length} assets to ${targetSection}.`);
+    if (state.activeWorkspaceId) {
+      apiClient.bulkMoveBrandAssets(state.activeWorkspaceId, assetIds, targetSection).catch(() => {});
+    }
+  };
+
+  const deleteBrandAssetPermanently = async (assetId: string) => {
+    setState((prev) => ({
+      ...prev,
+      assets: prev.assets.filter((a) => a.id !== assetId),
+    }));
+    showToast('Asset permanently deleted.');
+    if (state.activeWorkspaceId) {
+      apiClient.deleteBrandAssetPermanently(state.activeWorkspaceId, assetId).catch(() => {});
+    }
+  };
+
+  const uploadAssetFiles = async (
+    files: File[],
+    options?: { section?: string; category?: string; onProgress?: (pct: number) => void }
+  ) => {
+    if (!files.length) return;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // Strict Video Exclusion
+      if (file.type.toLowerCase().startsWith('video/')) {
+        showToast(`Excluded "${file.name}": Video files are strictly excluded.`, { tone: 'error' });
+        continue;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        showToast(`"${file.name}" exceeds 10MB limit.`, { tone: 'error' });
+        continue;
+      }
+
+      const tempId = `asset-upload-${Date.now()}-${i}`;
+      const defaultSection = options?.section || 'Active';
+      const defaultCategory = options?.category || 'Collateral';
+
+      let svgContent: string | undefined;
+
+      if (file.type === 'image/svg+xml') {
+        try {
+          svgContent = await file.text();
+        } catch {
+          // ignore
+        }
+      }
+
+      // Optimistically add to state
+      const optimisticAsset: BrandAsset = {
+        id: tempId,
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        category: (defaultCategory as any) || 'Collateral',
+        folder: (defaultSection as any) || 'Active',
+        format: `${file.type.split('/')[1]?.toUpperCase() || 'FILE'} · ${(file.size / 1024).toFixed(0)} KB`,
+        createdAt: new Date().toISOString().slice(0, 10),
+        status: 'Approved',
+        headlineText: file.name,
+        subtext: `Uploaded file · ${(file.size / 1024).toFixed(0)} KB`,
+        accentHex: '#FF7417',
+        svgMarkup: svgContent,
+      };
+
+      setState((prev) => ({
+        ...prev,
+        assets: [optimisticAsset, ...prev.assets],
+      }));
+
+      options?.onProgress?.(Math.round(((i + 1) / files.length) * 100));
+
+      if (state.activeWorkspaceId) {
+        try {
+          const wsId = state.activeWorkspaceId;
+          const uploadMeta = await apiClient.requestSignedUploadUrl(wsId, {
+            fileName: file.name,
+            mimeType: file.type || 'application/octet-stream',
+            fileSizeBytes: file.size,
+            folder: defaultSection.toLowerCase().includes('identity') ? 'brand' : 'documents',
+          });
+
+          // Upload file buffer
+          if (uploadMeta.uploadUrl.startsWith('/api/')) {
+            const bufferBase64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const res = reader.result as string;
+                resolve(res.split(',')[1] || res);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+
+            await fetch(uploadMeta.uploadUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fileBase64: bufferBase64, mimeType: file.type }),
+            });
+          }
+
+          // Complete upload in database
+          await apiClient.completeAssetUpload(wsId, tempId, {
+            name: optimisticAsset.title,
+            title: optimisticAsset.title,
+            category: optimisticAsset.category,
+            section: optimisticAsset.folder,
+            folder: optimisticAsset.folder,
+            assetType: file.type.split('/')[1] || 'png',
+            storagePath: uploadMeta.storagePath,
+            fileSize: file.size,
+            mimeType: file.type,
+            svgContent,
+            svgMarkup: svgContent,
+          });
+        } catch {
+          // Keep optimistic asset
+        }
+      }
+    }
+
+    showToast(`Successfully uploaded ${files.length} asset${files.length > 1 ? 's' : ''}.`);
+  };
+
+  const getAuthoritativeBrandIdentity = async () => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.getAuthoritativeBrandIdentity(state.activeWorkspaceId);
+  };
+
+  const syncBrandWithBusinessBrain = async () => {
+    if (!state.activeWorkspaceId) return null;
+    const res = await apiClient.syncBrandWithBusinessBrain(state.activeWorkspaceId);
+    showToast('Synchronized authoritative identity with Business Brain.');
+    return res;
+  };
+
+  const evaluateBrandCompliance = async (params: Record<string, any>) => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.evaluateBrandCompliance(state.activeWorkspaceId, params);
+  };
+
+  const getBrandDriftReport = async () => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.getBrandDriftReport(state.activeWorkspaceId);
+  };
+
+  const listBrandIdentityVersions = async () => {
+    if (!state.activeWorkspaceId) return [];
+    return apiClient.listBrandIdentityVersions(state.activeWorkspaceId);
+  };
+
+  const createPackagingAsset = async (payload: Record<string, any>) => {
+    if (!state.activeWorkspaceId) return null;
+    const res = await apiClient.createPackagingAsset(state.activeWorkspaceId, payload);
+    showToast(`Created packaging asset "${payload.name}".`);
+    return res;
+  };
+
+  const listPackagingAssets = async (filter?: Record<string, any>) => {
+    if (!state.activeWorkspaceId) return [];
+    return apiClient.listPackagingAssets(state.activeWorkspaceId, filter);
+  };
+
+  const evaluatePrintReadiness = async (assetId: string) => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.evaluatePrintReadiness(state.activeWorkspaceId, assetId);
+  };
+
+  const extractPackagingContentIntelligence = async (assetId: string, rawText?: string) => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.extractPackagingContentIntelligence(state.activeWorkspaceId, assetId, rawText);
+  };
+
+  const advancePackagingWorkflow = async (
+    assetId: string,
+    payload: { targetStatus: string; notes?: string; vendorName?: string }
+  ) => {
+    if (!state.activeWorkspaceId) return null;
+    const res = await apiClient.advancePackagingWorkflow(state.activeWorkspaceId, assetId, payload);
+    showToast(`Workflow updated to "${payload.targetStatus}".`);
+    return res;
+  };
+
+  const analyzeAssetIntelligence = async (assetId: string, bypassCredits = false) => {
+    if (!state.activeWorkspaceId) return null;
+    const res = await apiClient.analyzeAssetIntelligence(state.activeWorkspaceId, assetId, bypassCredits);
+    showToast('AI Asset Analysis completed.');
+    return res;
+  };
+
+  const semanticAssetSearch = async (query: string, filters?: any) => {
+    if (!state.activeWorkspaceId) return [];
+    return apiClient.semanticAssetSearch(state.activeWorkspaceId, query, filters);
+  };
+
+  const recommendAssets = async (payload: any) => {
+    if (!state.activeWorkspaceId) return [];
+    return apiClient.recommendAssets(state.activeWorkspaceId, payload);
+  };
+
+  const checkAssetDuplicates = async (payload: any) => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.checkAssetDuplicates(state.activeWorkspaceId, payload);
+  };
+
+  const applyHumanClassificationOverride = async (payload: any) => {
+    if (!state.activeWorkspaceId) return null;
+    const res = await apiClient.applyHumanClassificationOverride(state.activeWorkspaceId, payload);
+    showToast('Classification override applied & confirmed.');
+    return res;
+  };
+
+  const chatAssetAssistant = async (payload: { query: string; conversationId?: string; confirmationToken?: string; context?: any }) => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.chatAssetAssistant(state.activeWorkspaceId, payload);
+  };
+
+  const confirmAssetAssistantAction = async (payload: { confirmationToken: string; conversationId?: string }) => {
+    if (!state.activeWorkspaceId) return null;
+    const res = await apiClient.confirmAssetAssistantAction(state.activeWorkspaceId, payload);
+    showToast('Action confirmed and executed.');
+    return res;
+  };
+
+  const bindAssetsToCampaign = async (payload: any) => {
+    if (!state.activeWorkspaceId) return null;
+    const res = await apiClient.bindAssetsToCampaign(state.activeWorkspaceId, payload);
+    showToast('Assets successfully bound to campaign.');
+    return res;
+  };
+
+  const createAssetDerivative = async (payload: any) => {
+    if (!state.activeWorkspaceId) return null;
+    const res = await apiClient.createAssetDerivative(state.activeWorkspaceId, payload);
+    showToast('Asset derivative created.');
+    return res;
+  };
+
+  const getCompetitiveCreativeOpportunities = async (params?: any) => {
+    if (!state.activeWorkspaceId) return [];
+    return apiClient.getCompetitiveCreativeOpportunities(state.activeWorkspaceId, params);
+  };
+
+  const recordAssetPerformance = async (payload: any) => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.recordAssetPerformance(state.activeWorkspaceId, payload);
+  };
+
+  const getAssetPerformanceSummary = async (assetId: string) => {
+    if (!state.activeWorkspaceId) return null;
+    return apiClient.getAssetPerformanceSummary(state.activeWorkspaceId, assetId);
+  };
+
+  const listTopPerformingAssets = async (params?: any) => {
+    if (!state.activeWorkspaceId) return [];
+    return apiClient.listTopPerformingAssets(state.activeWorkspaceId, params);
   };
 
   const toggleTaskStatus = (taskId: string, explicitStatus?: GrowthTask['status']) => {
@@ -1395,7 +2276,13 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
 
     if (state.activeWorkspaceId) {
-      apiClient.updateTask(state.activeWorkspaceId, taskId, { status: nextStatus }).catch(() => {});
+      apiClient.updateTask(state.activeWorkspaceId, taskId, { status: nextStatus }).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          tasks: prev.tasks.map((t) => (t.id === taskId ? { ...t, status: previousStatus } : t)),
+        }));
+        showToast(`Failed to update task: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
 
     const label =
@@ -1417,45 +2304,74 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addTask = (task: Omit<GrowthTask, 'id'>) => {
     const id = `task-${Date.now()}`;
+    const prevTasks = state.tasks;
     setState((prev) => ({
       ...prev,
       tasks: [{ ...task, id }, ...prev.tasks],
     }));
     showToast('Action task added to Growth Planner.');
     if (state.activeWorkspaceId) {
-      apiClient.createTask(state.activeWorkspaceId, task).catch(() => {});
+      apiClient.createTask(state.activeWorkspaceId, task).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          tasks: prevTasks,
+        }));
+        showToast(`Failed to create task: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
   const updateTaskNotes = (taskId: string, notes: string) => {
+    const prevTasks = state.tasks;
     setState((prev) => ({
       ...prev,
       tasks: prev.tasks.map((t) => (t.id === taskId ? { ...t, notes } : t)),
     }));
     if (state.activeWorkspaceId) {
-      apiClient.updateTask(state.activeWorkspaceId, taskId, { notes }).catch(() => {});
+      apiClient.updateTask(state.activeWorkspaceId, taskId, { notes }).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          tasks: prevTasks,
+        }));
+        showToast(`Failed to update task notes: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
   const addGoal = (goal: Omit<GrowthGoal, 'id'>) => {
     const id = `goal-${Date.now()}`;
+    const prevGoals = state.goals;
     setState((prev) => ({
       ...prev,
       goals: [{ ...goal, id }, ...prev.goals],
     }));
     showToast('Business goal added.');
     if (state.activeWorkspaceId) {
-      apiClient.createGoal(state.activeWorkspaceId, goal).catch(() => {});
+      apiClient.createGoal(state.activeWorkspaceId, goal).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          goals: prevGoals,
+        }));
+        showToast(`Failed to persist goal: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
   const updateGoalProgress = (goalId: string, currentValue: number) => {
+    const targetGoal = state.goals.find((g) => g.id === goalId);
+    const prevValue = targetGoal ? targetGoal.currentValue : currentValue;
     setState((prev) => ({
       ...prev,
       goals: prev.goals.map((g) => (g.id === goalId ? { ...g, currentValue } : g)),
     }));
     if (state.activeWorkspaceId) {
-      apiClient.updateGoal(state.activeWorkspaceId, goalId, { currentValue }).catch(() => {});
+      apiClient.updateGoal(state.activeWorkspaceId, goalId, { currentValue }).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          goals: prev.goals.map((g) => (g.id === goalId ? { ...g, currentValue: prevValue } : g)),
+        }));
+        showToast(`Failed to update goal: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
       apiClient
         .recordGoalObservation(state.activeWorkspaceId, goalId, { value: currentValue })
         .catch(() => {});
@@ -1464,13 +2380,20 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addExperiment = (exp: Omit<GrowthExperiment, 'id'>) => {
     const id = `exp-${Date.now()}`;
+    const prevExperiments = state.experiments;
     setState((prev) => ({
       ...prev,
       experiments: [{ ...exp, id }, ...prev.experiments],
     }));
     showToast('Growth experiment created.');
     if (state.activeWorkspaceId) {
-      apiClient.createExperiment(state.activeWorkspaceId, exp).catch(() => {});
+      apiClient.createExperiment(state.activeWorkspaceId, exp).catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          experiments: prevExperiments,
+        }));
+        showToast(`Failed to persist experiment: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
@@ -1479,24 +2402,33 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     status: GrowthExperiment['status'],
     results?: string
   ) => {
+    const target = state.experiments.find((e) => e.id === expId);
+    const prevStatus = target?.status;
+    const prevResults = target?.results;
     setState((prev) => ({
       ...prev,
       experiments: prev.experiments.map((e) =>
-        e.id === expId ? { ...e, status, results: results ?? e.results } : e
+        e.id === expId ? { ...e, status, results: results ?? e.results ?? '' } : e
       ),
     }));
     showToast('Experiment updated.');
     if (state.activeWorkspaceId) {
-      if (status === 'Completed') {
-        apiClient.completeExperiment(state.activeWorkspaceId, expId, { results }).catch(() => {});
-      } else {
-        apiClient
-          .updateExperiment(state.activeWorkspaceId, expId, {
-            status: status.toLowerCase() as any,
-            results,
-          })
-          .catch(() => {});
-      }
+      const p =
+        status === 'Completed'
+          ? apiClient.completeExperiment(state.activeWorkspaceId, expId, { results: results ?? '' })
+          : apiClient.updateExperiment(state.activeWorkspaceId, expId, {
+              status: status.toLowerCase() as any,
+              results: results ?? '',
+            });
+      p.catch((err: any) => {
+        setState((prev) => ({
+          ...prev,
+          experiments: prev.experiments.map((e) =>
+            e.id === expId ? { ...e, status: prevStatus || e.status, results: prevResults ?? '' } : e
+          ),
+        }));
+        showToast(`Failed to update experiment: ${err?.message || 'Error'}`, { tone: 'error' });
+      });
     }
   };
 
@@ -1627,11 +2559,27 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       user: { ...prev.user, ...patch },
     }));
     showToast('Personal profile updated.');
+    apiClient
+      .updateCurrentUser({
+        displayName: `${patch.firstName || state.user.firstName} ${patch.lastName || state.user.lastName}`.trim(),
+        preferences: {
+          timezone: patch.timezone || state.user.timezone,
+          role: patch.role || state.user.role,
+        },
+      })
+      .catch(() => {});
   };
 
   const setAiTonePreference = (tone: BrainWiseState['aiTonePreference']) => {
     setState((prev) => ({ ...prev, aiTonePreference: tone }));
     showToast('AI intelligence tone preference saved.');
+    if (state.activeWorkspaceId) {
+      apiClient
+        .updateWorkspace(state.activeWorkspaceId, {
+          preferences: { aiTonePreference: tone },
+        })
+        .catch(() => {});
+    }
   };
 
   const setCustomScenarioB = (preset: MarketScenarioPreset | null) => {
@@ -1639,14 +2587,27 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const inviteTeamMember = (member: Omit<TeamMemberItem, 'id' | 'status'>) => {
+    const tempId = `tm-${Date.now()}`;
     setState((prev) => ({
       ...prev,
       teamMembers: [
         ...(prev.teamMembers ?? INITIAL_BRAINWISE_STATE.teamMembers ?? []),
-        { ...member, id: `tm-${Date.now()}`, status: 'Invited' },
+        { ...member, id: tempId, status: 'Invited' },
       ],
     }));
     showToast(`Invitation recorded for ${member.name}.`);
+
+    if (state.activeWorkspaceId) {
+      apiClient
+        .addWorkspaceMember(state.activeWorkspaceId, {
+          email: member.email,
+          name: member.name,
+          role: member.role,
+        })
+        .catch((err) => {
+          console.warn('Backend team member synchronization notice:', err);
+        });
+    }
   };
 
   const removeTeamMember = (memberId: string) => {
@@ -1657,17 +2618,32 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       teamMembers: (prev.teamMembers ?? []).filter((m) => m.id !== memberId),
     }));
     if (target) showToast(`Removed ${target.name} from roster.`);
+
+    if (state.activeWorkspaceId) {
+      apiClient.removeWorkspaceMember(state.activeWorkspaceId, memberId).catch((err) => {
+        console.warn('Backend team member removal notice:', err);
+      });
+    }
   };
 
   const updateWorkspacePrefs = (patch: Partial<WorkspacePreferences>) => {
+    const newPrefs = {
+      ...(state.workspacePrefs ?? INITIAL_BRAINWISE_STATE.workspacePrefs!),
+      ...patch,
+    };
     setState((prev) => ({
       ...prev,
-      workspacePrefs: {
-        ...(prev.workspacePrefs ?? INITIAL_BRAINWISE_STATE.workspacePrefs!),
-        ...patch,
-      },
+      workspacePrefs: newPrefs,
     }));
     showToast('Workspace preferences saved.');
+
+    if (state.activeWorkspaceId) {
+      apiClient
+        .updateWorkspace(state.activeWorkspaceId, { preferences: newPrefs })
+        .catch((err) => {
+          console.warn('Backend workspace preferences synchronization notice:', err);
+        });
+    }
   };
 
   const updateContextSharing = (patch: Partial<ContextSharingConfig>) => {
@@ -1743,6 +2719,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       loginDemo,
       loginWithGoogle,
       hydrateWorkspaceState,
+      refreshWorkspace: hydrateWorkspaceState,
       sendChatToStrategist,
       loginUser,
       registerUser,
@@ -1756,6 +2733,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setPrefilledIdeaPrompt,
       completeOnboarding,
       logout,
+      switchWorkspace,
       resetDemoData,
       updateBrain,
       confirmFact,
@@ -1764,7 +2742,12 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       recordStrategicAngleUsage,
       addReport,
       toggleSaveReportToBrain,
+      graduateIdeaToBrain,
+      setBrainActivationState,
       updateReportAssumption,
+      saveReportScenario,
+      deleteReportScenario,
+      selectReportScenario,
       addCompetitor,
       toggleCompetitorMonitoring,
       updateCompetitorFrequency,
@@ -1776,6 +2759,36 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       addBrandAsset,
       renameBrandAsset,
       archiveBrandAsset,
+      duplicateBrandAsset,
+      bulkArchiveBrandAssets,
+      bulkRestoreBrandAssets,
+      bulkTagBrandAssets,
+      bulkMoveBrandAssets,
+      deleteBrandAssetPermanently,
+      uploadAssetFiles,
+      getAuthoritativeBrandIdentity,
+      syncBrandWithBusinessBrain,
+      evaluateBrandCompliance,
+      getBrandDriftReport,
+      listBrandIdentityVersions,
+      createPackagingAsset,
+      listPackagingAssets,
+      evaluatePrintReadiness,
+      extractPackagingContentIntelligence,
+      advancePackagingWorkflow,
+      analyzeAssetIntelligence,
+      semanticAssetSearch,
+      recommendAssets,
+      checkAssetDuplicates,
+      applyHumanClassificationOverride,
+      chatAssetAssistant,
+      confirmAssetAssistantAction,
+      bindAssetsToCampaign,
+      createAssetDerivative,
+      getCompetitiveCreativeOpportunities,
+      recordAssetPerformance,
+      getAssetPerformanceSummary,
+      listTopPerformingAssets,
       toggleTaskStatus,
       addTask,
       updateTaskNotes,

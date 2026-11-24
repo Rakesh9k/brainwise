@@ -18,13 +18,23 @@ export interface ServerConfig {
   gcsBucketName: string;
   corsOrigins: string[];
   devBypassAuth: boolean;
+  cashfree: {
+    appId: string;
+    secretKey: string;
+    apiVersion: string;
+    environment: 'sandbox' | 'production';
+    baseUrl: string;
+    hostedUrl: string;
+  };
 }
 
 export function loadServerConfig(): ServerConfig {
   const isTest =
     process.env.NODE_ENV === 'test' ||
     process.env.npm_lifecycle_event === 'test' ||
-    process.argv.includes('--test');
+    process.argv.includes('--test') ||
+    process.execArgv.includes('--test') ||
+    process.execArgv.some((a) => a.includes('test'));
   const nodeEnv = (process.env.NODE_ENV || (isTest ? 'test' : 'development')) as
     'development' | 'production' | 'test';
   const isProduction = nodeEnv === 'production';
@@ -35,7 +45,12 @@ export function loadServerConfig(): ServerConfig {
   const geminiApiKey = rawKey && rawKey !== 'MY_GEMINI_API_KEY' ? rawKey : null;
   const geminiModel = process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash';
   const tavilyApiKey = process.env.TAVILY_API_KEY?.trim() || null;
-  const firebaseProjectId = process.env.FIREBASE_PROJECT_ID?.trim() || 'brainwise-saas';
+  const firebaseProjectId =
+    process.env.FIREBASE_PROJECT_ID?.trim() ||
+    process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
+    process.env.GCLOUD_PROJECT?.trim() ||
+    process.env.PROJECT_ID?.trim() ||
+    'brainwise-ai-marketing-engine';
   const gcsBucketName = process.env.GCS_BUCKET_NAME?.trim() || `${firebaseProjectId}-assets`;
 
   const corsOrigins = process.env.CORS_ORIGIN
@@ -44,6 +59,19 @@ export function loadServerConfig(): ServerConfig {
 
   // In production, DEV_BYPASS_AUTH must NEVER be true
   const devBypassAuth = !isProduction && process.env.DEV_BYPASS_AUTH === 'true';
+
+  const cashfreeAppId = process.env.CASHFREE_APP_ID?.trim() || 'sandbox_app_brainwise';
+  const cashfreeSecretKey = process.env.CASHFREE_SECRET_KEY?.trim() || 'sandbox_secret_brainwise';
+  const cashfreeApiVersion = process.env.CASHFREE_API_VERSION?.trim() || '2023-08-01';
+  const cashfreeEnv = (process.env.CASHFREE_ENV?.trim() === 'production' ? 'production' : 'sandbox') as
+    | 'sandbox'
+    | 'production';
+  const cashfreeBaseUrl =
+    cashfreeEnv === 'production' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
+  const cashfreeHostedUrl =
+    cashfreeEnv === 'production'
+      ? 'https://payments.cashfree.com/forms'
+      : 'https://payments-test.cashfree.com/forms';
 
   return {
     port,
@@ -58,6 +86,14 @@ export function loadServerConfig(): ServerConfig {
     gcsBucketName,
     corsOrigins,
     devBypassAuth,
+    cashfree: {
+      appId: cashfreeAppId,
+      secretKey: cashfreeSecretKey,
+      apiVersion: cashfreeApiVersion,
+      environment: cashfreeEnv,
+      baseUrl: cashfreeBaseUrl,
+      hostedUrl: cashfreeHostedUrl,
+    },
   };
 }
 

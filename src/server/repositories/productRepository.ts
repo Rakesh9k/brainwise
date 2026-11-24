@@ -70,6 +70,92 @@ export class ProductRepository {
       .delete();
   }
 
+  public async findByNameOrSku(
+    workspaceId: string,
+    name: string,
+    sku?: string
+  ): Promise<ProductEntity | null> {
+    const products = await this.listProducts(workspaceId);
+    const cleanName = name.trim().toLowerCase();
+    const cleanSku = sku?.trim().toLowerCase();
+
+    return (
+      products.find((p) => {
+        if (cleanSku && p.sku && p.sku.trim().toLowerCase() === cleanSku) return true;
+        return p.name.trim().toLowerCase() === cleanName;
+      }) || null
+    );
+  }
+
+  public async importCatalogue(
+    workspaceId: string,
+    items: Array<Partial<ProductEntity> & { name: string }>,
+    options: { updateExisting?: boolean } = {}
+  ): Promise<{
+    created: ProductEntity[];
+    updated: ProductEntity[];
+    duplicates: Array<{ name: string; existingId: string; reason: string }>;
+  }> {
+    const created: ProductEntity[] = [];
+    const updated: ProductEntity[] = [];
+    const duplicates: Array<{ name: string; existingId: string; reason: string }> = [];
+    const now = new Date().toISOString();
+
+    for (const item of items) {
+      if (!item.name || !item.name.trim()) continue;
+
+      const existing = await this.findByNameOrSku(workspaceId, item.name, item.sku);
+
+      if (existing) {
+        if (options.updateExisting) {
+          const patched = await this.updateProduct(workspaceId, existing.productId, {
+            ...item,
+            updatedAt: now,
+          });
+          updated.push(patched);
+        } else {
+          duplicates.push({
+            name: item.name,
+            existingId: existing.productId,
+            reason:
+              item.sku && existing.sku === item.sku ? 'Matching SKU' : 'Matching product name',
+          });
+        }
+      } else {
+        const productId =
+          item.productId || `prod_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        const newProduct: ProductEntity = {
+          productId,
+          workspaceId,
+          name: item.name.trim(),
+          sku: item.sku,
+          category: item.category || 'General',
+          subcategory: item.subcategory,
+          description: item.description || '',
+          price: Number(item.price) || 0,
+          currency: item.currency || 'USD',
+          pricingStructure: item.pricingStructure || 'one-time',
+          cost: item.cost,
+          margin: item.margin,
+          variants: item.variants || [],
+          features: item.features || [],
+          benefits: item.benefits || [],
+          targetCustomer: item.targetCustomer || '',
+          availability: item.availability || 'in_stock',
+          differentiation: item.differentiation || '',
+          status: item.status || 'active',
+          source: item.source || 'USER_CONFIRMED',
+          createdAt: now,
+          updatedAt: now,
+        };
+        await this.createProduct(newProduct);
+        created.push(newProduct);
+      }
+    }
+
+    return { created, updated, duplicates };
+  }
+
   public async bulkCreateProducts(
     workspaceId: string,
     products: Omit<ProductEntity, 'workspaceId' | 'createdAt' | 'updatedAt'>[]

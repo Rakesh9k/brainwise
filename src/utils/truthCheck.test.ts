@@ -58,3 +58,54 @@ test('executeTruthCheck catches explicit exclusion breaches and triggers safegua
   assert.equal(result.status, 'REJECTED');
   assert.ok(result.refundReason?.includes('Credit safeguard triggered'));
 });
+
+test('executeTruthCheck catches subtle contextual euphemisms via semantic safety check', () => {
+  const brain = {
+    ...INITIAL_BRAINWISE_STATE.brain,
+    strategicMemory: {
+      usedAngles: INITIAL_BRAINWISE_STATE.brain.strategicMemory?.usedAngles || [],
+      fatiguedThemes: INITIAL_BRAINWISE_STATE.brain.strategicMemory?.fatiguedThemes || [],
+      lastUpdated:
+        INITIAL_BRAINWISE_STATE.brain.strategicMemory?.lastUpdated || new Date().toISOString(),
+      explicitExclusions: [
+        'Do not mention deep discounts or cheap deals',
+        'Never offer free trials',
+      ],
+    },
+  };
+
+  // Euphemistic copy avoiding literal phrases "deep discounts" and "free trials"
+  const evasiveCopy =
+    'Get our Roast-to-Order subscription with slashed prices and try free for 30 days!';
+
+  const result = executeTruthCheck(evasiveCopy, brain);
+  assert.equal(
+    result.violations.some((v) => v.type === 'SEMANTIC_EXCLUSION_BREACH'),
+    true
+  );
+  assert.equal(result.refundTriggered, true);
+  assert.equal(result.status, 'REJECTED');
+});
+
+test('detectSemanticExclusions catches fuzzy token proximity for custom founder rules', () => {
+  const brain = {
+    ...INITIAL_BRAINWISE_STATE.brain,
+    strategicMemory: {
+      usedAngles: INITIAL_BRAINWISE_STATE.brain.strategicMemory?.usedAngles || [],
+      fatiguedThemes: INITIAL_BRAINWISE_STATE.brain.strategicMemory?.fatiguedThemes || [],
+      lastUpdated:
+        INITIAL_BRAINWISE_STATE.brain.strategicMemory?.lastUpdated || new Date().toISOString(),
+      explicitExclusions: ['Never use plastic packaging materials'],
+    },
+  };
+
+  // Content separates "plastic" and "packaging" with filler words
+  const fuzzyCopy =
+    'Our beans are securely packaged in durable plastic materials to seal freshness.';
+
+  const result = executeTruthCheck(fuzzyCopy, brain);
+  assert.equal(
+    result.violations.some((v) => v.type === 'SEMANTIC_EXCLUSION_BREACH'),
+    true
+  );
+});

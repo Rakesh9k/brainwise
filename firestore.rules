@@ -46,6 +46,10 @@ rules_version = '2';
 //    - marketingTasks/{taskId}: Actionable execution tasks with priorities
 //    - scheduledPosts/{scheduledPostId}: Multi-channel scheduled static publishing
 //    - analyticsSnapshots/{snapshotId}: Read-only analytics telemetry
+//    - executiveReports/{reportId}: Executive reports (client read-only)
+//    - businessMetrics/{metricId}: Aggregated business metrics (client read-only)
+//    - connectorHealth/{provider}: Connector health statuses (client read-only)
+//    - strategicDecisions/{decisionId}: Strategic decisions log (client read-only)
 //    - creditWallet/rootWallet: Server-side credit balance (client read-only)
 //      - transactions/{txId}: Append-only credit ledger (client read-only)
 //      - reservations/{resId}: Two-phase reservation locks (client read-only)
@@ -664,6 +668,193 @@ service cloud.firestore {
         allow delete: if isOwnerOrAdmin(workspaceId);
       }
 
+      // --- BrandStudio Subcollections ---
+      match /brandProjects/{projectId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandProfiles/{profileId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandStrategies/{strategyId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandResearch/{researchId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /competitorVisualAnalyses/{analysisId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /creativeDirections/{directionId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandAssetVersions/{versionId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandGuidelines/{guidelineId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandDesignTokens/{tokenId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandGenerations/{generationId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId);
+        allow update, delete: if false; // append-only audit log
+      }
+
+      match /brandApprovals/{approvalId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isOwnerOrAdmin(workspaceId);
+        allow update, delete: if false; // append-only audit log
+      }
+
+      match /brandExports/{exportId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandQualityReports/{reportId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /visualMoodboards/{moodboardId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandPositioningMaps/{mapId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandValidationResults/{validationId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /logoConcepts/{conceptId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /logoVariants/{conceptId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /logoQualityReports/{reportId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /logoPresentations/{deckId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /livingDesignTokens/{tokenId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /designRules/{ruleId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandConsistencyReports/{reportId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandBooks/{bookId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /productMockups/{mockupId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /packagingArtworks/{packagingId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /editableDesignDocuments/{docId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /socialCreativeProjects/{projectId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /creativeCampaigns/{campaignId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /creativeOpportunities/{opportunityId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /brandLaunchKits/{launchId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
       // --- Subcollection: Marketing Strategies ---
       match /marketingStrategies/{strategyId} {
         allow read: if isWorkspaceMember(workspaceId);
@@ -752,9 +943,65 @@ service cloud.firestore {
         allow write: if false; // Computed server-side only
       }
 
+      // --- Subcollection: Executive Reports (Read-only for members; write DENIED) ---
+      match /executiveReports/{reportId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow write: if false; // Server-side only
+      }
+
+      // --- Subcollection: Business Metrics (Read-only for members; write DENIED) ---
+      match /businessMetrics/{metricId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow write: if false; // Server-side only
+      }
+
+      // --- Subcollection: Connector Health (Read-only for members; write DENIED) ---
+      match /connectorHealth/{provider} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow write: if false; // Server-side only
+      }
+
+      // --- Subcollection: Strategic Decisions (Read-only for members; write DENIED) ---
+      match /strategicDecisions/{decisionId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow write: if false; // Server-side only
+      }
+
       // --- Subcollection: Integrations ---
       match /integrations/{integrationId} {
         allow read, write: if isOwnerOrAdmin(workspaceId);
+      }
+
+      // --- Growth Agency Subcollections ---
+      match /growthMissions/{missionId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /growthStrategies/{strategyId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isOwnerOrAdmin(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /executionJobs/{jobId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isNotViewer(workspaceId);
+        allow update: if isOwnerOrAdmin(workspaceId);
+        allow delete: if false; // Append-only execution audit log
+      }
+
+      match /growthScenarios/{scenarioId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
+      }
+
+      match /growthTasks/{taskId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create, update: if isNotViewer(workspaceId);
+        allow delete: if isOwnerOrAdmin(workspaceId);
       }
 
       // --- Subcollection: Credit Wallet (Client read-only; writes strictly DENIED) ---

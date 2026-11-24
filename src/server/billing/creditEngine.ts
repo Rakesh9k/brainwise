@@ -376,6 +376,22 @@ export class CreditEngine {
       throw new Error(`Credit grant amount must be positive: ${amount}`);
     }
 
+    // Idempotency: Prevent duplicate credit allocation for the same paymentId
+    if (paymentId) {
+      const existingLedger = await db
+        .collection<EnhancedCreditLedgerEntry>(`workspaces/${workspaceId}/creditAccount/root/ledger`)
+        .where('paymentId', '==', paymentId)
+        .limit(1)
+        .get();
+
+      if (!existingLedger.empty) {
+        console.info(
+          `[CREDIT_ENGINE] Credits already granted for paymentId '${paymentId}'. Skipping duplicate allocation.`
+        );
+        return await this.getAccount(workspaceId);
+      }
+    }
+
     return await db.runTransaction(async (transaction) => {
       const accountRef = db.doc<MultiPoolCreditAccount>(
         `workspaces/${workspaceId}/creditAccount/root`

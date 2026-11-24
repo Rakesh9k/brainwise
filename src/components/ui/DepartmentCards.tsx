@@ -353,7 +353,7 @@ export const ResearchReportSection: React.FC<{
   id?: string;
   number: string;
   title: string;
-  factType?: 'verified' | 'estimate' | 'mixed';
+  factType?: 'verified' | 'estimate' | 'mixed' | 'observed' | 'inferred';
   collapsible?: boolean;
   expanded?: boolean;
   onToggle?: () => void;
@@ -427,7 +427,9 @@ export const ResearchReportSection: React.FC<{
 export const AssetCard: React.FC<{
   asset: BrandAsset;
   onPreview: (asset: BrandAsset) => void;
-}> = ({ asset, onPreview }) => {
+  selected?: boolean;
+  onToggleSelect?: (asset: BrandAsset) => void;
+}> = ({ asset, onPreview, selected = false, onToggleSelect }) => {
   let openLedger: ReturnType<typeof useContextualLedger>['openLedger'] | undefined;
   try {
     const ctx = useContextualLedger();
@@ -454,8 +456,29 @@ export const AssetCard: React.FC<{
   return (
     <div
       onContextMenu={handleContextMenu}
-      className="bw-trace-card rounded-[20px] border border-[#ECECE8] bg-[#FFFFFF] overflow-hidden flex flex-col bw-surface-raised transition-all duration-200"
+      className={`bw-trace-card rounded-[20px] border relative group ${
+        selected ? 'border-[#FF7417] ring-2 ring-[#FF7417]/25' : 'border-[#ECECE8]'
+      } bg-[#FFFFFF] overflow-hidden flex flex-col bw-surface-raised transition-all duration-200`}
     >
+      {onToggleSelect && (
+        <div className="absolute top-3 left-3 z-10">
+          <button
+            type="button"
+            aria-label={selected ? `Deselect ${asset.title}` : `Select ${asset.title}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect(asset);
+            }}
+            className={`w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors cursor-pointer ${
+              selected
+                ? 'bg-[#FF7417] text-white shadow-sm'
+                : 'bg-white/90 text-transparent border border-[#D5D5D0] hover:border-[#FF7417] group-hover:text-[#888]'
+            }`}
+          >
+            <Check className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
       <button
         type="button"
         onClick={() => onPreview(asset)}

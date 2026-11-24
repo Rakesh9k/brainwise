@@ -13,6 +13,7 @@ import { experimentRepository } from '../../repositories/experimentRepository';
 import { businessProfileRepository } from '../../repositories/businessProfileRepository';
 import { departmentEventBus } from '../../events/eventBus';
 import { creditService } from '../../services/creditService';
+import { businessWatchService } from '../../services/businessWatchService';
 import type {
   MarketTopicEntity,
   MarketFindingEntity,
@@ -440,6 +441,101 @@ router.post(
       res
         .status(500)
         .json({ success: false, error: { code: 'SCAN_FAILED', message: 'Market scan failed' } });
+    }
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/market-watch/cycle/run
+ * Triggers an operational surveillance monitoring cycle
+ */
+router.post(
+  '/cycle/run',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const result = await businessWatchService.executeMonitoringCycle({ workspaceId });
+      res.json({ success: true, data: result });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'SURVEILLANCE_CYCLE_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/market-watch/alerts
+ * Lists active 6-factor actionable surveillance alerts
+ */
+router.get(
+  '/alerts',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const category = req.query.category as any;
+      const severity = req.query.severity as any;
+      const alerts = await businessWatchService.getActiveAlerts(workspaceId, {
+        category,
+        severity,
+      });
+      res.json({ success: true, data: alerts });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'ALERTS_FETCH_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/market-watch/alerts/:alertId/acknowledge
+ * Acknowledges or resolves an alert
+ */
+router.post(
+  '/alerts/:alertId/acknowledge',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const alertId = req.params.alertId;
+      const { status = 'ACKNOWLEDGED', resolutionNotes = '' } = req.body;
+      const updated = await businessWatchService.acknowledgeAlert({
+        workspaceId,
+        alertId,
+        status,
+        resolutionNotes,
+      });
+      res.json({ success: true, data: updated });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'ALERT_ACKNOWLEDGE_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/market-watch/digest/weekly
+ * Generates an executive Weekly Business Digest
+ */
+router.post(
+  '/digest/weekly',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const digest = await businessWatchService.generateWeeklyDigest(workspaceId);
+      res.json({ success: true, data: digest });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'DIGEST_GENERATION_FAILED', message: err.message },
+      });
     }
   }
 );

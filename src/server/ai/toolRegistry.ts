@@ -76,6 +76,57 @@ export class ToolRegistry {
       },
     });
 
+    // 1b. Autonomous Deep Market Research Tool (Multi-vector query decomposition)
+    this.register({
+      toolName: 'deep_market_research',
+      description:
+        'Executes autonomous deep multi-vector research across orthogonal angles, extracting structured facts with AI_INFERRED provenance.',
+      inputSchema: {
+        type: 'object',
+        required: ['query'],
+        properties: {
+          query: { type: 'string' },
+          category: {
+            type: 'string',
+            enum: ['market', 'competitor', 'industry', 'pricing'],
+          },
+          depthTier: {
+            type: 'string',
+            enum: ['RAPID_SCAN', 'DEEP_INTELLIGENCE'],
+          },
+        },
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          dossierId: { type: 'string' },
+          subQueriesExecuted: { type: 'array' },
+          sources: { type: 'array' },
+          synthesis: { type: 'string' },
+          extractedFacts: { type: 'array' },
+          creditsConsumed: { type: 'number' },
+        },
+      },
+      requiredPermissions: ['workspace.read'],
+      riskCategory: 'LOW',
+      requiresApproval: false,
+      timeoutMs: 30000,
+      maxRetries: 2,
+      isIdempotent: true,
+      execute: async (
+        input: { query: string; category?: any; depthTier?: any },
+        ctx: ToolExecutionContext
+      ) => {
+        return await researchEngine.conductDeepResearch({
+          workspaceId: ctx.workspaceId,
+          requestId: ctx.requestId,
+          query: input.query,
+          category: input.category,
+          depthTier: input.depthTier,
+        });
+      },
+    });
+
     // 2. Business Brain Lookup Tool
     this.register({
       toolName: 'business_brain_lookup',

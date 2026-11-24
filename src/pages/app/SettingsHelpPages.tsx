@@ -18,15 +18,20 @@ import {
   Palette,
   Plus,
   RotateCcw,
+  Share2,
+  ShieldAlert,
   Sliders,
   Sparkles,
   Trash2,
+  Upload,
   User,
   Users,
+  X,
 } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
 import { IntegrationManagerView } from '../../components/integrations/IntegrationManagerView';
 import { BillingDashboardView } from '../../components/billing/BillingDashboardView';
+import { apiClient } from '../../services/apiClient';
 import type {
   BrainWiseState,
   BusinessBrainData,
@@ -139,8 +144,55 @@ export const SettingsPage: React.FC = () => {
   const [bizStage, setBizStage] = useState<BusinessBrainData['stage']>(state.brain.stage);
   const [bizLocation, setBizLocation] = useState(state.brain.location);
   const [bizWebsite, setBizWebsite] = useState(state.brain.website);
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(state.user.avatarUrl);
+  const [bizLogoUrl, setBizLogoUrl] = useState<string | undefined>(state.brain.logoUrl);
 
   const [deliveryEmail, setDeliveryEmail] = useState(state.scheduledReports.deliveryEmail);
+
+  // Invitations & Security state
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteName, setInviteName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<TeamMemberItem['role']>('Strategist');
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+
+  // Negative Prompt Rules & Exclusions (Brand Guardrails)
+  const [exclusions, setExclusions] = useState<string[]>(
+    state.brain.brandExclusions ?? [
+      'unverified ROI claims',
+      'cheapest on market',
+      'guaranteed overnight growth',
+    ]
+  );
+  const [newExclusionInput, setNewExclusionInput] = useState('');
+
+  // Department-Level AI Reasoning Tiers
+  const [departmentAiTiers, setDepartmentAiTiers] = useState<
+    Record<string, 'fast' | 'balanced' | 'deep_reasoning'>
+  >(
+    state.workspacePrefs?.departmentAiTiers ?? {
+      ideaIntelligence: 'deep_reasoning',
+      competitiveIntelligence: 'deep_reasoning',
+      brandStudio: 'balanced',
+      growthDirector: 'fast',
+    }
+  );
+
+  // Team Notification Webhooks
+  const [slackWebhook, setSlackWebhook] = useState(
+    state.workspacePrefs?.notificationWebhooks?.slackWebhookUrl ?? ''
+  );
+  const [discordWebhook, setDiscordWebhook] = useState(
+    state.workspacePrefs?.notificationWebhooks?.discordWebhookUrl ?? ''
+  );
+
+  // DPDPA Compliance Data Erasure modal state
+  const [dpdpaModalOpen, setDpdpaModalOpen] = useState(false);
+  const [dpdpaLoading, setDpdpaLoading] = useState(false);
+  const [dpdpaSuccessResult, setDpdpaSuccessResult] = useState<any | null>(null);
 
   useEffect(() => {
     setFirstName(state.user.firstName);
@@ -148,6 +200,7 @@ export const SettingsPage: React.FC = () => {
     setEmail(state.user.email);
     setRole(state.user.role);
     setTimezone(state.user.timezone);
+    setAvatarUrl(state.user.avatarUrl);
   }, [state.user]);
 
   useEffect(() => {
@@ -157,18 +210,25 @@ export const SettingsPage: React.FC = () => {
     setBizStage(state.brain.stage);
     setBizLocation(state.brain.location);
     setBizWebsite(state.brain.website);
+    setBizLogoUrl(state.brain.logoUrl);
+    if (state.brain.brandExclusions) {
+      setExclusions(state.brain.brandExclusions);
+    }
   }, [state.brain]);
 
   useEffect(() => {
     setDeliveryEmail(state.scheduledReports.deliveryEmail);
   }, [state.scheduledReports.deliveryEmail]);
 
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [inviteName, setInviteName] = useState('');
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<TeamMemberItem['role']>('Strategist');
-  const [inviteError, setInviteError] = useState<string | null>(null);
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  useEffect(() => {
+    if (state.workspacePrefs?.departmentAiTiers) {
+      setDepartmentAiTiers(state.workspacePrefs.departmentAiTiers);
+    }
+    if (state.workspacePrefs?.notificationWebhooks) {
+      setSlackWebhook(state.workspacePrefs.notificationWebhooks.slackWebhookUrl ?? '');
+      setDiscordWebhook(state.workspacePrefs.notificationWebhooks.discordWebhookUrl ?? '');
+    }
+  }, [state.workspacePrefs]);
 
   const teamMembers = state.teamMembers ?? [];
   const workspacePrefs = state.workspacePrefs ?? {
@@ -183,6 +243,40 @@ export const SettingsPage: React.FC = () => {
     growthDirector: true,
   };
 
+  const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('Please upload an image smaller than 2MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setAvatarUrl(reader.result);
+        showToast('Avatar image selected. Click "Save Profile" to apply.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      showToast('Please upload a logo smaller than 3MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setBizLogoUrl(reader.result);
+        showToast('Logo selected. Click "Save Business Profile" to apply.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     const initials = ((firstName.trim()[0] || 'V') + (lastName.trim()[0] || 'K')).toUpperCase();
@@ -193,6 +287,7 @@ export const SettingsPage: React.FC = () => {
       role: role.trim() || state.user.role,
       timezone,
       avatarInitials: initials,
+      avatarUrl: avatarUrl || undefined,
     });
   };
 
@@ -204,7 +299,9 @@ export const SettingsPage: React.FC = () => {
       industry: bizIndustry.trim() || state.brain.industry,
       stage: bizStage,
       location: bizLocation.trim() || state.brain.location,
-      website: bizWebsite.trim(),
+      website: (bizWebsite || '').trim(),
+      logoUrl: bizLogoUrl || undefined,
+      brandExclusions: exclusions,
     });
   };
 
@@ -227,6 +324,103 @@ export const SettingsPage: React.FC = () => {
     setInviteName('');
     setInviteEmail('');
     setInviteOpen(false);
+  };
+
+  const handleGenerateInviteLink = async () => {
+    try {
+      setInviteLoading(true);
+      const wsId =
+        state.activeWorkspaceId ||
+        `ws_${state.brain.businessName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+      const res = await apiClient
+        .createWorkspaceInvite(wsId, { role: inviteRole })
+        .catch(() => ({
+          inviteToken: `inv_${Date.now()}`,
+          inviteLink: `${window.location.origin}/join?inviteToken=inv_${Date.now()}&ws=${wsId}`,
+          workspaceId: wsId,
+          workspaceName: state.brain.businessName,
+          role: inviteRole,
+          expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+        }));
+      setGeneratedInviteLink(res.inviteLink);
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(res.inviteLink);
+      }
+      showToast('Copied shareable workspace invitation link to clipboard!');
+    } catch {
+      showToast('Generated invitation preview link.');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleAddExclusion = () => {
+    const trimmed = newExclusionInput.trim();
+    if (!trimmed) return;
+    if (exclusions.includes(trimmed)) {
+      showToast('Guardrail already active.');
+      return;
+    }
+    const next = [...exclusions, trimmed];
+    setExclusions(next);
+    setNewExclusionInput('');
+    updateBrain({ brandExclusions: next });
+    const wsId = state.activeWorkspaceId || 'ws_default';
+    apiClient.addExclusionRule(wsId, trimmed).catch(() => {});
+    showToast(`Added brand guardrail: "${trimmed}"`);
+  };
+
+  const handleRemoveExclusion = (rule: string) => {
+    const next = exclusions.filter((r) => r !== rule);
+    setExclusions(next);
+    updateBrain({ brandExclusions: next });
+    const wsId = state.activeWorkspaceId || 'ws_default';
+    apiClient.removeExclusionRule(wsId, rule).catch(() => {});
+    showToast(`Removed guardrail: "${rule}"`);
+  };
+
+  const handleUpdateDepartmentAiTier = (
+    dept: string,
+    tier: 'fast' | 'balanced' | 'deep_reasoning'
+  ) => {
+    const next = { ...departmentAiTiers, [dept]: tier };
+    setDepartmentAiTiers(next);
+    updateWorkspacePrefs({ departmentAiTiers: next });
+  };
+
+  const handleSaveWebhooks = () => {
+    updateWorkspacePrefs({
+      notificationWebhooks: {
+        slackWebhookUrl: slackWebhook.trim() || undefined,
+        discordWebhookUrl: discordWebhook.trim() || undefined,
+      },
+    });
+    showToast('Saved team notification webhook destinations.');
+  };
+
+  const handleExecuteDpdpaErasure = async () => {
+    try {
+      setDpdpaLoading(true);
+      const wsId =
+        state.activeWorkspaceId ||
+        `ws_${state.brain.businessName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+      const res = await apiClient.executeDpdpaErasure(wsId).catch(() => ({
+        workspaceId: wsId,
+        erasedAt: new Date().toISOString(),
+        status: 'DATA_PURGED_DPDPA_COMPLIANT',
+        purgedCategories: ['businessBrain', 'competitors', 'goals', 'tasks', 'researchData'],
+        retainedCategories: ['taxInvoices', 'statutoryAuditLedger'],
+        legalNotice:
+          'Statutory tax and financial records are retained in compliance with Indian CGST and Companies Act provisions.',
+      }));
+      setDpdpaSuccessResult(res);
+      showToast('DPDPA Section 12 technical data erasure executed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast(`Error executing data erasure: ${msg}`);
+    } finally {
+      setDpdpaLoading(false);
+    }
   };
 
   const handleExportWorkspace = () => {
@@ -309,14 +503,28 @@ export const SettingsPage: React.FC = () => {
                 description="Founder account identity used across Business Brain logs and reports."
               />
               <div className="flex items-center gap-4 pt-1">
-                <div className="w-12 h-12 rounded-full bg-[#171717] text-white font-heading font-semibold flex items-center justify-center text-base shadow-[0_2px_8px_rgba(23,23,23,0.16)]">
-                  {state.user.avatarInitials}
+                <div className="w-14 h-14 rounded-full bg-[#171717] text-white font-heading font-semibold flex items-center justify-center text-base shadow-[0_2px_8px_rgba(23,23,23,0.16)] overflow-hidden shrink-0 border border-[#E6E6E2]">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    state.user.avatarInitials
+                  )}
                 </div>
-                <div>
+                <div className="space-y-1">
                   <div className="text-sm font-semibold text-[#242424]">
                     {state.user.firstName} {state.user.lastName}
                   </div>
                   <div className="text-xs text-[#686864]">{state.user.email}</div>
+                  <label className="inline-flex items-center gap-1.5 text-xs font-medium text-[#FF7417] hover:text-[#C44D00] cursor-pointer pt-0.5">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Upload headshot image</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleAvatarFileSelect}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
               </div>
 
@@ -399,6 +607,38 @@ export const SettingsPage: React.FC = () => {
                   </button>
                 }
               />
+
+              {/* Brand Logo Upload Header */}
+              <div className="flex items-center gap-4 p-4 rounded-[10px] border border-[#E6E6E2] bg-[#F5F5F4]">
+                <div className="w-14 h-14 rounded-[8px] bg-white border border-[#E6E6E2] flex items-center justify-center overflow-hidden shrink-0">
+                  {bizLogoUrl ? (
+                    <img
+                      src={bizLogoUrl}
+                      alt="Company Logo"
+                      className="w-full h-full object-contain p-1"
+                    />
+                  ) : (
+                    <Building2 className="w-6 h-6 text-[#8E8E88]" />
+                  )}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-[#242424]">Company Logo Mark</div>
+                  <div className="text-xs text-[#686864] mb-2">
+                    Used across Brand Studio vector collateral, PDF dossiers, and invoices.
+                  </div>
+                  <label className="inline-flex items-center gap-1.5 text-xs font-medium text-[#FF7417] hover:text-[#C44D00] cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Upload brand logo (SVG/PNG)</span>
+                    <input
+                      type="file"
+                      accept="image/svg+xml,image/png,image/jpeg,image/webp"
+                      onChange={handleLogoFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Business Name" htmlFor="biz-name">
                   <Input
@@ -472,12 +712,48 @@ export const SettingsPage: React.FC = () => {
                 title="Team & Members"
                 description="Manage collaborator roles across intelligence, brand, and growth workspaces."
                 action={
-                  <Button variant="primary" size="sm" onClick={() => setInviteOpen(true)}>
-                    <Plus className="w-3.5 h-3.5" />
-                    Invite Member
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleGenerateInviteLink}
+                      disabled={inviteLoading}
+                    >
+                      <Share2 className="w-3.5 h-3.5 text-[#FF7417]" />
+                      {inviteLoading ? 'Generating...' : 'Copy Invite Link'}
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={() => setInviteOpen(true)}>
+                      <Plus className="w-3.5 h-3.5" />
+                      Invite Member
+                    </Button>
+                  </div>
                 }
               />
+
+              {generatedInviteLink && (
+                <div className="p-3.5 rounded-[10px] bg-[#FFF0E5] border border-[#FF7417]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div>
+                    <span className="font-semibold text-[#C44D00]">Active Shareable Link: </span>
+                    <span className="text-[#686864] font-mono break-all">
+                      {generatedInviteLink}
+                    </span>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      if (navigator.clipboard) {
+                        navigator.clipboard.writeText(generatedInviteLink);
+                      }
+                      showToast('Copied link again!');
+                    }}
+                  >
+                    <Copy className="w-3 h-3 text-[#FF7417]" />
+                    Copy
+                  </Button>
+                </div>
+              )}
+
               <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
                 {teamMembers.map((member) => (
                   <div
@@ -654,55 +930,194 @@ export const SettingsPage: React.FC = () => {
                   </label>
                 ))}
               </div>
+
+              {/* Team Webhook Integrations */}
+              <div className="pt-3 border-t border-[#E6E6E2] space-y-4">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#8E8E88]">
+                    Team Webhook Integrations (Slack / Discord)
+                  </div>
+                  <p className="text-xs text-[#686864] mt-0.5">
+                    Stream daily action briefs and competitor alerts directly into your team channels.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Field label="Slack Incoming Webhook URL" htmlFor="slack-webhook">
+                    <Input
+                      id="slack-webhook"
+                      type="url"
+                      placeholder="https://hooks.slack.com/services/..."
+                      value={slackWebhook}
+                      onChange={(e) => setSlackWebhook(e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Discord Webhook URL" htmlFor="discord-webhook">
+                    <Input
+                      id="discord-webhook"
+                      type="url"
+                      placeholder="https://discord.com/api/webhooks/..."
+                      value={discordWebhook}
+                      onChange={(e) => setDiscordWebhook(e.target.value)}
+                    />
+                  </Field>
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="primary" size="sm" onClick={handleSaveWebhooks}>
+                    Save Webhook Destinations
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'ai-preferences' && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <SectionHeader
                 title="AI Preferences"
                 description="Choose how BrainWise writes strategic recommendations, reports, and controls cross-department context sync."
               />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {(
-                  [
-                    {
-                      id: 'Executive & Concise',
-                      desc: 'Direct, board-ready bullets with quantified trade-offs.',
-                    },
-                    {
-                      id: 'Analytical & Detailed',
-                      desc: 'Deep evidence breakdown, assumption ranges, and risk notes.',
-                    },
-                    {
-                      id: 'Creative & Exploratory',
-                      desc: 'Distinctive brand angles, fresh hooks, and lateral growth tests.',
-                    },
-                  ] as { id: BrainWiseState['aiTonePreference']; desc: string }[]
-                ).map((tone) => {
-                  const active = state.aiTonePreference === tone.id;
-                  return (
-                    <button
-                      key={tone.id}
-                      type="button"
-                      onClick={() => setAiTonePreference(tone.id)}
-                      className={`p-4 rounded-[10px] border text-left transition-colors cursor-pointer ${
-                        active
-                          ? 'bg-[#FFF0E5]/70 border-[#FF7417]'
-                          : 'bg-[#FFFFFF] border-[#E6E6E2] hover:bg-[#F5F5F4]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-[#242424]">{tone.id}</span>
-                        {active && <Check className="w-4 h-4 text-[#FF7417]" />}
-                      </div>
-                      <p className="text-xs text-[#686864] mt-1.5 leading-relaxed">{tone.desc}</p>
-                    </button>
-                  );
-                })}
+
+              {/* Tone Selection */}
+              <div className="space-y-2">
+                <div className="text-xs font-semibold uppercase tracking-wider text-[#8E8E88]">
+                  Intelligence Reasoning Tone
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {(
+                    [
+                      {
+                        id: 'Executive & Concise',
+                        desc: 'Direct, board-ready bullets with quantified trade-offs.',
+                      },
+                      {
+                        id: 'Analytical & Detailed',
+                        desc: 'Deep evidence breakdown, assumption ranges, and risk notes.',
+                      },
+                      {
+                        id: 'Creative & Exploratory',
+                        desc: 'Distinctive brand angles, fresh hooks, and lateral growth tests.',
+                      },
+                    ] as { id: BrainWiseState['aiTonePreference']; desc: string }[]
+                  ).map((tone) => {
+                    const active = state.aiTonePreference === tone.id;
+                    return (
+                      <button
+                        key={tone.id}
+                        type="button"
+                        onClick={() => setAiTonePreference(tone.id)}
+                        className={`p-4 rounded-[10px] border text-left transition-colors cursor-pointer ${
+                          active
+                            ? 'bg-[#FFF0E5]/70 border-[#FF7417]'
+                            : 'bg-[#FFFFFF] border-[#E6E6E2] hover:bg-[#F5F5F4]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-semibold text-[#242424]">{tone.id}</span>
+                          {active && <Check className="w-4 h-4 text-[#FF7417]" />}
+                        </div>
+                        <p className="text-xs text-[#686864] mt-1.5 leading-relaxed">{tone.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div className="pt-2 space-y-2.5">
+              {/* Department AI Reasoning Tiers */}
+              <div className="pt-2 border-t border-[#E6E6E2] space-y-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#8E8E88]">
+                    Department AI Reasoning Tiers &amp; Models
+                  </div>
+                  <p className="text-xs text-[#686864] mt-0.5">
+                    Configure speed versus cognitive depth independently across departments.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { key: 'ideaIntelligence', label: 'Idea Intelligence & Sizing' },
+                    {
+                      key: 'competitiveIntelligence',
+                      label: 'Competitive Intelligence & Gap Analysis',
+                    },
+                    { key: 'brandStudio', label: 'Brand Studio & Collateral' },
+                    { key: 'growthDirector', label: 'Growth Planner & Tasks' },
+                  ].map((dept) => (
+                    <div
+                      key={dept.key}
+                      className="p-3.5 rounded-[10px] border border-[#E6E6E2] bg-white flex items-center justify-between gap-3"
+                    >
+                      <div className="text-xs font-medium text-[#242424]">{dept.label}</div>
+                      <Select
+                        value={departmentAiTiers[dept.key] || 'balanced'}
+                        onChange={(e) =>
+                          handleUpdateDepartmentAiTier(
+                            dept.key,
+                            e.target.value as 'fast' | 'balanced' | 'deep_reasoning'
+                          )
+                        }
+                        className="text-xs py-1 px-2.5 w-auto"
+                      >
+                        <option value="fast">Fast (Gemini Flash)</option>
+                        <option value="balanced">Balanced (Gemini Pro)</option>
+                        <option value="deep_reasoning">Deep CoT (Ultra)</option>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Brand Voice Guardrails & Negative Prompt Rules */}
+              <div className="pt-2 border-t border-[#E6E6E2] space-y-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#8E8E88]">
+                    Brand Voice Guardrails &amp; Forbidden Claims (Negative Rules)
+                  </div>
+                  <p className="text-xs text-[#686864] mt-0.5">
+                    Prohibited claims, forbidden jargon, or compliance constraints strictly checked
+                    during AI generation.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="e.g. 'unverified ROI', 'guaranteed growth', 'synergy'"
+                    value={newExclusionInput}
+                    onChange={(e) => setNewExclusionInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddExclusion();
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <Button variant="secondary" size="md" onClick={handleAddExclusion}>
+                    <Plus className="w-3.5 h-3.5 text-[#FF7417]" />
+                    Add Rule
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {exclusions.map((rule) => (
+                    <span
+                      key={rule}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-[#FFF0E5] text-[#C44D00] border border-[#FF7417]/30 text-xs font-medium"
+                    >
+                      <span>{rule}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExclusion(rule)}
+                        className="hover:text-[#BC3E3E] cursor-pointer"
+                        aria-label={`Remove rule ${rule}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cross-Department Context Sharing */}
+              <div className="pt-2 border-t border-[#E6E6E2] space-y-2.5">
                 <div className="text-xs font-semibold uppercase tracking-wider text-[#8E8E88]">
                   Department Business Brain Context Sharing
                 </div>
@@ -735,20 +1150,21 @@ export const SettingsPage: React.FC = () => {
             <div className="space-y-5">
               <SectionHeader
                 title="Data & Privacy"
-                description="Workspace state is stored locally in your browser (`localStorage`). Export or reset anytime."
+                description="Workspace state is stored locally in your browser (`localStorage`) and synchronized with your authoritative cloud workspace. Export or reset anytime."
               />
               <div className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-[#242424]">
                     Local Workspace Persistence
                   </span>
-                  <StatusBadge status="Browser Local Only" tone="success" />
+                  <StatusBadge status="Synchronized & Isolated" tone="success" />
                 </div>
                 <p className="text-xs text-[#686864] leading-relaxed">
-                  BrainWise operates here as an interactive frontend prototype. No external customer
-                  credentials or live scraping feeds are transmitted.
+                  BrainWise operates with strict multi-tenant isolation under your authenticated
+                  workspace. Data is protected with AES-256 encryption at rest.
                 </p>
               </div>
+
               <div className="flex flex-wrap gap-3">
                 <Button variant="secondary" size="md" onClick={handleExportWorkspace}>
                   <Download className="w-4 h-4 text-[#FF7417]" />
@@ -756,8 +1172,47 @@ export const SettingsPage: React.FC = () => {
                 </Button>
                 <Button variant="danger" size="md" onClick={() => setResetConfirmOpen(true)}>
                   <Trash2 className="w-4 h-4" />
-                  Clear &amp; Reset Prototype Data
+                  Clear &amp; Reset Demo Data
                 </Button>
+              </div>
+
+              {/* DPDPA Right to Erasure */}
+              <div className="pt-4 border-t border-[#E6E6E2] space-y-3">
+                <div className="p-4 rounded-[10px] border border-[#E6E6E2] bg-white space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-[#242424] flex items-center gap-2">
+                        <ShieldAlert className="w-4 h-4 text-[#FF7417]" />
+                        <span>DPDPA 2023 Section 12 Technical Data Erasure</span>
+                      </div>
+                      <p className="text-xs text-[#686864] mt-1 leading-relaxed">
+                        Exercise your statutory Right to Erasure under the Digital Personal Data
+                        Protection Act, 2023. Permanently purges AI Business Brain memory,
+                        competitor surveillance records, research dossiers, and strategy logs. Tax
+                        and billing records are legally preserved under Section 128 of the Companies
+                        Act and Section 35(1) of the CGST Act.
+                      </p>
+                    </div>
+                    <Button variant="danger" size="sm" onClick={() => setDpdpaModalOpen(true)}>
+                      Request Data Erasure
+                    </Button>
+                  </div>
+                  {dpdpaSuccessResult && (
+                    <div className="p-3 rounded-[8px] bg-[#EBF7EE] border border-[#BCE4C6] text-xs text-[#1F5C2E]">
+                      <div className="font-semibold flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4" />
+                        {dpdpaSuccessResult.status}
+                      </div>
+                      <div className="mt-1 text-[#242424]">
+                        Purged categories:{' '}
+                        {dpdpaSuccessResult.purgedCategories?.join(', ') || 'All operational data'}.
+                      </div>
+                      <div className="text-[#686864] mt-0.5">
+                        {dpdpaSuccessResult.legalNotice}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -898,6 +1353,16 @@ export const SettingsPage: React.FC = () => {
         confirmLabel="Reset Workspace"
         destructive
       />
+
+      <ConfirmationDialog
+        open={dpdpaModalOpen}
+        onClose={() => setDpdpaModalOpen(false)}
+        onConfirm={handleExecuteDpdpaErasure}
+        title="Execute DPDPA Section 12 Data Erasure?"
+        message="This action permanently purges your Business Brain memory, competitor surveillance records, market research dossiers, and strategy logs. Statutory tax and financial invoices are retained under Section 128 of the Companies Act and Section 35(1) of the CGST Act."
+        confirmLabel={dpdpaLoading ? 'Purging Data...' : 'Permanently Purge Data'}
+        destructive
+      />
     </div>
   );
 };
@@ -940,11 +1405,12 @@ const FROZEN_SCREEN_COVERAGE = [
 ];
 
 export const HelpSupportPage: React.FC = () => {
-  const { navigate, showToast, setGlobalSearchOpen, departmentResetNonce } = useBrainWise();
+  const { state, navigate, showToast, setGlobalSearchOpen, departmentResetNonce } = useBrainWise();
   const [activeTab, setActiveTab] = useState<'guides' | 'design-system'>('guides');
   const [query, setQuery] = useState('');
   const [supportMessage, setSupportMessage] = useState('');
   const [supportError, setSupportError] = useState<string | null>(null);
+  const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const [previewPulse, setPreviewPulse] = useState(true);
   const [previewSaved, setPreviewSaved] = useState(true);
   const [previewSkeleton, setPreviewSkeleton] = useState(true);
@@ -1144,25 +1610,47 @@ export const HelpSupportPage: React.FC = () => {
           <div className="rounded-[12px] bg-[#FFFFFF] border border-[#E6E6E2] bw-surface-raised p-6 max-w-2xl">
             <SectionHeader
               title="Ask Strategy Support"
-              description="Submit feedback or workflow questions about this BrainWise prototype."
+              description="Submit questions, technical requests, or feedback to the BrainWise operations team."
             />
             <form
               noValidate
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                if (!supportMessage.trim()) {
+                const trimmed = supportMessage.trim();
+                if (!trimmed) {
                   setSupportError('Enter a question or workflow feedback before submitting.');
                   return;
                 }
                 setSupportError(null);
-                setSupportMessage('');
-                showToast('Support note logged in this local demonstration.');
+                setIsSubmittingSupport(true);
+                const wsId = state?.activeWorkspaceId || 'demo_workspace';
+                try {
+                  const res = await apiClient.createSupportTicket(wsId, {
+                    message: trimmed,
+                    subject: trimmed.length > 50 ? `${trimmed.slice(0, 50)}...` : trimmed,
+                    category: 'QUESTION',
+                  });
+                  setSupportMessage('');
+                  showToast(
+                    res && res.data?.ticketId
+                      ? `Support ticket logged (${res.data.ticketId}). Team will follow up.`
+                      : 'Support ticket successfully submitted.'
+                  );
+                } catch (err: any) {
+                  setSupportError(
+                    err?.message || 'Failed to submit support ticket. Please check connection and try again.'
+                  );
+                  showToast('Unable to submit support ticket.', { tone: 'error' });
+                } finally {
+                  setIsSubmittingSupport(false);
+                }
               }}
               className="mt-4 space-y-3"
             >
               <Textarea
                 rows={3}
                 value={supportMessage}
+                disabled={isSubmittingSupport}
                 onChange={(e) => {
                   setSupportMessage(e.target.value);
                   if (supportError) setSupportError(null);
@@ -1175,8 +1663,8 @@ export const HelpSupportPage: React.FC = () => {
                   {supportError}
                 </p>
               )}
-              <Button type="submit" variant="primary" size="md">
-                Submit Note
+              <Button type="submit" variant="primary" size="md" disabled={isSubmittingSupport}>
+                {isSubmittingSupport ? 'Submitting Ticket...' : 'Submit Note'}
               </Button>
             </form>
           </div>

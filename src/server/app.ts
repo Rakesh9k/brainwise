@@ -24,8 +24,15 @@ export function createApp(): Express {
   // CORS
   app.use(configureCors());
 
-  // JSON Body Parser with 2MB limit
-  app.use(express.json({ limit: '2mb' }));
+  // JSON Body Parser with 2MB limit and rawBody capture for webhook signature verification
+  app.use(
+    express.json({
+      limit: '2mb',
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf.toString('utf8');
+      },
+    })
+  );
 
   // Direct Liveness & Readiness Probes (Cloud Run, Container Probes)
   app.get('/health/live', (_req, res) => {

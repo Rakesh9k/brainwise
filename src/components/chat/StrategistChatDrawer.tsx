@@ -3,20 +3,32 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   ArrowRight,
   Bot,
+  Check,
   CheckCircle2,
+  Clock,
+  Copy,
   Cpu,
-  ExternalLink,
   Globe,
   Loader2,
   RotateCcw,
   Send,
   Sparkles,
+  ThumbsDown,
+  ThumbsUp,
   X,
   Zap,
 } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
+import { apiClient } from '../../services/apiClient';
 import { BW_EASE } from '../motion/LiquidMotion';
 import { typeClass } from '../../theme/typography';
+import {
+  AgentStatusBadge,
+  AgentReasoningDrawer,
+  AgentToolExecutionCard,
+  AgentActionApprovalCard,
+  SlidingSegmentedControl,
+} from '../animation';
 
 export type ModelTier = 'fast' | 'search_grounded' | 'deep_reasoning';
 
@@ -26,7 +38,21 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   modelUsed?: string;
-  citations?: Array<{ title?: string; url?: string }>;
+  citations?: Array<{
+    title?: string;
+    url?: string;
+    sourceType?: string;
+    factStatus?: string;
+    isOutdated?: boolean;
+    calculationMethod?: string;
+    snippet?: string;
+  }>;
+  factStatusBreakdown?: Record<string, number>;
+  conflictingInformation?: string[];
+  missingInformation?: string[];
+  suggestedFollowUps?: string[];
+  toolCalls?: any[];
+  feedback?: { rating: 'positive' | 'negative' };
   truthVerified?: boolean;
 }
 
@@ -139,19 +165,64 @@ export const StrategistChatDrawer: React.FC<{
       }));
 
     try {
-      const response = await sendChatToStrategist(textToSend, {
-        threadId,
-        modelTier,
-        history,
-      });
+      let reply = '';
+      let modelUsed = TIER_CONFIG[modelTier].modelName;
+      let citations: any[] = [];
+      let factStatusBreakdown: any = undefined;
+      let conflictingInformation: string[] | undefined = undefined;
+      let missingInformation: string[] | undefined = undefined;
+      let suggestedFollowUps: string[] | undefined = undefined;
+      let toolCalls: any[] | undefined = undefined;
+
+      if (state.activeWorkspaceId) {
+        try {
+          const askRes = await apiClient.askBusinessQuery(state.activeWorkspaceId, {
+            query: textToSend,
+            conversationId: threadId,
+            modelTier,
+          });
+          reply = askRes.message.content;
+          modelUsed = askRes.message.modelUsed || modelUsed;
+          citations = askRes.message.citations || [];
+          factStatusBreakdown = askRes.message.factStatusBreakdown;
+          conflictingInformation = askRes.message.conflictingInformation;
+          missingInformation = askRes.message.missingInformation;
+          suggestedFollowUps = askRes.message.suggestedFollowUps;
+          toolCalls = askRes.message.toolCalls;
+        } catch {
+          // Fallback to sendChatToStrategist
+          const response = await sendChatToStrategist(textToSend, {
+            threadId,
+            modelTier,
+            history,
+          });
+          reply = response.reply;
+          modelUsed = response.modelUsed || modelUsed;
+          citations = response.citations || [];
+        }
+      } else {
+        const response = await sendChatToStrategist(textToSend, {
+          threadId,
+          modelTier,
+          history,
+        });
+        reply = response.reply;
+        modelUsed = response.modelUsed || modelUsed;
+        citations = response.citations || [];
+      }
 
       const modelMsg: ChatMessage = {
         id: `msg-${Date.now()}-m`,
         role: 'model',
-        content: response.reply,
+        content: reply,
         timestamp: Date.now(),
-        modelUsed: response.modelUsed || TIER_CONFIG[modelTier].modelName,
-        citations: response.citations,
+        modelUsed,
+        citations,
+        factStatusBreakdown,
+        conflictingInformation,
+        missingInformation,
+        suggestedFollowUps,
+        toolCalls,
         truthVerified: true,
       };
 
@@ -167,6 +238,60 @@ export const StrategistChatDrawer: React.FC<{
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+
+  const handleCopy = (msgId: string, content: string) => {
+    void navigator.clipboard.writeText(content);
+    setCopiedMsgId(msgId);
+    showToast('Answer copied to clipboard.');
+    setTimeout(() => setCopiedMsgId(null), 2000);
+  };
+
+  const handleFeedback = async (msgId: string, rating: 'positive' | 'negative') => {
+    setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, feedback: { rating } } : m)));
+    showToast(
+      rating === 'positive'
+        ? 'Thank you for your feedback!'
+        : 'Feedback recorded for model improvement.'
+    );
+    if (state.activeWorkspaceId) {
+      try {
+        await apiClient.submitAskBusinessFeedback(state.activeWorkspaceId, threadId, msgId, {
+          rating,
+        });
+      } catch {
+        // non-blocking
+      }
+    }
+  };
+
+  const handleConfirmTool = async (tool: any) => {
+    if (!state.activeWorkspaceId) return;
+    try {
+      await apiClient.executeAskBusinessTool(state.activeWorkspaceId, threadId, {
+        toolId: tool.toolId,
+        toolName: tool.toolName,
+        parameters: tool.parameters,
+        confirmed: true,
+      });
+      showToast(`Action "${tool.toolName}" confirmed and executed!`);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.toolCalls
+            ? {
+                ...m,
+                toolCalls: m.toolCalls.map((t) =>
+                  t.toolId === tool.toolId ? { ...t, status: 'EXECUTED' } : t
+                ),
+              }
+            : m
+        )
+      );
+    } catch (err: any) {
+      showToast(`Failed to execute tool: ${err.message || 'Error'}`);
     }
   };
 
@@ -263,9 +388,7 @@ export const StrategistChatDrawer: React.FC<{
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className={`${typeClass.h4} text-[#171717]`}>Executive AI Strategist</h3>
-                    <span className="px-2 py-0.5 rounded-full bg-[#EFEFEB] text-[10px] font-semibold text-[#5C5C58]">
-                      Multi-Turn
-                    </span>
+                    <AgentStatusBadge state={isSending ? 'thinking' : 'truth_verified'} size="sm" />
                   </div>
                   <p className="text-xs text-[#686864] flex items-center gap-1.5 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
@@ -300,32 +423,21 @@ export const StrategistChatDrawer: React.FC<{
               <span className="text-[11px] font-semibold text-[#686864] uppercase tracking-wider">
                 Reasoning Mode:
               </span>
-              <div className="inline-flex p-0.5 rounded-lg bg-[#EFEFEB] gap-0.5">
-                {(Object.keys(TIER_CONFIG) as ModelTier[]).map((tierKey) => {
+              <SlidingSegmentedControl
+                options={(Object.keys(TIER_CONFIG) as ModelTier[]).map((tierKey) => {
                   const conf = TIER_CONFIG[tierKey];
-                  const Icon = conf.icon;
-                  const active = modelTier === tierKey;
-                  return (
-                    <button
-                      key={tierKey}
-                      type="button"
-                      onClick={() => setModelTier(tierKey)}
-                      className={`h-7 px-2.5 rounded-[6px] text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-                        active
-                          ? 'bg-[#FFFFFF] text-[#171717] shadow-sm font-semibold'
-                          : 'text-[#686864] hover:text-[#171717]'
-                      }`}
-                      title={`${conf.label} (${conf.credits} credits)`}
-                    >
-                      <Icon className={`w-3.5 h-3.5 ${active ? 'text-[#FF7417]' : 'text-[#858585]'}`} />
-                      <span>{conf.label}</span>
-                      <span className="text-[10px] text-[#858585] font-mono-num">
-                        {conf.credits}c
-                      </span>
-                    </button>
-                  );
+                  return {
+                    id: tierKey,
+                    label: conf.label,
+                    badge: `${conf.credits}c`,
+                    icon: conf.icon,
+                  };
                 })}
-              </div>
+                activeId={modelTier}
+                onChange={(id) => setModelTier(id as ModelTier)}
+                size="sm"
+                layoutId="strategist-model-tier-pill"
+              />
             </div>
 
             {/* Message Thread */}
@@ -348,44 +460,174 @@ export const StrategistChatDrawer: React.FC<{
                         <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                       ) : (
                         <div>
+                          {msg.factStatusBreakdown && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {msg.factStatusBreakdown.VERIFIED_FACT > 0 && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  {msg.factStatusBreakdown.VERIFIED_FACT} Verified Fact
+                                </span>
+                              )}
+                              {msg.factStatusBreakdown.CALCULATED_VALUE > 0 && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                  {msg.factStatusBreakdown.CALCULATED_VALUE} Calculated
+                                </span>
+                              )}
+                              {msg.factStatusBreakdown.HISTORICAL_INFO > 0 && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                                  {msg.factStatusBreakdown.HISTORICAL_INFO} Historical
+                                </span>
+                              )}
+                              {msg.factStatusBreakdown.AI_INFERRED > 0 && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                  {msg.factStatusBreakdown.AI_INFERRED} AI Inferred
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                           {renderContentFormatted(msg.content)}
 
                           {/* Grounding Citations */}
                           {msg.citations && msg.citations.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-[#EFEFEB]">
+                            <div className="mt-3 pt-2.5 border-t border-[#EFEFEB]">
                               <p className="text-[11px] font-semibold text-[#5C5C58] flex items-center gap-1 mb-1.5">
                                 <Globe className="w-3 h-3 text-[#2563EB]" />
-                                Grounded Web Sources:
+                                Grounded Evidence & Sources:
                               </p>
                               <div className="flex flex-wrap gap-1.5">
-                                {msg.citations.map((cite, cIdx) => (
-                                  <a
+                                {msg.citations.map((cite: any, cIdx) => (
+                                  <span
                                     key={cIdx}
-                                    href={cite.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F0F5FF] hover:bg-[#E0ECFF] border border-[#BFDBFE] text-[11px] text-[#1D4ED8] font-medium transition-colors cursor-pointer"
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-medium ${
+                                      cite.isOutdated
+                                        ? 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]'
+                                        : 'bg-[#F0F5FF] text-[#1D4ED8] border-[#BFDBFE]'
+                                    }`}
+                                    title={cite.snippet || cite.title}
                                   >
+                                    {cite.isOutdated && (
+                                      <Clock className="w-2.5 h-2.5 text-[#B45309]" />
+                                    )}
                                     <span className="max-w-[200px] truncate">
                                       {cite.title || cite.url}
                                     </span>
-                                    <ExternalLink className="w-2.5 h-2.5 shrink-0" />
-                                  </a>
+                                    {cite.factStatus && (
+                                      <span className="text-[9px] opacity-75 font-mono">
+                                        [{cite.factStatus}]
+                                      </span>
+                                    )}
+                                  </span>
                                 ))}
                               </div>
                             </div>
                           )}
 
-                          {/* Provenance Footer */}
+                          {/* Consequential Tool Actions & Tool Traces */}
+                          {msg.toolCalls && msg.toolCalls.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              {msg.toolCalls.map((tool: any, tIdx: number) => {
+                                if (tool.requiresApproval && tool.status !== 'EXECUTED') {
+                                  return (
+                                    <AgentActionApprovalCard
+                                      key={tIdx}
+                                      actionName={tool.toolName || 'Executive Action'}
+                                      reason={tool.approvalReason || 'Requires confirmation'}
+                                      creditsCost={tool.creditsCost}
+                                      details={tool.parameters}
+                                      onApprove={() => void handleConfirmTool(tool)}
+                                      onReject={() => {
+                                        tool.status = 'REJECTED';
+                                        showToast('Action declined.');
+                                      }}
+                                    />
+                                  );
+                                }
+                                return (
+                                  <AgentToolExecutionCard
+                                    key={tIdx}
+                                    toolName={tool.toolName || 'Tool Call'}
+                                    category={
+                                      tool.toolName?.includes('search')
+                                        ? 'search'
+                                        : tool.toolName?.includes('truth')
+                                          ? 'truth'
+                                          : 'general'
+                                    }
+                                    status={
+                                      tool.status === 'EXECUTED'
+                                        ? 'success'
+                                        : tool.status === 'FAILED'
+                                          ? 'failed'
+                                          : 'executing'
+                                    }
+                                    args={tool.parameters}
+                                    result={tool.result}
+                                    durationMs={tool.durationMs}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Provenance & Action Footer */}
                           <div className="mt-2.5 pt-2 border-t border-[#F5F5F4] flex items-center justify-between text-[10px] text-[#858585]">
-                            <span className="flex items-center gap-1 text-[#16A34A] font-medium">
-                              <CheckCircle2 className="w-3 h-3" />
-                              Truth Checked
-                            </span>
-                            {msg.modelUsed && (
-                              <span className="font-mono text-[#858585]">{msg.modelUsed}</span>
-                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center gap-1 text-[#16A34A] font-medium">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Truth Checked
+                              </span>
+                              {msg.modelUsed && (
+                                <span className="font-mono text-[#858585]">{msg.modelUsed}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleCopy(msg.id, msg.content)}
+                                className="p-1 rounded hover:bg-[#F5F5F4] text-[#686864] hover:text-[#171717] cursor-pointer"
+                                title="Copy answer"
+                              >
+                                {copiedMsgId === msg.id ? (
+                                  <Check className="w-3 h-3 text-[#16A34A]" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void handleFeedback(msg.id, 'positive')}
+                                className={`p-1 rounded hover:bg-[#F5F5F4] cursor-pointer ${msg.feedback?.rating === 'positive' ? 'text-[#16A34A]' : 'text-[#686864] hover:text-[#171717]'}`}
+                                title="Helpful"
+                              >
+                                <ThumbsUp className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void handleFeedback(msg.id, 'negative')}
+                                className={`p-1 rounded hover:bg-[#F5F5F4] cursor-pointer ${msg.feedback?.rating === 'negative' ? 'text-[#DC2626]' : 'text-[#686864] hover:text-[#171717]'}`}
+                                title="Not helpful"
+                              >
+                                <ThumbsDown className="w-3 h-3" />
+                              </button>
+                            </div>
                           </div>
+
+                          {/* Contextual Follow-Up Suggestions */}
+                          {msg.suggestedFollowUps && msg.suggestedFollowUps.length > 0 && (
+                            <div className="mt-2.5 pt-2 border-t border-[#F5F5F4] flex flex-wrap gap-1.5">
+                              {msg.suggestedFollowUps.map((sug, sIdx) => (
+                                <button
+                                  key={sIdx}
+                                  type="button"
+                                  disabled={isSending}
+                                  onClick={() => void handleSend(sug)}
+                                  className="text-[11px] px-2.5 py-1 rounded-full bg-[#FAFAF9] hover:bg-[#F5F5F4] border border-[#E6E6E2] text-[#5C5C58] hover:text-[#171717] transition-all cursor-pointer text-left"
+                                >
+                                  💬 {sug}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -394,12 +636,19 @@ export const StrategistChatDrawer: React.FC<{
               })}
 
               {isSending && (
-                <div className="flex flex-col items-start">
-                  <div className="rounded-[16px] px-4 py-3 bg-[#FFFFFF] border border-[#E6E6E2] text-[#5C5C58] text-sm flex items-center gap-2 shadow-xs">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#FF7417]" />
-                    <span>
-                      Synthesizing strategic brief with {TIER_CONFIG[modelTier].modelName}…
-                    </span>
+                <div className="flex flex-col items-start w-full max-w-[85%]">
+                  <div className="rounded-[16px] p-4 bg-[#FFFFFF] border border-[#E6E6E2] shadow-xs w-full space-y-3">
+                    <AgentStatusBadge
+                      state="thinking"
+                      label={`Synthesizing brief with ${TIER_CONFIG[modelTier].modelName}…`}
+                      size="sm"
+                    />
+                    <AgentReasoningDrawer
+                      isStreaming={true}
+                      modelTierName={TIER_CONFIG[modelTier].modelName}
+                      reasoningText={`Grounded in ${businessName} (${industry}).\nDecomposing strategic query and verifying against persistent Business Brain.\nRunning deterministic Truth Check & Anti-Fatigue guardrails.`}
+                      defaultExpanded={modelTier === 'deep_reasoning'}
+                    />
                   </div>
                 </div>
               )}

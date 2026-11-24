@@ -1,0 +1,374 @@
+[
+  {
+    "line": "✖ 2. Executes atomic bulk archive, restore, tagging, move, and permanent delete (3.2863ms)",
+    "context": "▶ BRAINWISE ACTIVE ASSET MANAGEMENT — PHASE 2 ACCEPTANCE TEST SUITE\n  ✔ 1. Duplicates asset with (Copy) naming, parentAssetId provenance, and initial version (3.3649ms)\n  ✖ 2. Executes atomic bulk archive, restore, tagging, move, and permanent delete (3.2863ms)\n  ✔ 3. Automatically classifies assets into categories with deterministic heuristic rules (0.301ms)\n  ✔ 4. Computes SHA-256 checksums and detects duplicate file content (0.7319ms)\n  ✔ 5. Strictly rejects video uploads in accordance with BrainWise architectural directives (0.566ms)\n  ✔ 6. Creates versions and accurately restores previous versions (0.7868ms)\n✖ BRAINWISE ACTIVE ASSET MANAGEMENT — PHASE 2 ACCEPTANCE TEST SUITE (9.7618ms)"
+  },
+  {
+    "line": "✖ BRAINWISE ACTIVE ASSET MANAGEMENT — PHASE 2 ACCEPTANCE TEST SUITE (9.7618ms)",
+    "context": "  ✔ 5. Strictly rejects video uploads in accordance with BrainWise architectural directives (0.566ms)\n  ✔ 6. Creates versions and accurately restores previous versions (0.7868ms)\n✖ BRAINWISE ACTIVE ASSET MANAGEMENT — PHASE 2 ACCEPTANCE TEST SUITE (9.7618ms)\n▶ BRAINWISE AI ASSETS & SOCIAL STUDIO — PRODUCTION IMPLEMENTATION TEST SUITE\n  ✔ 1. Recommends tailored assets across at least 12 distinct industries with structured metadata (1.582ms)\n  ✔ 2. Generates category-specific product mockups with realistic geometry, disclaimer, and 5-credit settlement (11.6205ms)\n  ✔ 3. Generates packaging across 3 tiers (Concept, Editable, Production) with bleed, dielines, and regulatory stamps (11.0369ms)\n  ✔ 4. Generates high-impact campaign visuals and editorial layouts without video (5.2649ms)"
+  },
+  {
+    "line": "✖ PHASE 04 - 1. Research Engine: Missing search provider returns honest PROVIDER_UNAVAILABLE state (2.2461ms)",
+    "context": "  ✔ 6. Invokes deep_market_research tool seamlessly via ToolRegistry (0.2427ms)\n✔ Deep Research Engine (Incorporating & Improving GPT Researcher) (4.081ms)\n✖ PHASE 04 - 1. Research Engine: Missing search provider returns honest PROVIDER_UNAVAILABLE state (2.2461ms)\n✖ PHASE 04 - 2. Research Engine: Indian consumer inquiry does not receive US Census Bureau statistics (0.283ms)\n✖ PHASE 04 - 3. Competitor Discovery Engine: Returns empty list for unknown category without inventing example-incumbent.com (0.4387ms)\n✔ PHASE 04 - 4. Truth Check: Flags unsubstantiated marketing superlatives and absolute guarantees (2.3682ms)\n✔ PHASE 04 - 5. Truth Check: Flags fabricated customer testimonials and review counts (0.7272ms)\n✔ PHASE 04 - 6. Truth Check: Flags unsupported competitor claims and disparagement (0.181ms)"
+  },
+  {
+    "line": "✖ PHASE 04 - 2. Research Engine: Indian consumer inquiry does not receive US Census Bureau statistics (0.283ms)",
+    "context": "✔ Deep Research Engine (Incorporating & Improving GPT Researcher) (4.081ms)\n✖ PHASE 04 - 1. Research Engine: Missing search provider returns honest PROVIDER_UNAVAILABLE state (2.2461ms)\n✖ PHASE 04 - 2. Research Engine: Indian consumer inquiry does not receive US Census Bureau statistics (0.283ms)\n✖ PHASE 04 - 3. Competitor Discovery Engine: Returns empty list for unknown category without inventing example-incumbent.com (0.4387ms)\n✔ PHASE 04 - 4. Truth Check: Flags unsubstantiated marketing superlatives and absolute guarantees (2.3682ms)\n✔ PHASE 04 - 5. Truth Check: Flags fabricated customer testimonials and review counts (0.7272ms)\n✔ PHASE 04 - 6. Truth Check: Flags unsupported competitor claims and disparagement (0.181ms)\n✖ PHASE 04 - 7. Truth Check: Flags uncited macro market size claims (0.3425ms)"
+  },
+  {
+    "line": "✖ PHASE 04 - 3. Competitor Discovery Engine: Returns empty list for unknown category without inventing example-incumbent.com (0.4387ms)",
+    "context": "✖ PHASE 04 - 1. Research Engine: Missing search provider returns honest PROVIDER_UNAVAILABLE state (2.2461ms)\n✖ PHASE 04 - 2. Research Engine: Indian consumer inquiry does not receive US Census Bureau statistics (0.283ms)\n✖ PHASE 04 - 3. Competitor Discovery Engine: Returns empty list for unknown category without inventing example-incumbent.com (0.4387ms)\n✔ PHASE 04 - 4. Truth Check: Flags unsubstantiated marketing superlatives and absolute guarantees (2.3682ms)\n✔ PHASE 04 - 5. Truth Check: Flags fabricated customer testimonials and review counts (0.7272ms)\n✔ PHASE 04 - 6. Truth Check: Flags unsupported competitor claims and disparagement (0.181ms)\n✖ PHASE 04 - 7. Truth Check: Flags uncited macro market size claims (0.3425ms)\n✔ PHASE 04 - 8. Transparent Confidence Scoring: Never outputs 1.0 and omits numeric score when evidence is unavailable (0.2476ms)"
+  },
+  {
+    "line": "✖ PHASE 04 - 7. Truth Check: Flags uncited macro market size claims (0.3425ms)",
+    "context": "✔ PHASE 04 - 5. Truth Check: Flags fabricated customer testimonials and review counts (0.7272ms)\n✔ PHASE 04 - 6. Truth Check: Flags unsupported competitor claims and disparagement (0.181ms)\n✖ PHASE 04 - 7. Truth Check: Flags uncited macro market size claims (0.3425ms)\n✔ PHASE 04 - 8. Transparent Confidence Scoring: Never outputs 1.0 and omits numeric score when evidence is unavailable (0.2476ms)\n✔ PHASE 04 - 9. Evidence Classification Taxonomy: Supports all 7 distinct evidence classes with strict semantics (0.1113ms)\n▶ PHASE 13 & 14 — SECURITY, FINANCIAL INTEGRITY & END-TO-END VALIDATION\n  ✔ 1. Enforces strict multi-tenant workspace isolation across reports and decisions (2.2789ms)\n  ✔ 2. ADR-006 Two-Phase Credit Reservation: reserves 5 credits, settles on success (0.8762ms)"
+  },
+  {
+    "line": "✖ Scenario D: Print & Packaging Intelligence, Pre-Flight Verification, and State Machine (1.1361ms)",
+    "context": "    ✔ Scenario B: Complete Asset Lifecycle (Upload, Analyze, Version, Campaign Bind, Archive, Restore) (3.8325ms)\n    ✔ Scenario C: Deterministic Brand Compliance, Drift Detection, and Auto-Remediation (0.8687ms)\n    ✖ Scenario D: Print & Packaging Intelligence, Pre-Flight Verification, and State Machine (1.1361ms)\n    ✔ Scenario E: Social Media Omnichannel Adaptation, Attribution & Performance Ranking (1.9903ms)\n    ✔ Scenario F: Conversational Asset Intelligence Assistant Operations & Guardrails (3.3654ms)\n  ✖ 1. Complete User Journeys (17.0225ms)\n  ▶ 2. Security & Adversarial Penetration Testing\n    ✔ Blocks cross-tenant data access attempts unconditionally (0.456ms)"
+  },
+  {
+    "line": "✖ 1. Complete User Journeys (17.0225ms)",
+    "context": "    ✔ Scenario E: Social Media Omnichannel Adaptation, Attribution & Performance Ranking (1.9903ms)\n    ✔ Scenario F: Conversational Asset Intelligence Assistant Operations & Guardrails (3.3654ms)\n  ✖ 1. Complete User Journeys (17.0225ms)\n  ▶ 2. Security & Adversarial Penetration Testing\n    ✔ Blocks cross-tenant data access attempts unconditionally (0.456ms)\n    ✔ Enforces RBAC access matrix across guest, viewer, member, admin, owner (0.1492ms)\n    ✔ Intercepts and neutralizes malicious SVG script tags, inline event handlers, and XXE entities (0.2727ms)\n    ✔ Validates magic byte signatures and strictly intercepts video formats (0.2256ms)"
+  },
+  {
+    "line": "✖ PHASE 12 — AssetLibrary End-to-End Validation & Production Acceptance (22.446ms)",
+    "context": "    ✔ Measures asset listing latency, search throughput, and batch ingestion speed (3.6329ms)\n  ✔ 3. Performance & Latency Validation (3.6751ms)\n✖ PHASE 12 — AssetLibrary End-to-End Validation & Production Acceptance (22.446ms)\n▶ PHASE 9 — AssetLibrary Ecosystem Integration Gateway\n  ✔ 1. Business Brain: Synchronizes product metadata across linked assets and emits events (2.9675ms)\n  ✔ 2. BrandStudio: Ingests logos and brand identity collateral with versioning and event emission (8.434ms)\n  ✔ 3. Campaign Studio: Discovers approved assets, binds campaign collection, and saves creatives (1.8563ms)\n  ✔ 4. Content Studio: Multi-format adaptation preserves parentAssetId, dimensions, and lineage (1.2349ms)"
+  },
+  {
+    "line": "✖ 12. Preserves and tags existing brand assets provided by an established business (1.5142ms)",
+    "context": "  ✔ 10. Category 10: Healthcare Services — Preventative Diagnostics & Value-Based Care (0.2324ms)\n  ✔ 11. Handles missing info gracefully by prompting targeted clarification questions (0.2403ms)\n  ✖ 12. Preserves and tags existing brand assets provided by an established business (1.5142ms)\n  ✔ 13. Performs 12-dimension competitor teardowns, distinguishing verified facts vs hypotheses and enforcing anti-imitation (0.821ms)\n  ✔ 14. Identifies actionable visual whitespace specific to the business category (0.352ms)\n  ✔ 15. Generates three distinct creative directions maintaining mathematical 1.25 modular scale (0.5499ms)\n  ✔ 16. Generates visual moodboard with pure SVG vector motifs and certifies Strict Video Exclusion (0.608ms)\n  ✔ 17. Generates 2D positioning map with whitespace quadrants and estimated competitor coordinates (0.5625ms)"
+  },
+  {
+    "line": "✖ BRAND IDENTITY STUDIO — DEEP INTELLIGENCE & PRODUCTION TEST SUITE (15.4185ms)",
+    "context": "  ✔ 19. Executes conversational refinement directives while preserving underlying approved facts (0.6981ms)\n  ✔ 20. Enforces strict multi-tenant isolation across all brand identity entities (0.5306ms)\n✖ BRAND IDENTITY STUDIO — DEEP INTELLIGENCE & PRODUCTION TEST SUITE (15.4185ms)\n▶ BRAINWISE AUTHORITATIVE BRAND IDENTITY SYSTEM — PHASE 3 ACCEPTANCE TEST SUITE\n  ✔ 1. Bootstraps authoritative brand identity with all 10 standard logo variants, aspect ratios, and clear space rules (1.8681ms)\n  ✔ 2. Maintains structured, machine-readable brand tokens and design system tokens (0.4376ms)\n  ✔ 3. Connects with Business Brain without creating competing sources of truth (0.5529ms)\n  ✔ 4. Executes deterministic Brand Guardian compliance checks, off-brand detection, and auto-remediation (1.1369ms)"
+  },
+  {
+    "line": "✖ enforces Level 3 Human Approval Gate before dispatching outbound messages (1.6641ms)",
+    "context": "  ▶ Scenario B: Early-Stage B2B SaaS — Outbound Contrast Wedge & Human Approval Gate\n    ✔ formulates an Outbound-Led contrast strategy against legacy competitor opacity (0.2936ms)\n    ✖ enforces Level 3 Human Approval Gate before dispatching outbound messages (1.6641ms)\n  ✖ Scenario B: Early-Stage B2B SaaS — Outbound Contrast Wedge & Human Approval Gate (2.0941ms)\n  ▶ Scenario C: Restaurant / Cloud Kitchen — Weekday Cover Optimization & Local Catering\n    ✔ diagnoses local seating constraint and rejects nationwide digital advertising (0.1283ms)\n    ✔ creates a hyper-local corporate catering and weekday lunch tasting mission (0.5138ms)\n  ✔ Scenario C: Restaurant / Cloud Kitchen — Weekday Cover Optimization & Local Catering (0.7498ms)"
+  },
+  {
+    "line": "✖ Scenario B: Early-Stage B2B SaaS — Outbound Contrast Wedge & Human Approval Gate (2.0941ms)",
+    "context": "    ✔ formulates an Outbound-Led contrast strategy against legacy competitor opacity (0.2936ms)\n    ✖ enforces Level 3 Human Approval Gate before dispatching outbound messages (1.6641ms)\n  ✖ Scenario B: Early-Stage B2B SaaS — Outbound Contrast Wedge & Human Approval Gate (2.0941ms)\n  ▶ Scenario C: Restaurant / Cloud Kitchen — Weekday Cover Optimization & Local Catering\n    ✔ diagnoses local seating constraint and rejects nationwide digital advertising (0.1283ms)\n    ✔ creates a hyper-local corporate catering and weekday lunch tasting mission (0.5138ms)\n  ✔ Scenario C: Restaurant / Cloud Kitchen — Weekday Cover Optimization & Local Catering (0.7498ms)\n  ▶ Scenario D: D2C Brand Launch — AOV Optimization & Thermal Transit Guarantee"
+  },
+  {
+    "line": "✖ BRAINWISE AI GROWTH AGENCY — 5 REALISTIC FOUNDER JOURNEYS (6.5784ms)",
+    "context": "    ✔ pivots strategy to non-paid Partnership & Referral channels with zero credit waste (0.2844ms)\n  ✔ Scenario E: Failing Channel Recovery — Telemetry Anomaly Detection & Strategy Pivot (0.6379ms)\n✖ BRAINWISE AI GROWTH AGENCY — 5 REALISTIC FOUNDER JOURNEYS (6.5784ms)\n▶ BRAINWISE AI GROWTH AGENCY — MASTER UNIT & ENGINE SUITE\n  ▶ 1. Growth Mission Engine: Lifecycle, State Machine & Verification\n    ✔ creates a mission in PROPOSED status with validated targets (1.4004ms)\n    ✔ progresses status sequentially through valid transitions (0.4238ms)\n    ✔ rejects invalid lifecycle transition jumps (e.g. IN_PROGRESS -> PLANNED) (0.3506ms)"
+  },
+  {
+    "line": "✖ 3. Document Extraction Canonical Contract & Fact Staging (12.5777ms)",
+    "context": "  ✔ 1. Workspace ID Validation Guardrails (aiClient.ts) (0.6027ms)\n  ✔ 2. Workspace-Aware Route Authorization & Multi-Tenant Isolation (41.3747ms)\n  ✖ 3. Document Extraction Canonical Contract & Fact Staging (12.5777ms)\n  ✔ 4. Product Bulk Import API — CSV String Ingestion (4.3938ms)\n  ✔ 5. Product Bulk Import API — JSON Array Ingestion (1.8514ms)\n  ✖ 6. Product Bulk Import API — Deduplication & Partial Success Reporting (2.2391ms)\n  ✖ 7. Product Bulk Import API — Atomic Mode Abort & Rollback (2.46ms)\n  ✔ 8. Immutable Audit Trail Logging for Bulk Operations (0.2657ms)"
+  },
+  {
+    "line": "✖ 6. Product Bulk Import API — Deduplication & Partial Success Reporting (2.2391ms)",
+    "context": "  ✔ 4. Product Bulk Import API — CSV String Ingestion (4.3938ms)\n  ✔ 5. Product Bulk Import API — JSON Array Ingestion (1.8514ms)\n  ✖ 6. Product Bulk Import API — Deduplication & Partial Success Reporting (2.2391ms)\n  ✖ 7. Product Bulk Import API — Atomic Mode Abort & Rollback (2.46ms)\n  ✔ 8. Immutable Audit Trail Logging for Bulk Operations (0.2657ms)\n✖ PHASE 02 — BUILD STABILITY, API ROUTING & CONTRACT REPAIR TEST SUITE (72.2453ms)\n▶ PHASE 06 — CORE MODULE FUNCTIONAL COMPLETION SUITE\n  ✔ Module 1: Business Brain — Onboarding, Extraction, Confirmation & Conflict Guardrails (3.3315ms)"
+  },
+  {
+    "line": "✖ 7. Product Bulk Import API — Atomic Mode Abort & Rollback (2.46ms)",
+    "context": "  ✔ 5. Product Bulk Import API — JSON Array Ingestion (1.8514ms)\n  ✖ 6. Product Bulk Import API — Deduplication & Partial Success Reporting (2.2391ms)\n  ✖ 7. Product Bulk Import API — Atomic Mode Abort & Rollback (2.46ms)\n  ✔ 8. Immutable Audit Trail Logging for Bulk Operations (0.2657ms)\n✖ PHASE 02 — BUILD STABILITY, API ROUTING & CONTRACT REPAIR TEST SUITE (72.2453ms)\n▶ PHASE 06 — CORE MODULE FUNCTIONAL COMPLETION SUITE\n  ✔ Module 1: Business Brain — Onboarding, Extraction, Confirmation & Conflict Guardrails (3.3315ms)\n  ✔ Module 2: Idea Intelligence — Natural Idea Understanding, Scoring & Blueprint (4.4679ms)"
+  },
+  {
+    "line": "✖ PHASE 02 — BUILD STABILITY, API ROUTING & CONTRACT REPAIR TEST SUITE (72.2453ms)",
+    "context": "  ✖ 7. Product Bulk Import API — Atomic Mode Abort & Rollback (2.46ms)\n  ✔ 8. Immutable Audit Trail Logging for Bulk Operations (0.2657ms)\n✖ PHASE 02 — BUILD STABILITY, API ROUTING & CONTRACT REPAIR TEST SUITE (72.2453ms)\n▶ PHASE 06 — CORE MODULE FUNCTIONAL COMPLETION SUITE\n  ✔ Module 1: Business Brain — Onboarding, Extraction, Confirmation & Conflict Guardrails (3.3315ms)\n  ✔ Module 2: Idea Intelligence — Natural Idea Understanding, Scoring & Blueprint (4.4679ms)\n  ✔ Module 3: Competitive Intelligence — Discovery, SSRF-Safe Manual Add, Matrix & Alerts (4.2541ms)\n  ✔ Module 4: Growth Agency — Strategy, Missions, State Transitions & Queue Dispatch (0.7248ms)"
+  },
+  {
+    "line": "✖ Phase 10 — Suite 6: Failure & Recovery: 12 Real-World Fault Scenarios (212.7965ms)",
+    "context": "✔ Phase 10 — Suite 4: Seven Realistic Customer Personas Validation (550.3386ms)\n✔ Phase 10 — Suite 5: Department-by-Department Connectivity (All 14 Departments) (0.2769ms)\n✖ Phase 10 — Suite 6: Failure & Recovery: 12 Real-World Fault Scenarios (212.7965ms)\n✔ Phase 10 — Suite 7: Database Integrity & Disaster Recovery: Backup, Data Loss Simulation & Restore (2.8335ms)\n✔ Phase 10 — Suite 8: AI Quality & Business Intelligence Validation (50 Scenarios) (1.2335ms)\n✔ Phase 10 — Suite 9: Load & Concurrency Benchmarking (10, 25, 50, 100 Concurrent Operations) (263.9903ms)\n✔ Phase 10 — Suite 10: Privacy & Indian Legal Compliance: DPDPA Right to Erasure Execution (0.6524ms)\n✖ Phase 10 — Suite 11: Production Acceptance: Complete 28-Step Customer Journey (31.4205ms)"
+  },
+  {
+    "line": "✖ Phase 10 — Suite 11: Production Acceptance: Complete 28-Step Customer Journey (31.4205ms)",
+    "context": "✔ Phase 10 — Suite 9: Load & Concurrency Benchmarking (10, 25, 50, 100 Concurrent Operations) (263.9903ms)\n✔ Phase 10 — Suite 10: Privacy & Indian Legal Compliance: DPDPA Right to Erasure Execution (0.6524ms)\n✖ Phase 10 — Suite 11: Production Acceptance: Complete 28-Step Customer Journey (31.4205ms)\n▶ PHASE 10-12 — MASTER PRODUCTION READINESS & CERTIFICATION SUITE\n  ✔ 1. Blocks loopback, internal subnets, and cloud metadata endpoints via ssrfValidator (2.8123ms)\n  ✔ 2. Enforces Truth Engine guardrail: rejects price hallucinations and forbidden claims (4.8243ms)\n  ✔ 3. Enforces Anti-Fatigue Memory guardrail when strategic angle usage hits threshold (0.2289ms)\n  ✔ 4. Executes Two-Phase Credit Protocol: reserves credits and auto-refunds on simulated failure (1.3478ms)"
+  },
+  {
+    "line": "✖ Scenario 1: Product-to-customer relationships are created, validated and retrieved (3.5733ms)",
+    "context": "✔ PHASE 2 — MASTER CENTRAL BUSINESS BRAIN SUITE (4.1446ms)\n▶ PHASE 2 — MASTER UNIFIED INTELLIGENCE, KNOWLEDGE GRAPH & MEMORY SUITE\n  ✖ Scenario 1: Product-to-customer relationships are created, validated and retrieved (3.5733ms)\n  ✖ Scenario 2: Campaign-to-product relationships link marketing initiatives to catalog items (4.5134ms)\n  ✖ Scenario 3: Assembled context accurately retrieves brand voice, vocabulary, and restrictions (3.52ms)\n  ✖ Scenario 4: Retrieval of historical decisions, campaign outcomes and learnings (1.5342ms)\n  ✔ Scenario 5: Fact correction updates active memory and eliminates stale records (1.0539ms)\n  ✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)"
+  },
+  {
+    "line": "✖ Scenario 2: Campaign-to-product relationships link marketing initiatives to catalog items (4.5134ms)",
+    "context": "▶ PHASE 2 — MASTER UNIFIED INTELLIGENCE, KNOWLEDGE GRAPH & MEMORY SUITE\n  ✖ Scenario 1: Product-to-customer relationships are created, validated and retrieved (3.5733ms)\n  ✖ Scenario 2: Campaign-to-product relationships link marketing initiatives to catalog items (4.5134ms)\n  ✖ Scenario 3: Assembled context accurately retrieves brand voice, vocabulary, and restrictions (3.52ms)\n  ✖ Scenario 4: Retrieval of historical decisions, campaign outcomes and learnings (1.5342ms)\n  ✔ Scenario 5: Fact correction updates active memory and eliminates stale records (1.0539ms)\n  ✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)\n  ✖ Scenario 7: Working memory expires according to TTL while business memory stays permanent (1.6847ms)"
+  },
+  {
+    "line": "✖ Scenario 3: Assembled context accurately retrieves brand voice, vocabulary, and restrictions (3.52ms)",
+    "context": "  ✖ Scenario 1: Product-to-customer relationships are created, validated and retrieved (3.5733ms)\n  ✖ Scenario 2: Campaign-to-product relationships link marketing initiatives to catalog items (4.5134ms)\n  ✖ Scenario 3: Assembled context accurately retrieves brand voice, vocabulary, and restrictions (3.52ms)\n  ✖ Scenario 4: Retrieval of historical decisions, campaign outcomes and learnings (1.5342ms)\n  ✔ Scenario 5: Fact correction updates active memory and eliminates stale records (1.0539ms)\n  ✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)\n  ✖ Scenario 7: Working memory expires according to TTL while business memory stays permanent (1.6847ms)\n  ✔ Scenario 8: Strategic memory records objectives and supersedes old priorities (0.6422ms)"
+  },
+  {
+    "line": "✖ Scenario 4: Retrieval of historical decisions, campaign outcomes and learnings (1.5342ms)",
+    "context": "  ✖ Scenario 2: Campaign-to-product relationships link marketing initiatives to catalog items (4.5134ms)\n  ✖ Scenario 3: Assembled context accurately retrieves brand voice, vocabulary, and restrictions (3.52ms)\n  ✖ Scenario 4: Retrieval of historical decisions, campaign outcomes and learnings (1.5342ms)\n  ✔ Scenario 5: Fact correction updates active memory and eliminates stale records (1.0539ms)\n  ✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)\n  ✖ Scenario 7: Working memory expires according to TTL while business memory stays permanent (1.6847ms)\n  ✔ Scenario 8: Strategic memory records objectives and supersedes old priorities (0.6422ms)\n  ✔ Scenario 9: All 14 departments receive unified, consistent context from Shared Context API (0.8345ms)"
+  },
+  {
+    "line": "✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)",
+    "context": "  ✖ Scenario 4: Retrieval of historical decisions, campaign outcomes and learnings (1.5342ms)\n  ✔ Scenario 5: Fact correction updates active memory and eliminates stale records (1.0539ms)\n  ✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)\n  ✖ Scenario 7: Working memory expires according to TTL while business memory stays permanent (1.6847ms)\n  ✔ Scenario 8: Strategic memory records objectives and supersedes old priorities (0.6422ms)\n  ✔ Scenario 9: All 14 departments receive unified, consistent context from Shared Context API (0.8345ms)\n  ✔ Scenario 10: Cross-tenant data isolation strictly prevents information leakage (2.6085ms)\n  ✔ Scenario 11: Retrieved knowledge contains verifiable source citations with confidence (1.4369ms)"
+  },
+  {
+    "line": "✖ Scenario 7: Working memory expires according to TTL while business memory stays permanent (1.6847ms)",
+    "context": "  ✔ Scenario 5: Fact correction updates active memory and eliminates stale records (1.0539ms)\n  ✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)\n  ✖ Scenario 7: Working memory expires according to TTL while business memory stays permanent (1.6847ms)\n  ✔ Scenario 8: Strategic memory records objectives and supersedes old priorities (0.6422ms)\n  ✔ Scenario 9: All 14 departments receive unified, consistent context from Shared Context API (0.8345ms)\n  ✔ Scenario 10: Cross-tenant data isolation strictly prevents information leakage (2.6085ms)\n  ✔ Scenario 11: Retrieved knowledge contains verifiable source citations with confidence (1.4369ms)\n  ✔ Scenario 12: USER_CONFIRMED facts take absolute precedence over unconfirmed guesses (0.5607ms)"
+  },
+  {
+    "line": "✖ PHASE 2 — MASTER UNIFIED INTELLIGENCE, KNOWLEDGE GRAPH & MEMORY SUITE (69.2314ms)",
+    "context": "  ✔ Scenario 14: Ingests and retrieves large document insights without context corruption (0.5037ms)\n  ✔ Scenario 15: Context assembly strictly enforces tight token budgets (0.4378ms)\n✖ PHASE 2 — MASTER UNIFIED INTELLIGENCE, KNOWLEDGE GRAPH & MEMORY SUITE (69.2314ms)\n▶ PHASE 3 — MASTER IDEA & MARKET INTELLIGENCE SUITE\n  ✔ 1. Computes the 7-score matrix using the documented transparent mathematical formula (0.7611ms)\n  ✔ 2. Evaluates idea and returns GO executive verdict for high-opportunity low-risk ideas (3.6063ms)\n  ✔ 3. Generates dual top-down and bottom-up TAM/SAM/SOM breakdowns with stated assumptions (10.6118ms)\n  ✔ 4. Delivers India-specific market insights including Tier 1/2 dynamics, UPI, and tax considerations (0.4165ms)"
+  },
+  {
+    "line": "✖ Scenario 10: User rejection records feedback, logs decision, and suppresses re-recommendation (6.0052ms)",
+    "context": "  ✔ Scenario 8: Scenario planning generates best-case, expected, and downside ranges (2.5521ms)\n  ✔ Scenario 9: Reasoning safeguards prevent ungrounded revenue promises or assumptions (1.4397ms)\n  ✖ Scenario 10: User rejection records feedback, logs decision, and suppresses re-recommendation (6.0052ms)\n  ✔ Scenario 11: Decision history retrieves alternatives considered, approvals, and lessons learned (2.1784ms)\n  ✔ Scenario 12: Poor performance triggers root-cause investigation rather than generic ad recommendations (1.1842ms)\n✖ PHASE 3 — MASTER BUSINESS REASONING & DECISION INTELLIGENCE SUITE (77.5643ms)\n▶ PHASE 4 — MASTER COMPETITIVE INTELLIGENCE & COMPETITOR WATCH SUITE\n  ✔ 1. Creates and retrieves detailed competitor profiles with 14 required dimensions (2.4613ms)"
+  },
+  {
+    "line": "✖ PHASE 3 — MASTER BUSINESS REASONING & DECISION INTELLIGENCE SUITE (77.5643ms)",
+    "context": "  ✔ Scenario 11: Decision history retrieves alternatives considered, approvals, and lessons learned (2.1784ms)\n  ✔ Scenario 12: Poor performance triggers root-cause investigation rather than generic ad recommendations (1.1842ms)\n✖ PHASE 3 — MASTER BUSINESS REASONING & DECISION INTELLIGENCE SUITE (77.5643ms)\n▶ PHASE 4 — MASTER COMPETITIVE INTELLIGENCE & COMPETITOR WATCH SUITE\n  ✔ 1. Creates and retrieves detailed competitor profiles with 14 required dimensions (2.4613ms)\n  ✔ 2. Computes 2D Euclidean positioning distance and identifies nearest rival and whitespace (0.2918ms)\n  ✔ 3. Detects price decrease and feature launch across competitor snapshots (1.5392ms)\n  ✔ 4. Executes Competitor Watch run and generates 6-factor actionable change alerts (2.8883ms)"
+  },
+  {
+    "line": "✖ Rejects tampered ciphertext with authentication error (0.6399ms)",
+    "context": "▶ PHASE 8 — SUITE 1: Credential Security & AES-256-GCM Encryption\n  ✔ Encrypts and decrypts credentials with authenticated AES-256-GCM (1.7521ms)\n  ✖ Rejects tampered ciphertext with authentication error (0.6399ms)\n  ✔ Stores and retrieves encrypted credentials in Firestore subcollection (0.4045ms)\n✖ PHASE 8 — SUITE 1: Credential Security & AES-256-GCM Encryption (3.3911ms)\n▶ PHASE 8 — SUITE 2: OAuth 2.0 Security, PKCE & Anti-CSRF Verification\n  ✔ Generates PKCE code_verifier and S256 code_challenge (0.208ms)\n  ✔ Generates tamper-evident HMAC state and verifies within 15-minute TTL (0.1186ms)"
+  },
+  {
+    "line": "✖ PHASE 8 — SUITE 1: Credential Security & AES-256-GCM Encryption (3.3911ms)",
+    "context": "  ✖ Rejects tampered ciphertext with authentication error (0.6399ms)\n  ✔ Stores and retrieves encrypted credentials in Firestore subcollection (0.4045ms)\n✖ PHASE 8 — SUITE 1: Credential Security & AES-256-GCM Encryption (3.3911ms)\n▶ PHASE 8 — SUITE 2: OAuth 2.0 Security, PKCE & Anti-CSRF Verification\n  ✔ Generates PKCE code_verifier and S256 code_challenge (0.208ms)\n  ✔ Generates tamper-evident HMAC state and verifies within 15-minute TTL (0.1186ms)\n  ✔ Rejects tampered OAuth state (0.1042ms)\n  ✔ Enforces single-use consumption of OAuth state (replays blocked) (0.1271ms)"
+  },
+  {
+    "line": "✖ 1. Google Research Provider: Synthesizes web research with citations (0.2914ms)",
+    "context": "✔ PHASE 8 — SUITE 3: Provider Registry & Multi-Provider Ingestion Capabilities (0.4706ms)\n▶ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters\n  ✖ 1. Google Research Provider: Synthesizes web research with citations (0.2914ms)\n  ✖ 2. Google Analytics 4 Provider: Ingests traffic & session performance (0.2626ms)\n  ✖ 3. Google Search Console Provider: Ingests impressions, clicks & keywords (0.175ms)\n  ✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)\n  ✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)\n  ✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)"
+  },
+  {
+    "line": "✖ 2. Google Analytics 4 Provider: Ingests traffic & session performance (0.2626ms)",
+    "context": "▶ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters\n  ✖ 1. Google Research Provider: Synthesizes web research with citations (0.2914ms)\n  ✖ 2. Google Analytics 4 Provider: Ingests traffic & session performance (0.2626ms)\n  ✖ 3. Google Search Console Provider: Ingests impressions, clicks & keywords (0.175ms)\n  ✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)\n  ✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)\n  ✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)\n  ✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)"
+  },
+  {
+    "line": "✖ 3. Google Search Console Provider: Ingests impressions, clicks & keywords (0.175ms)",
+    "context": "  ✖ 1. Google Research Provider: Synthesizes web research with citations (0.2914ms)\n  ✖ 2. Google Analytics 4 Provider: Ingests traffic & session performance (0.2626ms)\n  ✖ 3. Google Search Console Provider: Ingests impressions, clicks & keywords (0.175ms)\n  ✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)\n  ✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)\n  ✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)\n  ✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)\n  ✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)"
+  },
+  {
+    "line": "✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)",
+    "context": "  ✖ 2. Google Analytics 4 Provider: Ingests traffic & session performance (0.2626ms)\n  ✖ 3. Google Search Console Provider: Ingests impressions, clicks & keywords (0.175ms)\n  ✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)\n  ✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)\n  ✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)\n  ✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)\n  ✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)\n  ✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)"
+  },
+  {
+    "line": "✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)",
+    "context": "  ✖ 3. Google Search Console Provider: Ingests impressions, clicks & keywords (0.175ms)\n  ✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)\n  ✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)\n  ✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)\n  ✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)\n  ✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)\n  ✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)\n✖ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters (5.7253ms)"
+  },
+  {
+    "line": "✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)",
+    "context": "  ✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)\n  ✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)\n  ✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)\n  ✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)\n  ✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)\n  ✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)\n✖ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters (5.7253ms)\n▶ PHASE 8 — SUITE 5: Centralized Data Ingestion, Storage & Deduplication"
+  },
+  {
+    "line": "✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)",
+    "context": "  ✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)\n  ✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)\n  ✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)\n  ✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)\n  ✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)\n✖ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters (5.7253ms)\n▶ PHASE 8 — SUITE 5: Centralized Data Ingestion, Storage & Deduplication\n  ✔ Ingests, normalizes, and stores provider records (0.575ms)"
+  },
+  {
+    "line": "✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)",
+    "context": "  ✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)\n  ✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)\n  ✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)\n  ✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)\n✖ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters (5.7253ms)\n▶ PHASE 8 — SUITE 5: Centralized Data Ingestion, Storage & Deduplication\n  ✔ Ingests, normalizes, and stores provider records (0.575ms)\n  ✔ Deduplicates identical records within time window (0.1617ms)"
+  },
+  {
+    "line": "✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)",
+    "context": "  ✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)\n  ✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)\n  ✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)\n✖ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters (5.7253ms)\n▶ PHASE 8 — SUITE 5: Centralized Data Ingestion, Storage & Deduplication\n  ✔ Ingests, normalizes, and stores provider records (0.575ms)\n  ✔ Deduplicates identical records within time window (0.1617ms)\n  ✔ Purges provider records upon disconnection (0.1222ms)"
+  },
+  {
+    "line": "✖ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters (5.7253ms)",
+    "context": "  ✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)\n  ✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)\n✖ PHASE 8 — SUITE 4: All 9 Provider Implementations & Data Adapters (5.7253ms)\n▶ PHASE 8 — SUITE 5: Centralized Data Ingestion, Storage & Deduplication\n  ✔ Ingests, normalizes, and stores provider records (0.575ms)\n  ✔ Deduplicates identical records within time window (0.1617ms)\n  ✔ Purges provider records upon disconnection (0.1222ms)\n✔ PHASE 8 — SUITE 5: Centralized Data Ingestion, Storage & Deduplication (1.0676ms)"
+  },
+  {
+    "line": "✖ Manages full connection lifecycle: connect, sync, health check, disconnect (0.35ms)",
+    "context": "✔ PHASE 8 — SUITE 6: Automation Engine, Triggers, Retries & Category C Approval Gate (190.2417ms)\n▶ PHASE 8 — SUITE 7: End-to-End Integration Manager Lifecycle & Audit Trail\n  ✖ Manages full connection lifecycle: connect, sync, health check, disconnect (0.35ms)\n  ✖ Audit ledger records all security and operational events with sanitized credentials (0.2102ms)\n✖ PHASE 8 — SUITE 7: End-to-End Integration Manager Lifecycle & Audit Trail (0.834ms)\n▶ PHASE 8 — SUITE 8: Department Intelligence Context Integration\n  ✖ Feeds external telemetry into Growth Planner and Analytics departments (0.1555ms)\n✖ PHASE 8 — SUITE 8: Department Intelligence Context Integration (0.2579ms)"
+  },
+  {
+    "line": "✖ Audit ledger records all security and operational events with sanitized credentials (0.2102ms)",
+    "context": "▶ PHASE 8 — SUITE 7: End-to-End Integration Manager Lifecycle & Audit Trail\n  ✖ Manages full connection lifecycle: connect, sync, health check, disconnect (0.35ms)\n  ✖ Audit ledger records all security and operational events with sanitized credentials (0.2102ms)\n✖ PHASE 8 — SUITE 7: End-to-End Integration Manager Lifecycle & Audit Trail (0.834ms)\n▶ PHASE 8 — SUITE 8: Department Intelligence Context Integration\n  ✖ Feeds external telemetry into Growth Planner and Analytics departments (0.1555ms)\n✖ PHASE 8 — SUITE 8: Department Intelligence Context Integration (0.2579ms)\n▶ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation"
+  },
+  {
+    "line": "✖ PHASE 8 — SUITE 7: End-to-End Integration Manager Lifecycle & Audit Trail (0.834ms)",
+    "context": "  ✖ Manages full connection lifecycle: connect, sync, health check, disconnect (0.35ms)\n  ✖ Audit ledger records all security and operational events with sanitized credentials (0.2102ms)\n✖ PHASE 8 — SUITE 7: End-to-End Integration Manager Lifecycle & Audit Trail (0.834ms)\n▶ PHASE 8 — SUITE 8: Department Intelligence Context Integration\n  ✖ Feeds external telemetry into Growth Planner and Analytics departments (0.1555ms)\n✖ PHASE 8 — SUITE 8: Department Intelligence Context Integration (0.2579ms)\n▶ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation\n  ✖ Ensures complete data and credential isolation between tenants (0.1758ms)"
+  },
+  {
+    "line": "✖ Feeds external telemetry into Growth Planner and Analytics departments (0.1555ms)",
+    "context": "✖ PHASE 8 — SUITE 7: End-to-End Integration Manager Lifecycle & Audit Trail (0.834ms)\n▶ PHASE 8 — SUITE 8: Department Intelligence Context Integration\n  ✖ Feeds external telemetry into Growth Planner and Analytics departments (0.1555ms)\n✖ PHASE 8 — SUITE 8: Department Intelligence Context Integration (0.2579ms)\n▶ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation\n  ✖ Ensures complete data and credential isolation between tenants (0.1758ms)\n✖ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation (0.3233ms)\n▶ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE"
+  },
+  {
+    "line": "✖ PHASE 8 — SUITE 8: Department Intelligence Context Integration (0.2579ms)",
+    "context": "▶ PHASE 8 — SUITE 8: Department Intelligence Context Integration\n  ✖ Feeds external telemetry into Growth Planner and Analytics departments (0.1555ms)\n✖ PHASE 8 — SUITE 8: Department Intelligence Context Integration (0.2579ms)\n▶ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation\n  ✖ Ensures complete data and credential isolation between tenants (0.1758ms)\n✖ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation (0.3233ms)\n▶ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE\n  ✖ 1. Executes operational surveillance monitoring cycle across competitors, regulations, and goals (2.3523ms)"
+  },
+  {
+    "line": "✖ Ensures complete data and credential isolation between tenants (0.1758ms)",
+    "context": "✖ PHASE 8 — SUITE 8: Department Intelligence Context Integration (0.2579ms)\n▶ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation\n  ✖ Ensures complete data and credential isolation between tenants (0.1758ms)\n✖ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation (0.3233ms)\n▶ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE\n  ✖ 1. Executes operational surveillance monitoring cycle across competitors, regulations, and goals (2.3523ms)\n  ✖ 2. Enforces strict 6-factor actionable alert structure across all generated surveillance alerts (2.5308ms)\n  ✔ 3. Synthesizes executive Weekly Business Digest with dynamic health scoring and action items (0.3691ms)"
+  },
+  {
+    "line": "✖ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation (0.3233ms)",
+    "context": "▶ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation\n  ✖ Ensures complete data and credential isolation between tenants (0.1758ms)\n✖ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation (0.3233ms)\n▶ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE\n  ✖ 1. Executes operational surveillance monitoring cycle across competitors, regulations, and goals (2.3523ms)\n  ✖ 2. Enforces strict 6-factor actionable alert structure across all generated surveillance alerts (2.5308ms)\n  ✔ 3. Synthesizes executive Weekly Business Digest with dynamic health scoring and action items (0.3691ms)\n  ✔ 4. Acknowledges and resolves active alerts with resolution notes (0.2237ms)"
+  },
+  {
+    "line": "✖ 1. Executes operational surveillance monitoring cycle across competitors, regulations, and goals (2.3523ms)",
+    "context": "✖ PHASE 8 — SUITE 9: Multi-Tenant Workspace Security Isolation (0.3233ms)\n▶ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE\n  ✖ 1. Executes operational surveillance monitoring cycle across competitors, regulations, and goals (2.3523ms)\n  ✖ 2. Enforces strict 6-factor actionable alert structure across all generated surveillance alerts (2.5308ms)\n  ✔ 3. Synthesizes executive Weekly Business Digest with dynamic health scoring and action items (0.3691ms)\n  ✔ 4. Acknowledges and resolves active alerts with resolution notes (0.2237ms)\n  ✔ 5. Certifies Strict Video Exclusion across all surveillance alerts and recommended actions (0.2149ms)\n  ✖ 6. Enforces strict multi-tenant boundary isolation on surveillance alerts and digests (0.5125ms)"
+  },
+  {
+    "line": "✖ 2. Enforces strict 6-factor actionable alert structure across all generated surveillance alerts (2.5308ms)",
+    "context": "▶ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE\n  ✖ 1. Executes operational surveillance monitoring cycle across competitors, regulations, and goals (2.3523ms)\n  ✖ 2. Enforces strict 6-factor actionable alert structure across all generated surveillance alerts (2.5308ms)\n  ✔ 3. Synthesizes executive Weekly Business Digest with dynamic health scoring and action items (0.3691ms)\n  ✔ 4. Acknowledges and resolves active alerts with resolution notes (0.2237ms)\n  ✔ 5. Certifies Strict Video Exclusion across all surveillance alerts and recommended actions (0.2149ms)\n  ✖ 6. Enforces strict multi-tenant boundary isolation on surveillance alerts and digests (0.5125ms)\n✖ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE (6.8352ms)"
+  },
+  {
+    "line": "✖ 6. Enforces strict multi-tenant boundary isolation on surveillance alerts and digests (0.5125ms)",
+    "context": "  ✔ 4. Acknowledges and resolves active alerts with resolution notes (0.2237ms)\n  ✔ 5. Certifies Strict Video Exclusion across all surveillance alerts and recommended actions (0.2149ms)\n  ✖ 6. Enforces strict multi-tenant boundary isolation on surveillance alerts and digests (0.5125ms)\n✖ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE (6.8352ms)\n✔ Phase 9 — Suite 1: Authoritative Commercial Plans & Pricing Configuration (0.6353ms)\n✔ Phase 9 — Suite 2: Cashfree / Mitra Provider & Cryptographic Signatures (420.5257ms)\n✔ Phase 9 — Suite 3: Multi-Pool Credit Wallet, Priority Ordering & Reservation Locks (2.9948ms)\n✔ Phase 9 — Suite 4: Subscription Activation, Renewal, Upgrade & Cancellation (0.734ms)"
+  },
+  {
+    "line": "✖ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE (6.8352ms)",
+    "context": "  ✔ 5. Certifies Strict Video Exclusion across all surveillance alerts and recommended actions (0.2149ms)\n  ✖ 6. Enforces strict multi-tenant boundary isolation on surveillance alerts and digests (0.5125ms)\n✖ PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE (6.8352ms)\n✔ Phase 9 — Suite 1: Authoritative Commercial Plans & Pricing Configuration (0.6353ms)\n✔ Phase 9 — Suite 2: Cashfree / Mitra Provider & Cryptographic Signatures (420.5257ms)\n✔ Phase 9 — Suite 3: Multi-Pool Credit Wallet, Priority Ordering & Reservation Locks (2.9948ms)\n✔ Phase 9 — Suite 4: Subscription Activation, Renewal, Upgrade & Cancellation (0.734ms)\n✔ Phase 9 — Suite 5: Centralized Feature Barriers & Plan Entitlement Checks (0.3545ms)"
+  },
+  {
+    "line": "✖ 2. Verifies Full Research Orchestration & Real-World Indian Chocolate Metrics (4.4271ms)",
+    "context": "▶ Phase 2 Real-World Intelligence Independent Audit\n  ✔ 1. Verifies Idea Understanding: extracts 12 dimensions and detects geography & industry (0.563ms)\n  ✖ 2. Verifies Full Research Orchestration & Real-World Indian Chocolate Metrics (4.4271ms)\n  ✔ 3. Audits Emerging-Player Discovery (Paul And Mike, Manam, Subko, Mason & Co) (0.4931ms)\n  ✔ 4. Audits Opportunity Discovery & 4-Dimension Attractiveness Math (0.5411ms)\n  ✔ 5. Audits Financial Intelligence & Exact Unit Economics Calculation (0.9378ms)\n  ✔ 6. Audits Follow-up Conversational Queries across multiple dimensions (4.7353ms)\n  ✔ 7. Audits Idea Finalization & Business Brain Blueprint Graduation (1.0736ms)"
+  },
+  {
+    "line": "✖ Phase 2 Real-World Intelligence Independent Audit (15.0646ms)",
+    "context": "  ✔ 7. Audits Idea Finalization & Business Brain Blueprint Graduation (1.0736ms)\n  ✔ 8. Audits Failure Handling & Two-Phase Credit Refund on Error (0.7353ms)\n✖ Phase 2 Real-World Intelligence Independent Audit (15.0646ms)\n▶ Settings & Workspace E2E Integration Suite\n  ✔ 1. Creates new workspace anchor and validates initial state (33.1016ms)\n  ✔ 2. Invites team member with email & role, then verifies in roster (6.7024ms)\n  ✔ 3. Generates shareable cryptographic invitation link with 7-day expiry (2.0205ms)\n  ✔ 4. Updates workspace preferences: department AI reasoning tiers & webhooks (4.758ms)"
+  },
+  {
+    "line": "✖ failing tests:",
+    "context": "ℹ duration_ms 62196.1465\n\n✖ failing tests:\n\ntest at src\\server\\activeAssetManagement.test.ts:57:3\n✖ 2. Executes atomic bulk archive, restore, tagging, move, and permanent delete (3.2863ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  "
+  },
+  {
+    "line": "✖ 2. Executes atomic bulk archive, restore, tagging, move, and permanent delete (3.2863ms)",
+    "context": "\ntest at src\\server\\activeAssetManagement.test.ts:57:3\n✖ 2. Executes atomic bulk archive, restore, tagging, move, and permanent delete (3.2863ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  'active' !== 'Active'\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\activeAssetManagement.test.ts:124:12)"
+  },
+  {
+    "line": "✖ PHASE 04 - 1. Research Engine: Missing search provider returns honest PROVIDER_UNAVAILABLE state (2.2461ms)",
+    "context": "\ntest at src\\server\\ai\\phase04AiTruthAndProvenance.test.ts:14:1\n✖ PHASE 04 - 1. Research Engine: Missing search provider returns honest PROVIDER_UNAVAILABLE state (2.2461ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  + actual - expected\n  \n  + 'COMPLETED'\n  - 'PROVIDER_UNAVAILABLE'"
+  },
+  {
+    "line": "✖ PHASE 04 - 2. Research Engine: Indian consumer inquiry does not receive US Census Bureau statistics (0.283ms)",
+    "context": "\ntest at src\\server\\ai\\phase04AiTruthAndProvenance.test.ts:46:1\n✖ PHASE 04 - 2. Research Engine: Indian consumer inquiry does not receive US Census Bureau statistics (0.283ms)\n  AssertionError [ERR_ASSERTION]: Expected \"actual\" to be strictly unequal to:\n  \n  'census.gov'\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\ai\\phase04AiTruthAndProvenance.test.ts:59:12)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ PHASE 04 - 3. Competitor Discovery Engine: Returns empty list for unknown category without inventing example-incumbent.com (0.4387ms)",
+    "context": "\ntest at src\\server\\ai\\phase04AiTruthAndProvenance.test.ts:64:1\n✖ PHASE 04 - 3. Competitor Discovery Engine: Returns empty list for unknown category without inventing example-incumbent.com (0.4387ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  2 !== 0\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\ai\\phase04AiTruthAndProvenance.test.ts:77:10)"
+  },
+  {
+    "line": "✖ PHASE 04 - 7. Truth Check: Flags uncited macro market size claims (0.3425ms)",
+    "context": "\ntest at src\\server\\ai\\phase04AiTruthAndProvenance.test.ts:130:1\n✖ PHASE 04 - 7. Truth Check: Flags uncited macro market size claims (0.3425ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  true !== false\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\ai\\phase04AiTruthAndProvenance.test.ts:138:10)"
+  },
+  {
+    "line": "✖ Scenario D: Print & Packaging Intelligence, Pre-Flight Verification, and State Machine (1.1361ms)",
+    "context": "\ntest at src\\server\\assetLibraryE2EValidation.test.ts:324:5\n✖ Scenario D: Print & Packaging Intelligence, Pre-Flight Verification, and State Machine (1.1361ms)\n  TypeError: Cannot read properties of undefined (reading 'length')\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\assetLibraryE2EValidation.test.ts:363:75)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7)\n"
+  },
+  {
+    "line": "✖ 12. Preserves and tags existing brand assets provided by an established business (1.5142ms)",
+    "context": "\ntest at src\\server\\brandIdentityDeepValidation.test.ts:201:3\n✖ 12. Preserves and tags existing brand assets provided by an established business (1.5142ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  + actual - expected\n  \n  + {\n  +   confidence: 1,"
+  },
+  {
+    "line": "✖ enforces Level 3 Human Approval Gate before dispatching outbound messages (1.6641ms)",
+    "context": "\ntest at src\\server\\growthAgencyJourneys.test.ts:145:5\n✖ enforces Level 3 Human Approval Gate before dispatching outbound messages (1.6641ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  + actual - expected\n  \n  + 'Resend'\n  - 'Resend / EmailService'"
+  },
+  {
+    "line": "✖ 3. Document Extraction Canonical Contract & Fact Staging (12.5777ms)",
+    "context": "\ntest at src\\server\\phase02ApiAndTypeRemediation.test.ts:113:11\n✖ 3. Document Extraction Canonical Contract & Fact Staging (12.5777ms)\n  AssertionError [ERR_ASSERTION]: Must extract at least 1 service\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase02ApiAndTypeRemediation.test.ts:150:12)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase02ApiAndTypeRemediation.test.ts:113:3)"
+  },
+  {
+    "line": "✖ 6. Product Bulk Import API — Deduplication & Partial Success Reporting (2.2391ms)",
+    "context": "\ntest at src\\server\\phase02ApiAndTypeRemediation.test.ts:286:11\n✖ 6. Product Bulk Import API — Deduplication & Partial Success Reporting (2.2391ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  2 !== 5\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase02ApiAndTypeRemediation.test.ts:327:12)"
+  },
+  {
+    "line": "✖ 7. Product Bulk Import API — Atomic Mode Abort & Rollback (2.46ms)",
+    "context": "\ntest at src\\server\\phase02ApiAndTypeRemediation.test.ts:335:11\n✖ 7. Product Bulk Import API — Atomic Mode Abort & Rollback (2.46ms)\n  AssertionError [ERR_ASSERTION]: No product should be created when atomic import fails\n  + actual - expected\n  \n  + {\n  +   category: 'General',"
+  },
+  {
+    "line": "✖ Phase 10 — Suite 6: Failure & Recovery: 12 Real-World Fault Scenarios (212.7965ms)",
+    "context": "\ntest at src\\server\\phase10.test.ts:546:1\n✖ Phase 10 — Suite 6: Failure & Recovery: 12 Real-World Fault Scenarios (212.7965ms)\n  Error: UNCONNECTED: Google Analytics 4 is not connected\n      at GoogleAnalytics4Provider.getAccountInfo (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\providers\\googleAnalytics4Provider.ts:184:13)\n      at IntegrationManager.connectApiKeyProvider (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\integrationManager.ts:231:40)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase10.test.ts:628:16)"
+  },
+  {
+    "line": "✖ Phase 10 — Suite 11: Production Acceptance: Complete 28-Step Customer Journey (31.4205ms)",
+    "context": "\ntest at src\\server\\phase10.test.ts:916:1\n✖ Phase 10 — Suite 11: Production Acceptance: Complete 28-Step Customer Journey (31.4205ms)\n  Error: UNCONNECTED: Google Analytics 4 is not connected\n      at GoogleAnalytics4Provider.getAccountInfo (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\providers\\googleAnalytics4Provider.ts:184:13)\n      at IntegrationManager.connectApiKeyProvider (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\integrationManager.ts:231:40)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase10.test.ts:955:23)"
+  },
+  {
+    "line": "✖ Scenario 1: Product-to-customer relationships are created, validated and retrieved (3.5733ms)",
+    "context": "\ntest at src\\server\\phase2UnifiedIntelligence.test.ts:155:13\n✖ Scenario 1: Product-to-customer relationships are created, validated and retrieved (3.5733ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  404 !== 201\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase2UnifiedIntelligence.test.ts:176:16)"
+  },
+  {
+    "line": "✖ Scenario 2: Campaign-to-product relationships link marketing initiatives to catalog items (4.5134ms)",
+    "context": "\ntest at src\\server\\phase2UnifiedIntelligence.test.ts:199:13\n✖ Scenario 2: Campaign-to-product relationships link marketing initiatives to catalog items (4.5134ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(twoHop.edges.length >= 2)\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase2UnifiedIntelligence.test.ts:217:16)"
+  },
+  {
+    "line": "✖ Scenario 3: Assembled context accurately retrieves brand voice, vocabulary, and restrictions (3.52ms)",
+    "context": "\ntest at src\\server\\phase2UnifiedIntelligence.test.ts:225:13\n✖ Scenario 3: Assembled context accurately retrieves brand voice, vocabulary, and restrictions (3.52ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  404 !== 200\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase2UnifiedIntelligence.test.ts:232:16)"
+  },
+  {
+    "line": "✖ Scenario 4: Retrieval of historical decisions, campaign outcomes and learnings (1.5342ms)",
+    "context": "\ntest at src\\server\\phase2UnifiedIntelligence.test.ts:245:13\n✖ Scenario 4: Retrieval of historical decisions, campaign outcomes and learnings (1.5342ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  404 !== 200\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase2UnifiedIntelligence.test.ts:266:16)"
+  },
+  {
+    "line": "✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)",
+    "context": "\ntest at src\\server\\phase2UnifiedIntelligence.test.ts:313:13\n✖ Scenario 6: Working and episodic memory persist across discrete HTTP sessions (1.82ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  404 !== 200\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase2UnifiedIntelligence.test.ts:333:16)"
+  },
+  {
+    "line": "✖ Scenario 7: Working memory expires according to TTL while business memory stays permanent (1.6847ms)",
+    "context": "\ntest at src\\server\\phase2UnifiedIntelligence.test.ts:346:13\n✖ Scenario 7: Working memory expires according to TTL while business memory stays permanent (1.6847ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  404 !== 200\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase2UnifiedIntelligence.test.ts:365:16)"
+  },
+  {
+    "line": "✖ Scenario 10: User rejection records feedback, logs decision, and suppresses re-recommendation (6.0052ms)",
+    "context": "\ntest at src\\server\\phase3ReasoningIntelligence.test.ts:492:13\n✖ Scenario 10: User rejection records feedback, logs decision, and suppresses re-recommendation (6.0052ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(rejectedDec.userApproval.comments?.includes('mini-keg packaging'))\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase3ReasoningIntelligence.test.ts:539:16)"
+  },
+  {
+    "line": "✖ Rejects tampered ciphertext with authentication error (0.6399ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:55:11\n✖ Rejects tampered ciphertext with authentication error (0.6399ms)\n  AssertionError [ERR_ASSERTION]: Missing expected exception: Must reject tampered ciphertext with cryptographic authentication failure\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:63:12)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1201:25)\n      at Test.start (node:internal/test_runner/test:1096:17)"
+  },
+  {
+    "line": "✖ 1. Google Research Provider: Synthesizes web research with citations (0.2914ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:161:11\n✖ 1. Google Research Provider: Synthesizes web research with citations (0.2914ms)\n  AssertionError [ERR_ASSERTION]: Research records must be returned\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:165:12)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:161:3)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ 2. Google Analytics 4 Provider: Ingests traffic & session performance (0.2626ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:171:11\n✖ 2. Google Analytics 4 Provider: Ingests traffic & session performance (0.2626ms)\n  AssertionError [ERR_ASSERTION]: GA4 must return records\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:175:14)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:171:3)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ 3. Google Search Console Provider: Ingests impressions, clicks & keywords (0.175ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:183:11\n✖ 3. Google Search Console Provider: Ingests impressions, clicks & keywords (0.175ms)\n  AssertionError [ERR_ASSERTION]: GSC must return search records\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:187:14)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:183:3)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:194:11\n✖ 4. Google Business Profile Provider: Handles local reach & reviews (0.1834ms)\n  AssertionError [ERR_ASSERTION]: GBP must return performance and reviews\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:196:12)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:194:3)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:202:11\n✖ 5. Email Service Provider: Dispatches transactional message with idempotency (0.355ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  false !== true\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:217:14)"
+  },
+  {
+    "line": "✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:222:11\n✖ 6. Meta / Instagram Provider: Ingests reach and follower metrics (2.7605ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(pkg.records.length > 0)\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:224:12)"
+  },
+  {
+    "line": "✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:230:11\n✖ 7. LinkedIn Marketing Provider: Ingests company engagement & demographics (0.4443ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(pkg.records.length > 0)\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:234:14)"
+  },
+  {
+    "line": "✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:241:11\n✖ 8. YouTube Data Provider: Read-only channel & video analytics (NO VIDEO CREATION) (0.3716ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(pkg.records.length > 0)\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:245:14)"
+  },
+  {
+    "line": "✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:260:11\n✖ 9. Google Drive Provider: Manages executive report export & file listing (0.3677ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(pkg.records.length > 0)\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:264:14)"
+  },
+  {
+    "line": "✖ Manages full connection lifecycle: connect, sync, health check, disconnect (0.35ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:484:11\n✖ Manages full connection lifecycle: connect, sync, health check, disconnect (0.35ms)\n  Error: UNCONNECTED: Google Analytics 4 is not connected\n      at GoogleAnalytics4Provider.getAccountInfo (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\providers\\googleAnalytics4Provider.ts:184:13)\n      at IntegrationManager.connectApiKeyProvider (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\integrationManager.ts:231:40)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:488:20)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ Audit ledger records all security and operational events with sanitized credentials (0.2102ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:517:11\n✖ Audit ledger records all security and operational events with sanitized credentials (0.2102ms)\n  AssertionError [ERR_ASSERTION]: Audit logs must record connection and lifecycle events\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:521:14)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:517:3)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ Feeds external telemetry into Growth Planner and Analytics departments (0.1555ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:541:11\n✖ Feeds external telemetry into Growth Planner and Analytics departments (0.1555ms)\n  Error: UNCONNECTED: Google Analytics 4 is not connected\n      at GoogleAnalytics4Provider.getAccountInfo (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\providers\\googleAnalytics4Provider.ts:184:13)\n      at IntegrationManager.connectApiKeyProvider (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\integrationManager.ts:231:40)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:545:7)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ Ensures complete data and credential isolation between tenants (0.1758ms)",
+    "context": "\ntest at src\\server\\phase8.test.ts:567:11\n✖ Ensures complete data and credential isolation between tenants (0.1758ms)\n  Error: UNCONNECTED: Google Analytics 4 is not connected\n      at GoogleAnalytics4Provider.getAccountInfo (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\providers\\googleAnalytics4Provider.ts:184:13)\n      at IntegrationManager.connectApiKeyProvider (D:\\brainwise pro\\brainwise (1)\\src\\server\\integrations\\integrationManager.ts:231:40)\n      at async TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8.test.ts:569:5)\n      at async Test.run (node:internal/test_runner/test:1208:7)"
+  },
+  {
+    "line": "✖ 1. Executes operational surveillance monitoring cycle across competitors, regulations, and goals (2.3523ms)",
+    "context": "\ntest at src\\server\\phase8BusinessWatch.test.ts:19:3\n✖ 1. Executes operational surveillance monitoring cycle across competitors, regulations, and goals (2.3523ms)\n  AssertionError [ERR_ASSERTION]: Must generate at least regulatory and goal lag alerts\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8BusinessWatch.test.ts:36:12)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async Promise.all (index 0)\n      at async Suite.run (node:internal/test_runner/test:1619:7)"
+  },
+  {
+    "line": "✖ 2. Enforces strict 6-factor actionable alert structure across all generated surveillance alerts (2.5308ms)",
+    "context": "\ntest at src\\server\\phase8BusinessWatch.test.ts:44:3\n✖ 2. Enforces strict 6-factor actionable alert structure across all generated surveillance alerts (2.5308ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(alerts.length >= 2)\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8BusinessWatch.test.ts:46:12)"
+  },
+  {
+    "line": "✖ 6. Enforces strict multi-tenant boundary isolation on surveillance alerts and digests (0.5125ms)",
+    "context": "\ntest at src\\server\\phase8BusinessWatch.test.ts:133:3\n✖ 6. Enforces strict multi-tenant boundary isolation on surveillance alerts and digests (0.5125ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(alertsA.length >= 1)\n  \n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\phase8BusinessWatch.test.ts:139:12)"
+  },
+  {
+    "line": "✖ 2. Verifies Full Research Orchestration & Real-World Indian Chocolate Metrics (4.4271ms)",
+    "context": "\ntest at src\\server\\realWorldValidation.test.ts:42:3\n✖ 2. Verifies Full Research Orchestration & Real-World Indian Chocolate Metrics (4.4271ms)\n  AssertionError [ERR_ASSERTION]: Must provide credible citations\n      at TestContext.<anonymous> (D:\\brainwise pro\\brainwise (1)\\src\\server\\realWorldValidation.test.ts:81:12)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async Suite.processPendingSubtests (node:internal/test_runner/test:831:7) {\n    generatedMessage: false,"
+  }
+]

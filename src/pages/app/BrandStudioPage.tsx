@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
+import { apiClient } from '../../services/apiClient';
 import {
   buildCarouselSlideSvgMarkup,
   buildLocalBrandAssetVariations,
@@ -338,34 +339,38 @@ export const BrandStudioPage: React.FC = () => {
     setLogoGenerating(true);
     setLogoError(null);
     try {
-      const res = await fetch('/api/ai/brand-logo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      let data: any;
+      if (state.activeWorkspaceId) {
+        data = await apiClient.generateAiLogoConcepts(state.activeWorkspaceId, {
           prompt: effectivePrompt,
           styleArchetype: logoArchetype,
           mood: logoMood,
           lockBrandColors: brandLockEnabled,
-          brand: state.brand,
-        }),
-      });
-      const data = (await res.json()) as {
-        concepts?: Array<{
-          name?: string;
-          rationale?: string;
-          styleTag?: string;
-          markStyle?: 'geometric' | 'monogram' | 'emblem';
-          accentColor?: string;
-          customSvg?: string;
-        }>;
-        model?: string;
-        error?: string;
-      };
-      if (!res.ok || !Array.isArray(data.concepts) || data.concepts.length === 0) {
-        throw new Error(data.error || `AI logo request failed (${res.status}).`);
+          brand: state.brand as any,
+        });
+      } else {
+        const res = await fetch('/api/ai/brand-logo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: effectivePrompt,
+            styleArchetype: logoArchetype,
+            mood: logoMood,
+            lockBrandColors: brandLockEnabled,
+            brand: state.brand,
+          }),
+        });
+        data = (await res.json()) as any;
+        if (!res.ok) {
+          throw new Error(data.error || `AI logo request failed (${res.status}).`);
+        }
       }
 
-      const nextConcepts: BrandConcept[] = data.concepts.slice(0, 3).map((c, idx) => ({
+      if (!data || !Array.isArray(data.concepts) || data.concepts.length === 0) {
+        throw new Error(data?.error || `AI logo request returned no concepts.`);
+      }
+
+      const nextConcepts: BrandConcept[] = data.concepts.slice(0, 3).map((c: any, idx: number) => ({
         id: `ai-logo-${Date.now()}-${idx}`,
         name: c.name || `AI Concept 0${idx + 1}`,
         rationale: c.rationale || 'AI-generated identity mark anchored to Business Brain.',
@@ -427,44 +432,51 @@ export const BrandStudioPage: React.FC = () => {
     setSocialError(null);
 
     try {
-      const res = await fetch('/api/ai/social-creative', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platform: socialPlatform,
-          angle: socialAngle,
-          prompt: socialPrompt,
-          slideCount: socialPlatform === 'Carousel' ? socialSlideCount : 1,
-          mood: socialDark ? 'Dark Charcoal Editorial' : 'Swiss White Architectural',
-          regenerateSlideNumber,
-          brand: {
-            brandName: state.brand.brandName,
-            tagline: state.brand.tagline,
-            positioningStatement: state.brand.positioningStatement,
-            visualDirection: state.brand.visualDirection,
-            voice: state.brand.guidelines.brandVoice,
-          },
-          brain: {
-            industry: state.brain.industry,
-            targetAudience: state.brain.targetAudience,
-            products: state.brain.products.slice(0, 2),
-          },
-        }),
-      });
-
-      const data = (await res.json()) as {
-        creative?: GeneratedSocialPackage;
-        model?: string;
-        error?: string;
+      let data: any;
+      const socialPayload = {
+        platform: socialPlatform,
+        angle: socialAngle,
+        prompt: socialPrompt,
+        slideCount: socialPlatform === 'Carousel' ? socialSlideCount : 1,
+        mood: socialDark ? 'Dark Charcoal Editorial' : 'Swiss White Architectural',
+        regenerateSlideNumber,
+        brand: {
+          brandName: state.brand.brandName,
+          tagline: state.brand.tagline,
+          positioningStatement: state.brand.positioningStatement,
+          visualDirection: state.brand.visualDirection,
+          voice: state.brand.guidelines.brandVoice,
+        },
+        brain: {
+          industry: state.brain.industry,
+          targetAudience: state.brain.targetAudience,
+          products: state.brain.products.slice(0, 2),
+        },
       };
-      if (!res.ok || !data.creative || !Array.isArray(data.creative.slides)) {
-        throw new Error(data.error || `AI social generation failed (${res.status}).`);
+
+      if (state.activeWorkspaceId) {
+        data = await apiClient.generateAiSocialCreative(state.activeWorkspaceId, socialPayload);
+      } else {
+        const res = await fetch('/api/ai/social-creative', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(socialPayload),
+        });
+        data = (await res.json()) as any;
+        if (!res.ok) {
+          throw new Error(data.error || `AI social generation failed (${res.status}).`);
+        }
       }
 
-      const cleanedSlides: CarouselSlide[] = data.creative.slides.map((s, idx) => ({
+      const creativePkg = data.creative || (Array.isArray(data.slides) ? data : null);
+      if (!creativePkg || !Array.isArray(creativePkg.slides)) {
+        throw new Error(data?.error || `AI social generation returned invalid format.`);
+      }
+
+      const cleanedSlides: CarouselSlide[] = creativePkg.slides.map((s: any, idx: number) => ({
         ...s,
         slideNumber: regenerateSlideNumber ?? s.slideNumber ?? idx + 1,
-        svgMotif: sanitizeAiSvgMarkup(s.svgMotif, '0 0 120 48'),
+        svgMotif: sanitizeAiSvgMarkup(s.svgMotif || s.artSvg, '0 0 120 48'),
       }));
 
       if (regenerateSlideNumber && cleanedSlides[0]) {
@@ -527,40 +539,46 @@ export const BrandStudioPage: React.FC = () => {
     setCollateralGenerating(true);
     setCollateralError(null);
     try {
-      const res = await fetch('/api/ai/brand-asset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category: selectedCollateral,
-          prompt: collateralPrompt,
-          surfaceMode: collateralSurfacePref,
-          brand: {
-            brandName: state.brand.brandName,
-            tagline: state.brand.tagline,
-            positioningStatement: state.brand.positioningStatement,
-            visualDirection: state.brand.visualDirection,
-            accentHex: activeConcept?.accentColor ?? '#FF7417',
-          },
-          brain: {
-            industry: state.brain.industry,
-            location: state.brain.location,
-            products: state.brain.products.slice(0, 2),
-          },
-        }),
-      });
-
-      const data = (await res.json()) as {
-        variations?: Array<Omit<GeneratedCollateralVariation, 'id'>>;
-        model?: string;
-        error?: string;
+      let data: any;
+      const collateralPayload = {
+        category: selectedCollateral,
+        prompt: collateralPrompt,
+        surfaceMode: collateralSurfacePref,
+        brand: {
+          brandName: state.brand.brandName,
+          tagline: state.brand.tagline,
+          positioningStatement: state.brand.positioningStatement,
+          visualDirection: state.brand.visualDirection,
+          accentHex: activeConcept?.accentColor ?? '#FF7417',
+        },
+        brain: {
+          industry: state.brain.industry,
+          location: state.brain.location,
+          products: state.brain.products.slice(0, 2),
+        },
       };
-      if (!res.ok || !Array.isArray(data.variations) || data.variations.length === 0) {
-        throw new Error(data.error || `AI asset request failed (${res.status}).`);
+
+      if (state.activeWorkspaceId) {
+        data = await apiClient.generateAiCollateralVariations(state.activeWorkspaceId, collateralPayload);
+      } else {
+        const res = await fetch('/api/ai/brand-asset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(collateralPayload),
+        });
+        data = (await res.json()) as any;
+        if (!res.ok) {
+          throw new Error(data.error || `AI asset request failed (${res.status}).`);
+        }
+      }
+
+      if (!data || !Array.isArray(data.variations) || data.variations.length === 0) {
+        throw new Error(data?.error || `AI asset request returned no variations.`);
       }
 
       const nextVars: GeneratedCollateralVariation[] = data.variations
         .slice(0, 3)
-        .map((v, idx) => ({
+        .map((v: any, idx: number) => ({
           id: `ai-var-${Date.now()}-${idx}`,
           title: v.title || `${state.brand.brandName} ${selectedCollateral} v${idx + 1}`,
           layoutLabel: v.layoutLabel || 'Editorial Composition',

@@ -14,7 +14,13 @@ import { businessProfileRepository } from '../repositories/businessProfileReposi
 import type { ResearchReportEntity, BrandAssetEntity } from '../types/api';
 
 function getGeminiClient(): GoogleGenAI | null {
-  if (process.env.NODE_ENV === 'test' || serverConfig.isTest || !serverConfig.geminiApiKey) {
+  if (
+    process.env.NODE_ENV === 'test' ||
+    process.env.TEST_MODE === 'true' ||
+    process.env.NODE_TEST_CONTEXT !== undefined ||
+    serverConfig.isTest ||
+    !serverConfig.geminiApiKey
+  ) {
     return null;
   }
   return new GoogleGenAI({

@@ -16,6 +16,7 @@ import { taskRepository } from '../../repositories/taskRepository';
 import { goalRepository } from '../../repositories/goalRepository';
 import { departmentEventBus } from '../../events/eventBus';
 import { creditService } from '../../services/creditService';
+import { unifiedReportService } from '../../services/unifiedReportService';
 import type { ExecutiveReportEntity } from '../../types/api';
 
 const router = Router({ mergeParams: true });
@@ -101,7 +102,7 @@ router.post(
           overdue: 0,
         },
         goalProgress: goals.map((g) => ({
-          title: g.title,
+          title: g.title || '',
           current: g.currentValue,
           target: g.targetValue,
           unit: g.unit,
@@ -205,5 +206,108 @@ router.get('/:reportId/export-csv', async (req: Request, res: Response): Promise
   res.setHeader('Content-Disposition', `attachment; filename="${report.reportId}.csv"`);
   res.send(csvContent);
 });
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/reports/dossier/generate
+ * Generates an interconnected 7-section Unified Executive Dossier
+ */
+router.post(
+  '/dossier/generate',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const { title, monthlyPrice } = req.body;
+      const dossier = await unifiedReportService.generateUnifiedDossier({
+        workspaceId,
+        title,
+        monthlyPrice,
+      });
+      res.json({ success: true, data: dossier });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'DOSSIER_GENERATION_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/reports/dossier/:dossierId
+ * Retrieves a unified executive dossier
+ */
+router.get(
+  '/dossier/:dossierId',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const dossier = await unifiedReportService.getDossier(workspaceId, req.params.dossierId);
+      if (!dossier) {
+        res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Dossier not found' } });
+        return;
+      }
+      res.json({ success: true, data: dossier });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'DOSSIER_FETCH_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/reports/dossier/:dossierId/export-html
+ * Returns self-contained, print-ready HTML for the dossier
+ */
+router.get(
+  '/dossier/:dossierId/export-html',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const dossier = await unifiedReportService.getDossier(workspaceId, req.params.dossierId);
+      if (!dossier) {
+        res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Dossier not found' } });
+        return;
+      }
+      const html = unifiedReportService.formatHtmlExport(dossier);
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'HTML_EXPORT_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/reports/dossier/:dossierId/export-csv
+ * Returns structured CSV data export for the dossier
+ */
+router.get(
+  '/dossier/:dossierId/export-csv',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const dossier = await unifiedReportService.getDossier(workspaceId, req.params.dossierId);
+      if (!dossier) {
+        res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Dossier not found' } });
+        return;
+      }
+      const csv = unifiedReportService.formatCsvExport(dossier);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${dossier.dossierId}.csv"`);
+      res.send(csv);
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'CSV_EXPORT_FAILED', message: err.message },
+      });
+    }
+  }
+);
 
 export const executiveReportRoutes = router;

@@ -8,6 +8,7 @@ import { authenticateToken } from '../../middleware/auth';
 import { requireWorkspaceMember, requireWorkspaceRole } from '../../middleware/workspace';
 import { taskRepository } from '../../repositories/taskRepository';
 import { departmentEventBus } from '../../events/eventBus';
+import { growthDirectorService } from '../../services/growthDirectorService';
 import type { GrowthTaskEntity } from '../../types/api';
 
 const router = Router({ mergeParams: true });
@@ -125,6 +126,147 @@ router.delete(
       success: true,
       data: { deleted: true, taskId: req.params.taskId },
     });
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/tasks/roadmap/generate
+ * Generates an actionable operational roadmap with multi-horizon tasks
+ */
+router.post(
+  '/roadmap/generate',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const { focusCategory } = req.body;
+      const roadmap = await growthDirectorService.generateOperationalRoadmap({
+        workspaceId,
+        focusCategory,
+      });
+      res.json({ success: true, data: roadmap });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'ROADMAP_GENERATION_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/tasks/growth-plans
+ * Lists growth tasks with deterministic ICE scores and time horizons
+ */
+router.get(
+  '/growth-plans',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const timeHorizon = req.query.timeHorizon as any;
+      const status = req.query.status as any;
+      const tasks = await growthDirectorService.getGrowthTasks(workspaceId, {
+        timeHorizon,
+        status,
+      });
+      res.json({ success: true, data: tasks });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'TASK_FETCH_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/tasks/:taskId/outcome
+ * Records real-world task outcome and triggers closed-loop learning
+ */
+router.post(
+  '/:taskId/outcome',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const taskId = req.params.taskId;
+      const { status = 'COMPLETED', outcomeMet, actualMetrics, notes, learningsToPersist } = req.body;
+
+      const result = await growthDirectorService.recordTaskOutcome({
+        taskId,
+        workspaceId,
+        status,
+        outcomeMet: Boolean(outcomeMet),
+        actualMetrics,
+        notes: notes || '',
+        learningsToPersist,
+      });
+
+      res.json({ success: true, data: result });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'TASK_OUTCOME_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/tasks/intelligence/overview
+ * Returns complete AI Growth Director intelligence overview
+ */
+router.get(
+  '/intelligence/overview',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const overview = await growthDirectorService.getGrowthIntelligenceOverview(workspaceId);
+      res.json({ success: true, data: overview });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'GROWTH_INTELLIGENCE_FAILED', message: err.message },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/tasks/intelligence/simulate
+ * Simulates growth scenarios across conservative, expected, and optimistic models
+ */
+router.post(
+  '/intelligence/simulate',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const workspaceId = req.workspace!.workspaceId;
+      const {
+        baselineRevenue = 50000,
+        monthlyBudget = 10000,
+        currentCac = 800,
+        currentConversionRatePercent = 3.2,
+        averageOrderValue = 499,
+        grossMarginPercent = 75,
+      } = req.body;
+
+      const simulation = growthDirectorService.simulateGrowthScenarios({
+        workspaceId,
+        baselineRevenue: Number(baselineRevenue),
+        monthlyBudget: Number(monthlyBudget),
+        currentCac: Number(currentCac),
+        currentConversionRatePercent: Number(currentConversionRatePercent),
+        averageOrderValue: Number(averageOrderValue),
+        grossMarginPercent: Number(grossMarginPercent),
+      });
+
+      res.json({ success: true, data: simulation });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'SIMULATION_FAILED', message: err.message },
+      });
+    }
   }
 );
 

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { db, type DbQuery } from '../db/firestore';
-import type { GrowthExperimentEntity, GrowthTaskEntity, BrandAssetEntity } from '../types/api';
+import { db } from '../db/firestore';
+import type { GrowthExperimentEntity, GrowthTaskEntity } from '../types/api';
 
 export class ExperimentRepository {
   public async listByWorkspace(workspaceId: string): Promise<GrowthExperimentEntity[]> {
@@ -93,59 +93,7 @@ export class TaskRepository {
   }
 }
 
-export class BrandAssetRepository {
-  public async listByWorkspace(
-    workspaceId: string,
-    filter?: { category?: string; status?: string }
-  ): Promise<BrandAssetEntity[]> {
-    let query: DbQuery<BrandAssetEntity> = db.collection<BrandAssetEntity>(
-      `workspaces/${workspaceId}/brandAssets`
-    );
-    if (filter?.status) {
-      query = query.where('status', '==', filter.status);
-    }
-    const snap = await query.orderBy('createdAt', 'desc').get();
-    let docs = snap.docs.map((d) => d.data()).filter((d): d is BrandAssetEntity => Boolean(d));
-    if (filter?.category) {
-      docs = docs.filter((d) => d.category === filter.category);
-    }
-    return docs;
-  }
-
-  public async findById(workspaceId: string, assetId: string): Promise<BrandAssetEntity | null> {
-    const snap = await db
-      .doc<BrandAssetEntity>(`workspaces/${workspaceId}/brandAssets/${assetId}`)
-      .get();
-    return snap.exists && snap.data() ? snap.data()! : null;
-  }
-
-  public async create(asset: BrandAssetEntity): Promise<BrandAssetEntity> {
-    await db
-      .doc<BrandAssetEntity>(`workspaces/${asset.workspaceId}/brandAssets/${asset.assetId}`)
-      .set(asset);
-    return asset;
-  }
-
-  public async update(
-    workspaceId: string,
-    assetId: string,
-    patch: Partial<BrandAssetEntity>
-  ): Promise<BrandAssetEntity> {
-    const now = db.serverTimestamp();
-    await db.doc<BrandAssetEntity>(`workspaces/${workspaceId}/brandAssets/${assetId}`).update({
-      ...patch,
-      updatedAt: now,
-    });
-    const updated = await this.findById(workspaceId, assetId);
-    if (!updated) throw new Error(`Brand asset '${assetId}' not found`);
-    return updated;
-  }
-
-  public async delete(workspaceId: string, assetId: string): Promise<void> {
-    await this.update(workspaceId, assetId, { status: 'archived' });
-  }
-}
+export { BrandAssetRepository, brandAssetRepository } from './brandAssetRepository';
 
 export const experimentRepository = new ExperimentRepository();
 export const taskRepository = new TaskRepository();
-export const brandAssetRepository = new BrandAssetRepository();

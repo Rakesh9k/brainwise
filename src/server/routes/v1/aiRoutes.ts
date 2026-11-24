@@ -10,12 +10,17 @@ import { aiOrchestrator } from '../../ai/orchestrator';
 import { memoryEngine } from '../../ai/memoryEngine';
 import { aiRequestRepository } from '../../repositories/aiRequestRepository';
 import { aiOrchestrationService } from '../../services/aiOrchestrationService';
+import { ideaIntelligenceService } from '../../services/ideaIntelligenceService';
 import { creditService } from '../../services/creditService';
 import { businessBrainService } from '../../services/businessBrainService';
 import { db } from '../../db/firestore';
 import { GeminiProviderAdapter } from '../../ai/modelRouter';
 import { serverConfig } from '../../config/index';
 import { executeTruthCheck } from '../../../utils/truthCheck';
+import { sharedBusinessContextService } from '../../services/sharedBusinessContextService';
+import { memoryService } from '../../services/memoryService';
+import { growthRadarService } from '../../services/growthRadarService';
+import { brandStudioService } from '../../services/brandStudioService';
 import type { AiExecutionEntity, AiWorkflowRequest, MemoryCategory } from '../../ai/types';
 
 const router = Router({ mergeParams: true });
@@ -336,7 +341,7 @@ router.post('/dossier', async (req: Request, res: Response): Promise<void> => {
   const { ideaSummary, industry, targetMarket, geography, depth } = req.body;
   const workspaceId = getWorkspaceId(req);
 
-  const result = await aiOrchestrationService.generateDossier({
+  const result = await ideaIntelligenceService.orchestrateResearch({
     workspaceId,
     userId: req.user!.uid,
     ideaSummary: ideaSummary || 'Commercial Opportunity',
@@ -352,7 +357,6 @@ router.post('/dossier', async (req: Request, res: Response): Promise<void> => {
     model: result.modelUsed,
     meta: {
       creditsDeducted: result.creditsDeducted,
-      creditBalanceRemaining: result.creditBalanceRemaining,
       truthScore: result.truthScore,
     },
   });
@@ -428,26 +432,62 @@ router.post('/recommendations', async (req: Request, res: Response): Promise<voi
 
   try {
     const profile = await businessBrainService.getProfile(workspaceId);
+    const radarSummary = await growthRadarService.analyzeWorkspace(workspaceId);
 
-    const recs = [
-      {
-        department: 'Brand Studio',
-        title: `Clarify ${profile.businessName} Luxury Differentiation`,
-        description: `Highlight verified product attributes to establish clear pricing defense against local alternatives.`,
-        impact: 'High' as const,
-        confidence: 92,
-        reasoning: 'Grounded in Business Brain verified products and market positioning.',
-      },
-      {
-        department: 'Competitive Intelligence',
-        title: 'Monitor Tier-1 Rival Pricing Shifts',
-        description:
-          'Set weekly tracking for price adjustments on top competing subscription tiers.',
-        impact: 'Medium' as const,
-        confidence: 88,
-        reasoning: 'Protects subscriber margins.',
-      },
+    const detectedOpps = [
+      ...radarSummary.highestPriorityOpportunities,
+      ...radarSummary.emergingOpportunities,
     ];
+
+    const recs =
+      detectedOpps.length > 0
+        ? detectedOpps.slice(0, 5).map((opp) => ({
+            department: opp.relevantDepartment || 'Growth Director',
+            title: opp.title,
+            description: opp.description,
+            impact: opp.opportunityScore >= 75 ? ('High' as const) : ('Medium' as const),
+            confidence: opp.confidence,
+            reasoning: opp.potentialImpact,
+            whatToDo: opp.title,
+            whyToDoIt: opp.description,
+            supportingResearch:
+              opp.supportingEvidence.map((e) => `${e.title}: ${e.detail}`).join('; ') ||
+              'Grounded in active Business Brain context',
+            expectedBenefit: opp.potentialImpact,
+            difficulty:
+              opp.estimatedEffort === 'LOW'
+                ? 'Low'
+                : opp.estimatedEffort === 'MEDIUM'
+                  ? 'Medium'
+                  : 'High',
+            estimatedCost: opp.requiredBudget.amount
+              ? `${opp.requiredBudget.currency || '$'}${opp.requiredBudget.amount}`
+              : '$0 (Internal)',
+            priority:
+              opp.opportunityScore >= 80
+                ? ('high' as const)
+                : opp.opportunityScore >= 60
+                  ? ('medium' as const)
+                  : ('low' as const),
+          }))
+        : [
+            {
+              department: 'Brand Studio',
+              title: `Clarify ${profile.businessName} Differentiation`,
+              description: `Highlight verified product attributes to establish clear pricing defense against local alternatives.`,
+              impact: 'High' as const,
+              confidence: 90,
+              reasoning: 'Grounded in Business Brain verified products and market positioning.',
+              whatToDo: `Clarify ${profile.businessName} Differentiation`,
+              whyToDoIt:
+                'Highlight verified product attributes to establish clear pricing defense.',
+              supportingResearch: 'Grounded in Business Brain facts',
+              expectedBenefit: 'Clear market differentiation',
+              difficulty: 'Low',
+              estimatedCost: '$0',
+              priority: 'high' as const,
+            },
+          ];
 
     const settlement = await creditService.settleCredits({
       workspaceId,
@@ -477,31 +517,165 @@ router.post('/recommendations', async (req: Request, res: Response): Promise<voi
 });
 
 /**
+ * POST /api/v1/workspaces/:workspaceId/ai/brand-logo
+ * Generates 3 differentiated vector logo concepts with sanitized SVG markup
+ */
+router.post('/brand-logo', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const workspaceId = getWorkspaceId(req);
+    const userId = req.user?.uid || 'anonymous';
+    const {
+      prompt,
+      styleArchetype,
+      mood,
+      lockBrandColors,
+      brand,
+    } = req.body;
+
+    const brandName = (brand?.brandName as string) || req.workspace?.workspaceName || 'BrainWise';
+
+    const result = await brandStudioService.generateAiLogoConcepts({
+      workspaceId,
+      userId,
+      brandName,
+      prompt: prompt || `Modern brand logo for ${brandName}`,
+      styleArchetype,
+      mood,
+      lockBrandColors,
+      brand,
+      idempotencyKey: req.headers['x-idempotency-key'] as string,
+    });
+
+    res.json({
+      success: true,
+      concepts: result.concepts,
+      model: result.model,
+      meta: {
+        creditsDeducted: result.creditsDeducted,
+        creditBalanceRemaining: result.creditBalanceRemaining,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'LOGO_GENERATION_FAILED', message: err.message },
+    });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/ai/social-creative
+ * Generates multi-slide social carousel or static creative (STRICT VIDEO EXCLUSION)
+ */
+router.post('/social-creative', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const workspaceId = getWorkspaceId(req);
+    const userId = req.user?.uid || 'anonymous';
+    const {
+      platform = 'Carousel',
+      angle = 'Educational Carousel',
+      prompt,
+      slideCount = 5,
+      mood,
+      regenerateSlideNumber,
+      brand,
+      brain,
+    } = req.body;
+
+    const result = await brandStudioService.generateSocialCreative({
+      workspaceId,
+      userId,
+      platform,
+      angle,
+      prompt: prompt || 'Differentiated commercial strategy carousel',
+      slideCount: Number(slideCount) || 5,
+      mood,
+      regenerateSlideNumber: regenerateSlideNumber ? Number(regenerateSlideNumber) : undefined,
+      brand,
+      brain,
+      idempotencyKey: req.headers['x-idempotency-key'] as string,
+    });
+
+    res.json({
+      success: true,
+      creative: result.package,
+      ...result.package,
+      model: result.model,
+      meta: {
+        creditsDeducted: result.creditsDeducted,
+        creditBalanceRemaining: result.creditBalanceRemaining,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'SOCIAL_CREATIVE_FAILED', message: err.message },
+    });
+  }
+});
+
+/**
  * POST /api/v1/workspaces/:workspaceId/ai/brand-asset
  * STRICT VIDEO EXCLUSION: SVG ONLY
+ * Supports both single vector asset generation and 3 collateral variations
  */
 router.post('/brand-asset', async (req: Request, res: Response): Promise<void> => {
-  const { name, category, conceptPrompt } = req.body;
-  const workspaceId = getWorkspaceId(req);
+  try {
+    const workspaceId = getWorkspaceId(req);
+    const userId = req.user?.uid || 'anonymous';
+    const { name, category, conceptPrompt, prompt, surfaceMode, brand, brain } = req.body;
 
-  const result = await aiOrchestrationService.generateBrandAssetSvg({
-    workspaceId,
-    userId: req.user!.uid,
-    name: name || 'Brand Asset',
-    category: category || 'Collateral',
-    conceptPrompt: conceptPrompt || 'Minimalist vector collateral',
-    idempotencyKey: req.headers['x-idempotency-key'] as string,
-  });
+    // If request contains variations payload from BrandStudioPage collateral tab:
+    if (category && (surfaceMode || prompt || brand)) {
+      const result = await brandStudioService.generateCollateralVariations({
+        workspaceId,
+        userId,
+        category: category || 'Packaging',
+        prompt: prompt || conceptPrompt || 'Signature brand launch collateral',
+        surfaceMode,
+        brand,
+        brain,
+        idempotencyKey: req.headers['x-idempotency-key'] as string,
+      });
 
-  res.json({
-    asset: result.asset,
-    svg: result.asset.svgContent,
-    model: result.modelUsed,
-    meta: {
-      creditsDeducted: result.creditsDeducted,
-      creditBalanceRemaining: result.creditBalanceRemaining,
-    },
-  });
+      res.json({
+        success: true,
+        variations: result.variations,
+        model: result.model,
+        meta: {
+          creditsDeducted: result.creditsDeducted,
+          creditBalanceRemaining: result.creditBalanceRemaining,
+        },
+      });
+      return;
+    }
+
+    // Default single asset vector generation:
+    const result = await aiOrchestrationService.generateBrandAssetSvg({
+      workspaceId,
+      userId,
+      name: name || 'Brand Asset',
+      category: category || 'Collateral',
+      conceptPrompt: conceptPrompt || 'Minimalist vector collateral',
+      idempotencyKey: req.headers['x-idempotency-key'] as string,
+    });
+
+    res.json({
+      success: true,
+      asset: result.asset,
+      svg: result.asset.svgContent,
+      model: result.modelUsed,
+      meta: {
+        creditsDeducted: result.creditsDeducted,
+        creditBalanceRemaining: result.creditBalanceRemaining,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'BRAND_ASSET_GENERATION_FAILED', message: err.message },
+    });
+  }
 });
 
 /**
@@ -513,12 +687,7 @@ router.post('/brand-asset', async (req: Request, res: Response): Promise<void> =
 router.post('/chat', async (req: Request, res: Response): Promise<void> => {
   const workspaceId = getWorkspaceId(req);
   const userId = req.user!.uid;
-  const {
-    message,
-    threadId = `thread_${Date.now()}`,
-    modelTier = 'fast',
-    history = [],
-  } = req.body;
+  const { message, threadId = `thread_${Date.now()}`, modelTier = 'fast', history = [] } = req.body;
 
   if (!message || typeof message !== 'string' || !message.trim()) {
     res.status(400).json({
@@ -533,10 +702,9 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
   }
 
   // 1. Credit Reservation (2 for fast, 5 for search_grounded, 8 for deep_reasoning)
-  const creditCost =
-    modelTier === 'deep_reasoning' ? 8 : modelTier === 'search_grounded' ? 5 : 2;
+  const creditCost = modelTier === 'deep_reasoning' ? 8 : modelTier === 'search_grounded' ? 5 : 2;
 
-  let reservation: any = null;
+  let reservation: any;
   try {
     reservation = await creditService.reserveCredits({
       workspaceId,
@@ -556,8 +724,14 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
   }
 
   try {
-    // 2. Fetch authoritative Business Brain for Grounding
+    // 2. Fetch authoritative Shared Business Context for Grounding
     const profile = await businessBrainService.getProfile(workspaceId);
+    const sharedContext = await sharedBusinessContextService.getBusinessContext({
+      workspaceId,
+      sessionId: threadId,
+      taskType: 'STRATEGY',
+    });
+
     const confirmedFacts: string[] = [];
     const inferredFacts: string[] = [];
 
@@ -576,13 +750,22 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
     const systemInstruction = [
       'You are the BrainWise Chief Strategy Partner, an elite AI advisor specializing in B2B/B2C venture strategy, growth acceleration, brand positioning, and market analysis.',
       '',
-      'GROUNDING CONTEXT (BUSINESS BRAIN):',
+      'GROUNDING CONTEXT (BUSINESS BRAIN & KNOWLEDGE GRAPH):',
       profile?.businessName ? `Business Name: ${profile.businessName}` : '',
       profile?.tagline ? `Tagline: ${profile.tagline}` : '',
       profile?.location ? `Location: ${profile.location}` : '',
       profile?.stage ? `Stage: ${profile.stage}` : '',
       profile?.valueProposition ? `Value Proposition: ${profile.valueProposition}` : '',
       profile?.targetAudience ? `Target Audience: ${profile.targetAudience}` : '',
+      sharedContext.relevantProducts.length > 0
+        ? `Confirmed Offerings:\n${sharedContext.relevantProducts.map((p) => `- ${p.name} ($${p.price})`).join('\n')}`
+        : '',
+      sharedContext.brandDirectives.voice.length > 0
+        ? `Brand Voice: ${sharedContext.brandDirectives.voice.join(', ')}`
+        : '',
+      sharedContext.relevantConstraints.length > 0
+        ? `Constraints & Boundaries:\n${sharedContext.relevantConstraints.map((c) => `- ${c}`).join('\n')}`
+        : '',
       confirmedFacts.length > 0
         ? `Authoritative Confirmed Facts:\n- ${confirmedFacts.join('\n- ')}`
         : '',
@@ -599,10 +782,7 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
       .join('\n');
 
     // 4. Model Routing
-    const model =
-      modelTier === 'deep_reasoning'
-        ? 'gemini-2.5-pro'
-        : serverConfig.geminiModel;
+    const model = modelTier === 'deep_reasoning' ? 'gemini-2.5-pro' : serverConfig.geminiModel;
 
     const enableGoogleSearch = modelTier === 'search_grounded';
 
@@ -627,7 +807,23 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
     const replyText =
       result.text || 'I have analyzed your request based on your current Business Brain.';
 
-    // 5. Truth Check Guardrail
+    // 5. Update Working Memory
+    await memoryService.appendConversationTurn({
+      workspaceId,
+      sessionId: threadId,
+      userId,
+      role: 'user',
+      content: message.trim(),
+    });
+    await memoryService.appendConversationTurn({
+      workspaceId,
+      sessionId: threadId,
+      userId,
+      role: 'assistant',
+      content: replyText,
+    });
+
+    // 6. Truth Check Guardrail
     const truthCheck = executeTruthCheck(replyText, {
       businessName: profile.businessName || 'Business',
       tagline: profile.tagline || '',
@@ -643,7 +839,15 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
       businessModel: profile.businessModel || '',
       revenueModel: profile.revenueModel || '',
       primaryGoals: profile.primaryGoals || [],
-      products: [],
+      products: sharedContext.relevantProducts.map((p) => ({
+        id: (p.id as string) || 'p1',
+        name: (p.name as string) || '',
+        category: (p.category as string) || 'General',
+        priceRange: `$${p.price}`,
+        price: Number(p.price) || 0,
+        description: (p.description as string) || '',
+        marginEstimate: '60%',
+      })),
       personas: [],
       documents: [],
       decisions: [],
@@ -667,7 +871,8 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
         success: false,
         error: {
           code: 'TRUTH_GUARDRAIL_VIOLATION',
-          message: 'The generated strategic response violated Business Brain fact constraints. Credits refunded.',
+          message:
+            'The generated strategic response violated Business Brain fact constraints. Credits refunded.',
           category: 'AI_ORCHESTRATION_ERROR',
         },
       });
@@ -722,10 +927,12 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
         citations: result.groundingMetadata?.citations || [],
         modelUsed: result.model,
         groundingQueries: result.groundingMetadata?.webSearchQueries || [],
-        meta: {
-          creditsDeducted: creditCost,
-          creditBalanceRemaining: settlement.remainingBalance,
-        },
+        creditsDeducted: creditCost,
+        creditBalanceRemaining: settlement.remainingBalance,
+      },
+      meta: {
+        creditsDeducted: creditCost,
+        creditBalanceRemaining: settlement.remainingBalance,
       },
     });
   } catch (err) {
