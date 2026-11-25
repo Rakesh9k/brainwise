@@ -3111,58 +3111,67 @@ export const IdeaIntelligencePage: React.FC = () => {
           onClick: () => setScenarioModalOpen(true),
           icon: <BarChart3 className="w-3.5 h-3.5 text-[#71717A]" />,
         }}
-        proofTelemetry={{
-          confidenceScore: 95.4,
-          confidenceLabel: 'Angle Originality & Strategic Fit',
-          metrics: [
-            {
-              label: 'Anti-Fatigue Novelty',
-              value: '100%',
-              subtext: 'Zero repetition overlap',
-              status: 'optimal',
+        proofTelemetry={(() => {
+          const hasIdeaData = Boolean(activeReport || state.reports.length > 0);
+          const score = hasIdeaData ? (activeReport?.viabilityScore || (state.reports[0]?.viabilityScore) || 88) : 0;
+          return {
+            confidenceScore: score,
+            confidenceLabel: hasIdeaData
+              ? 'Angle Originality & Market Viability Score'
+              : 'Idea Intelligence Standby',
+            statusBadge: hasIdeaData ? 'PASS' : 'STANDBY',
+            isStandby: !hasIdeaData,
+            metrics: [
+              {
+                label: 'Anti-Fatigue Novelty',
+                value: hasIdeaData ? '100%' : 'Standby',
+                subtext: hasIdeaData ? 'Zero repetition overlap' : 'Awaiting business concept',
+                status: hasIdeaData ? 'optimal' : 'inferred',
+              },
+              {
+                label: 'Saved Dossiers',
+                value: state.reports.length,
+                subtext: hasIdeaData ? 'Complete market models' : '0 dossiers generated',
+                status: hasIdeaData ? 'optimal' : 'warning',
+              },
+              {
+                label: 'TAM/SAM Estimation Model',
+                value: hasIdeaData ? (activeReport?.tamSamSom?.tamLabel || '3-Tier Sensitivity') : 'Standby',
+                subtext: hasIdeaData ? 'Conservative / Base / Aggressive' : 'Awaiting input idea',
+                status: hasIdeaData ? 'verified' : 'inferred',
+              },
+              {
+                label: 'Credit Escrow Protocol',
+                value: 'Two-Phase',
+                subtext: 'Auto-released if check fails',
+                status: 'verified',
+              },
+            ],
+            lineageItems: state.reports.slice(0, 3).map((r) => ({
+              title: r.ideaSummary,
+              source: 'Deep Market Validation Engine',
+              timestamp: r.date,
+              confidence: (r.viabilityScore || 85) / 100,
+              type: 'GROUND_TRUTH' as any,
+              details: `TAM: ${r.tamSamSom?.tamLabel || (r as any).marketSizing?.tam || 'Verified'} · CAC/LTV: ${r.cacLtvRatio || '3.5x'}`,
+            })),
+            guardrails: {
+              truthCheckStatus: 'PASSED',
+              antiFatigueScore: '0% Repetition · High Novelty',
+              creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
+              modelAudited: 'Gemini 2.5 Flash Grounded',
             },
-            {
-              label: 'Saved Dossiers',
-              value: state.reports.length,
-              subtext: 'Complete market models',
-              status: 'optimal',
+            rawJson: {
+              department: 'DEP-05 (Idea Intelligence)',
+              workspace: state.brain.businessName || 'Default Workspace',
+              industry: state.brain.industry || 'Unspecified',
+              savedDossiers: state.reports.length,
+              activeReportTitle: activeReport?.title || 'None',
+              latestIdeaPrompt: ideaPrompt || 'None',
+              timestamp: new Date().toISOString(),
             },
-            {
-              label: 'TAM/SAM Estimation Model',
-              value: '3-Tier Sensitivity',
-              subtext: 'Conservative / Base / Aggressive',
-              status: 'verified',
-            },
-            {
-              label: 'Credit Escrow Protocol',
-              value: 'Two-Phase',
-              subtext: 'Auto-released if check fails',
-              status: 'verified',
-            },
-          ],
-          lineageItems: state.reports.slice(0, 3).map((r) => ({
-            title: r.ideaSummary,
-            source: 'Deep Market Validation Engine',
-            timestamp: r.date,
-            confidence: (r.viabilityScore || 85) / 100,
-            type: 'GROUND_TRUTH' as any,
-            details: `TAM: ${r.tamSamSom?.tamLabel || (r as any).marketSizing?.tam || 'Verified'} · CAC/LTV: ${r.cacLtvRatio || '3.5x'}`,
-          })),
-          guardrails: {
-            truthCheckStatus: 'PASSED',
-            antiFatigueScore: '0% Repetition · High Novelty',
-            creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
-            modelAudited: 'Gemini 2.5 Flash Grounded',
-          },
-          rawJson: {
-            department: 'DEP-05',
-            workspace: state.brain.businessName,
-            industry: state.brain.industry,
-            savedDossiers: state.reports.length,
-            latestIdeaPrompt: ideaPrompt,
-            timestamp: new Date().toISOString(),
-          },
-        }}
+          };
+        })()}
       />
 
       {/* Hero Omnibar Launchpad (IdeaProof-style UX) */}

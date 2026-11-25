@@ -1192,62 +1192,81 @@ export const BusinessBrainPage: React.FC = () => {
           onClick: () => setDocModalOpen(true),
           icon: <Upload className="w-3.5 h-3.5 text-[#71717A]" />,
         }}
-        proofTelemetry={{
-          confidenceScore: 98.6,
-          confidenceLabel: 'Ground Truth Fact Reliability',
-          metrics: [
-            {
-              label: 'Verified Ground Truths',
-              value: state.brain.factProvenance?.filter((f) => f.sourceType === 'USER_CONFIRMED').length || 18,
-              subtext: 'Authoritative facts',
-              status: 'verified',
+        proofTelemetry={(() => {
+          const verifiedTruths = (state.brain.factProvenance || []).filter(
+            (f) => f.sourceType === 'USER_CONFIRMED'
+          ).length;
+          const catalogCount = Array.isArray(state.brain.products)
+            ? state.brain.products.length
+            : (state.brain.productsServices?.length ?? 0);
+          const isBrainStandby = completeness.percentage === 0 && verifiedTruths === 0;
+
+          return {
+            confidenceScore: completeness.percentage,
+            confidenceLabel: isBrainStandby
+              ? 'Ground Truth Standby'
+              : 'Ground Truth Fact Reliability',
+            statusBadge: isBrainStandby
+              ? 'STANDBY'
+              : completeness.percentage >= 70
+                ? 'PASS'
+                : 'OPTIMAL',
+            isStandby: isBrainStandby,
+            metrics: [
+              {
+                label: 'Verified Ground Truths',
+                value: verifiedTruths,
+                subtext: verifiedTruths > 0 ? 'Authoritative facts' : '0 confirmed facts',
+                status: verifiedTruths > 0 ? 'verified' : 'warning',
+              },
+              {
+                label: 'AI-Inferred Staged',
+                value: state.brain.verificationQueue?.length || 0,
+                subtext: 'Pending review',
+                status: (state.brain.verificationQueue?.length || 0) > 0 ? 'warning' : 'optimal',
+              },
+              {
+                label: 'Catalog Items Grounded',
+                value: catalogCount,
+                subtext: catalogCount > 0 ? 'Offerings locked' : '0 products/services',
+                status: catalogCount > 0 ? 'optimal' : 'inferred',
+              },
+              {
+                label: 'Cross-Doc Discrepancies',
+                value: (state.brain.multiDocDiscrepancies || []).length,
+                subtext: 'Zero conflicts',
+                status: 'optimal',
+              },
+            ],
+            lineageItems: [
+              ...(state.brain.factProvenance || []).slice(0, 4).map((f) => ({
+                title: f.claim,
+                source: f.sourceDocument || 'Direct Founder Confirmation',
+                timestamp: f.verifiedAt || 'Verified',
+                confidence: f.confidence || 0.98,
+                type: (f.sourceType === 'USER_CONFIRMED' ? 'GROUND_TRUTH' : 'AI_INFERRED') as any,
+                details: f.contextSnippet,
+              })),
+            ],
+            guardrails: {
+              truthCheckStatus: 'PASSED',
+              antiFatigueScore: 'Ground Truth Locked',
+              creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
+              modelAudited: 'Gemini 2.5 Pro Grounding Matrix',
             },
-            {
-              label: 'AI-Inferred Staged',
-              value: state.brain.verificationQueue?.length || 0,
-              subtext: 'Pending review',
-              status: (state.brain.verificationQueue?.length || 0) > 0 ? 'warning' : 'optimal',
+            rawJson: {
+              department: 'DEP-03 (Business Brain)',
+              businessName: state.brain.businessName || 'Default Workspace',
+              industry: state.brain.industry || 'Unspecified',
+              completenessScore: completeness.percentage,
+              productsCount: catalogCount,
+              personasCount: state.brain.customerPersonas?.length || 0,
+              verifiedGroundTruths: verifiedTruths,
+              activeDiscrepancies: (state.brain.multiDocDiscrepancies || []).length,
+              timestamp: new Date().toISOString(),
             },
-            {
-              label: 'Catalog Items Grounded',
-              value: state.brain.productsServices?.length || 4,
-              subtext: 'Prices locked',
-              status: 'optimal',
-            },
-            {
-              label: 'Cross-Doc Discrepancies',
-              value: (state.brain.multiDocDiscrepancies || []).length,
-              subtext: 'Zero conflicts',
-              status: 'optimal',
-            },
-          ],
-          lineageItems: [
-            ...(state.brain.factProvenance || []).slice(0, 4).map((f) => ({
-              title: f.claim,
-              source: f.sourceDocument || 'Direct Founder Confirmation',
-              timestamp: f.verifiedAt || 'Verified',
-              confidence: f.confidence || 0.98,
-              type: (f.sourceType === 'USER_CONFIRMED' ? 'GROUND_TRUTH' : 'AI_INFERRED') as any,
-              details: f.contextSnippet,
-            })),
-          ],
-          guardrails: {
-            truthCheckStatus: 'PASSED',
-            antiFatigueScore: 'Ground Truth Locked',
-            creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
-            modelAudited: 'Gemini 2.5 Pro Grounding Matrix',
-          },
-          rawJson: {
-            department: 'DEP-03',
-            businessName: state.brain.businessName,
-            industry: state.brain.industry,
-            completenessScore: completeness.percentage,
-            productsCount: state.brain.productsServices?.length || 0,
-            personasCount: state.brain.customerPersonas?.length || 0,
-            activeDiscrepancies: (state.brain.multiDocDiscrepancies || []).length,
-            timestamp: new Date().toISOString(),
-          },
-        }}
+          };
+        })()}
       />
 
       {/* Idea Sandbox Mode Banner (Business Brain is Dormant until validation) */}

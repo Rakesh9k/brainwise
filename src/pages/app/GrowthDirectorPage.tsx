@@ -451,59 +451,74 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
           onClick: () => setTaskModalOpen(true),
           icon: <Plus className="w-3.5 h-3.5 text-[#71717A]" />,
         }}
-        proofTelemetry={{
-          confidenceScore: 96.7,
-          confidenceLabel: 'Strategic Execution Reliability',
-          metrics: [
-            {
-              label: 'Sprint Velocity Rate',
-              value: `${taskStats.completionRate}%`,
-              subtext: `${taskStats.pending} pending actions`,
-              status: 'optimal',
+        proofTelemetry={(() => {
+          const hasExecutionData = (taskStats.total > 0 || state.goals.length > 0 || state.experiments.length > 0);
+          const avgGoalProgress = state.goals.length > 0
+            ? Math.round(state.goals.reduce((acc, g) => acc + (g.progressPercentage || 0), 0) / state.goals.length)
+            : 0;
+          const growthConfidence = hasExecutionData
+            ? Math.round((taskStats.completionRate * 0.6) + (avgGoalProgress * 0.4))
+            : 0;
+
+          return {
+            confidenceScore: growthConfidence,
+            confidenceLabel: hasExecutionData
+              ? 'Strategic Execution Velocity & Goal Pacing'
+              : 'Execution Roadmap Standby',
+            statusBadge: hasExecutionData ? (growthConfidence >= 50 ? 'PASS' : 'CALIBRATING') : 'STANDBY',
+            isStandby: !hasExecutionData,
+            metrics: [
+              {
+                label: 'Sprint Velocity Rate',
+                value: `${taskStats.completionRate}%`,
+                subtext: `${taskStats.pending} pending actions`,
+                status: taskStats.total > 0 ? (taskStats.completionRate >= 50 ? 'optimal' : 'warning') : 'inferred',
+              },
+              {
+                label: 'Active Business Goals',
+                value: state.goals.length,
+                subtext: state.goals.length > 0 ? `${avgGoalProgress}% avg progress` : '0 goals set',
+                status: state.goals.length > 0 ? 'optimal' : 'warning',
+              },
+              {
+                label: 'Growth Experiments',
+                value: state.experiments.length,
+                subtext: 'Hypothesis-tested',
+                status: state.experiments.length > 0 ? 'optimal' : 'inferred',
+              },
+              {
+                label: 'Pending AI Suggestions',
+                value: state.recommendations.filter((r) => r.status === 'pending').length,
+                subtext: 'Growth Director queue',
+                status: 'verified',
+              },
+            ],
+            lineageItems: state.goals.slice(0, 3).map((g) => ({
+              title: g.title,
+              source: 'Quarterly OKR Framework',
+              timestamp: `Target: ${g.targetDate}`,
+              confidence: 0.97,
+              type: 'GROUND_TRUTH' as any,
+              details: `Metric: ${g.currentMetric} → ${g.targetMetric} (${g.progressPercentage}% progress)`,
+            })),
+            guardrails: {
+              truthCheckStatus: 'PASSED',
+              antiFatigueScore: 'Milestone Execution Grounded',
+              creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
+              modelAudited: 'Gemini 2.5 Pro CMO Orchestrator',
             },
-            {
-              label: 'Active Business Goals',
-              value: state.goals.length,
-              subtext: 'Strategic OKRs',
-              status: 'optimal',
+            rawJson: {
+              department: 'DEP-10 (Growth Director)',
+              workspace: state.brain.businessName || 'Default Workspace',
+              taskStats,
+              goalsCount: state.goals.length,
+              avgGoalProgress: `${avgGoalProgress}%`,
+              experimentsCount: state.experiments.length,
+              activeTab: tab,
+              timestamp: new Date().toISOString(),
             },
-            {
-              label: 'Growth Experiments',
-              value: state.experiments.length,
-              subtext: 'Hypothesis-tested',
-              status: 'optimal',
-            },
-            {
-              label: 'Pending AI Suggestions',
-              value: state.recommendations.filter((r) => r.status === 'pending').length,
-              subtext: 'Growth Director queue',
-              status: 'verified',
-            },
-          ],
-          lineageItems: state.goals.slice(0, 3).map((g) => ({
-            title: g.title,
-            source: 'Quarterly OKR Framework',
-            timestamp: `Target: ${g.targetDate}`,
-            confidence: 0.97,
-            type: 'GROUND_TRUTH' as any,
-            details: `Metric: ${g.currentMetric} → ${g.targetMetric} (${g.progressPercentage}% progress)`,
-          })),
-          guardrails: {
-            truthCheckStatus: 'PASSED',
-            antiFatigueScore: 'Milestone Execution Grounded',
-            creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
-            modelAudited: 'Gemini 2.5 Pro CMO Orchestrator',
-          },
-          rawJson: {
-            department: 'DEP-10',
-            workspace: state.brain.businessName,
-            taskStats,
-            goalsCount: state.goals.length,
-            experimentsCount: state.experiments.length,
-            activeTab: tab,
-            timestamp: new Date().toISOString(),
-          },
-        }}
+          };
+        })()}
       />
 
       <Tabs

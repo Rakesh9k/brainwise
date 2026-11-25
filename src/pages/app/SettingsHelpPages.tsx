@@ -483,68 +483,73 @@ export const SettingsPage: React.FC = () => {
           onClick: handleExportWorkspace,
           icon: <Download className="w-3.5 h-3.5 text-[#71717A]" />,
         }}
-        proofTelemetry={{
-          confidenceScore: 100,
-          confidenceLabel: 'Financial Ledger & RBAC Integrity',
-          metrics: [
-            {
-              label: 'Credits Balance',
-              value: state.subscription?.creditsRemaining || 1250,
-              subtext: 'Auto-refreshes on cycle',
-              status: 'optimal',
+        proofTelemetry={(() => {
+          const credits = state.subscription?.creditsRemaining ?? 0;
+          return {
+            confidenceScore: 100,
+            confidenceLabel: 'Financial Ledger & RBAC Integrity',
+            statusBadge: 'PASS',
+            isStandby: false,
+            metrics: [
+              {
+                label: 'Credits Balance',
+                value: credits,
+                subtext: 'Auto-refreshes on cycle',
+                status: credits > 0 ? 'optimal' : 'warning',
+              },
+              {
+                label: 'Billing Cycle',
+                value: state.subscription?.billingCycle || 'Free Tier',
+                subtext: state.subscription?.tier || 'Starter',
+                status: 'verified',
+              },
+              {
+                label: 'Team Seats',
+                value: `${state.team?.length || 1} / 5 Active`,
+                subtext: 'RBAC permissions',
+                status: 'optimal',
+              },
+              {
+                label: 'Escrow Failure Rate',
+                value: '0.00%',
+                subtext: 'Atomic 2-Phase Protocol',
+                status: 'verified',
+              },
+            ],
+            lineageItems: [
+              {
+                title: 'Two-Phase Credit Reservation Protocol (ADR-006)',
+                source: 'Cloud Firestore Atomic Transaction Lock',
+                timestamp: 'Active',
+                confidence: 1.0,
+                type: 'GUARDRAIL' as any,
+                details: 'Credits are held in atomic escrow and automatically released if AI truth check rejects output.',
+              },
+              {
+                title: 'Multi-Tenant Isolation Protocol',
+                source: `workspaces/${state.activeWorkspaceId || 'default'}`,
+                timestamp: 'Enforced',
+                confidence: 1.0,
+                type: 'GROUND_TRUTH' as any,
+                details: 'Zero cross-tenant leakage. Secret Manager serverside token encryption.',
+              },
+            ],
+            guardrails: {
+              truthCheckStatus: 'PASSED',
+              antiFatigueScore: 'Ledger Audit Synchronized',
+              creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
+              modelAudited: 'Stripe & Cashfree Atomic Ledger',
             },
-            {
-              label: 'Billing Cycle',
-              value: state.subscription?.billingCycle || 'Monthly',
-              subtext: 'Active plan',
-              status: 'verified',
+            rawJson: {
+              department: 'DEP-13 (Settings & Workspace)',
+              workspace: state.brain.businessName || 'Default Workspace',
+              tier: state.subscription?.tier || 'Free',
+              credits,
+              teamMembersCount: state.team?.length || 1,
+              timestamp: new Date().toISOString(),
             },
-            {
-              label: 'Team Seats',
-              value: `${state.team?.length || 1} / 5 Active`,
-              subtext: 'RBAC permissions',
-              status: 'optimal',
-            },
-            {
-              label: 'Escrow Failure Rate',
-              value: '0.00%',
-              subtext: 'Atomic 2-Phase Protocol',
-              status: 'verified',
-            },
-          ],
-          lineageItems: [
-            {
-              title: 'Two-Phase Credit Reservation Protocol (ADR-006)',
-              source: 'Cloud Firestore Atomic Transaction Lock',
-              timestamp: 'Active',
-              confidence: 1.0,
-              type: 'GUARDRAIL',
-              details: 'Credits are held in atomic escrow and automatically released if AI truth check rejects output.',
-            },
-            {
-              title: 'Multi-Tenant Isolation Protocol',
-              source: `workspaces/${state.activeWorkspaceId || 'default'}`,
-              timestamp: 'Enforced',
-              confidence: 1.0,
-              type: 'GROUND_TRUTH',
-              details: 'Zero cross-tenant leakage. Secret Manager serverside token encryption.',
-            },
-          ],
-          guardrails: {
-            truthCheckStatus: 'PASSED',
-            antiFatigueScore: 'Ledger Audit Synchronized',
-            creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
-            modelAudited: 'Stripe & Cashfree Atomic Ledger',
-          },
-          rawJson: {
-            department: 'DEP-13',
-            workspace: state.brain.businessName,
-            tier: state.subscription?.tier,
-            credits: state.subscription?.creditsRemaining,
-            teamMembersCount: state.team?.length,
-            timestamp: new Date().toISOString(),
-          },
-        }}
+          };
+        })()}
       />
 
       {/* Mobile selector */}

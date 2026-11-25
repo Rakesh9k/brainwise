@@ -155,58 +155,92 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
               },
               icon: <FlaskConical className="w-3.5 h-3.5 text-[#71717A]" />,
             }}
-            proofTelemetry={{
-              confidenceScore: 97.2,
-              confidenceLabel: 'Signal Authenticity & Fact Separation',
-              metrics: [
-                {
-                  label: 'Captured Signals',
-                  value: state.marketEvents.length,
-                  subtext: 'Verified market events',
-                  status: 'optimal',
+            proofTelemetry={(() => {
+              const hasEvents = state.marketEvents.length > 0;
+              const verifiedEventsCount = state.marketEvents.filter(
+                (e) => Boolean(e.sourceReference) || !e.isAiInferred
+              ).length;
+              const marketConfidence = hasEvents
+                ? Math.round((verifiedEventsCount / state.marketEvents.length) * 100)
+                : 0;
+              const isMarketStandby = !hasEvents && state.competitors.length === 0;
+
+              return {
+                confidenceScore: marketConfidence,
+                confidenceLabel: isMarketStandby
+                  ? 'Surveillance Readiness & Signal Grounding'
+                  : 'Signal Authenticity & Fact Separation',
+                statusBadge: isMarketStandby
+                  ? 'STANDBY'
+                  : marketConfidence >= 80
+                    ? 'PASS'
+                    : 'REVIEW',
+                isStandby: isMarketStandby,
+                metrics: [
+                  {
+                    label: 'Captured Signals',
+                    value: state.marketEvents.length,
+                    subtext:
+                      state.marketEvents.length > 0
+                        ? 'Verified market events'
+                        : '0 active market events',
+                    status: state.marketEvents.length > 0 ? 'optimal' : 'warning',
+                  },
+                  {
+                    label: 'Watchlist Size',
+                    value: state.competitors.length,
+                    subtext:
+                      state.competitors.length > 0
+                        ? 'Active surveillance'
+                        : '0 peers on radar',
+                    status: state.competitors.length > 0 ? 'optimal' : 'warning',
+                  },
+                  {
+                    label: 'Scheduled Reports',
+                    value: state.scheduledReports?.length ?? 0,
+                    subtext:
+                      (state.scheduledReports?.length ?? 0) > 0
+                        ? 'Automated briefing'
+                        : '0 briefings scheduled',
+                    status: (state.scheduledReports?.length ?? 0) > 0 ? 'verified' : 'inferred',
+                  },
+                  {
+                    label: 'Signal-to-Experiment Conversion',
+                    value: state.marketEvents.length > 0 ? '1-Click Ready' : 'Standby',
+                    subtext:
+                      state.marketEvents.length > 0
+                        ? 'Grounded in real demand'
+                        : 'Awaiting captured signals',
+                    status: state.marketEvents.length > 0 ? 'verified' : 'inferred',
+                  },
+                ],
+                lineageItems: state.marketEvents.slice(0, 3).map((e) => ({
+                  title: e.headline,
+                  source: e.competitorName || 'Category Surveillance Feed',
+                  timestamp: e.detectedAt || 'Recent Alert',
+                  confidence: 0.97,
+                  type: (e.isAiInferred ? 'AI_INFERRED' : 'GROUND_TRUTH') as any,
+                  details: e.analysis,
+                })),
+                guardrails: {
+                  truthCheckStatus: 'PASSED',
+                  antiFatigueScore: 'Real-Time Market Grounded',
+                  creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
+                  modelAudited: 'Gemini 2.5 Flash Grounded with Real-Time Web Signals',
                 },
-                {
-                  label: 'Watchlist Size',
-                  value: state.competitors.length,
-                  subtext: 'Active surveillance',
-                  status: 'optimal',
+                rawJson: {
+                  department: 'DEP-09 (Market Watch & Macro Trends)',
+                  workspace: state.brain.businessName || 'Default Workspace',
+                  eventsCount: state.marketEvents.length,
+                  monitoredCompetitors: state.competitors.length,
+                  scheduledReportsCount: state.scheduledReports?.length ?? 0,
+                  surveillanceStatus: isMarketStandby
+                    ? 'STANDBY_AWAITING_COMPETITORS'
+                    : 'ACTIVE_SURVEILLANCE',
+                  timestamp: new Date().toISOString(),
                 },
-                {
-                  label: 'Scheduled Reports',
-                  value: state.scheduledReports?.length || 1,
-                  subtext: 'Automated briefing',
-                  status: 'verified',
-                },
-                {
-                  label: 'Signal-to-Experiment Conversion',
-                  value: '1-Click',
-                  subtext: 'Grounded in real demand',
-                  status: 'verified',
-                },
-              ],
-              lineageItems: state.marketEvents.slice(0, 3).map((e) => ({
-                title: e.headline,
-                source: e.competitorName || 'Category Surveillance Feed',
-                timestamp: e.detectedAt || 'Recent Alert',
-                confidence: 0.97,
-                type: (e.isAiInferred ? 'AI_INFERRED' : 'GROUND_TRUTH') as any,
-                details: e.analysis,
-              })),
-              guardrails: {
-                truthCheckStatus: 'PASSED',
-                antiFatigueScore: 'Real-Time Market Grounded',
-                creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
-                modelAudited: 'Gemini 2.5 Flash Grounded with Real-Time Web Signals',
-              },
-              rawJson: {
-                department: 'DEP-09',
-                workspace: state.brain.businessName,
-                eventsCount: state.marketEvents.length,
-                monitoredCompetitors: state.competitors.length,
-                scheduledReportsCount: state.scheduledReports?.length || 0,
-                timestamp: new Date().toISOString(),
-              },
-            }}
+              };
+            })()}
           />
         </>
       )}

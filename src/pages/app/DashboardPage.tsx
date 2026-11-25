@@ -226,35 +226,53 @@ export const DashboardPage: React.FC = () => {
           onClick: handleSyncBriefing,
           icon: <RefreshCw className="w-3.5 h-3.5 text-[#71717A]" />,
         }}
-        proofTelemetry={{
-          confidenceScore: 94.2,
-          confidenceLabel: 'System Calibration Score',
-          metrics: [
-            {
-              label: 'Strategic Alignment',
-              value: `${metrics.goalsAvgPercentage}%`,
-              subtext: 'Across active goals',
-              status: 'optimal',
-            },
-            {
-              label: 'Execution Velocity',
-              value: `${taskStats.completionRate}%`,
-              subtext: `${taskStats.completed}/${taskStats.total} completed`,
-              status: 'optimal',
-            },
-            {
-              label: 'Active Growth Tests',
-              value: activeExperiments.length,
-              subtext: 'Experiments running',
-              status: 'optimal',
-            },
-            {
-              label: 'Brain Memory Completeness',
-              value: `${brainComp.percentage}%`,
-              subtext: 'Ground truth synced',
-              status: 'verified',
-            },
-          ],
+        proofTelemetry={(() => {
+          const calScore = metrics.isFreshWorkspace
+            ? brainComp.percentage
+            : Math.round(
+                brainComp.percentage * 0.4 +
+                  taskStats.completionRate * 0.4 +
+                  metrics.goalsAvgPercentage * 0.2
+              );
+          const isDashStandby = metrics.isFreshWorkspace && brainComp.percentage === 0;
+
+          return {
+            confidenceScore: calScore,
+            confidenceLabel: isDashStandby
+              ? 'Telemetry Standby'
+              : 'System Calibration Score',
+            statusBadge: isDashStandby
+              ? 'STANDBY'
+              : calScore >= 70
+                ? 'PASS'
+                : 'OPTIMAL',
+            isStandby: isDashStandby,
+            metrics: [
+              {
+                label: 'Strategic Alignment',
+                value: `${metrics.goalsAvgPercentage}%`,
+                subtext: 'Across active goals',
+                status: 'optimal',
+              },
+              {
+                label: 'Execution Velocity',
+                value: `${taskStats.completionRate}%`,
+                subtext: `${taskStats.completed}/${taskStats.total} completed`,
+                status: 'optimal',
+              },
+              {
+                label: 'Active Growth Tests',
+                value: activeExperiments.length,
+                subtext: 'Experiments running',
+                status: 'optimal',
+              },
+              {
+                label: 'Brain Memory Completeness',
+                value: `${brainComp.percentage}%`,
+                subtext: 'Ground truth synced',
+                status: 'verified',
+              },
+            ],
           lineageItems: [
             {
               title: primaryFocus.title,
@@ -280,16 +298,17 @@ export const DashboardPage: React.FC = () => {
             modelAudited: 'Gemini 2.5 Flash Grounded',
           },
           rawJson: {
-            department: 'DEP-01',
-            workspace: state.brain.businessName,
-            readinessScore: 94.2,
+            department: 'DEP-01 (Executive Command Center)',
+            workspace: state.brain.businessName || 'Default Workspace',
+            readinessScore: calScore,
             activeExperiments: activeExperiments.length,
             taskCompletionRate: taskStats.completionRate,
             primaryFocusTitle: primaryFocus.title,
             groundTruthPercentage: brainComp.percentage,
             timestamp: new Date().toISOString(),
           },
-        }}
+        };
+      })()}
       />
 
       <LiquidSkeletonReveal

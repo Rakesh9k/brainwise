@@ -787,69 +787,81 @@ export const BrandStudioPage: React.FC = () => {
           },
           icon: <Copy className="w-3.5 h-3.5 text-[#71717A]" />,
         }}
-        proofTelemetry={{
-          confidenceScore: 99.1,
-          confidenceLabel: 'Vector Precision & Typography Grounding',
-          metrics: [
-            {
-              label: 'Design Tokens',
-              value: 'Active',
-              subtext: 'Tailwind & CSS :root',
-              status: 'verified',
+        proofTelemetry={(() => {
+          const conceptCount = (state.brand?.concepts || []).length;
+          const brandConfidence = conceptCount > 0 ? 100 : state.brand?.brandName ? 75 : 0;
+          const isBrandStandby = conceptCount === 0 && !state.brand?.brandName;
+
+          return {
+            confidenceScore: brandConfidence,
+            confidenceLabel: isBrandStandby
+              ? 'Brand Studio Standby'
+              : 'Vector Precision & Typography Grounding',
+            statusBadge: isBrandStandby ? 'STANDBY' : 'PASS',
+            isStandby: isBrandStandby,
+            metrics: [
+              {
+                label: 'Design Tokens',
+                value: state.brand?.brandName ? 'Active' : 'Standby',
+                subtext: 'Tailwind & CSS :root',
+                status: state.brand?.brandName ? 'verified' : 'inferred',
+              },
+              {
+                label: 'Logo Concepts',
+                value: conceptCount,
+                subtext: conceptCount > 0 ? 'SVG vector marks' : '0 concepts generated',
+                status: conceptCount > 0 ? 'optimal' : 'warning',
+              },
+              {
+                label: 'Collateral Locker',
+                value: state.assets.length,
+                subtext: 'Print & Digital ready',
+                status: state.assets.length > 0 ? 'optimal' : 'warning',
+              },
+              {
+                label: 'Color Accessibility',
+                value: 'WCAG AA',
+                subtext: 'High-contrast compliant',
+                status: 'verified',
+              },
+            ],
+            lineageItems: [
+              {
+                title: `Brand Guidelines: ${state.brand.brandName || 'Default'}`,
+                source: 'Deterministic Brand Profile Store',
+                timestamp: 'Calibrated',
+                confidence: 0.99,
+                type: 'GROUND_TRUTH',
+                details: `Primary Color: ${(state.brand.palette as any)?.primary || state.brand.palette?.[0]?.hex || activeConcept?.accentColor || '#18181B'} · Heading Font: ${(state.brand.typography as any)?.headingFont || state.brand.typography?.heading || 'Plus Jakarta Sans'}`,
+              },
+              {
+                title: 'Tone of Voice Parameters',
+                source: 'Persistent Strategic Brain',
+                timestamp: 'Grounded',
+                confidence: 0.98,
+                type: 'USER_CONFIRMED',
+                details: (state.brand as any)?.guidelines?.toneOfVoice || (state.brand as any)?.guidelines?.brandVoice || 'Authoritative and approachable',
+              },
+            ],
+            guardrails: {
+              truthCheckStatus: 'PASSED',
+              antiFatigueScore: 'Design System Enforced',
+              creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
+              modelAudited: 'Gemini 2.5 Flash Grounded Vector Engine',
             },
-            {
-              label: 'Logo Concepts',
-              value: (state.brand?.concepts || []).length || 3,
-              subtext: 'SVG vector marks',
-              status: 'optimal',
+            rawJson: {
+              department: 'DEP-04 (Brand Studio)',
+              brandName: state.brand.brandName || 'Unspecified',
+              brandStatus: state.brand.status,
+              colors: state.brand.palette,
+              typography: state.brand.typography,
+              logoConceptsCount: conceptCount,
+              collateralAssetsCount: state.assets.length,
+              status: isBrandStandby ? 'STANDBY' : 'OPTIMAL',
+              timestamp: new Date().toISOString(),
             },
-            {
-              label: 'Collateral Locker',
-              value: state.assets.length,
-              subtext: 'Print & Digital ready',
-              status: 'optimal',
-            },
-            {
-              label: 'Color Accessibility',
-              value: 'WCAG AA',
-              subtext: 'High-contrast compliant',
-              status: 'verified',
-            },
-          ],
-          lineageItems: [
-            {
-              title: `Brand Guidelines: ${state.brand.brandName}`,
-              source: 'Deterministic Brand Profile Store',
-              timestamp: 'Calibrated',
-              confidence: 0.99,
-              type: 'GROUND_TRUTH',
-              details: `Primary Color: ${(state.brand.palette as any)?.primary || state.brand.palette?.[0]?.hex || activeConcept?.accentColor || '#18181B'} · Heading Font: ${(state.brand.typography as any)?.headingFont || state.brand.typography?.heading || 'Plus Jakarta Sans'}`,
-            },
-            {
-              title: 'Tone of Voice Parameters',
-              source: 'Persistent Strategic Brain',
-              timestamp: 'Grounded',
-              confidence: 0.98,
-              type: 'USER_CONFIRMED',
-              details: (state.brand as any)?.guidelines?.toneOfVoice || (state.brand as any)?.guidelines?.brandVoice || 'Authoritative and approachable',
-            },
-          ],
-          guardrails: {
-            truthCheckStatus: 'PASSED',
-            antiFatigueScore: 'Design System Enforced',
-            creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
-            modelAudited: 'Vector SVG Engine + Gemini 2.5 Pro Grounding',
-          },
-          rawJson: {
-            department: 'DEP-04',
-            workspace: state.brand.brandName,
-            brandStatus: state.brand.status,
-            colors: state.brand.palette,
-            typography: state.brand.typography,
-            assetsCount: state.assets.length,
-            timestamp: new Date().toISOString(),
-          },
-        }}
+          };
+        })()}
       />
 
       <Tabs

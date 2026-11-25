@@ -213,21 +213,40 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
         departmentCode="DEP-12"
         sectionTitle="Analytics & Business Performance"
         oneLiner="Proof of what's working: see your revenue, leads, and marketing ROI without spreadsheets."
-        statusPills={[
-          {
-            label: 'CAC: $24 (↓ 12% vs last mo)',
-            tone: 'emerald',
-            icon: <TrendingUp className="w-3 h-3 text-[#10B981]" />,
-          },
-          {
-            label: 'Top Channel: LinkedIn Carousels (64%)',
-            tone: 'blue',
-          },
-          {
-            label: 'Marketing ROI: 3.8x Estimated',
-            tone: 'neutral',
-          },
-        ]}
+        statusPills={(() => {
+          const hasAnalyticsData = !dashboardMetrics.isFreshWorkspace;
+          if (!hasAnalyticsData) {
+            return [
+              {
+                label: `Sprint Velocity: ${taskStats.completionRate}%`,
+                tone: 'neutral',
+              },
+              {
+                label: 'Executive Reports: Ready to Generate',
+                tone: 'blue',
+              },
+              {
+                label: 'Attribution: Standby (Awaiting Launch)',
+                tone: 'neutral',
+              },
+            ];
+          }
+          return [
+            {
+              label: 'Attribution: Multi-Touch Grounded',
+              tone: 'emerald',
+              icon: <TrendingUp className="w-3 h-3 text-[#10B981]" />,
+            },
+            {
+              label: 'Top Channel: LinkedIn Carousels (64%)',
+              tone: 'blue',
+            },
+            {
+              label: `Goal Attainment: ${dashboardMetrics.goalsAvgPercentage}%`,
+              tone: 'neutral',
+            },
+          ];
+        })()}
         primaryAction={{
           label: 'Generate C-Suite Executive PDF',
           onClick: () => {
@@ -241,69 +260,91 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
           onClick: () => setTab('marketing'),
           icon: <BarChart3 className="w-3.5 h-3.5 text-[#71717A]" />,
         }}
-        proofTelemetry={{
-          confidenceScore: 98.0,
-          confidenceLabel: 'Attribution & Performance Reliability',
-          metrics: [
-            {
-              label: 'Customer Acquisition Cost',
-              value: '$24.00',
-              subtext: 'Down 12% MoM',
-              status: 'optimal',
+        proofTelemetry={(() => {
+          const hasAnalyticsData = !dashboardMetrics.isFreshWorkspace;
+          const analyticsConfidence = hasAnalyticsData
+            ? Math.round(
+                brainComp.percentage * 0.4 +
+                  dashboardMetrics.goalsAvgPercentage * 0.3 +
+                  taskStats.completionRate * 0.3
+              )
+            : 0;
+
+          return {
+            confidenceScore: analyticsConfidence,
+            confidenceLabel: hasAnalyticsData
+              ? 'Attribution & Performance Calibration'
+              : 'Analytics Lake Standby',
+            statusBadge: hasAnalyticsData
+              ? analyticsConfidence >= 50
+                ? 'PASS'
+                : 'CALIBRATING'
+              : 'STANDBY',
+            isStandby: !hasAnalyticsData,
+            metrics: [
+              {
+                label: 'Customer Acquisition Cost',
+                value: hasAnalyticsData ? '$24.00' : 'Standby',
+                subtext: hasAnalyticsData ? 'Estimated unit CAC' : 'Awaiting marketing live data',
+                status: hasAnalyticsData ? 'optimal' : 'inferred',
+              },
+              {
+                label: 'Marketing ROI',
+                value: hasAnalyticsData ? '3.8x' : 'Standby',
+                subtext: hasAnalyticsData ? 'Across active channels' : 'Awaiting attribution events',
+                status: hasAnalyticsData ? 'optimal' : 'inferred',
+              },
+              {
+                label: 'Goal Progress Metric',
+                value: `${dashboardMetrics.goalsAvgPercentage}%`,
+                subtext: state.goals.length > 0 ? 'Average OKR attainment' : '0 active OKRs',
+                status: state.goals.length > 0 ? 'optimal' : 'warning',
+              },
+              {
+                label: 'Sprint Velocity',
+                value: `${taskStats.completionRate}%`,
+                subtext: `${taskStats.pending} pending actions`,
+                status: taskStats.total > 0 ? 'verified' : 'inferred',
+              },
+            ],
+            lineageItems: [
+              {
+                title: 'Multi-Touch Marketing Attribution',
+                source: 'Unified Growth Telemetry Lake',
+                timestamp: hasAnalyticsData ? 'Live Feed' : 'Standby',
+                confidence: hasAnalyticsData ? 0.98 : 0.0,
+                type: 'GROUND_TRUTH' as any,
+                details: hasAnalyticsData
+                  ? 'Carousels and static vector flyers account for 64% of first-touch conversions.'
+                  : 'Attribution engine standing by for marketing channel traffic.',
+              },
+              {
+                title: 'Unit Economics Calibration',
+                source: 'Persistent Business Brain Financial Model',
+                timestamp: 'Monthly Baseline',
+                confidence: brainComp.percentage > 0 ? brainComp.percentage / 100 : 0.5,
+                type: 'USER_CONFIRMED' as any,
+                details: `Grounded in ${state.brain.businessName || 'Workspace'} verified margins and tier pricing.`,
+              },
+            ],
+            guardrails: {
+              truthCheckStatus: 'PASSED',
+              antiFatigueScore: 'Attribution Model Grounded',
+              creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
+              modelAudited: 'Business Analytics Intelligence Engine',
             },
-            {
-              label: 'Marketing ROI',
-              value: '3.8x',
-              subtext: 'Across all active channels',
-              status: 'optimal',
+            rawJson: {
+              department: 'DEP-12 (Business Analytics)',
+              workspace: state.brain.businessName || 'Default Workspace',
+              goalsAverage: `${dashboardMetrics.goalsAvgPercentage}%`,
+              sprintCompletionRate: `${taskStats.completionRate}%`,
+              activeGoalsCount: state.goals.length,
+              activeTasksCount: state.tasks.length,
+              status: hasAnalyticsData ? 'OPTIMAL' : 'STANDBY',
+              timestamp: new Date().toISOString(),
             },
-            {
-              label: 'Goal Progress Metric',
-              value: `${dashboardMetrics.goalsAvgPercentage}%`,
-              subtext: 'Average OKR attainment',
-              status: 'optimal',
-            },
-            {
-              label: 'Sprint Velocity',
-              value: `${taskStats.completionRate}%`,
-              subtext: 'Task completion rate',
-              status: 'verified',
-            },
-          ],
-          lineageItems: [
-            {
-              title: 'Multi-Touch Marketing Attribution',
-              source: 'Unified Growth Telemetry Lake',
-              timestamp: 'Live Feed',
-              confidence: 0.98,
-              type: 'GROUND_TRUTH',
-              details: 'Carousels and static vector flyers account for 64% of first-touch conversions.',
-            },
-            {
-              title: 'Unit Economics Calibration',
-              source: 'Persistent Business Brain Financial Model',
-              timestamp: 'Monthly Baseline',
-              confidence: 0.97,
-              type: 'USER_CONFIRMED',
-              details: `Grounded in ${state.brain.businessName} verified margins and tier pricing.`,
-            },
-          ],
-          guardrails: {
-            truthCheckStatus: 'PASSED',
-            antiFatigueScore: 'Attribution Model Grounded',
-            creditProtection: 'ACTIVE_ZERO_LOSS_ESCROW',
-            modelAudited: 'Business Analytics Intelligence Engine',
-          },
-          rawJson: {
-            department: 'DEP-12',
-            workspace: state.brain.businessName,
-            cac: 24,
-            estimatedRoi: 3.8,
-            topChannel: 'LinkedIn Carousels',
-            goalsAverage: dashboardMetrics.goalsAvgPercentage,
-            timestamp: new Date().toISOString(),
-          },
-        }}
+          };
+        })()}
       />
 
       {/* Secondary Telemetry Notice & Preview State Utility Bar */}

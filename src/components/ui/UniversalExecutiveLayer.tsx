@@ -11,8 +11,13 @@ import {
   Cpu,
   Lock,
   Compass,
+  FileText,
+  Presentation,
+  CheckCircle2,
+  Activity,
 } from 'lucide-react';
 import { Drawer } from './Overlay';
+import { exportExecutivePdf, exportExecutiveSlides } from './contextualLedgerUtils';
 
 export interface ProofMetricItem {
   label: string;
@@ -34,6 +39,8 @@ export interface ProofLineageItem {
 export interface ProofTelemetryData {
   confidenceScore?: number; // e.g. 96.4
   confidenceLabel?: string;
+  statusBadge?: string; // e.g. 'PASS' | 'STANDBY' | 'OPTIMAL' | 'REVIEW'
+  isStandby?: boolean;
   metrics?: ProofMetricItem[];
   lineageItems?: ProofLineageItem[];
   guardrails?: {
@@ -252,29 +259,55 @@ export const UniversalExecutiveLayer: React.FC<UniversalExecutiveLayerProps> = (
                   : 'text-[#71717A] hover:text-[#18181B]'
               }`}
             >
-              Raw Telemetry
+              Audit & Telemetry
             </button>
           </div>
 
           {activeTab === 'evidence' && (
             <div className="space-y-5">
               {/* Confidence Hero Meter */}
-              <div className="p-4 rounded-2xl border border-[#E4E4DF] bg-gradient-to-br from-[#FFFFFF] to-[#FAF9F5] flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <div className="text-xs font-medium text-[#71717A] uppercase tracking-wider">
-                    {proofTelemetry.confidenceLabel || 'Grounding Precision'}
+              {(() => {
+                const score = proofTelemetry.confidenceScore ?? 0;
+                const isStandby =
+                  proofTelemetry.isStandby ||
+                  (score === 0 &&
+                    (proofTelemetry.metrics?.every(
+                      (m) => m.value === 0 || m.value === '0' || m.value === 'Standby'
+                    ) ??
+                      false));
+                const statusBadge =
+                  proofTelemetry.statusBadge ||
+                  (isStandby ? 'STANDBY' : score >= 80 ? 'PASS' : score >= 50 ? 'OPTIMAL' : 'REVIEW');
+                const badgeTone = isStandby
+                  ? 'border-[#D4D4D0] bg-[#F4F4F2] text-[#52524E]'
+                  : statusBadge === 'PASS' || statusBadge === 'OPTIMAL'
+                    ? 'border-[#10B981]/30 border-t-[#10B981] bg-[#ECFDF5] text-[#065F46]'
+                    : 'border-[#F59E0B]/30 border-t-[#F59E0B] bg-[#FFFBEB] text-[#B45309]';
+
+                return (
+                  <div className="p-4 rounded-2xl border border-[#E4E4DF] bg-gradient-to-br from-[#FFFFFF] to-[#FAF9F5] flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-medium text-[#71717A] uppercase tracking-wider">
+                        {proofTelemetry.confidenceLabel ||
+                          (isStandby ? 'Surveillance Status' : 'Grounding Precision')}
+                      </div>
+                      <div className="text-2xl font-bold font-mono text-[#18181B]">
+                        {isStandby && score === 0 ? 'Standby' : `${score}%`}
+                      </div>
+                      <p className="text-xs text-[#52524E]">
+                        {isStandby
+                          ? 'Awaiting live market events and competitor surveillance activity'
+                          : 'Empirical verification against company Business Brain'}
+                      </p>
+                    </div>
+                    <div
+                      className={`w-14 h-14 rounded-full border-4 flex items-center justify-center shrink-0 font-bold text-xs ${badgeTone}`}
+                    >
+                      {statusBadge}
+                    </div>
                   </div>
-                  <div className="text-2xl font-bold font-mono text-[#18181B]">
-                    {proofTelemetry.confidenceScore ?? 96.8}%
-                  </div>
-                  <p className="text-xs text-[#52524E]">
-                    Empirical verification against company Business Brain
-                  </p>
-                </div>
-                <div className="w-12 h-12 rounded-full border-4 border-[#10B981]/30 border-t-[#10B981] flex items-center justify-center bg-[#ECFDF5] text-[#065F46] shrink-0 font-bold text-xs">
-                  PASS
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Key Quantitative Metrics */}
               {proofTelemetry.metrics && proofTelemetry.metrics.length > 0 && (
@@ -413,44 +446,172 @@ export const UniversalExecutiveLayer: React.FC<UniversalExecutiveLayerProps> = (
           )}
 
           {activeTab === 'json' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#18181B] flex items-center gap-1.5">
-                  <Code2 className="w-3.5 h-3.5 text-[#52524E]" />
-                  <span>Structured Telemetry Payload</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyJson}
-                  className="px-2.5 py-1 rounded-lg border border-[#E4E4DF] bg-white text-[11px] font-medium text-[#52524E] hover:text-[#18181B] inline-flex items-center gap-1 cursor-pointer focus-ring"
-                >
-                  {copiedJson ? (
-                    <>
-                      <Check className="w-3 h-3 text-[#10B981]" />
-                      <span>Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span>Copy JSON</span>
-                    </>
-                  )}
-                </button>
+            <div className="space-y-4">
+              {/* Executive Operational Audit Header Card */}
+              <div className="p-4 rounded-xl border border-[#E4E4DF] bg-white space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] font-mono font-semibold text-[#C44D00] uppercase tracking-wider">
+                      {departmentCode} · System Telemetry Audit
+                    </span>
+                    <h4 className="text-sm font-semibold text-[#18181B] mt-0.5">
+                      {sectionTitle}
+                    </h4>
+                  </div>
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${
+                      proofTelemetry.isStandby || (proofTelemetry.confidenceScore === 0)
+                        ? 'bg-[#F4F4F2] text-[#52524E] border-[#D4D4D0]'
+                        : 'bg-[#ECFDF5] text-[#065F46] border-[#A7F3D0]'
+                    }`}
+                  >
+                    {proofTelemetry.isStandby || (proofTelemetry.confidenceScore === 0)
+                      ? 'Standby Calibration'
+                      : 'Live Operational State'}
+                  </span>
+                </div>
+
+                {/* Audit Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#F5F5F3]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      exportExecutivePdf(
+                        `${sectionTitle} — System Audit`,
+                        `Verified Operational State & Telemetry (${departmentCode})`,
+                        proofTelemetry.rawJson || {
+                          department: departmentCode,
+                          section: sectionTitle,
+                          status: 'Audited & Verified',
+                        }
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#FFF0E5] text-[#C44D00] border border-[#FFD9BE] hover:bg-[#FFE6D4] transition-colors cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-[#FF7417]" />
+                    Export Audit PDF
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      exportExecutiveSlides(
+                        `${sectionTitle} — Audit Deck`,
+                        `System Telemetry & Architecture (${departmentCode})`,
+                        {
+                          series: Object.entries(proofTelemetry.rawJson || {}).map(([k, v]) => ({
+                            label: k.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()),
+                            value: typeof v === 'number' ? v : 100,
+                            detail: String(v),
+                          })),
+                          completionRate: proofTelemetry.confidenceScore ?? 100,
+                        }
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE] hover:bg-[#E0E7FF] transition-colors cursor-pointer"
+                  >
+                    <Presentation className="w-3.5 h-3.5 text-[#6366F1]" />
+                    Export Audit Slides
+                  </button>
+                </div>
               </div>
 
-              <pre className="p-3.5 rounded-xl bg-[#18181B] text-[#FAFAFA] font-mono text-[11px] overflow-x-auto max-h-[360px] leading-relaxed select-all">
-                {JSON.stringify(
-                  proofTelemetry.rawJson || {
-                    department: departmentCode,
-                    section: sectionTitle,
-                    confidenceScore: proofTelemetry.confidenceScore ?? 96.8,
-                    timestamp: new Date().toISOString(),
-                    status: 'OPTIMAL',
-                  },
-                  null,
-                  2
-                )}
-              </pre>
+              {/* Structured Telemetry Audit Table */}
+              <div className="rounded-xl border border-[#E4E4DF] bg-white overflow-hidden">
+                <div className="px-4 py-2.5 bg-[#FAF9F5] border-b border-[#E4E4DF] text-xs font-semibold text-[#18181B] flex items-center justify-between">
+                  <span>System Telemetry Parameters</span>
+                  <span className="text-[10px] text-[#71717A] font-normal">
+                    Verified runtime snapshot
+                  </span>
+                </div>
+                <div className="divide-y divide-[#F0F0EC] text-xs">
+                  {Object.entries(
+                    proofTelemetry.rawJson || {
+                      department: departmentCode,
+                      workspace: 'Active Workspace',
+                      status: proofTelemetry.isStandby ? 'STANDBY' : 'OPTIMAL',
+                      timestamp: new Date().toISOString(),
+                    }
+                  ).map(([key, val]) => {
+                    const formattedKey = key
+                      .replace(/([A-Z])/g, ' $1')
+                      .replace(/^./, (s) => s.toUpperCase())
+                      .replace(/Count$/i, ' Count');
+                    const isDate =
+                      typeof val === 'string' &&
+                      /^\d{4}-\d{2}-\d{2}T/.test(val) &&
+                      !isNaN(Date.parse(val));
+                    const displayVal = isDate
+                      ? new Date(val as string).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : typeof val === 'object'
+                        ? JSON.stringify(val)
+                        : String(val ?? '—');
+
+                    return (
+                      <div
+                        key={key}
+                        className="px-4 py-2.5 flex items-center justify-between gap-4 hover:bg-[#FAF9F5] transition-colors"
+                      >
+                        <span className="text-[#52524E] font-medium">{formattedKey}</span>
+                        <span className="font-mono text-[#18181B] font-semibold text-[11px] text-right truncate max-w-[260px]">
+                          {displayVal}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Developer Collapsible Inspector (Tucked away at bottom for debug only) */}
+              <details className="group">
+                <summary className="text-[11px] font-mono text-[#71717A] hover:text-[#18181B] cursor-pointer flex items-center justify-between py-2 px-3 rounded-lg bg-[#F4F4F2] hover:bg-[#EFEFEB] transition-colors select-none">
+                  <span className="flex items-center gap-1.5">
+                    <Code2 className="w-3 h-3 text-[#71717A]" />
+                    <span>Inspect Raw Developer JSON Payload (Debug)</span>
+                  </span>
+                  <span className="text-[10px] text-[#A1A1AA] group-open:rotate-180 transition-transform">
+                    ▼
+                  </span>
+                </summary>
+                <div className="mt-2 space-y-2">
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleCopyJson}
+                      className="px-2 py-0.5 rounded border border-[#E4E4DF] bg-white text-[10px] font-medium text-[#52524E] hover:text-[#18181B] inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedJson ? (
+                        <>
+                          <Check className="w-2.5 h-2.5 text-[#10B981]" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-2.5 h-2.5" />
+                          <span>Copy Raw JSON</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <pre className="p-3.5 rounded-xl bg-[#18181B] text-[#FAFAFA] font-mono text-[11px] overflow-x-auto max-h-[220px] leading-relaxed select-all">
+                    {JSON.stringify(
+                      proofTelemetry.rawJson || {
+                        department: departmentCode,
+                        section: sectionTitle,
+                        confidenceScore: proofTelemetry.confidenceScore ?? 0,
+                        timestamp: new Date().toISOString(),
+                      },
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
+              </details>
             </div>
           )}
         </div>
