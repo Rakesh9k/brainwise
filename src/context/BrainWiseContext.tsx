@@ -192,9 +192,9 @@ interface BrainWiseContextValue {
   getAssetPerformanceSummary: (assetId: string) => Promise<any>;
   listTopPerformingAssets: (params?: any) => Promise<any[]>;
   toggleTaskStatus: (taskId: string, status?: GrowthTask['status']) => void;
-  addTask: (task: Omit<GrowthTask, 'id'>) => void;
+  addTask: (task: Omit<GrowthTask, 'id'>, options?: { silent?: boolean }) => void;
   updateTaskNotes: (taskId: string, notes: string) => void;
-  addGoal: (goal: Omit<GrowthGoal, 'id'>) => void;
+  addGoal: (goal: Omit<GrowthGoal, 'id'>, options?: { silent?: boolean }) => void;
   updateGoalProgress: (goalId: string, currentValue: number) => void;
   addExperiment: (
     exp: Omit<GrowthExperiment, 'id'>,
@@ -2673,14 +2673,16 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   };
 
-  const addTask = (task: Omit<GrowthTask, 'id'>) => {
-    const id = `task-${Date.now()}`;
+  const addTask = (task: Omit<GrowthTask, 'id'>, options?: { silent?: boolean }) => {
+    const id = `task-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const prevTasks = state.tasks;
     setState((prev) => ({
       ...prev,
       tasks: [{ ...task, id }, ...prev.tasks],
     }));
-    showToast('Action task added to Growth Planner.');
+    if (!options?.silent) {
+      showToast('Action task added to Growth Planner.');
+    }
     if (state.activeWorkspaceId) {
       apiClient.createTask(state.activeWorkspaceId, task).catch((err: any) => {
         setState((prev) => ({
@@ -2709,14 +2711,16 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const addGoal = (goal: Omit<GrowthGoal, 'id'>) => {
-    const id = `goal-${Date.now()}`;
+  const addGoal = (goal: Omit<GrowthGoal, 'id'>, options?: { silent?: boolean }) => {
+    const id = `goal-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const prevGoals = state.goals;
     setState((prev) => ({
       ...prev,
       goals: [{ ...goal, id }, ...prev.goals],
     }));
-    showToast('Business goal added.');
+    if (!options?.silent) {
+      showToast('Business goal added.');
+    }
     if (state.activeWorkspaceId) {
       apiClient.createGoal(state.activeWorkspaceId, goal).catch((err: any) => {
         setState((prev) => ({

@@ -25,7 +25,11 @@ import {
   formatCountdownSeconds,
   selectFocusSprintTasks,
 } from '../../utils/logic';
-import { generateAiRecommendations } from '../../utils/aiClient';
+import {
+  generateAiRecommendations,
+  generateAiWeeklyPlan,
+  type GeneratedWeeklyPlanResponse,
+} from '../../utils/aiClient';
 import type { GrowthGoal, GrowthTask } from '../../types/brainwise';
 import { apiClient } from '../../services/apiClient';
 import {
@@ -339,6 +343,82 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
     taskFilter === 'today'
       ? state.tasks.filter((t) => t.isTodayPriority || t.priority === 'high')
       : state.tasks;
+
+  const [weeklyAiLoading, setWeeklyAiLoading] = useState(false);
+  const [weeklyPlanMeta, setWeeklyPlanMeta] = useState<{
+    weeklyTheme: string;
+    effectiveLocation: string;
+  } | null>(null);
+
+  const handleGenerateWeeklyAiPlan = async () => {
+    setWeeklyAiLoading(true);
+    try {
+      const plan: GeneratedWeeklyPlanResponse = await generateAiWeeklyPlan(state);
+
+      // Save all 7 daily tasks into tracked Daily Action Plan
+      plan.tasks.forEach((t) => {
+        addTask(
+          {
+            title: t.title,
+            description: `${t.dayLabel}: ${t.description}`,
+            whyItMatters: `Grounded in ${state.brain.businessName} (${plan.effectiveLocation}) — ${plan.weeklyTheme}`,
+            expectedOutcome: `Advance weekly sprint goals (${t.department})`,
+            priority: t.priority,
+            estimatedMinutes: t.estimatedMinutes,
+            dueDate: t.dueDate,
+            department: t.department,
+            status: 'pending',
+            isTodayPriority: t.isTodayPriority,
+          },
+          { silent: true }
+        );
+      });
+
+      // Save measurable weekly goals into tracked Active Goals
+      plan.goals.forEach((g) => {
+        addGoal(
+          {
+            title: g.title,
+            metric: g.metric,
+            currentValue: g.currentValue,
+            targetValue: g.targetValue,
+            unit: g.unit,
+            targetDate: g.targetDate,
+          },
+          { silent: true }
+        );
+      });
+
+      setWeeklyPlanMeta({
+        weeklyTheme: plan.weeklyTheme,
+        effectiveLocation: plan.effectiveLocation,
+      });
+
+      showToast(
+        `Generated ${plan.tasks.length}-day AI weekly plan & ${plan.goals.length} measurable goals (${plan.effectiveLocation}).`
+      );
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'Unable to generate 7-day AI weekly plan.',
+        { tone: 'error' }
+      );
+    } finally {
+      setWeeklyAiLoading(false);
+    }
+  };
+
+  // Compute live 7-day weekly velocity from tracked tasks
+  const weeklyVelocity = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const weekEndStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+    const weekTasks = state.tasks.filter(
+      (t) => !t.dueDate || (t.dueDate >= todayStr && t.dueDate <= weekEndStr) || t.status === 'completed'
+    );
+    const total = weekTasks.length;
+    const completed = weekTasks.filter((t) => t.status === 'completed').length;
+    const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, rate, weekTasks };
+  }, [state.tasks]);
 
   const handleGenerate30DayPlan = () => {
     const primaryGoal = state.goals[0];
@@ -743,6 +823,15 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                 description={`${taskStats.highPriorityPending} high priority · ${taskStats.remainingMinutes} mins estimated remaining`}
                 action={
                   <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleGenerateWeeklyAiPlan}
+                      disabled={weeklyAiLoading}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+                      {weeklyAiLoading ? 'Planning 7-Day Sprint…' : 'AI 7-Day Plan'}
+                    </Button>
                     <div className="inline-flex p-0.5 bg-[#ECECE9] border border-[#E6E6E2] rounded-[8px]">
                       {(
                         [
@@ -774,13 +863,42 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                 }
               />
 
+              {/* Live 7-Day Weekly Velocity & Location Grounding Strip */}
+              {(weeklyVelocity.total > 0 || weeklyPlanMeta) && (
+                <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FAF9F6] px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-[#171717]">
+                      <Calendar className="w-3.5 h-3.5 text-[#FF7417] shrink-0" />
+                      <span className="truncate">
+                        {weeklyPlanMeta?.weeklyTheme || '7-Day Sprint Execution Velocity'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-[#686864]">
+                      {weeklyVelocity.completed}/{weeklyVelocity.total} weekly tasks completed ·{' '}
+                      <span className="font-mono-num font-semibold text-[#171717]">
+                        {weeklyVelocity.rate}%
+                      </span>{' '}
+                      velocity
+                      {weeklyPlanMeta?.effectiveLocation
+                        ? ` · Grounded in ${weeklyPlanMeta.effectiveLocation}`
+                        : state.brain.location
+                          ? ` · Grounded in ${state.brain.location}`
+                          : ''}
+                    </div>
+                  </div>
+                  <div className="w-full sm:w-44 shrink-0">
+                    <FluidProgress value={weeklyVelocity.rate} className="h-2" />
+                  </div>
+                </div>
+              )}
+
               {displayedTasks.length === 0 ? (
                 <GuidedActionEmptyCard
                   stepLabel="Execution Queue"
                   title="No daily execution tasks queued"
-                  description="Generate a 30-day growth task from your Business Brain or create a custom action task to start tracking velocity."
-                  actionLabel="Generate 30-Day Growth Task"
-                  onAction={handleGenerate30DayPlan}
+                  description="Generate a 7-day AI weekly schedule & measurable goals from your Business Brain, location, and Idea Intelligence report."
+                  actionLabel={weeklyAiLoading ? 'Generating 7-Day Plan…' : 'Generate 7-Day AI Weekly Plan'}
+                  onAction={handleGenerateWeeklyAiPlan}
                   secondaryLabel="New Custom Task"
                   onSecondaryAction={() => setTaskModalOpen(true)}
                 />
@@ -1601,14 +1719,45 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
         <FluidTransition key="roadmap" direction="fade" className="space-y-6">
           <SectionHeader
             title="Weekly Execution Plan"
-            description="Generated dynamically from your pending priorities, active experiments, and growth targets"
+            description="7-day AI sprint schedule, measurable goals, and live completion velocity"
             action={
-              <Button variant="secondary" size="sm" onClick={handleGenerate30DayPlan}>
-                <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
-                Generate 30-Day Growth Task
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleGenerateWeeklyAiPlan}
+                  disabled={weeklyAiLoading}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {weeklyAiLoading ? 'Generating 7-Day AI Plan…' : 'Generate 7-Day AI Weekly Plan'}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleGenerate30DayPlan}>
+                  + 30-Day Task
+                </Button>
+              </div>
             }
           />
+          <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#FF7417]">
+                Weekly Completion Velocity
+              </div>
+              <div className="text-sm font-semibold text-[#171717]">
+                {weeklyVelocity.completed} of {weeklyVelocity.total} tasks completed ({weeklyVelocity.rate}%)
+              </div>
+              <div className="text-xs text-[#686864]">
+                {weeklyPlanMeta?.weeklyTheme ||
+                  `Tracks all daily actions and goals for ${state.brain.businessName}`}
+              </div>
+            </div>
+            <div className="w-full sm:w-56 space-y-1">
+              <FluidProgress value={weeklyVelocity.rate} className="h-2.5" />
+              <div className="flex justify-between text-[10px] font-mono-num text-[#686864]">
+                <span>0%</span>
+                <span>Target: 100%</span>
+              </div>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {weeklyPlan.map((w) => (
               <div

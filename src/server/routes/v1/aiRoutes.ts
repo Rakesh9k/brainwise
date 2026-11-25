@@ -517,6 +517,286 @@ router.post('/recommendations', async (req: Request, res: Response): Promise<voi
 });
 
 /**
+ * POST /api/v1/workspaces/:workspaceId/ai/weekly-plan
+ * Generates a concrete 7-day AI weekly task schedule & measurable weekly goals
+ * grounded in Business Brain, silent/explicit user location, and active Idea Intelligence report.
+ */
+router.post('/weekly-plan', async (req: Request, res: Response): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
+  const userId = req.user!.uid;
+
+  const reservation = await creditService.reserveCredits({
+    workspaceId,
+    userId,
+    featureId: 'FEAT-STR-001',
+    idempotencyKey: req.headers['x-idempotency-key'] as string,
+  });
+
+  try {
+    const profile = await businessBrainService.getProfile(workspaceId);
+    const bodyBrain = req.body?.brain || {};
+    const activeReport = req.body?.activeReport || null;
+    const detectedLocation =
+      typeof req.body?.detectedLocation === 'string' ? req.body.detectedLocation.trim() : '';
+
+    // 3-layer silent location resolution:
+    // 1. User-confirmed Business Brain location
+    // 2. Client timezone-derived or Cloud Run / edge geo header
+    // 3. Fallback
+    const headerCity = (req.headers['x-appengine-city'] as string) || '';
+    const headerCountry =
+      (req.headers['x-appengine-country'] as string) ||
+      (req.headers['cf-ipcountry'] as string) ||
+      '';
+    const headerLocation = [headerCity, headerCountry].filter(Boolean).join(', ');
+
+    const effectiveLocation =
+      (bodyBrain.location || profile.location || '').trim() ||
+      detectedLocation ||
+      headerLocation ||
+      'Local & Regional Market';
+
+    const businessName = bodyBrain.businessName || profile.businessName || 'Your Business';
+    const industry = bodyBrain.industry || profile.industry || 'General Commerce';
+    const stage = bodyBrain.stage || profile.stage || 'Early Traction';
+    const targetAudience = bodyBrain.targetAudience || profile.targetAudience || 'Target buyers';
+    const valueProp = bodyBrain.valueProposition || profile.valueProposition || '';
+
+    const today = new Date();
+    const formatDateOffset = (days: number) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+    };
+
+    const dayLabels = ['Today (Day 1)', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
+
+    // Deterministic location-aware fallback
+    const buildFallbackPlan = () => ({
+      weeklyTheme: `7-Day Local Growth & Validation Sprint for ${businessName} (${effectiveLocation})`,
+      effectiveLocation,
+      goals: [
+        {
+          title: `Acquire 10 qualified local leads in ${effectiveLocation}`,
+          description: `Weekly top-of-funnel acquisition target grounded in ${businessName} positioning.`,
+          metric: 'Qualified Leads / Inquiries',
+          currentValue: 0,
+          targetValue: 10,
+          unit: 'leads',
+          targetDate: formatDateOffset(7),
+        },
+        {
+          title: `Complete 7 consecutive daily growth actions`,
+          description: `Maintain 100% weekly sprint velocity across positioning, outreach, and conversion.`,
+          metric: 'Sprint Tasks Completed',
+          currentValue: 0,
+          targetValue: 7,
+          unit: 'tasks',
+          targetDate: formatDateOffset(7),
+        },
+      ],
+      tasks: [
+        {
+          dayNumber: 1,
+          dayLabel: dayLabels[0],
+          title: `Audit top 3 local competitors in ${effectiveLocation} & sharpen ${businessName} offer hook`,
+          description: `Compare pricing and positioning against local alternatives in ${effectiveLocation}.`,
+          dueDate: formatDateOffset(0),
+          priority: 'high' as const,
+          estimatedMinutes: 35,
+          department: 'Competitive Intelligence',
+          isTodayPriority: true,
+        },
+        {
+          dayNumber: 2,
+          dayLabel: dayLabels[1],
+          title: `Publish 1 high-intent static carousel or vector flyer tailored for ${targetAudience}`,
+          description: `Create static visual collateral in Brand Studio highlighting ${valueProp || businessName}.`,
+          dueDate: formatDateOffset(1),
+          priority: 'high' as const,
+          estimatedMinutes: 40,
+          department: 'Brand Studio',
+          isTodayPriority: false,
+        },
+        {
+          dayNumber: 3,
+          dayLabel: dayLabels[2],
+          title: `Direct outreach to 15 warm prospects or local partners in ${effectiveLocation}`,
+          description: `Run targeted regional outreach with a clear sample/discovery CTA.`,
+          dueDate: formatDateOffset(2),
+          priority: 'high' as const,
+          estimatedMinutes: 45,
+          department: 'Growth Director',
+          isTodayPriority: false,
+        },
+        {
+          dayNumber: 4,
+          dayLabel: dayLabels[3],
+          title: `Scan ${effectiveLocation} ${industry} market signals & pricing shifts`,
+          description: `Review Market Watch for regional demand spikes or competitor moves.`,
+          dueDate: formatDateOffset(3),
+          priority: 'medium' as const,
+          estimatedMinutes: 25,
+          department: 'Market Watch',
+          isTodayPriority: false,
+        },
+        {
+          dayNumber: 5,
+          dayLabel: dayLabels[4],
+          title: `Follow up with Day 3 prospects & collect 3 structured buyer feedback quotes`,
+          description: `Log real customer objections into Business Brain to refine messaging.`,
+          dueDate: formatDateOffset(4),
+          priority: 'high' as const,
+          estimatedMinutes: 35,
+          department: 'Growth Director',
+          isTodayPriority: false,
+        },
+        {
+          dayNumber: 6,
+          dayLabel: dayLabels[5],
+          title: `Refresh landing/catalog copy & test pricing anchor for ${effectiveLocation} buyers`,
+          description: `Ensure all claims and prices match verified Business Brain facts.`,
+          dueDate: formatDateOffset(5),
+          priority: 'medium' as const,
+          estimatedMinutes: 30,
+          department: 'Brand Studio',
+          isTodayPriority: false,
+        },
+        {
+          dayNumber: 7,
+          dayLabel: dayLabels[6],
+          title: `Weekly Sprint Review: log goal progress & queue next week's highest-ROI test`,
+          description: `Audit conversion rate and update Active Goals in Analytics & Growth Planner.`,
+          dueDate: formatDateOffset(6),
+          priority: 'medium' as const,
+          estimatedMinutes: 25,
+          department: 'Analytics',
+          isTodayPriority: false,
+        },
+      ],
+    });
+
+    let plan = buildFallbackPlan();
+
+    try {
+      const provider = new GeminiProviderAdapter();
+      const prompt = [
+        `Generate a concrete, actionable 7-day weekly growth plan and 2 measurable weekly goals for:`,
+        `Business: ${businessName}`,
+        `Industry: ${industry}`,
+        `Stage: ${stage}`,
+        `Target Location / Market: ${effectiveLocation}`,
+        `Target Audience: ${targetAudience}`,
+        valueProp ? `Value Proposition: ${valueProp}` : '',
+        activeReport
+          ? `Active Idea Intelligence Report: "${activeReport.title || ''}" — ${activeReport.ideaSummary || ''}. Top opportunities: ${(activeReport.opportunities || []).slice(0, 2).map((o: any) => o.title).join('; ')}`
+          : '',
+        '',
+        `STRICT RULES:`,
+        `1. Tailor channels, partnerships, and tactics specifically to "${effectiveLocation}" and "${industry}".`,
+        `2. STRICT VIDEO EXCLUSION: NEVER suggest video, reels, TikTok, or YouTube video creation. Visual tasks must be static carousels, SVG vector flyers, print collateral, or copywriting.`,
+        `3. Return ONLY valid JSON (no markdown fences) matching this exact schema:`,
+        `{`,
+        `  "weeklyTheme": "string",`,
+        `  "goals": [{ "title": "string", "description": "string", "metric": "string", "currentValue": 0, "targetValue": number, "unit": "string" }],`,
+        `  "tasks": [{ "dayNumber": 1..7, "title": "string", "description": "string", "priority": "high"|"medium", "estimatedMinutes": number, "department": "Growth Director"|"Brand Studio"|"Competitive Intelligence"|"Market Watch"|"Analytics" }]`,
+        `}`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      const aiRes = await provider.generate({
+        model: serverConfig.geminiModel,
+        prompt,
+        systemInstruction:
+          'You are BrainWise AI Chief Marketing Officer. Output strictly valid JSON with 2 measurable weekly goals and 7 daily tasks (Day 1 to Day 7). Never mention video or reels.',
+        temperature: 0.35,
+      });
+
+      if (aiRes.text) {
+        const cleaned = aiRes.text
+          .replace(/^```json\s*/i, '')
+          .replace(/^```\s*/i, '')
+          .replace(/```$/i, '')
+          .trim();
+        const parsed = JSON.parse(cleaned);
+
+        if (Array.isArray(parsed.tasks) && parsed.tasks.length >= 5) {
+          const validTasks = parsed.tasks.slice(0, 7).map((t: any, idx: number) => ({
+            dayNumber: idx + 1,
+            dayLabel: dayLabels[idx] || `Day ${idx + 1}`,
+            title: String(t.title || `Day ${idx + 1} Growth Action`).slice(0, 140),
+            description: String(t.description || '').slice(0, 260),
+            dueDate: formatDateOffset(idx),
+            priority: t.priority === 'high' ? ('high' as const) : ('medium' as const),
+            estimatedMinutes: Math.max(15, Math.min(90, Number(t.estimatedMinutes) || 30)),
+            department: String(t.department || 'Growth Director'),
+            isTodayPriority: idx === 0,
+          }));
+
+          const validGoals =
+            Array.isArray(parsed.goals) && parsed.goals.length > 0
+              ? parsed.goals.slice(0, 2).map((g: any) => ({
+                  title: String(g.title || 'Weekly Growth Target').slice(0, 120),
+                  description: String(g.description || '').slice(0, 220),
+                  metric: String(g.metric || 'Conversions'),
+                  currentValue: 0,
+                  targetValue: Math.max(1, Number(g.targetValue) || 10),
+                  unit: String(g.unit || 'items'),
+                  targetDate: formatDateOffset(7),
+                }))
+              : plan.goals;
+
+          plan = {
+            weeklyTheme: String(parsed.weeklyTheme || plan.weeklyTheme),
+            effectiveLocation,
+            goals: validGoals,
+            tasks: validTasks,
+          };
+        }
+      }
+    } catch {
+      // Gracefully use location-grounded deterministic fallback if Gemini parse/API fails
+    }
+
+    // Truth & Strict Video Exclusion guardrail
+    const serialized = JSON.stringify(plan);
+    const truthResult = executeTruthCheck(serialized, {
+      verifiedPrices: [],
+      forbiddenClaims: ['ai video', 'video reel', 'tiktok video', 'ffmpeg'],
+    });
+    if (!truthResult.passed) {
+      plan = buildFallbackPlan();
+    }
+
+    const settlement = await creditService.settleCredits({
+      workspaceId,
+      reservation,
+      featureId: 'FEAT-STR-001',
+      notes: `7-Day AI Weekly Plan (${effectiveLocation})`,
+    });
+
+    res.json({
+      ...plan,
+      model: serverConfig.geminiModel,
+      meta: {
+        creditsDeducted: 10,
+        creditBalanceRemaining: settlement.remainingBalance,
+      },
+    });
+  } catch (err) {
+    if (reservation) {
+      await creditService.refundCredits({
+        workspaceId,
+        reservation,
+        reason: err instanceof Error ? err.message : 'Weekly plan generation failed',
+      });
+    }
+    throw err;
+  }
+});
+
+/**
  * POST /api/v1/workspaces/:workspaceId/ai/brand-logo
  * Generates 3 differentiated vector logo concepts with sanitized SVG markup
  */

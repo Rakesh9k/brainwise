@@ -288,3 +288,102 @@ export async function finalizeIdeaApi(params: {
   );
   return res.data;
 }
+
+/**
+ * Silent zero-permission location detector using browser timezone & locale
+ * as a fallback when Business Brain location is not explicitly specified.
+ */
+export function detectSilentUserLocation(): { detectedLocation: string; timezone: string } {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const tzMap: Record<string, string> = {
+      'Asia/Kolkata': 'India',
+      'Asia/Calcutta': 'India',
+      'America/New_York': 'United States (East Coast)',
+      'America/Los_Angeles': 'United States (West Coast)',
+      'America/Chicago': 'United States (Central)',
+      'Europe/London': 'United Kingdom',
+      'Asia/Singapore': 'Singapore',
+      'Asia/Dubai': 'United Arab Emirates',
+      'Australia/Sydney': 'Australia',
+      'Europe/Berlin': 'Germany',
+      'America/Toronto': 'Canada',
+    };
+    if (tzMap[timezone]) {
+      return { detectedLocation: tzMap[timezone], timezone };
+    }
+    const parts = timezone.split('/');
+    const city = parts.length > 1 ? parts[parts.length - 1].replace(/_/g, ' ') : '';
+    return { detectedLocation: city || 'Local Market', timezone };
+  } catch {
+    return { detectedLocation: '', timezone: '' };
+  }
+}
+
+export interface GeneratedWeeklyGoal {
+  title: string;
+  description: string;
+  metric: string;
+  currentValue: number;
+  targetValue: number;
+  unit: string;
+  targetDate: string;
+}
+
+export interface GeneratedWeeklyTask {
+  dayNumber: number;
+  dayLabel: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  priority: 'high' | 'medium';
+  estimatedMinutes: number;
+  department: string;
+  isTodayPriority: boolean;
+}
+
+export interface GeneratedWeeklyPlanResponse {
+  weeklyTheme: string;
+  effectiveLocation: string;
+  goals: GeneratedWeeklyGoal[];
+  tasks: GeneratedWeeklyTask[];
+  model: string;
+}
+
+export async function generateAiWeeklyPlan(
+  state: BrainWiseState,
+  workspaceId?: string
+): Promise<GeneratedWeeklyPlanResponse> {
+  const wsId = validateWorkspaceId(
+    workspaceId || state.activeWorkspaceId || apiClient.getActiveWorkspaceId() || 'default'
+  );
+  const activeReport =
+    state.reports.find((r) => r.id === state.activeReportId) || state.reports[0] || null;
+  const { detectedLocation, timezone } = detectSilentUserLocation();
+
+  return postJson<GeneratedWeeklyPlanResponse>(
+    `/api/v1/workspaces/${wsId}/ai/weekly-plan`,
+    {
+      brain: {
+        businessName: state.brain.businessName,
+        industry: state.brain.industry,
+        stage: state.brain.stage,
+        location: state.brain.location,
+        targetAudience: state.brain.targetAudience,
+        valueProposition: state.brain.valueProposition,
+      },
+      activeReport: activeReport
+        ? {
+            id: activeReport.id,
+            title: activeReport.title,
+            ideaSummary: activeReport.ideaSummary,
+            targetMarket: activeReport.targetMarket,
+            opportunities: activeReport.opportunities?.slice(0, 3),
+          }
+        : null,
+      detectedLocation,
+      timezone,
+    },
+    wsId
+  );
+}
