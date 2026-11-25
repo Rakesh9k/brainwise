@@ -54,7 +54,7 @@ export interface UniversalExecutiveLayerProps {
     tone?: 'emerald' | 'amber' | 'neutral' | 'blue' | 'purple';
     icon?: React.ReactNode;
   }>;
-  primaryAction: {
+  primaryAction?: {
     label: string;
     onClick: () => void;
     icon?: React.ReactNode;
@@ -123,69 +123,51 @@ export const UniversalExecutiveLayer: React.FC<UniversalExecutiveLayerProps> = (
     <>
       {/* LAYER 1: THE EXECUTIVE GLANCE (Top Banner) */}
       <div
-        className={`relative overflow-hidden rounded-[22px] border border-[#E8E8E4] bg-gradient-to-b from-[#FFFFFF] to-[#FAF9F5] p-5 sm:p-6 shadow-xs bw-trace-card ${className}`}
+        className={`relative overflow-hidden rounded-[16px] border border-[#E6E6E2] bg-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] bw-trace-card ${className}`}
       >
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          {/* Left Block: Department Tag, Plain-English Status, and Live Status Pills */}
-          <div className="space-y-3 min-w-0 max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide uppercase bg-[#18181B] text-[#FAFAFA]">
-                <Layers className="w-3 h-3 text-[#FF7417]" />
-                {departmentCode}
-              </span>
-              <span className="text-xs font-medium text-[#737373] tracking-tight">
-                {sectionTitle}
-              </span>
-
-              {/* Status Pills */}
-              <div className="flex flex-wrap items-center gap-1.5 ml-1">
-                {statusPills.map((pill, idx) => (
-                  <span
-                    key={idx}
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${toneClasses(
-                      pill.tone
-                    )}`}
-                  >
-                    {pill.icon}
-                    {pill.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* The One-Liner (Dead Simple Plain English) */}
-            <p className="text-base sm:text-lg font-medium text-[#18181B] tracking-tight leading-snug">
-              {oneLiner}
-            </p>
+        {/* Top Header Row: Department Code & Title on Left, Action Cluster on Right */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F0F0EC]">
+          {/* Department Tag & Clear Title */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-[#18181B] text-[#FAFAFA] shrink-0">
+              <Layers className="w-3 h-3 text-[#FF7417]" />
+              {departmentCode}
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-[#18181B] tracking-tight">
+              {sectionTitle}
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shrink-0" title="Operational & Synchronized" />
           </div>
 
-          {/* Right Block: Primary Action + Inspect Proof Toggle Button */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 self-start lg:self-center">
+          {/* Action Buttons Cluster */}
+          <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
             {secondaryAction && (
               <button
                 type="button"
                 onClick={secondaryAction.onClick}
-                className="h-10 px-4 rounded-full border border-[#D4D4D0] bg-[#FFFFFF] hover:bg-[#F5F5F0] text-xs font-semibold text-[#3F3F46] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs focus-ring"
+                className="h-8 sm:h-9 px-3 sm:px-3.5 rounded-lg border border-[#E4E4DF] bg-[#FAF9F5] hover:bg-[#F0EFEA] hover:border-[#D4D4D0] text-xs font-semibold text-[#3F3F46] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs focus-ring"
               >
                 {secondaryAction.icon}
                 <span>{secondaryAction.label}</span>
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={primaryAction.onClick}
-              disabled={primaryAction.disabled || primaryAction.loading}
-              className="h-10 px-5 rounded-full bg-[#18181B] hover:bg-[#27272A] text-xs font-semibold text-[#FFFFFF] transition-all cursor-pointer inline-flex items-center gap-2 shadow-xs hover:shadow-md focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {primaryAction.loading ? (
-                <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              ) : (
-                primaryAction.icon || <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
-              )}
-              <span>{primaryAction.label}</span>
-              <ArrowRight className="w-3.5 h-3.5 opacity-70" />
-            </button>
+            {primaryAction && (
+              <button
+                type="button"
+                onClick={primaryAction.onClick}
+                disabled={primaryAction.disabled || primaryAction.loading}
+                className="h-8 sm:h-9 px-3.5 sm:px-4 rounded-lg bg-[#18181B] hover:bg-[#27272A] text-xs font-semibold text-[#FFFFFF] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs hover:shadow-sm focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {primaryAction.loading ? (
+                  <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                ) : (
+                  primaryAction.icon || <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+                )}
+                <span>{primaryAction.label}</span>
+                <ArrowRight className="w-3 h-3 opacity-70" />
+              </button>
+            )}
 
             {/* Inspect Proof Button (Layer 3 Trigger) */}
             <button
@@ -193,15 +175,39 @@ export const UniversalExecutiveLayer: React.FC<UniversalExecutiveLayerProps> = (
               onClick={() => setProofOpen(true)}
               aria-label="Inspect deep mathematical proof and RAG evidence"
               title="Inspect evidence (Shortcut: Cmd+I / Ctrl+I)"
-              className="h-10 px-3.5 rounded-full border border-[#E4E4DF] bg-[#FFFFFF] hover:border-[#D4D4D0] hover:bg-[#F9F9F6] text-xs font-medium text-[#52524E] hover:text-[#18181B] transition-all cursor-pointer inline-flex items-center gap-1.5 focus-ring"
+              className="h-8 sm:h-9 px-3 rounded-lg border border-[#E4E4DF] bg-white hover:border-[#D4D4D0] hover:bg-[#FAF9F5] text-xs font-semibold text-[#52524E] hover:text-[#18181B] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs focus-ring"
             >
-              <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-              <span className="hidden sm:inline">Proof Drawer</span>
-              <kbd className="hidden md:inline-block ml-0.5 px-1.5 py-0.5 text-[10px] font-mono rounded bg-[#F4F4F2] text-[#71717A] border border-[#E4E4DF]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#10B981]" />
+              <span>Proof Drawer</span>
+              <kbd className="hidden md:inline-block ml-0.5 px-1.5 py-0.5 text-[9px] font-mono rounded bg-[#F4F4F2] text-[#71717A] border border-[#E4E4DF]">
                 ⌘I
               </kbd>
             </button>
           </div>
+        </div>
+
+        {/* Lower Row: Plain English Purpose + Real-Time Status Indicators */}
+        <div className="pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <p className="text-xs sm:text-[13px] text-[#52524E] leading-relaxed max-w-2xl font-normal">
+            {oneLiner}
+          </p>
+
+          {/* Status Pills */}
+          {statusPills && statusPills.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+              {statusPills.map((pill, idx) => (
+                <span
+                  key={idx}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border ${toneClasses(
+                    pill.tone
+                  )}`}
+                >
+                  {pill.icon}
+                  {pill.label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

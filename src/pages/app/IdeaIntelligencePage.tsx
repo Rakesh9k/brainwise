@@ -3067,8 +3067,8 @@ export const IdeaIntelligencePage: React.FC = () => {
       {/* Universal Executive Glance Layer (Layer 1 + Layer 3 Proof Drawer) */}
       <UniversalExecutiveLayer
         departmentCode="DEP-05"
-        sectionTitle="Idea & Strategic Angle Intelligence"
-        oneLiner="Fresh marketing hooks, ad angles, and campaign concepts that match your brand and never sound repetitive."
+        sectionTitle="Idea & Market Validation Intelligence"
+        oneLiner="Autonomous market validation: test business concepts, size addressable markets (TAM/SAM/SOM), and benchmark real competitor unit economics."
         statusPills={[
           {
             label: 'Anti-Fatigue: 0% Repetition · Fresh',
@@ -3084,14 +3084,6 @@ export const IdeaIntelligencePage: React.FC = () => {
             tone: 'neutral',
           },
         ]}
-        primaryAction={{
-          label: 'Validate New Market Concept',
-          onClick: () => {
-            const input = document.querySelector('textarea, input[type="text"]') as HTMLElement;
-            if (input) input.focus();
-          },
-          icon: <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />,
-        }}
         secondaryAction={{
           label: 'Market Sizing Model',
           onClick: () => setScenarioModalOpen(true),
