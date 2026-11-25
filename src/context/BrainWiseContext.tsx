@@ -348,6 +348,8 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const isDemoQuery = params.get('demo') === '1' || params.get('example') === '1';
 
     if (isDemoQuery) {
+      apiClient.setAuthToken('demo-token');
+      apiClient.setActiveWorkspaceId('solstice-demo');
       return {
         ...SOLSTICE_EXAMPLE_STATE,
         isAuthenticated: true,
@@ -959,6 +961,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const userName = firstName?.trim() || 'Vishesh';
     const token = `test-token-${userEmail.split('@')[0]}`;
     apiClient.setAuthToken(token);
+    setStoredAuthToken(token);
 
     setState((prev) => ({
       ...SOLSTICE_EXAMPLE_STATE,

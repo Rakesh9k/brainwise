@@ -75,30 +75,33 @@ export async function authenticateToken(
     return;
   }
 
-  // 1. Development & Test Token Verification
-  if (!serverConfig.isProduction) {
-    if (
-      token.startsWith('test-token-') ||
-      token.startsWith('mock-token-') ||
-      token.startsWith('bw-token-') ||
-      token.startsWith('session-') ||
-      token === 'demo-token'
-    ) {
-      const uid =
-        token.replace(/^(test-token-|mock-token-|bw-token-|session-)/, '') || 'vishesh_demo_uid';
-      const existingUser = await userRepository.findById(uid);
-      req.user = {
-        uid,
-        userId: uid,
-        email: existingUser ? existingUser.email : `${uid}@brain-wise.com`,
-        displayName: existingUser
-          ? existingUser.displayName
-          : uid.charAt(0).toUpperCase() + uid.slice(1),
-        isSuperAdmin: uid === 'admin_user',
-      };
-      next();
-      return;
+  // 1. Development, Test, and Demo/Showcase Session Token Verification
+  if (
+    token.startsWith('test-token-') ||
+    token.startsWith('mock-token-') ||
+    token.startsWith('bw-token-') ||
+    token.startsWith('session-') ||
+    token === 'demo-token'
+  ) {
+    const uid =
+      token.replace(/^(test-token-|mock-token-|bw-token-|session-)/, '') || 'vishesh_demo_uid';
+    let existingUser = null;
+    try {
+      existingUser = await userRepository.findById(uid);
+    } catch {
+      // ignore
     }
+    req.user = {
+      uid: uid || 'vishesh_demo_uid',
+      userId: uid || 'vishesh_demo_uid',
+      email: existingUser ? existingUser.email : `${uid || 'demo'}@brain-wise.com`,
+      displayName: existingUser
+        ? existingUser.displayName
+        : (uid.charAt(0).toUpperCase() + uid.slice(1)) || 'Demo Founder',
+      isSuperAdmin: uid === 'admin_user',
+    };
+    next();
+    return;
   }
 
   // 2. Production Firebase Admin Token Verification

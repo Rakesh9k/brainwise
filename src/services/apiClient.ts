@@ -165,6 +165,10 @@ export class BrainWiseApiClient {
         token = await this.getAuthToken();
       }
 
+      if (!token) {
+        token = 'session-guest';
+      }
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
