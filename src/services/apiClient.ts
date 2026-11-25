@@ -2869,6 +2869,27 @@ export class BrainWiseApiClient {
     );
   }
 
+  public async brandIdentityChat(
+    workspaceId: string,
+    payload: {
+      message: string;
+      brain?: Record<string, unknown>;
+      competitors?: Array<Record<string, unknown>>;
+      currentBrand?: Record<string, unknown>;
+      history?: Array<{ role: string; text: string }>;
+    }
+  ): Promise<{
+    success: boolean;
+    reply: string;
+    suggestedPatch?: Record<string, any>;
+  }> {
+    return this.request(
+      `/api/v1/workspaces/${workspaceId}/ai/brand-identity-chat`,
+      'POST',
+      payload
+    );
+  }
+
   public async generateAiSocialCreative(
     workspaceId: string,
     payload: {

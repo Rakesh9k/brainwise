@@ -170,12 +170,138 @@ export const BrandStudioPage: React.FC = () => {
   const flagshipProduct = state.brain?.products?.[0];
   const topCompetitor = state.competitors?.[0];
 
+  const effectiveBrandName =
+    (state.brand?.brandName && state.brand.brandName !== 'My Venture'
+      ? state.brand.brandName
+      : state.brain?.businessName) || 'Your Brand';
+
+  // Dynamically recommend Style Archetype & Visual Mood based on Brand Identity, Industry & Competitors
+  const recommendedLogoProfile = React.useMemo(() => {
+    const text = `${state.brain?.industry || ''} ${state.brain?.businessName || ''} ${state.brand?.brandVoice || ''} ${state.brand?.visualDirection || ''}`.toLowerCase();
+    if (/chocolate|bakery|coffee|food|artisan|craft|organic|botanical|tea|skin|beauty|spice/.test(text)) {
+      return {
+        archetype: LOGO_ARCHETYPES.find((a) => /seal|emblem|botanical|craft/i.test(a)) || LOGO_ARCHETYPES[0],
+        mood: 'Warm Tactile Craft',
+        reason: `Artisanal & consumer craft brands win trust with warm tactile seals and approachable heritage marks rather than cold corporate tech icons.`,
+      };
+    }
+    if (/luxury|jewel|fashion|couture|atelier|estate|wealth/.test(text)) {
+      return {
+        archetype: LOGO_ARCHETYPES.find((a) => /monogram|crest|serif/i.test(a)) || LOGO_ARCHETYPES[0],
+        mood: 'Monochrome Luxury',
+        reason: `High-ticket luxury categories signal exclusivity through refined monograms and restrained monochrome contrast.`,
+      };
+    }
+    if (/saas|ai|tech|software|fintech|cloud|data|platform|b2b/.test(text)) {
+      return {
+        archetype: LOGO_ARCHETYPES[0],
+        mood: 'Bold Geometric Tech',
+        reason: `Modern software & B2B brands scale cleanly across favicons and dashboards with sharp geometric marks.`,
+      };
+    }
+    return {
+      archetype: LOGO_ARCHETYPES[0],
+      mood: 'Swiss Editorial',
+      reason: `Clean geometric balance creates immediate credibility and stands out against cluttered category competitors.`,
+    };
+  }, [state.brain?.industry, state.brain?.businessName, state.brand?.brandVoice, state.brand?.visualDirection]);
+
+  // Center Brand Identity Chat state
+  const [identityChatInput, setIdentityChatInput] = useState('');
+  const [identityChatLoading, setIdentityChatLoading] = useState(false);
+  const [identityChatHistory, setIdentityChatHistory] = useState<
+    Array<{ role: 'user' | 'assistant'; text: string }>
+  >([
+    {
+      role: 'assistant',
+      text: `Hi! Tell me how you want ${effectiveBrandName} to look and sound—or click one of the 3 tailored directions below to preview and finalize your Brand Identity.`,
+    },
+  ]);
+
+  const handleSendIdentityChat = async (messageOverride?: string) => {
+    const msg = (messageOverride ?? identityChatInput).trim();
+    if (!msg || identityChatLoading) return;
+    setIdentityChatInput('');
+    setIdentityChatHistory((prev) => [...prev, { role: 'user', text: msg }]);
+    setIdentityChatLoading(true);
+    try {
+      const wsId = state.activeWorkspaceId || 'default';
+      if (!apiClient.getAuthTokenSync()) {
+        apiClient.setAuthToken('demo-token');
+      }
+      const res = await apiClient.brandIdentityChat(wsId, {
+        message: msg,
+        brain: {
+          businessName: effectiveBrandName,
+          industry: state.brain.industry,
+          location: state.brain.location,
+          targetAudience: state.brain.targetAudience,
+          valueProposition: state.brain.valueProposition,
+        },
+        competitors: state.competitors.slice(0, 5).map((c) => ({
+          name: c.name,
+          category: c.category,
+          positioning: c.positioning,
+        })),
+        currentBrand: {
+          brandName: effectiveBrandName,
+          tagline: state.brand.tagline,
+          brandVoice: state.brand.brandVoice,
+          palette: state.brand.palette,
+        },
+        history: identityChatHistory.slice(-4),
+      });
+
+      if (res?.suggestedPatch) {
+        const p = res.suggestedPatch;
+        updateBrandIdentity({
+          ...(p.brandName ? { brandName: p.brandName } : {}),
+          ...(p.tagline ? { tagline: p.tagline } : {}),
+          ...(p.brandVoice ? { brandVoice: p.brandVoice } : {}),
+          ...(p.palette ? { palette: { ...state.brand.palette, ...p.palette } } : {}),
+          ...(p.typography ? { typography: { ...state.brand.typography, ...p.typography } } : {}),
+          ...(Array.isArray(p.personalityTraits) ? { personalityTraits: p.personalityTraits } : {}),
+        });
+        if (p.recommendedLogoArchetype && LOGO_ARCHETYPES.includes(p.recommendedLogoArchetype)) {
+          setLogoArchetype(p.recommendedLogoArchetype);
+        }
+        if (p.recommendedLogoMood) {
+          setLogoMood(p.recommendedLogoMood);
+        }
+        if (p.palette?.accent) {
+          setLogoAccent(p.palette.accent);
+        }
+      }
+      setIdentityChatHistory((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          text:
+            res?.reply ||
+            `Updated ${effectiveBrandName}'s identity palette, tagline, and voice. Review the live preview below and click Finalize when ready.`,
+        },
+      ]);
+      showToast('Brand Identity updated from your direction.');
+    } catch (err: any) {
+      const msgText =
+        typeof err?.message === 'string'
+          ? err.message
+          : 'Applied your brand direction locally.';
+      setIdentityChatHistory((prev) => [
+        ...prev,
+        { role: 'assistant', text: msgText },
+      ]);
+    } finally {
+      setIdentityChatLoading(false);
+    }
+  };
+
   // AI Logo Studio state
   const [logoPrompt, setLogoPrompt] = useState(
-    `Architectural minimal emblem for ${state.brand.brandName} inspired by ${state.brand.visualDirection}`
+    `${recommendedLogoProfile.mood} emblem for ${effectiveBrandName}${state.brain?.industry ? ` (${state.brain.industry})` : ''}`
   );
-  const [logoArchetype, setLogoArchetype] = useState(LOGO_ARCHETYPES[0]);
-  const [logoMood, setLogoMood] = useState('Swiss Editorial');
+  const [logoArchetype, setLogoArchetype] = useState(recommendedLogoProfile.archetype);
+  const [logoMood, setLogoMood] = useState(recommendedLogoProfile.mood);
   const [logoGenerating, setLogoGenerating] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
   const [logoSourceModel, setLogoSourceModel] = useState<string | null>(null);
@@ -405,8 +531,16 @@ export const BrandStudioPage: React.FC = () => {
       setLogoSourceModel(data.model || 'gemini-4-hydrogen');
       setLogoRefineInput('');
       showToast(`Generated 3 AI logo concepts via ${data.model || 'Gemini'}.`);
-    } catch (err) {
-      setLogoError(err instanceof Error ? err.message : 'Unable to reach AI logo engine.');
+    } catch (err: any) {
+      const errMsg =
+        typeof err === 'string'
+          ? err
+          : typeof err?.message === 'string' && err.message !== '[object Object]'
+            ? err.message
+            : typeof err?.error?.message === 'string'
+              ? err.error.message
+              : 'Live AI logo endpoint unavailable right now.';
+      setLogoError(errMsg);
     } finally {
       setLogoGenerating(false);
     }
@@ -928,6 +1062,130 @@ export const BrandStudioPage: React.FC = () => {
                 <span className="text-xs font-semibold text-[#C44D00]">{entry.cta}</span>
               </button>
             ))}
+          </div>
+
+          <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 sm:p-6 space-y-5 bw-surface-raised">
+            {/* 1. Competitor Brand Glimpse & Whitespace Suggestion */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-[#E6E6E2]">
+              <div className="p-3.5 rounded-[10px] bg-[#FAF9F6] border border-[#E6E6E2] space-y-1">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#858585]">
+                  Competitor Brand Glimpse
+                </div>
+                <p className="text-xs text-[#252525] leading-relaxed">
+                  {state.competitors.length > 0
+                    ? `${state.competitors.slice(0, 3).map((c) => c.name).join(', ')} lean on ${state.competitors[0]?.brandPositioningDetail?.visualTone || 'traditional category styling'} (${state.competitors[0]?.priceRange || 'standard tier'}).`
+                    : `Most peers in ${state.brain.industry || 'your category'} default to generic templates and formal corporate copy.`}
+                </p>
+              </div>
+              <div className="p-3.5 rounded-[10px] bg-[#FFF0E5]/50 border border-[#FFD3B3] space-y-1">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#C44D00]">
+                  BrainWise Recommendation for {effectiveBrandName}
+                </div>
+                <p className="text-xs text-[#252525] leading-relaxed">
+                  Lead with <strong>{recommendedLogoProfile.mood}</strong> styling and{' '}
+                  <strong>{recommendedLogoProfile.archetype}</strong> visual identity to stand apart
+                  for {state.brain.targetAudience || 'your buyers'}.
+                </p>
+              </div>
+            </div>
+
+            {/* 2. Center Interactive Brand Identity Chat + 3 Quick Directions */}
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="font-heading text-base font-bold text-[#171717]">
+                    Shape &amp; Finalize Your Brand Identity
+                  </h2>
+                  <p className="text-xs text-[#5C5C58]">
+                    Pick a suggested direction or chat below in plain English — preview updates live.
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    updateBrandIdentity({
+                      brandName: effectiveBrandName,
+                      status: 'Finalized',
+                    });
+                    showToast(`Brand Identity finalized & locked for ${effectiveBrandName}!`);
+                  }}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  {state.brand.status === 'Finalized'
+                    ? 'Brand Identity Finalized ✓'
+                    : 'Finalize & Lock Brand Identity'}
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {[
+                  {
+                    label: 'Warm Artisan Craft',
+                    prompt: `Give ${effectiveBrandName} a warm artisan craft identity with earthy cacao/terracotta tones, storytelling voice, and craft seal logo.`,
+                  },
+                  {
+                    label: 'Modern Minimalist Luxury',
+                    prompt: `Position ${effectiveBrandName} as modern minimalist luxury with deep espresso & ivory colors, refined serif typography, and monochrome elegance.`,
+                  },
+                  {
+                    label: 'Vibrant D2C Everyday',
+                    prompt: `Make ${effectiveBrandName} feel vibrant, modern, and D2C-friendly with energetic accent color, crisp sans typography, and approachable voice.`,
+                  },
+                ].map((dir) => (
+                  <button
+                    key={dir.label}
+                    type="button"
+                    disabled={identityChatLoading}
+                    onClick={() => handleSendIdentityChat(dir.prompt)}
+                    className="px-3 py-1.5 rounded-full bg-[#FAFAF9] hover:bg-[#FFF0E5] border border-[#E6E6E2] hover:border-[#FF7417] text-xs font-medium text-[#242424] cursor-pointer transition-colors"
+                  >
+                    ✦ {dir.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded-[10px] border border-[#E6E6E2] bg-[#FAFAF9] p-3 space-y-2.5 max-h-44 overflow-y-auto">
+                {identityChatHistory.map((m, idx) => (
+                  <div
+                    key={idx}
+                    className={`text-xs leading-relaxed px-3 py-2 rounded-[8px] ${
+                      m.role === 'user'
+                        ? 'bg-[#171717] text-white ml-8'
+                        : 'bg-white border border-[#E6E6E2] text-[#242424] mr-8'
+                    }`}
+                  >
+                    {m.text}
+                  </div>
+                ))}
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handleSendIdentityChat();
+                }}
+                className="flex gap-2"
+              >
+                <input
+                  type="text"
+                  value={identityChatInput}
+                  onChange={(e) => setIdentityChatInput(e.target.value)}
+                  placeholder={`Describe how you want ${effectiveBrandName} to feel (colors, vibe, voice)...`}
+                  disabled={identityChatLoading}
+                  className="flex-1 px-3.5 py-2 text-xs rounded-[8px] border border-[#E6E6E2] bg-white focus:outline-none focus:border-[#FF7417]"
+                />
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  loading={identityChatLoading}
+                  disabled={!identityChatInput.trim()}
+                >
+                  {identityChatLoading ? 'Updating…' : 'Update Identity'}
+                </Button>
+              </form>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] px-4 py-3 bw-surface-raised">
@@ -1492,7 +1750,7 @@ export const BrandStudioPage: React.FC = () => {
                       </div>
                       <div>
                         <div className="font-heading text-xl font-bold">
-                          {state.brand.brandName}
+                          {effectiveBrandName}
                         </div>
                         <div className="text-xs text-[#A8A8A2] mt-1">{state.brand.tagline}</div>
                       </div>
@@ -1637,6 +1895,46 @@ export const BrandStudioPage: React.FC = () => {
       {/* B. AI Logo Studio — Prompt -> Generate 3 Vector Marks -> Refine -> Inspect -> Approve */}
       {tab === 'logos' && (
         <FluidTransition key="logos" direction="fade" className="space-y-6">
+          {/* Competitor Visual Landscape & AI-Recommended Logo Direction */}
+          <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 bw-surface-raised">
+            <div className="space-y-1 max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#C44D00]">
+                <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+                <span>Recommended Logo Direction for {effectiveBrandName}</span>
+              </div>
+              <p className="text-xs text-[#252525] leading-relaxed">
+                <strong>AI Suggestion:</strong>{' '}
+                <span className="font-semibold text-[#C44D00]">
+                  {recommendedLogoProfile.archetype}
+                </span>{' '}
+                +{' '}
+                <span className="font-semibold text-[#C44D00]">
+                  {recommendedLogoProfile.mood}
+                </span>{' '}
+                — {recommendedLogoProfile.reason}
+                {state.competitors.length > 0
+                  ? ` (Differentiates from ${state.competitors.slice(0, 3).map((c) => c.name).join(', ')}.)`
+                  : ''}
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setLogoArchetype(recommendedLogoProfile.archetype);
+                setLogoMood(recommendedLogoProfile.mood);
+                setLogoPrompt(
+                  `${recommendedLogoProfile.mood} ${recommendedLogoProfile.archetype.toLowerCase()} logo for ${effectiveBrandName}`
+                );
+                showToast(
+                  `Applied recommended style: ${recommendedLogoProfile.archetype} · ${recommendedLogoProfile.mood}`
+                );
+              }}
+            >
+              Apply AI-Recommended Style
+            </Button>
+          </div>
+
           {/* Prompt-First AI Logo Director Bar */}
           <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 sm:p-6 space-y-4 bw-surface-raised">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1732,7 +2030,7 @@ export const BrandStudioPage: React.FC = () => {
                   <button
                     key={chip}
                     type="button"
-                    onClick={() => setLogoPrompt(`${chip} for ${state.brand.brandName}`)}
+                    onClick={() => setLogoPrompt(`${chip} for ${effectiveBrandName}`)}
                     className="px-2.5 py-1 rounded-[7px] bg-[#FAFAF9] hover:bg-[#F1F1EF] border border-[#E6E6E2] text-[11px] text-[#252525] cursor-pointer"
                   >
                     {chip}

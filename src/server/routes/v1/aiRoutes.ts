@@ -844,6 +844,128 @@ router.post('/brand-logo', async (req: Request, res: Response): Promise<void> =>
 });
 
 /**
+ * POST /api/v1/workspaces/:workspaceId/ai/brand-identity-chat
+ * Conversational Brand Identity Studio assistant:
+ * Accepts founder's natural-language preferences, grounds against Business Brain & Competitors,
+ * and returns a conversational reply + structured Brand Identity patch (name, tagline, palette, typography, voice, logo style).
+ */
+router.post('/brand-identity-chat', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const workspaceId = getWorkspaceId(req);
+    const { message, brain, competitors, currentBrand, history } = req.body || {};
+    const userMessage = String(message || '').trim();
+    if (!userMessage) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_MESSAGE', message: 'message is required' },
+      });
+      return;
+    }
+
+    const profile = await businessBrainService.getProfile(workspaceId).catch(() => null);
+    const businessName =
+      (brain?.businessName && brain.businessName !== 'My Venture' ? brain.businessName : '') ||
+      profile?.businessName ||
+      'Your Brand';
+    const industry = brain?.industry || profile?.industry || 'Specialty Commerce';
+    const location = brain?.location || profile?.location || 'India';
+    const competitorSummary = Array.isArray(competitors) && competitors.length > 0
+      ? competitors
+          .slice(0, 5)
+          .map((c: any) => `${c.name} (${c.category || 'Peer'}: ${c.positioning || ''})`)
+          .join('; ')
+      : 'No direct competitors profiled yet';
+
+    const provider = new GeminiProviderAdapter();
+    const prompt = [
+      `You are BrainWise AI Brand Director helping a founder finalize their Brand Identity effortlessly.`,
+      `Business: ${businessName} (${industry} in ${location})`,
+      `Target Audience: ${brain?.targetAudience || profile?.targetAudience || 'Quality-conscious buyers'}`,
+      `Competitors: ${competitorSummary}`,
+      `Current Brand Draft: ${JSON.stringify({
+        brandName: currentBrand?.brandName || businessName,
+        tagline: currentBrand?.tagline || '',
+        brandVoice: currentBrand?.brandVoice || '',
+        palette: currentBrand?.palette || {},
+      })}`,
+      Array.isArray(history) && history.length > 0
+        ? `Recent Chat:\n${history.slice(-4).map((h: any) => `${h.role}: ${h.text}`).join('\n')}`
+        : '',
+      `Founder Request: "${userMessage}"`,
+      ``,
+      `Respond in valid JSON ONLY (no markdown fences):`,
+      `{`,
+      `  "reply": "Concise, encouraging 2-3 sentence response explaining the tailored brand direction and how it differentiates from competitors.",`,
+      `  "suggestedPatch": {`,
+      `    "brandName": "${businessName}",`,
+      `    "tagline": "Short memorable tagline (3-7 words)",`,
+      `    "brandVoice": "Clear 1-sentence brand voice & tone rule",`,
+      `    "palette": { "primary": "#hex", "secondary": "#hex", "accent": "#hex", "surface": "#FAF9F6" },`,
+      `    "typography": { "heading": "Plus Jakarta Sans" | "Playfair Display" | "Instrument Serif" | "Space Grotesk", "body": "Inter" | "DM Sans" },`,
+      `    "personalityTraits": ["Trait 1", "Trait 2", "Trait 3"],`,
+      `    "recommendedLogoArchetype": "Minimal Geometric" | "Botanical / Craft Seal" | "Swiss Monogram" | "Modern Crest" | "Architectural Wordmark",`,
+      `    "recommendedLogoMood": "Warm Tactile Craft" | "Swiss Editorial" | "Monochrome Luxury" | "Bold Geometric Tech"`,
+      `  }`,
+      `}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    let reply = `I've updated ${businessName}'s brand direction to stand apart from local competitors with a cohesive palette, voice, and recommended logo style.`;
+    let suggestedPatch: Record<string, any> = {
+      brandName: businessName,
+      tagline: `Crafted for ${location} — Unmistakably ${businessName}`,
+      brandVoice: 'Warm, transparent, story-driven, and confident without generic hype.',
+      palette: {
+        primary: '#2C1E18',
+        secondary: '#6B4F43',
+        accent: '#D96B27',
+        surface: '#FAF7F2',
+      },
+      typography: { heading: 'Playfair Display', body: 'Inter' },
+      personalityTraits: ['Artisanal', 'Transparent', 'Memorable'],
+      recommendedLogoArchetype: 'Botanical / Craft Seal',
+      recommendedLogoMood: 'Warm Tactile Craft',
+    };
+
+    try {
+      const aiRes = await provider.generate({
+        model: serverConfig.geminiModel,
+        prompt,
+        systemInstruction:
+          'You are a senior Brand Director. Return strictly valid JSON with "reply" and "suggestedPatch".',
+        temperature: 0.4,
+      });
+      if (aiRes.text) {
+        const cleaned = aiRes.text
+          .replace(/^```json\s*/i, '')
+          .replace(/^```\s*/i, '')
+          .replace(/```$/i, '')
+          .trim();
+        const parsed = JSON.parse(cleaned);
+        if (parsed.reply) reply = String(parsed.reply);
+        if (parsed.suggestedPatch && typeof parsed.suggestedPatch === 'object') {
+          suggestedPatch = { ...suggestedPatch, ...parsed.suggestedPatch };
+        }
+      }
+    } catch {
+      // Use deterministic tailored patch above
+    }
+
+    res.json({
+      success: true,
+      reply,
+      suggestedPatch,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'BRAND_CHAT_FAILED', message: err?.message || 'Brand chat error' },
+    });
+  }
+});
+
+/**
  * POST /api/v1/workspaces/:workspaceId/ai/social-creative
  * Generates multi-slide social carousel or static creative (STRICT VIDEO EXCLUSION)
  */

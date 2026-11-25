@@ -425,6 +425,8 @@ export class BrandStudioService {
     const result = await logoDesignEngine.generateThreeDistinctConcepts({
       workspaceId,
       userId,
+      brandName: params.brandName,
+      brand: params.brand,
       userPrompt: prompt,
       styleArchetype,
       mood,

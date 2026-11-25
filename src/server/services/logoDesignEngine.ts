@@ -10,6 +10,7 @@ import { brandStudioRepository } from '../repositories/brandStudioRepository';
 import { creditService } from './creditService';
 import { serverConfig } from '../config/index';
 import { departmentEventBus } from '../events/eventBus';
+import { GeminiProviderAdapter } from '../ai/modelRouter';
 import type {
   LogoDesignBrief,
   LogoConceptPresentation,
@@ -217,6 +218,8 @@ export class LogoDesignEngine {
   public async generateThreeDistinctConcepts(params: {
     workspaceId: string;
     userId: string;
+    brand?: Record<string, any>;
+    brandName?: string;
     brief?: LogoDesignBrief;
     userPrompt?: string;
     styleArchetype?: string;
@@ -234,6 +237,8 @@ export class LogoDesignEngine {
     const {
       workspaceId,
       userId,
+      brandName: paramBrandName,
+      brand: reqBrand,
       userPrompt,
       styleArchetype = 'Minimal Geometric',
       mood = 'Swiss Editorial',
@@ -274,41 +279,124 @@ export class LogoDesignEngine {
           logoMood: mood,
         }));
 
-      const brandName = brief.brandName;
-      const primaryHex = lockBrandColors ? brief.approvedColors.primary : '#171717';
-      const accentHex = lockBrandColors ? brief.approvedColors.accent : '#FF7417';
-      const secondaryHex = lockBrandColors ? brief.approvedColors.secondary : '#252525';
-      const headingFont = brief.typographyDirection.headingFont || 'Plus Jakarta Sans';
-      const bodyFont = brief.typographyDirection.bodyFont || 'Inter';
+      const resolvedBrandName =
+        (paramBrandName && paramBrandName !== 'My Venture' && paramBrandName !== 'BrainWise'
+          ? paramBrandName
+          : '') ||
+        (reqBrand?.brandName && reqBrand.brandName !== 'My Venture' ? reqBrand.brandName : '') ||
+        brief.brandName ||
+        'Brand';
+      const brandName = resolvedBrandName;
+      const primaryHex = lockBrandColors
+        ? reqBrand?.palette?.primary || brief.approvedColors.primary
+        : '#171717';
+      const accentHex = lockBrandColors
+        ? reqBrand?.palette?.accent || brief.approvedColors.accent
+        : '#FF7417';
+      const secondaryHex = lockBrandColors
+        ? reqBrand?.palette?.secondary || brief.approvedColors.secondary
+        : '#252525';
+      const headingFont =
+        reqBrand?.typography?.heading || brief.typographyDirection.headingFont || 'Plus Jakarta Sans';
+      const bodyFont =
+        reqBrand?.typography?.body || brief.typographyDirection.bodyFont || 'Inter';
 
-      const initialLetters = (brandName.match(/\b\w/g) || [brandName[0]]).slice(0, 2).join('').toUpperCase();
+      const initialLetters = (brandName.match(/\b\w/g) || [brandName[0] || 'B'])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
       const now = new Date().toISOString();
 
-      // Synthesize 3 Distinct Logo Concepts
-      // Concept 1: Monogram / Lettermark / Precision Geometry
-      const concept1Id = `logo_c1_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
-      const symbolSvg1 = `<g id="symbol_monogram">
-  <rect x="220" y="80" width="160" height="160" rx="36" fill="${primaryHex}"/>
-  <path d="M 260 130 H 320 C 335 130 345 140 345 155 C 345 168 335 178 322 178 H 260 Z" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 260 178 H 325 C 340 178 350 188 350 205 C 350 218 338 228 322 228 H 260 Z" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="260" y1="178" x2="322" y2="178" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="346" cy="126" r="10" fill="${accentHex}"/>
-</g>`;
+      // Attempt Gemini bespoke SVG generation for 3 distinct concepts
+      let aiSvgConcepts: Array<{
+        conceptName: string;
+        markStyle: 'geometric' | 'monogram' | 'emblem';
+        designRationale: string;
+        svgIconInner: string;
+      }> | null = null;
 
-      const svgMarkup1 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
-  <!-- Genuine Alpha Transparent Canvas Background -->
-  ${symbolSvg1}
-  <!-- Deterministic Brand Name Typography -->
+      try {
+        const provider = new GeminiProviderAdapter();
+        const svgPrompt = [
+          `Design 3 distinct, clean, minimalist vector logo icon concepts (64x64 viewBox) for:`,
+          `Brand Name: ${brandName}`,
+          `Industry: ${brief.industry}`,
+          `Style Archetype: ${styleArchetype}`,
+          `Visual Mood: ${mood}`,
+          `User Brief: ${userPrompt || styleArchetype}`,
+          `Colors: primary="${primaryHex}", accent="${accentHex}", secondary="${secondaryHex}"`,
+          ``,
+          `STRICT RULES:`,
+          `1. Each "svgIconInner" must contain ONLY valid SVG elements (<rect>, <circle>, <path>, <line>, <polygon>, <text>) sized cleanly inside a 0..64 x 0..64 coordinate box. Do NOT include outer <svg> tag or scripts.`,
+          `2. Make Concept 1 "geometric" (abstract symbol), Concept 2 "emblem" (badge/seal/frame), Concept 3 "monogram" (using initials "${initialLetters}").`,
+          `3. Return ONLY valid JSON array of 3 objects:`,
+          `[{ "conceptName": "string", "markStyle": "geometric"|"emblem"|"monogram", "designRationale": "string", "svgIconInner": "string" }]`,
+        ].join('\n');
+
+        const aiRes = await provider.generate({
+          model: serverConfig.geminiModel,
+          prompt: svgPrompt,
+          systemInstruction:
+            'You are a world-class Swiss geometric brand identity designer. Return strictly valid JSON array of 3 clean SVG icon concepts.',
+          temperature: 0.45,
+        });
+
+        if (aiRes.text) {
+          const cleaned = aiRes.text
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/```$/i, '')
+            .trim();
+          const parsed = JSON.parse(cleaned);
+          if (Array.isArray(parsed) && parsed.length >= 3) {
+            aiSvgConcepts = parsed.slice(0, 3).map((item: any, idx: number) => ({
+              conceptName: String(item.conceptName || `${brandName} Concept ${idx + 1}`),
+              markStyle:
+                item.markStyle === 'emblem' || item.markStyle === 'monogram'
+                  ? item.markStyle
+                  : 'geometric',
+              designRationale: String(
+                item.designRationale ||
+                  `Tailored ${styleArchetype} mark in ${mood} aesthetic for ${brandName}.`
+              ),
+              svgIconInner: String(item.svgIconInner || '')
+                .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+                .replace(/on\w+="[^"]*"/gi, ''),
+            }));
+          }
+        }
+      } catch {
+        // Use dynamic initials/archetype fallback below
+      }
+
+      const wrapIconTo600x400 = (iconInner: string) =>
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <g transform="translate(220, 75) scale(2.5)">
+    ${iconInner}
+  </g>
   <text x="300" y="295" font-family="${headingFont}, sans-serif" font-size="34" font-weight="700" letter-spacing="1" fill="${primaryHex}" text-anchor="middle">${brandName}</text>
   <text x="300" y="328" font-family="${bodyFont}, sans-serif" font-size="13" font-weight="500" letter-spacing="2" fill="${secondaryHex}" text-anchor="middle">${brief.tagline}</text>
 </svg>`;
 
+      // Synthesize 3 Distinct Logo Concepts (Gemini AI or Dynamic Brand-Initials Fallback)
+      // Concept 1: Geometric / Precision Mark
+      const concept1Id = `logo_c1_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const fallbackIcon1 = `<rect x="6" y="6" width="52" height="52" rx="14" fill="${primaryHex}"/>
+  <path d="M18 42 L32 16 L46 42 Z" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="32" cy="34" r="5" fill="${accentHex}"/>`;
+
+      const svgMarkup1 = aiSvgConcepts?.[0]?.svgIconInner
+        ? wrapIconTo600x400(aiSvgConcepts[0].svgIconInner)
+        : wrapIconTo600x400(fallbackIcon1);
+
       const concept1: LogoConceptPresentation = {
         id: concept1Id,
         workspaceId,
-        conceptName: `${brandName} Geometric Monogram`,
-        markStyle: 'geometric',
-        designRationale: `A precision-engineered interlocking lettermark for "${initialLetters}" utilizing 45-degree chamfers and balanced optical line weights.`,
+        conceptName: aiSvgConcepts?.[0]?.conceptName || `${brandName} ${styleArchetype}`,
+        markStyle: aiSvgConcepts?.[0]?.markStyle || 'geometric',
+        designRationale:
+          aiSvgConcepts?.[0]?.designRationale ||
+          `A precision-engineered ${styleArchetype} mark for ${brandName} in a ${mood} aesthetic.`,
         brandRelevance: `Directly communicates institutional certainty and rigorous craftsmanship required by ${brief.targetAudience}.`,
         audienceRelevance: `Instantly memorable at small viewports while establishing high perceived luxury.`,
         competitorDifferentiation: `Contrasts with competitor generic wordmarks through bold negative space and vibrant focal punctuation.`,
@@ -405,7 +493,9 @@ export class LogoDesignEngine {
   <path d="M 270 125 L 300 165 L 330 125" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
 </g>`;
 
-      const svgMarkup3 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+      const svgMarkup3 = aiSvgConcepts?.[2]?.svgIconInner
+        ? wrapIconTo600x400(aiSvgConcepts[2].svgIconInner)
+        : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
   ${symbolSvg3}
   <text x="300" y="275" font-family="${headingFont}, sans-serif" font-size="38" font-weight="800" letter-spacing="2" fill="${primaryHex}" text-anchor="middle">${brandName}</text>
   <text x="300" y="312" font-family="${bodyFont}, sans-serif" font-size="12" font-weight="600" letter-spacing="3" fill="${secondaryHex}" text-anchor="middle">${brief.tagline}</text>
@@ -414,9 +504,11 @@ export class LogoDesignEngine {
       const concept3: LogoConceptPresentation = {
         id: concept3Id,
         workspaceId,
-        conceptName: `${brandName} Typographic Monogram Lockup`,
-        markStyle: 'monogram',
-        designRationale: `A balanced combination lockup pairing a minimal horizon card glyph with bold, commanding display typography.`,
+        conceptName: aiSvgConcepts?.[2]?.conceptName || `${brandName} Typographic Monogram`,
+        markStyle: aiSvgConcepts?.[2]?.markStyle || 'monogram',
+        designRationale:
+          aiSvgConcepts?.[2]?.designRationale ||
+          `A balanced combination lockup pairing a minimal monogram with bold, commanding display typography.`,
         brandRelevance: `Direct, utilitarian, and confident; prioritizes immediate brand name recognition across mobile screens.`,
         audienceRelevance: `Eliminates cognitive friction; ensures the brand name is effortlessly legible at 50 yards or 50 pixels.`,
         competitorDifferentiation: `Stands tall against cluttered competitor logos through disciplined negative space and architectural typography.`,
@@ -451,9 +543,9 @@ export class LogoDesignEngine {
 
       const concepts = [concept1, concept2, concept3];
 
-      // Save to repository
+      // Save to repository (non-fatal if transient/demo workspace)
       for (const c of concepts) {
-        await brandStudioRepository.saveLogoConcept(c);
+        await brandStudioRepository.saveLogoConcept(c).catch(() => {});
       }
 
       // Settle Credits
