@@ -75,6 +75,7 @@ import { typeClass } from '../../theme/typography';
 import { ValidationVerdictScorecard } from '../../components/intelligence/ValidationVerdictScorecard';
 import { GoStopSignalsSection } from '../../components/intelligence/GoStopSignalsSection';
 import { UniversalExecutiveLayer } from '../../components/ui/UniversalExecutiveLayer';
+import { Drawer } from '../../components/ui/Overlay';
 import {
   ValidationTabNavigation,
   type ValidationTabKey,
@@ -2824,40 +2825,16 @@ export const IdeaIntelligencePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Persistent Floating Chat Trigger (No-Print) */}
-        <div className="fixed bottom-6 right-6 z-40 no-print">
-          <button
-            type="button"
-            onClick={() => setIsChatDrawerOpen((prev) => !prev)}
-            className="flex items-center gap-2 px-4 py-3 rounded-full bg-[#171717] hover:bg-[#252525] text-white shadow-xl cursor-pointer hover:scale-105 transition-all text-xs font-semibold"
-          >
-            <MessageSquare className="w-4 h-4 text-[#FF7417]" />
-            Ask Idea Intelligence
-            <span className="w-2 h-2 rounded-full bg-[#4FA87B] animate-pulse" />
-          </button>
-        </div>
-
-        {/* Persistent Conversational Deep Research Drawer */}
-        {isChatDrawerOpen && (
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white border-l border-[#E6E6E2] shadow-2xl flex flex-col no-print">
-            <div className="p-4 border-b border-[#E6E6E2] flex items-center justify-between bg-[#FAFAF9]">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-[#FF7417]" />
-                <h3 className="font-heading text-sm font-bold text-[#171717]">
-                  Conversational Deep Research
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsChatDrawerOpen(false)}
-                className="p-1 rounded-[6px] text-[#858585] hover:text-[#171717] hover:bg-[#E6E6E2]/50 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
+        {/* Persistent Conversational Deep Research Drawer via Standard Overlay */}
+        <Drawer
+          open={isChatDrawerOpen}
+          onClose={() => setIsChatDrawerOpen(false)}
+          title="Conversational Deep Research"
+          subtitle="Grounded AI inquiry into market dynamics, pricing & unit economics"
+        >
+          <div className="flex flex-col h-full space-y-4">
             {/* Messages Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+            <div className="flex-1 overflow-y-auto space-y-3 text-xs pr-1 max-h-[55vh]">
               {(activeReport.conversationalHistory || []).map((msg) => (
                 <div
                   key={msg.id}
@@ -2869,7 +2846,7 @@ export const IdeaIntelligencePage: React.FC = () => {
                 >
                   <div className="text-[10px] opacity-70 flex items-center justify-between">
                     <span>{msg.role === 'user' ? 'You' : 'Idea Intelligence Agent'}</span>
-                    <span className="font-mono-num">{msg.timestamp.slice(11, 16)}</span>
+                    <span className="font-mono-num">{msg.timestamp?.slice ? msg.timestamp.slice(11, 16) : ''}</span>
                   </div>
                   <div className="whitespace-pre-line leading-relaxed">{msg.content}</div>
 
@@ -2916,7 +2893,7 @@ export const IdeaIntelligencePage: React.FC = () => {
             </div>
 
             {/* Quick Prompt Suggestions */}
-            <div className="p-2 border-t border-[#E6E6E2] bg-[#FAFAF9] flex flex-wrap gap-1 text-[11px]">
+            <div className="p-2.5 border border-[#E6E6E2] bg-[#FAFAF9] rounded-[10px] flex flex-wrap gap-1.5 text-[11px]">
               {[
                 'Can I start this business with ₹5 lakh?',
                 'Explore corporate gifting in more detail',
@@ -2939,7 +2916,7 @@ export const IdeaIntelligencePage: React.FC = () => {
                 e.preventDefault();
                 handleSendChatMessage();
               }}
-              className="p-3 border-t border-[#E6E6E2] bg-white flex items-center gap-2"
+              className="pt-2 border-t border-[#E6E6E2] flex items-center gap-2"
             >
               <input
                 type="text"
@@ -2957,7 +2934,7 @@ export const IdeaIntelligencePage: React.FC = () => {
               </button>
             </form>
           </div>
-        )}
+        </Drawer>
 
         {/* Idea Finalization & Graduation Modal */}
         {isFinalizeModalOpen && (

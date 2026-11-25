@@ -49,9 +49,9 @@ export const ValidationTabNavigation: React.FC<ValidationTabNavigationProps> = (
   const activeStepNum = currentIdx >= 0 ? VALIDATION_TABS[currentIdx].stepNum : '01';
 
   return (
-    <div className="w-full bg-[#111111]/95 backdrop-blur-md text-white rounded-[14px] p-2 flex flex-wrap items-center justify-between gap-3 shadow-lg border border-[#262626] no-print sticky top-[52px] z-40">
+    <div className="w-full bg-[#111111]/95 backdrop-blur-md text-white rounded-[14px] p-1.5 sm:p-2 flex items-center justify-between gap-2 shadow-lg border border-[#262626] no-print sticky top-[72px] z-25 overflow-hidden">
       {/* Horizontal Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto py-0.5">
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-nowrap min-w-0">
         {VALIDATION_TABS.map((tab) => {
           const isActive = tab.key === activeTab;
           const Icon = tab.icon;
@@ -64,26 +64,26 @@ export const ValidationTabNavigation: React.FC<ValidationTabNavigationProps> = (
                 onSelectTab(tab.key);
                 const el = document.getElementById(tab.targetAnchor);
                 if (el) {
-                  const yOffset = -120; // clear sticky banner + tab bar
+                  const yOffset = -140; // clear sticky banner + tab bar
                   const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
                   window.scrollTo({ top: y, behavior: 'smooth' });
                 }
               }}
-              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-[9px] text-xs font-semibold cursor-pointer transition-all ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] text-xs font-semibold cursor-pointer shrink-0 transition-all ${
                 isActive
                   ? 'bg-[#2A2A2A] text-white shadow-xs border border-[#404040]'
                   : 'text-[#A0A09C] hover:text-white hover:bg-[#1C1C1C]'
               }`}
             >
               <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#FF7417]' : 'text-[#80807C]'}`} />
-              <span>{tab.label}</span>
+              <span className="whitespace-nowrap">{tab.label}</span>
             </button>
           );
         })}
       </div>
 
       {/* Step Counter indicator */}
-      <div className="flex items-center gap-2 pr-2 text-xs font-mono font-semibold text-[#80807C]">
+      <div className="flex items-center gap-1.5 pr-1.5 text-xs font-mono font-semibold text-[#80807C] shrink-0">
         <span className="text-white">{activeStepNum}</span>
         <span>/</span>
         <span>07</span>
