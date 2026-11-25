@@ -1241,7 +1241,7 @@ export const BusinessBrainPage: React.FC = () => {
             department: 'DEP-03',
             businessName: state.brain.businessName,
             industry: state.brain.industry,
-            completenessScore: comp.percentage,
+            completenessScore: completeness.percentage,
             productsCount: state.brain.productsServices?.length || 0,
             personasCount: state.brain.customerPersonas?.length || 0,
             activeDiscrepancies: (state.brain.multiDocDiscrepancies || []).length,

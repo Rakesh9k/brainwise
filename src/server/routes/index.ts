@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { authRoutes } from './v1/authRoutes';
 import { workspaceRoutes } from './v1/workspaceRoutes';
 import { businessProfileRoutes } from './v1/businessProfileRoutes';

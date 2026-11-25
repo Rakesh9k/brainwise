@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Download, FileBarChart2, Info, Search, HelpCircle, X } from 'lucide-react';
+import { Download, FileBarChart2, Info, Search, HelpCircle, X, TrendingUp, BarChart3 } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
 import { useAnalyticsIntelligence } from '../../utils/useAnalyticsIntelligence';
 import {
