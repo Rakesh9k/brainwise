@@ -705,7 +705,7 @@ export const MetricCard: React.FC<{
 
 export const StatusBadge: React.FC<{
   status: string;
-  tone?: 'neutral' | 'success' | 'warning' | 'error' | 'accent';
+  tone?: 'neutral' | 'success' | 'warning' | 'error' | 'accent' | string;
   size?: 'sm' | 'md' | 'lg' | string;
 }> = ({ status, tone = 'neutral' }) => {
   const styles: Record<string, { text: string; dot: string }> = {
@@ -715,7 +715,7 @@ export const StatusBadge: React.FC<{
     error: { text: 'text-[#BC3E3E]', dot: 'bg-[#BC3E3E]' },
     accent: { text: 'text-[#C44D00]', dot: 'bg-[#FF7417]' },
   };
-  const s = styles[tone];
+  const s = styles[tone] || styles.neutral;
 
   return (
     <span
@@ -727,13 +727,24 @@ export const StatusBadge: React.FC<{
   );
 };
 
-export const PriorityBadge: React.FC<{ priority: PriorityLevel }> = ({ priority }) => {
-  const config: Record<PriorityLevel, { label: string; text: string; dot: string }> = {
+export const PriorityBadge: React.FC<{ priority?: PriorityLevel | string }> = ({ priority = 'medium' }) => {
+  const normalized = String(priority || 'medium').toLowerCase();
+  const config: Record<string, { label: string; text: string; dot: string }> = {
+    critical: { label: 'Critical Priority', text: 'text-[#BC3E3E]', dot: 'bg-[#DC2626]' },
+    urgent: { label: 'Critical Priority', text: 'text-[#BC3E3E]', dot: 'bg-[#DC2626]' },
     high: { label: 'High Priority', text: 'text-[#C44D00]', dot: 'bg-[#FF7417]' },
     medium: { label: 'Medium Priority', text: 'text-[#A85E16]', dot: 'bg-[#D97706]' },
     low: { label: 'Low Priority', text: 'text-[#5C5C58]', dot: 'bg-[#858585]' },
   };
-  const c = config[priority];
+  const c =
+    config[normalized] ||
+    (normalized.includes('crit') || normalized.includes('urg')
+      ? config.critical
+      : normalized.includes('high')
+        ? config.high
+        : normalized.includes('low')
+          ? config.low
+          : config.medium);
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-[11px] font-medium whitespace-nowrap shrink-0 ${c.text}`}

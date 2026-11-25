@@ -2106,9 +2106,9 @@ export const IdeaIntelligencePage: React.FC = () => {
               expanded={Boolean(expandedSections['04'])}
               onToggle={() => toggleReportSection('04')}
             >
-              <p className="mb-3">{activeReport.marketDemand.summary}</p>
+              <p className="mb-3">{activeReport.marketDemand?.summary}</p>
               <div className="space-y-2">
-                {activeReport.marketDemand.signals.map((sig) => (
+                {(activeReport.marketDemand?.signals || []).map((sig) => (
                   <div
                     key={sig.label}
                     className="p-3 rounded-[8px] bg-[#F5F5F4] flex flex-wrap items-center justify-between gap-2 text-xs"
@@ -2132,7 +2132,7 @@ export const IdeaIntelligencePage: React.FC = () => {
               onToggle={() => toggleReportSection('05')}
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {activeReport.customerSegments.map((seg) => (
+                {(activeReport.customerSegments || []).map((seg) => (
                   <div key={seg.name} className="p-4 rounded-[10px] border border-[#E6E6E2]">
                     <div className="text-xs font-mono-num text-[#C44D00]">{seg.share}</div>
                     <div className="font-semibold text-[#242424] mt-1">{seg.name}</div>
@@ -2155,7 +2155,7 @@ export const IdeaIntelligencePage: React.FC = () => {
               onToggle={() => toggleReportSection('06')}
             >
               <div className="space-y-2.5">
-                {activeReport.customerPainPoints.map((pp) => (
+                {(activeReport.customerPainPoints || []).map((pp) => (
                   <div
                     key={pp.title}
                     className="p-3.5 rounded-[10px] border border-[#E6E6E2] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
@@ -2262,7 +2262,7 @@ export const IdeaIntelligencePage: React.FC = () => {
               onToggle={() => toggleReportSection('08')}
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                {activeReport.pricingAnalysis.tiers.map((t) => (
+                {(activeReport.pricingAnalysis?.tiers || []).map((t) => (
                   <div
                     key={t.tier}
                     className="p-3.5 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]"
@@ -2274,7 +2274,7 @@ export const IdeaIntelligencePage: React.FC = () => {
                 ))}
               </div>
               <p className="text-xs text-[#242424] font-medium">
-                Recommendation: {activeReport.pricingAnalysis.recommendation}
+                Recommendation: {activeReport.pricingAnalysis?.recommendation}
               </p>
             </ResearchReportSection>
 
@@ -2382,7 +2382,7 @@ export const IdeaIntelligencePage: React.FC = () => {
                 {/* General bullets fallback */}
                 {(!activeReport.structuredOpportunities || activeReport.structuredOpportunities.length === 0) && (
                   <ul className="space-y-1.5 text-sm">
-                    {activeReport.marketOpportunities.map((op) => (
+                    {(activeReport.marketOpportunities || []).map((op) => (
                       <li key={op} className="flex items-start gap-2">
                         <CheckCircle2 className="w-4 h-4 text-[#FF7417] shrink-0 mt-0.5" />
                         <span>{op}</span>
@@ -2403,7 +2403,7 @@ export const IdeaIntelligencePage: React.FC = () => {
               onToggle={() => toggleReportSection('10')}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeReport.businessModelOptions.map((bm) => (
+                {(activeReport.businessModelOptions || []).map((bm) => (
                   <div key={bm.model} className="p-4 rounded-[10px] border border-[#E6E6E2]">
                     <div className="text-xs font-semibold text-[#C44D00]">{bm.fit}</div>
                     <div className="font-semibold text-[#242424] mt-0.5">{bm.model}</div>
@@ -2427,18 +2427,18 @@ export const IdeaIntelligencePage: React.FC = () => {
                 <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
                   <div className="text-xs text-[#686864]">Year 1 Conservative Band</div>
                   <div className="font-mono-num font-bold text-base text-[#242424] mt-1">
-                    {activeReport.revenuePotential.year1Conservative}
+                    {activeReport.revenuePotential?.year1Conservative}
                   </div>
                 </div>
                 <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
                   <div className="text-xs text-[#686864]">Year 1 Target Band</div>
                   <div className="font-mono-num font-bold text-base text-[#C44D00] mt-1">
-                    {activeReport.revenuePotential.year1Target}
+                    {activeReport.revenuePotential?.year1Target}
                   </div>
                 </div>
               </div>
               <p className="text-xs text-[#686864] mt-2">
-                {activeReport.revenuePotential.unitEconomicsNote}
+                {activeReport.revenuePotential?.unitEconomicsNote}
               </p>
             </ResearchReportSection>
 
@@ -2452,7 +2452,7 @@ export const IdeaIntelligencePage: React.FC = () => {
               onToggle={() => toggleReportSection('12')}
             >
               <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
-                {activeReport.startupCostEstimates.map((c) => (
+                {(activeReport.startupCostEstimates || []).map((c) => (
                   <div
                     key={c.category}
                     className="p-3.5 flex flex-wrap items-center justify-between gap-2 text-xs"
@@ -2477,7 +2477,7 @@ export const IdeaIntelligencePage: React.FC = () => {
               onToggle={() => toggleReportSection('13')}
             >
               <div className="space-y-2.5">
-                {activeReport.risksAndChallenges.map((r) => (
+                {(activeReport.risksAndChallenges || []).map((r) => (
                   <div key={r.risk} className="p-3.5 rounded-[10px] border border-[#E6E6E2]">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-semibold text-[#242424]">{r.risk}</span>
@@ -2531,7 +2531,7 @@ export const IdeaIntelligencePage: React.FC = () => {
               onToggle={() => toggleReportSection('14')}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {activeReport.validationExperiments.map((ex) => (
+                {(activeReport.validationExperiments || []).map((ex) => (
                   <div
                     key={ex.title}
                     className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]"
@@ -2561,7 +2561,7 @@ export const IdeaIntelligencePage: React.FC = () => {
                   <span>Strategic Verdict</span>
                 </div>
                 <p className="text-sm text-white mt-1.5 leading-relaxed">
-                  {activeReport.finalRecommendation.verdict}
+                  {activeReport.finalRecommendation?.verdict || ''}
                 </p>
               </IntelligenceSurface>
 
@@ -2581,7 +2581,7 @@ export const IdeaIntelligencePage: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  {activeReport.sources.map((s, idx) => {
+                  {(activeReport.sources || []).map((s, idx) => {
                     const domainName =
                       s.domain ||
                       (s.url
@@ -2619,9 +2619,9 @@ export const IdeaIntelligencePage: React.FC = () => {
                     const metricVal =
                       s.metricValue ||
                       (idx === 0
-                        ? activeReport.tamSamSom.tamLabel
+                        ? activeReport.tamSamSom?.tamLabel || ''
                         : idx === 1
-                          ? activeReport.tamSamSom.samLabel
+                          ? activeReport.tamSamSom?.samLabel || ''
                           : idx === 2
                             ? '3.0% Monthly Churn'
                             : '14.2% YoY Growth');
@@ -2629,9 +2629,9 @@ export const IdeaIntelligencePage: React.FC = () => {
                     const metricContext =
                       s.statisticContext ||
                       (idx === 0
-                        ? activeReport.tamSamSom.tamBasis
+                        ? activeReport.tamSamSom?.tamBasis || ''
                         : idx === 1
-                          ? activeReport.tamSamSom.samBasis
+                          ? activeReport.tamSamSom?.samBasis || ''
                           : s.title);
 
                     return (

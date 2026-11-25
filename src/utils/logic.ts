@@ -1322,7 +1322,7 @@ export function buildDynamicDossier(params: {
         },
         {
           title: 'Gourmet chocolates melting or arriving bloomed (chalky white fat separation) due to unconditioned shipping',
-          severity: 'critical' as PriorityLevel,
+          severity: 'high' as PriorityLevel,
           evidence: 'Primary cause of customer churn and 1-star reviews for online confectionery.',
         },
         {

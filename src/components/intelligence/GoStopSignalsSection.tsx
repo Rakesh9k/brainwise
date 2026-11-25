@@ -151,24 +151,29 @@ export const GoStopSignalsSection: React.FC<GoStopSignalsSectionProps> = ({ repo
             </div>
 
             <div className="space-y-2.5">
-              {positiveSignals.map((item, idx) => (
-                <div
-                  key={item.id || `pos-${idx}`}
-                  className="rounded-[10px] border border-[#EAEAE7] bg-[#FAFAF9]/60 hover:bg-[#FFFFFF] p-3 text-xs flex items-start gap-3 transition-colors"
-                >
-                  <span className="font-mono-num text-[11px] font-bold text-[#1E6543] shrink-0 mt-0.5">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  <div className="flex-1 text-[#252525] leading-relaxed">
-                    <span>{item.text}</span>
-                    {item.tag && (
-                      <span className="ml-2 inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#EAF5EF] text-[#1E6543] border border-[#CDE5D7]">
-                        · {item.tag}
-                      </span>
-                    )}
+              {positiveSignals.map((item, idx) => {
+                const text = typeof item === 'string' ? item : item?.text || '';
+                const tag = typeof item === 'object' ? item?.tag : undefined;
+                const key = (typeof item === 'object' && item?.id) || `pos-${idx}`;
+                return (
+                  <div
+                    key={key}
+                    className="rounded-[10px] border border-[#EAEAE7] bg-[#FAFAF9]/60 hover:bg-[#FFFFFF] p-3 text-xs flex items-start gap-3 transition-colors"
+                  >
+                    <span className="font-mono-num text-[11px] font-bold text-[#1E6543] shrink-0 mt-0.5">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <div className="flex-1 text-[#252525] leading-relaxed">
+                      <span>{text}</span>
+                      {tag && (
+                        <span className="ml-2 inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#EAF5EF] text-[#1E6543] border border-[#CDE5D7]">
+                          · {tag}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -183,24 +188,29 @@ export const GoStopSignalsSection: React.FC<GoStopSignalsSectionProps> = ({ repo
             </div>
 
             <div className="space-y-2.5">
-              {keyStrengths.map((item, idx) => (
-                <div
-                  key={item.id || `str-${idx}`}
-                  className="rounded-[10px] border border-[#EAEAE7] bg-[#FAFAF9]/60 hover:bg-[#FFFFFF] p-3 text-xs flex items-start gap-3 transition-colors"
-                >
-                  <span className="font-mono-num text-[11px] font-bold text-[#1E6543] shrink-0 mt-0.5">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  <div className="flex-1 text-[#252525] leading-relaxed">
-                    <span>{item.text}</span>
-                    {item.tag && (
-                      <span className="ml-2 inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#EAF5EF] text-[#1E6543] border border-[#CDE5D7]">
-                        · {item.tag}
-                      </span>
-                    )}
+              {keyStrengths.map((item, idx) => {
+                const text = typeof item === 'string' ? item : item?.text || '';
+                const tag = typeof item === 'object' ? item?.tag : undefined;
+                const key = (typeof item === 'object' && item?.id) || `str-${idx}`;
+                return (
+                  <div
+                    key={key}
+                    className="rounded-[10px] border border-[#EAEAE7] bg-[#FAFAF9]/60 hover:bg-[#FFFFFF] p-3 text-xs flex items-start gap-3 transition-colors"
+                  >
+                    <span className="font-mono-num text-[11px] font-bold text-[#1E6543] shrink-0 mt-0.5">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <div className="flex-1 text-[#252525] leading-relaxed">
+                      <span>{text}</span>
+                      {tag && (
+                        <span className="ml-2 inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#EAF5EF] text-[#1E6543] border border-[#CDE5D7]">
+                          · {tag}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -255,24 +265,29 @@ export const GoStopSignalsSection: React.FC<GoStopSignalsSectionProps> = ({ repo
             </div>
 
             <div className="space-y-2.5">
-              {criticalRisks.map((item, idx) => (
-                <div
-                  key={item.id || `risk-${idx}`}
-                  className="rounded-[10px] border border-[#FEE2E2] bg-[#FFF8F8] hover:bg-[#FFFFFF] p-3 text-xs flex items-start gap-3 transition-colors"
-                >
-                  <span className="font-mono-num text-[11px] font-bold text-[#BC3E3E] shrink-0 mt-0.5">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  <div className="flex-1 text-[#252525] leading-relaxed">
-                    <span>{item.text}</span>
-                    {item.tag && (
-                      <span className="ml-2 inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FDF2F2] text-[#BC3E3E] border border-[#FECACA]">
-                        · {item.tag}
-                      </span>
-                    )}
+              {criticalRisks.map((item, idx) => {
+                const text = typeof item === 'string' ? item : item?.text || '';
+                const tag = typeof item === 'object' ? item?.tag : undefined;
+                const key = (typeof item === 'object' && item?.id) || `risk-${idx}`;
+                return (
+                  <div
+                    key={key}
+                    className="rounded-[10px] border border-[#FEE2E2] bg-[#FFF8F8] hover:bg-[#FFFFFF] p-3 text-xs flex items-start gap-3 transition-colors"
+                  >
+                    <span className="font-mono-num text-[11px] font-bold text-[#BC3E3E] shrink-0 mt-0.5">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <div className="flex-1 text-[#252525] leading-relaxed">
+                      <span>{text}</span>
+                      {tag && (
+                        <span className="ml-2 inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FDF2F2] text-[#BC3E3E] border border-[#FECACA]">
+                          · {tag}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -287,24 +302,29 @@ export const GoStopSignalsSection: React.FC<GoStopSignalsSectionProps> = ({ repo
             </div>
 
             <div className="space-y-2.5">
-              {areasOfConcern.map((item, idx) => (
-                <div
-                  key={item.id || `con-${idx}`}
-                  className="rounded-[10px] border border-[#FED7AA]/60 bg-[#FFFCF9] hover:bg-[#FFFFFF] p-3 text-xs flex items-start gap-3 transition-colors"
-                >
-                  <span className="font-mono-num text-[11px] font-bold text-[#C44D00] shrink-0 mt-0.5">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  <div className="flex-1 text-[#252525] leading-relaxed">
-                    <span>{item.text}</span>
-                    {item.tag && (
-                      <span className="ml-2 inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FFF3EB] text-[#C44D00] border border-[#FED7AA]">
-                        · {item.tag}
-                      </span>
-                    )}
+              {areasOfConcern.map((item, idx) => {
+                const text = typeof item === 'string' ? item : item?.text || '';
+                const tag = typeof item === 'object' ? item?.tag : undefined;
+                const key = (typeof item === 'object' && item?.id) || `con-${idx}`;
+                return (
+                  <div
+                    key={key}
+                    className="rounded-[10px] border border-[#FED7AA]/60 bg-[#FFFCF9] hover:bg-[#FFFFFF] p-3 text-xs flex items-start gap-3 transition-colors"
+                  >
+                    <span className="font-mono-num text-[11px] font-bold text-[#C44D00] shrink-0 mt-0.5">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <div className="flex-1 text-[#252525] leading-relaxed">
+                      <span>{text}</span>
+                      {tag && (
+                        <span className="ml-2 inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FFF3EB] text-[#C44D00] border border-[#FED7AA]">
+                          · {tag}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
