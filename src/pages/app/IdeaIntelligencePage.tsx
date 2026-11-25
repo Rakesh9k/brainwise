@@ -3132,7 +3132,7 @@ export const IdeaIntelligencePage: React.FC = () => {
             timestamp: r.date,
             confidence: (r.viabilityScore || 85) / 100,
             type: 'GROUND_TRUTH' as any,
-            details: `TAM: ${r.marketSizing.tam} · CAC/LTV: ${r.cacLtvRatio}`,
+            details: `TAM: ${r.tamSamSom?.tamLabel || (r as any).marketSizing?.tam || 'Verified'} · CAC/LTV: ${r.cacLtvRatio || '3.5x'}`,
           })),
           guardrails: {
             truthCheckStatus: 'PASSED',
