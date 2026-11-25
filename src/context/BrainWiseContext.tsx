@@ -2628,10 +2628,19 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const previousStatus = target.status;
     const nextStatus: GrowthTask['status'] =
       explicitStatus ?? (previousStatus === 'completed' ? 'pending' : 'completed');
+    const nowIso = new Date().toISOString();
 
     setState((prev) => ({
       ...prev,
-      tasks: prev.tasks.map((t) => (t.id === taskId ? { ...t, status: nextStatus } : t)),
+      tasks: prev.tasks.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              status: nextStatus,
+              completedAt: nextStatus === 'completed' ? (t.completedAt || nowIso) : undefined,
+            }
+          : t
+      ),
     }));
 
     if (state.activeWorkspaceId) {

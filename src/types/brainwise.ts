@@ -943,6 +943,8 @@ export interface GrowthTask {
   status: 'pending' | 'completed' | 'skipped';
   isTodayPriority?: boolean;
   notes?: string;
+  completedAt?: string;
+  createdAt?: string;
 }
 
 export interface GrowthExperiment {

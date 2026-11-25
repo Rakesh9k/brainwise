@@ -4,6 +4,8 @@ import {
   calculateLedgerPosition,
   formatCardDataAsJson,
   formatCardDataAsCsv,
+  generateExecutiveBriefingPdfHtml,
+  generateExecutiveSlideDeckHtml,
   buildContextualLedgerAriaProps,
 } from './contextualLedgerUtils';
 
@@ -62,3 +64,44 @@ test('buildContextualLedgerAriaProps sets role=menu and accessible title label',
   assert.equal(aria['aria-orientation'], 'vertical');
   assert.equal(aria['aria-label'], 'Contextual actions for Today’s Priorities');
 });
+
+test('generateExecutiveBriefingPdfHtml produces print-ready executive memo with branding', () => {
+  const html = generateExecutiveBriefingPdfHtml(
+    'Performance & Execution Pulse',
+    'Live sprint velocity',
+    {
+      completionRate: 100,
+      timeframe: '30d',
+      series: [
+        { label: 'W1', value: 0, detail: 'Baseline' },
+        { label: 'Now', value: 100, detail: '1/1 tasks complete' },
+      ],
+    },
+    'Chocolatier Studio'
+  );
+  assert.ok(html.includes('Chocolatier Studio'));
+  assert.ok(html.includes('Performance & Execution Pulse'));
+  assert.ok(html.includes('Sprint Velocity'));
+  assert.ok(html.includes('100%'));
+  assert.ok(html.includes('@media print'));
+  assert.ok(html.includes('Save as PDF / Print'));
+});
+
+test('generateExecutiveSlideDeckHtml produces 16:9 presentation deck with controls', () => {
+  const deck = generateExecutiveSlideDeckHtml(
+    'Performance & Execution Pulse',
+    'Executive Review',
+    {
+      completionRate: 100,
+      series: [{ label: 'W1', value: 0 }, { label: 'Now', value: 100 }],
+    },
+    'Chocolatier Studio'
+  );
+  assert.ok(deck.includes('Chocolatier Studio'));
+  assert.ok(deck.includes('aspect-ratio: 16 / 9'));
+  assert.ok(deck.includes('slide-1'));
+  assert.ok(deck.includes('slide-4'));
+  assert.ok(deck.includes('toggleFullscreen'));
+  assert.ok(deck.includes('Export PDF Deck'));
+});
+

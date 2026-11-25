@@ -17,6 +17,7 @@ import type {
 import { executeTruthCheck } from './truthCheck';
 import type { BusinessIntelligenceScore } from '../types/intelligenceScore';
 import { calculateBusinessIntelligenceScore } from './intelligenceScore';
+import type { GrowthTrendPoint, GrowthTrendSeriesMap } from '../components/ui/growthTrendUtils';
 
 export interface BrainCompletenessResult {
   percentage: number;
@@ -990,6 +991,240 @@ export function computeDashboardMetrics(state: BrainWiseState): DashboardCompute
     pendingRecommendationsCount,
     unreadHighImpactCount,
     activeAssetsCount,
+  };
+}
+
+/**
+ * Accurately derives the Performance & Execution Pulse trend series
+ * across 7d, 30d, 90d, and ytd based on real workspace tasks, goal milestones,
+ * and completion history. Eliminates static offsets and reflects authentic telemetry.
+ */
+export function deriveExecutionPulseSeries(state: BrainWiseState): GrowthTrendSeriesMap {
+  const taskStats = calculateTaskCompletionStats(state.tasks);
+  const total = taskStats.total;
+  const completed = taskStats.completed;
+  const currentRate = taskStats.completionRate;
+
+  const goalsAvg =
+    state.goals.length > 0
+      ? Math.round(
+          state.goals.reduce((sum, g) => sum + calculateGoalProgress(g).percentage, 0) /
+            state.goals.length
+        )
+      : 0;
+
+  // If no tasks exist, return an honest baseline reflecting real workspace state
+  if (total === 0) {
+    const detailMsg =
+      goalsAvg > 0
+        ? `Goal pacing: ${goalsAvg}% · 0 sprint tasks logged`
+        : 'Awaiting sprint task creation';
+
+    return {
+      '7d': [
+        { label: 'Mon', value: goalsAvg, detail: detailMsg },
+        { label: 'Tue', value: goalsAvg, detail: detailMsg },
+        { label: 'Wed', value: goalsAvg, detail: detailMsg },
+        { label: 'Thu', value: goalsAvg, detail: detailMsg },
+        { label: 'Fri', value: goalsAvg, detail: detailMsg },
+        { label: 'Now', value: goalsAvg, detail: detailMsg },
+      ],
+      '30d': [
+        { label: 'W1', value: goalsAvg, detail: 'Baseline sprint velocity: 0%' },
+        { label: 'W2', value: goalsAvg, detail: 'Baseline sprint velocity: 0%' },
+        { label: 'W3', value: goalsAvg, detail: 'Baseline sprint velocity: 0%' },
+        { label: 'W4', value: goalsAvg, detail: 'Baseline sprint velocity: 0%' },
+        { label: 'Now', value: goalsAvg, detail: detailMsg },
+      ],
+      '90d': [
+        { label: 'Month 1', value: goalsAvg, detail: 'Strategic baseline' },
+        { label: 'Month 2', value: goalsAvg, detail: 'Awaiting task allocation' },
+        { label: 'Month 3', value: goalsAvg, detail: `Quarterly goal pace: ${goalsAvg}%` },
+      ],
+      ytd: [
+        { label: 'Q1', value: goalsAvg, detail: 'Baseline' },
+        { label: 'Q2', value: goalsAvg, detail: 'Baseline' },
+        { label: 'Q3', value: goalsAvg, detail: 'Baseline' },
+        { label: 'Now', value: goalsAvg, detail: `Overall pacing: ${goalsAvg}%` },
+      ],
+    };
+  }
+
+  // Parse task completion timestamps or due dates
+  const now = Date.now();
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+  const taskEvents = state.tasks.map((task) => {
+    let completedTimestamp: number | null = null;
+    if (task.status === 'completed') {
+      if (task.completedAt) {
+        const parsed = Date.parse(task.completedAt);
+        if (!isNaN(parsed)) completedTimestamp = parsed;
+      }
+      if (completedTimestamp === null && task.dueDate) {
+        const parsed = Date.parse(task.dueDate);
+        if (!isNaN(parsed)) completedTimestamp = parsed;
+      }
+      if (completedTimestamp === null) {
+        completedTimestamp = now;
+      }
+    }
+    return {
+      id: task.id,
+      status: task.status,
+      completedTimestamp,
+      priority: task.priority,
+    };
+  });
+
+  const countCompletedBefore = (timestamp: number) => {
+    return taskEvents.filter(
+      (t) => t.completedTimestamp !== null && t.completedTimestamp <= timestamp
+    ).length;
+  };
+
+  // 1. 7-Day Window (Rolling 7 days)
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const series7d: GrowthTrendPoint[] = [];
+  for (let offset = 5; offset >= 1; offset--) {
+    const dayTimestamp = now - offset * ONE_DAY_MS;
+    const dateObj = new Date(dayTimestamp);
+    const dayName = daysOfWeek[dateObj.getDay()];
+    const endOfDay = new Date(
+      dateObj.getFullYear(),
+      dateObj.getMonth(),
+      dateObj.getDate(),
+      23,
+      59,
+      59
+    ).getTime();
+    const doneCount = countCompletedBefore(endOfDay);
+    const rate = Math.min(100, Math.round((doneCount / total) * 100));
+    series7d.push({
+      label: dayName,
+      value: rate,
+      detail: `${doneCount}/${total} sprint tasks complete`,
+    });
+  }
+  series7d.push({
+    label: 'Now',
+    value: currentRate,
+    detail: `Current sprint velocity: ${completed}/${total} completed (${currentRate}%)`,
+  });
+
+  // 2. 30-Day Window (4 weekly intervals)
+  const series30d: GrowthTrendPoint[] = [];
+  const weekIntervals = [
+    { label: 'W1', daysAgo: 28 },
+    { label: 'W2', daysAgo: 21 },
+    { label: 'W3', daysAgo: 14 },
+    { label: 'W4', daysAgo: 7 },
+  ];
+  for (const interval of weekIntervals) {
+    const targetTimestamp = now - interval.daysAgo * ONE_DAY_MS;
+    const doneCount = countCompletedBefore(targetTimestamp);
+    const rate = Math.min(100, Math.round((doneCount / total) * 100));
+    series30d.push({
+      label: interval.label,
+      value: rate,
+      detail:
+        doneCount === 0
+          ? 'Sprint baseline (0% complete)'
+          : `${doneCount}/${total} tasks completed (${rate}%)`,
+    });
+  }
+  series30d.push({
+    label: 'Now',
+    value: currentRate,
+    detail: `Monthly completion pace: ${completed}/${total} tasks (${currentRate}%)`,
+  });
+
+  // 3. 90-Day Window (3 monthly intervals)
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const nowDate = new Date(now);
+  const m2Date = new Date(nowDate.getFullYear(), nowDate.getMonth() - 2, 1);
+  const m1Date = new Date(nowDate.getFullYear(), nowDate.getMonth() - 1, 1);
+  const endOfM2 = new Date(
+    m2Date.getFullYear(),
+    m2Date.getMonth() + 1,
+    0,
+    23,
+    59,
+    59
+  ).getTime();
+  const endOfM1 = new Date(
+    m1Date.getFullYear(),
+    m1Date.getMonth() + 1,
+    0,
+    23,
+    59,
+    59
+  ).getTime();
+
+  const doneM2 = countCompletedBefore(endOfM2);
+  const rateM2 = Math.min(100, Math.round((doneM2 / total) * 100));
+  const doneM1 = countCompletedBefore(endOfM1);
+  const rateM1 = Math.min(100, Math.round((doneM1 / total) * 100));
+
+  const series90d: GrowthTrendPoint[] = [
+    {
+      label: monthNames[m2Date.getMonth()],
+      value: rateM2,
+      detail: `${doneM2}/${total} sprint tasks complete`,
+    },
+    {
+      label: monthNames[m1Date.getMonth()],
+      value: rateM1,
+      detail: `${doneM1}/${total} sprint tasks complete`,
+    },
+    {
+      label: 'Now',
+      value: currentRate,
+      detail: `Quarterly target pacing: ${completed}/${total} completed · Goal pace: ${goalsAvg}%`,
+    },
+  ];
+
+  // 4. YTD (Quarterly intervals)
+  const currentQuarter = Math.floor(nowDate.getMonth() / 3) + 1;
+  const seriesYtd: GrowthTrendPoint[] = [];
+  for (let q = 1; q <= 4; q++) {
+    if (q < currentQuarter) {
+      const endOfQ = new Date(nowDate.getFullYear(), q * 3, 0, 23, 59, 59).getTime();
+      const doneQ = countCompletedBefore(endOfQ);
+      const rateQ = Math.min(100, Math.round((doneQ / total) * 100));
+      seriesYtd.push({
+        label: `Q${q}`,
+        value: rateQ,
+        detail: `Q${q} completed tasks: ${doneQ}/${total} (${rateQ}%)`,
+      });
+    } else if (q === currentQuarter) {
+      seriesYtd.push({
+        label: `Q${q} (Now)`,
+        value: currentRate,
+        detail: `Overall execution velocity: ${completed}/${total} completed (${currentRate}%)`,
+      });
+      break;
+    }
+  }
+
+  return {
+    '7d': series7d,
+    '30d': series30d,
+    '90d': series90d,
+    ytd: seriesYtd,
   };
 }
 

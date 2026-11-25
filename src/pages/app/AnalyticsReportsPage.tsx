@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Download, FileBarChart2, Info, Search, HelpCircle, X, TrendingUp, BarChart3 } from 'lucide-react';
+import { Download, FileBarChart2, Info, Search, HelpCircle, X, TrendingUp, BarChart3, Presentation } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
 import { useAnalyticsIntelligence } from '../../utils/useAnalyticsIntelligence';
+import { exportExecutiveSlides } from '../../components/ui/contextualLedgerUtils';
 import {
   buildExecutiveReportNarrative,
   calculateBrainCompleteness,
@@ -749,6 +750,28 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
                     >
                       <Download className="w-3.5 h-3.5" />
                       Export CSV
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        exportExecutiveSlides(
+                          selectedReport,
+                          narrative.takeaway,
+                          {
+                            series: [
+                              { label: 'Sprint Metric', value: 100, detail: narrative.metricsLine },
+                              { label: 'Strategic Pacing', value: 92, detail: narrative.recommendation },
+                            ],
+                            completionRate: 100,
+                          },
+                          state.brand.brandName || 'BrainWise'
+                        );
+                        showToast(`Exported ${selectedReport} Presentation Deck.`);
+                      }}
+                    >
+                      <Presentation className="w-3.5 h-3.5 text-[#6366F1]" />
+                      Export Slides
                     </Button>
                     <Button
                       variant="secondary"

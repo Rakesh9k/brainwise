@@ -417,26 +417,116 @@ export const AssetLibraryPage: React.FC = () => {
   const handleBulkDownload = () => {
     const selected = state.assets.filter((a) => selectedAssetIds.has(a.id));
     if (!selected.length) return;
-    const blob = new Blob([JSON.stringify(selected, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `brainwise-assets-export-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast(`Downloaded package containing ${selected.length} asset specifications.`);
+    const catalogHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Brand Assets Catalog — ${state.brand.brandName}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #FAF9F6; color: #171717; padding: 40px; }
+    .card { max-width: 860px; margin: auto; background: #FFF; border: 1px solid #E6E6E2; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+    h1 { font-size: 26px; margin-bottom: 6px; }
+    .meta { font-size: 13px; color: #71717A; margin-bottom: 28px; }
+    .asset-item { border: 1px solid #E6E6E2; border-radius: 12px; padding: 20px; margin-bottom: 16px; background: #FAFAFA; }
+    .asset-item h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .actions { display: flex; gap: 8px; margin-bottom: 24px; }
+    button { padding: 8px 16px; border-radius: 8px; border: 1px solid #E6E6E2; background: #FF7417; color: #FFF; font-weight: 600; cursor: pointer; }
+    @media print { .actions { display: none; } body { padding: 0; background: #FFF; } .card { border: none; box-shadow: none; padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="actions">
+      <button onclick="window.print()">🖨️ Save Catalog as PDF / Print</button>
+      <button style="background: #FFF; color: #171717;" onclick="window.close()">Close</button>
+    </div>
+    <h1>${state.brand.brandName} — Brand Collateral Catalog</h1>
+    <div class="meta">${selected.length} Curated Creative Specifications · Generated ${new Date().toLocaleDateString()}</div>
+    ${selected
+      .map(
+        (a) => `
+      <div class="asset-item">
+        <span style="font-size: 11px; font-weight: 700; color: #C44D00; text-transform: uppercase;">${a.category || 'Asset'}</span>
+        <h3>${a.title}</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 8px;">${a.description || ''}</p>
+        <div style="font-size: 12px; color: #888;">Format: <strong>${a.format}</strong> · Folder: <strong>${a.folder}</strong> · Status: <strong>${a.status}</strong></div>
+      </div>
+    `
+      )
+      .join('')}
+  </div>
+</body>
+</html>`;
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.open();
+      printWin.document.write(catalogHtml);
+      printWin.document.close();
+      setTimeout(() => {
+        try { printWin.print(); } catch {}
+      }, 350);
+    } else {
+      triggerFileDownload(`brainwise-assets-catalog-${Date.now()}.html`, catalogHtml, 'text/html');
+    }
+    showToast(`Generated printable Brand Collateral Catalog with ${selected.length} assets.`);
   };
 
   // Single asset actions
   const handleDownloadSpec = (asset: BrandAsset) => {
-    const blob = new Blob([JSON.stringify(asset, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${asset.title.toLowerCase().replace(/\s+/g, '-')}-spec.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast(`Downloaded specification for "${asset.title}".`);
+    const slug = asset.title.toLowerCase().replace(/\s+/g, '-');
+    const specHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>${asset.title} — Brand Specification</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #FAF9F6; color: #171717; padding: 40px; }
+    .card { max-width: 720px; margin: auto; background: #FFF; border: 1px solid #E6E6E2; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+    h1 { font-size: 24px; margin-bottom: 8px; color: #171717; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; background: #FFF0E5; color: #C44D00; font-size: 12px; font-weight: 700; margin-bottom: 24px; }
+    .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; border-top: 1px solid #E6E6E2; border-bottom: 1px solid #E6E6E2; padding: 16px 0; }
+    .meta-item label { display: block; font-size: 11px; text-transform: uppercase; color: #71717A; font-weight: 600; margin-bottom: 4px; }
+    .meta-item value { font-size: 14px; font-weight: 600; color: #171717; }
+    .content-box { background: #F4F4F2; border-radius: 10px; padding: 16px; margin-bottom: 24px; font-size: 13px; line-height: 1.6; }
+    .actions { display: flex; gap: 8px; margin-bottom: 24px; }
+    button { padding: 8px 16px; border-radius: 8px; border: 1px solid #E6E6E2; background: #FF7417; color: #FFF; font-weight: 600; cursor: pointer; }
+    @media print { .actions { display: none; } body { padding: 0; background: #FFF; } .card { border: none; box-shadow: none; padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="actions">
+      <button onclick="window.print()">🖨️ Save as PDF / Print</button>
+      <button style="background: #FFF; color: #171717;" onclick="window.close()">Close</button>
+    </div>
+    <span class="badge">${asset.category || 'Brand Collateral'}</span>
+    <h1>${asset.title}</h1>
+    <p style="color: #666; margin-bottom: 24px;">${asset.description || 'Production-ready creative asset specification'}</p>
+    <div class="meta-grid">
+      <div class="meta-item"><label>Format</label><value>${asset.format || 'Vector SVG / Print PDF'}</value></div>
+      <div class="meta-item"><label>Folder</label><value>${asset.folder || 'Active'}</value></div>
+      <div class="meta-item"><label>Dimensions</label><value>${asset.dimensions?.width || 1080} × ${asset.dimensions?.height || 1080} px</value></div>
+      <div class="meta-item"><label>Status</label><value>${asset.status || 'Approved'}</value></div>
+    </div>
+    ${asset.headlineText ? `<div class="content-box"><strong>Primary Copywriting:</strong><br>${asset.headlineText}</div>` : ''}
+    <div style="font-size: 11px; color: #999; margin-top: 32px; border-top: 1px solid #E6E6E2; padding-top: 12px;">
+      BrainWise Brand Studio · Authoritative Brand Asset Spec
+    </div>
+  </div>
+</body>
+</html>`;
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.open();
+      printWin.document.write(specHtml);
+      printWin.document.close();
+      setTimeout(() => {
+        try { printWin.print(); } catch {}
+      }, 350);
+    } else {
+      triggerFileDownload(`${slug}-spec.html`, specHtml, 'text/html');
+    }
+    showToast(`Generated printable Brand Specification Sheet for "${asset.title}".`);
   };
 
   const handleDownloadSvg = (asset: BrandAsset) => {

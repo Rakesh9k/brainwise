@@ -7,9 +7,11 @@ import {
   Copy,
   Download,
   FileSpreadsheet,
+  FileText,
   MoreHorizontal,
   Pin,
   PinOff,
+  Presentation,
   RefreshCw,
   Sparkles,
   X,
@@ -22,6 +24,8 @@ import {
   type ContextualCardData,
   buildContextualLedgerAriaProps,
   calculateLedgerPosition,
+  exportExecutivePdf,
+  exportExecutiveSlides,
   formatCardDataAsCsv,
   formatCardDataAsJson,
   triggerFileDownload,
@@ -52,7 +56,7 @@ export function useContextualLedger() {
 export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { navigate, showToast, isWidgetPinned, togglePinWidget } = useBrainWise();
+  const { state, navigate, showToast, isWidgetPinned, togglePinWidget } = useBrainWise();
   const [activeCard, setActiveCard] = useState<ContextualCardData | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [copied, setCopied] = useState(false);
@@ -107,6 +111,30 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
       window.removeEventListener('pointerdown', handlePointerDown);
     };
   }, [activeCard, closeLedger]);
+
+  const handleExportPdf = () => {
+    if (!activeCard) return;
+    exportExecutivePdf(
+      activeCard.title,
+      activeCard.subtitle,
+      activeCard.data ?? activeCard.details,
+      state.brain.businessName || 'BrainWise'
+    );
+    showToast(`Generated Executive PDF for "${activeCard.title}".`);
+    closeLedger();
+  };
+
+  const handleExportSlides = () => {
+    if (!activeCard) return;
+    exportExecutiveSlides(
+      activeCard.title,
+      activeCard.subtitle,
+      activeCard.data ?? activeCard.details,
+      state.brain.businessName || 'BrainWise'
+    );
+    showToast(`Generated Presentation Deck for "${activeCard.title}".`);
+    closeLedger();
+  };
 
   const handleExportJson = () => {
     if (!activeCard) return;
@@ -245,32 +273,57 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
 
                   {/* Ledger Command Items */}
                   <div className="relative z-10 p-1.5 space-y-0.5 bg-[#FFFFFF]/90">
-                    {/* 1. Export Data */}
+                    {/* 1. Export Executive PDF */}
                     <button
                       type="button"
                       role="menuitem"
-                      onClick={handleExportJson}
+                      onClick={handleExportPdf}
                       className="w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-[10px] text-[#252525] hover:text-[#171717] hover:bg-[#F5F5F3] active:bg-[#ECECE9] transition-colors cursor-pointer group text-left"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-7 h-7 rounded-[8px] bg-[#F5F5F4] group-hover:bg-[#FFFFFF] border border-[#EFEFEB] flex items-center justify-center text-[#5C5C58] group-hover:text-[#FF7417] shrink-0 transition-colors">
-                          <Download className="w-3.5 h-3.5" />
+                          <FileText className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0">
                           <div className="font-medium text-[#171717] leading-tight">
-                            Export Data
+                            Export Executive PDF
                           </div>
                           <div className="text-[10px] text-[#858585] truncate leading-tight">
-                            Download JSON telemetry
+                            Printable briefing & KPI summary
                           </div>
                         </div>
                       </div>
-                      <span className="text-[10px] font-mono-num px-1.5 py-0.5 rounded bg-[#F1F1EF] text-[#858585] border border-[#E6E6E2] shrink-0">
-                        JSON
+                      <span className="text-[10px] font-mono-num px-1.5 py-0.5 rounded bg-[#FFF0E5] text-[#C44D00] border border-[#FFD9BE] shrink-0 font-medium">
+                        PDF
                       </span>
                     </button>
 
-                    {/* Export CSV variant */}
+                    {/* 2. Export Presentation Deck (Slides) */}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleExportSlides}
+                      className="w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-[10px] text-[#252525] hover:text-[#171717] hover:bg-[#F5F5F3] active:bg-[#ECECE9] transition-colors cursor-pointer group text-left"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-[8px] bg-[#F5F5F4] group-hover:bg-[#FFFFFF] border border-[#EFEFEB] flex items-center justify-center text-[#5C5C58] group-hover:text-[#6366F1] shrink-0 transition-colors">
+                          <Presentation className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-[#171717] leading-tight">
+                            Export Presentation Deck
+                          </div>
+                          <div className="text-[10px] text-[#858585] truncate leading-tight">
+                            16:9 executive briefing slides
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono-num px-1.5 py-0.5 rounded bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE] shrink-0 font-medium">
+                        SLIDES
+                      </span>
+                    </button>
+
+                    {/* 3. Export Spreadsheet (CSV) */}
                     <button
                       type="button"
                       role="menuitem"

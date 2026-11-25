@@ -6,6 +6,7 @@ import {
   calculateGoalProgress,
   calculateTaskCompletionStats,
   computeDashboardMetrics,
+  deriveExecutionPulseSeries,
   selectFocusSprintTasks,
 } from '../../utils/logic';
 import {
@@ -66,39 +67,8 @@ export const DashboardPage: React.FC = () => {
   const metrics = computeDashboardMetrics(state);
 
   const executionPulseSeries: GrowthTrendSeriesMap = useMemo(() => {
-    const total = taskStats.total || 1;
-    const completed = taskStats.completed;
-    const rate = taskStats.completionRate;
-
-    return {
-      '7d': [
-        { label: 'Mon', value: Math.round(rate * 0.4), detail: `${Math.round(completed * 0.4)} sprint tasks complete` },
-        { label: 'Tue', value: Math.round(rate * 0.55), detail: 'Mid-week task reviews' },
-        { label: 'Wed', value: Math.round(rate * 0.7), detail: `${Math.round(completed * 0.7)} sprint tasks complete` },
-        { label: 'Thu', value: Math.round(rate * 0.85), detail: 'Strategy milestone alignment' },
-        { label: 'Fri', value: Math.round(rate * 0.95), detail: 'End of week checkpoint' },
-        { label: 'Now', value: rate, detail: `Current sprint velocity: ${completed}/${total} completed` },
-      ],
-      '30d': [
-        { label: 'W1', value: Math.max(0, rate - 35), detail: 'Sprint kickoff' },
-        { label: 'W2', value: Math.max(0, rate - 20), detail: 'Mid-sprint milestones' },
-        { label: 'W3', value: Math.max(0, rate - 10), detail: 'Execution sprint pacing' },
-        { label: 'W4', value: Math.max(0, rate - 2), detail: 'Final task reviews' },
-        { label: 'Now', value: rate, detail: `Monthly completion pace: ${rate}%` },
-      ],
-      '90d': [
-        { label: 'Month 1', value: Math.max(0, rate - 40), detail: 'Foundation phase' },
-        { label: 'Month 2', value: Math.max(0, rate - 15), detail: 'Scaling experiments' },
-        { label: 'Month 3', value: rate, detail: `Quarterly target pacing: ${metrics.goalsAvgPercentage}%` },
-      ],
-      ytd: [
-        { label: 'Q1', value: Math.max(0, rate - 45), detail: 'Q1 Strategic baseline' },
-        { label: 'Q2', value: Math.max(0, rate - 25), detail: 'Q2 Expansion' },
-        { label: 'Q3', value: Math.max(0, rate - 10), detail: 'Q3 Optimization' },
-        { label: 'Now', value: rate, detail: `Overall execution rate: ${rate}%` },
-      ],
-    };
-  }, [taskStats, metrics.goalsAvgPercentage]);
+    return deriveExecutionPulseSeries(state);
+  }, [state]);
 
   useEffect(() => {
     return () => {

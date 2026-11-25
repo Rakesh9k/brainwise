@@ -5,6 +5,7 @@ import {
   calculateGoalProgress,
   calculateTaskCompletionStats,
   estimateMarketSizing,
+  deriveExecutionPulseSeries,
   calculateCacChurnSensitivityMatrix,
   filterGlobalSearch,
   getNextJourneyStep,
@@ -514,4 +515,56 @@ test('buildDynamicDossier generates deep authentic domain research for premium c
   assert.ok(dossier.validationExperiments.some((e) => e.title.includes('Corporate Gifting') || e.title.includes('Thermal')));
   assert.ok(dossier.criticalAssumptions?.some((a) => a.assumption.includes('Thermal barrier') || a.assumption.includes('craft bar')));
 });
+
+test('deriveExecutionPulseSeries derives authentic historical telemetry without static offsets', () => {
+  // Test 1: Empty tasks workspace
+  const emptyState = {
+    ...INITIAL_BRAINWISE_STATE,
+    tasks: [],
+    goals: [],
+  };
+  const emptySeries = deriveExecutionPulseSeries(emptyState);
+  assert.equal(emptySeries['30d']?.[0].value, 0);
+  assert.equal(emptySeries['30d']?.[0].detail, 'Baseline sprint velocity: 0%');
+  assert.equal(emptySeries['30d']?.[4].value, 0);
+  assert.equal(emptySeries['7d']?.[5].value, 0);
+
+  // Test 2: Single task completed today (the exact user scenario)
+  const singleTaskState = {
+    ...INITIAL_BRAINWISE_STATE,
+    tasks: [
+      {
+        id: 't-now',
+        title: 'Launch MVP Landing Page',
+        description: 'Publish hero test',
+        whyItMatters: 'Validate demand',
+        expectedOutcome: '10 signups',
+        priority: 'high' as const,
+        estimatedMinutes: 30,
+        dueDate: new Date().toISOString().slice(0, 10),
+        completedAt: new Date().toISOString(),
+        department: 'Brand Studio' as const,
+        status: 'completed' as const,
+      },
+    ],
+    goals: [],
+  };
+  const singleSeries = deriveExecutionPulseSeries(singleTaskState);
+  // Earlier intervals should be 0%, NOT fake 65%
+  assert.equal(singleSeries['30d']?.[0].value, 0);
+  assert.equal(singleSeries['30d']?.[1].value, 0);
+  assert.equal(singleSeries['30d']?.[2].value, 0);
+  assert.equal(singleSeries['30d']?.[3].value, 0);
+  // Current point is 100%
+  assert.equal(singleSeries['30d']?.[4].value, 100);
+  assert.ok(singleSeries['30d']?.[4].detail?.includes('1/1'));
+
+  // Test 3: Populated initial state
+  const populatedSeries = deriveExecutionPulseSeries(INITIAL_BRAINWISE_STATE);
+  assert.ok(populatedSeries['7d']!.length > 0);
+  assert.ok(populatedSeries['30d']!.length > 0);
+  assert.ok(populatedSeries['90d']!.length > 0);
+  assert.ok(populatedSeries.ytd!.length > 0);
+});
+
 

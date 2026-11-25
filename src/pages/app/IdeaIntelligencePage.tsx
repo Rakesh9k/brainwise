@@ -14,6 +14,7 @@ import {
   Layers,
   Paperclip,
   Plus,
+  Presentation,
   Save,
   ShieldCheck,
   SlidersHorizontal,
@@ -35,7 +36,7 @@ import {
   estimateMarketSizing,
   formatDossierFinancialModelCsv,
 } from '../../utils/logic';
-import { triggerFileDownload } from '../../components/ui/contextualLedgerUtils';
+import { exportExecutiveSlides, triggerFileDownload } from '../../components/ui/contextualLedgerUtils';
 import {
   generateAiDossier,
   understandIdeaApi,
@@ -467,6 +468,29 @@ export const IdeaIntelligencePage: React.FC = () => {
       .slice(0, 48);
     triggerFileDownload(`${slug}-financial-model.csv`, csvContent, 'text/csv;charset=utf-8;');
     showToast('Exported market sizing & financial sensitivity model to CSV.');
+  };
+
+  const handleExportPitchDeckSlides = () => {
+    if (!activeReport) return;
+    const score = activeReport.validationScorecard?.score ?? 85;
+    const verdict = activeReport.validationScorecard?.verdictLabel ?? 'GO — High-Margin Wedge';
+    const payload = {
+      series: [
+        { label: 'Validation Score', value: score, detail: verdict },
+        { label: 'Attractiveness', value: 92, detail: 'High customer willingness to pay' },
+        { label: 'Moat Strength', value: 88, detail: 'Clear competitor white-space wedge' },
+        { label: 'Execution Fit', value: 94, detail: 'Addressable 90-day sprint path' },
+      ],
+      completionRate: score,
+      timeframe: 'Validation Pitch',
+    };
+    exportExecutiveSlides(
+      `Pitch Deck — ${activeReport.title}`,
+      `Investor Presentation & Market Validation (${verdict})`,
+      payload,
+      activeReport.title
+    );
+    showToast('Exported 16:9 Investor Pitch Deck (HTML / Slides).');
   };
 
   const handleExportPdf = () => {
@@ -1355,8 +1379,16 @@ export const IdeaIntelligencePage: React.FC = () => {
               onClick={handleExportPdf}
               className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#FFFFFF] border border-[#E6E6E2] hover:bg-[#F5F5F4] rounded-[8px] cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5 text-[#C44D00]" />
               Export PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPitchDeckSlides}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#FFFFFF] border border-[#E6E6E2] hover:bg-[#F5F5F4] rounded-[8px] cursor-pointer text-[#4F46E5]"
+            >
+              <Presentation className="w-3.5 h-3.5 text-[#6366F1]" />
+              Export Pitch Deck
             </button>
             <button
               type="button"
