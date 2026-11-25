@@ -180,6 +180,124 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
       ],
     },
   ]);
+
+  // Dynamically derive Strategic Gaps from tracked competitors when state.gapAnalysis is empty
+  const effectiveGaps = useMemo(() => {
+    if (Array.isArray(state.gapAnalysis) && state.gapAnalysis.length > 0) {
+      return state.gapAnalysis;
+    }
+    if (state.competitors.length === 0) return [];
+
+    const businessName = state.brain.businessName || 'Your Brand';
+    const location = state.brain.location || 'Target Region';
+    const topPeers = state.competitors.slice(0, 4);
+    const peerNames = topPeers.map((c) => c.name).join(', ');
+    const allWeaknesses = state.competitors
+      .flatMap((c) => (c.weaknesses || []).map((w) => ({ comp: c.name, text: w })))
+      .slice(0, 3);
+    const allComplaints = state.competitors
+      .flatMap((c) =>
+        (c.customerReviews?.complaints || []).map((q) => ({ comp: c.name, text: q }))
+      )
+      .slice(0, 2);
+
+    const gaps = [
+      {
+        id: 'gap-pricing-tier',
+        dimension: 'Pricing & Tier Architecture',
+        impact: 'high' as const,
+        title: `Transparent Value & Discovery Tiers vs. ${topPeers[0]?.name || 'Incumbents'}`,
+        observation: `Tracked peers (${peerNames}) cluster around ${topPeers[0]?.priceRange || 'premium opaque pricing'} with limited low-friction starter flights.`,
+        opportunity: `Launch a clear starter tasting/discovery bundle for ${businessName} in ${location} with upfront unit pricing and 1-click reorder.`,
+      },
+      {
+        id: 'gap-customer-friction',
+        dimension: 'Customer Experience & Fulfillment',
+        impact: 'high' as const,
+        title: allComplaints[0]
+          ? `Eliminate "${allComplaints[0].text}" Friction`
+          : `Reliability & Freshness Guarantee in ${location}`,
+        observation: allComplaints[0]
+          ? `Reviews for ${allComplaints[0].comp} repeatedly flag: "${allComplaints[0].text}".`
+          : `Regional buyers report inconsistent fulfillment and packaging across ${peerNames}.`,
+        opportunity: `Make verified freshness/delivery SLAs and transparent quality proof a core differentiator for ${businessName}.`,
+      },
+      {
+        id: 'gap-digital-workflow',
+        dimension: 'Digital & Conversion Workflow',
+        impact: 'medium' as const,
+        title: `Direct-to-Buyer Self-Serve & Corporate Gifting Funnel`,
+        observation: allWeaknesses[0]
+          ? `${allWeaknesses[0].comp} shows friction around: ${allWeaknesses[0].text}.`
+          : `Competitor storefronts rely on generic catalog browsing without guided gift/bundle selectors.`,
+        opportunity: `Build a guided 2-minute gifting & tasting configurator with instant WhatsApp/checkout inquiry capture.`,
+      },
+      {
+        id: 'gap-regional-wedge',
+        dimension: `Regional Wedge · ${location}`,
+        impact: 'high' as const,
+        title: `Hyper-Local Positioning for ${state.brain.targetAudience || 'High-Intent Buyers'}`,
+        observation: `Larger national benchmarks (${topPeers[topPeers.length - 1]?.name || 'mass brands'}) optimize for broad retail rather than personalized local craft.`,
+        opportunity: `Own the "${location} artisan & bespoke" wedge with batch-level provenance and direct founder storytelling.`,
+      },
+    ];
+
+    if (allWeaknesses[1]) {
+      gaps.push({
+        id: 'gap-weakness-2',
+        dimension: 'Competitor Vulnerability',
+        impact: 'medium' as const,
+        title: `Counter-Position Against ${allWeaknesses[1].comp}`,
+        observation: `${allWeaknesses[1].comp} is exposed on: ${allWeaknesses[1].text}.`,
+        opportunity: `Explicitly address this pain point on ${businessName}'s hero landing page and comparison cards.`,
+      });
+    }
+    return gaps;
+  }, [state.gapAnalysis, state.competitors, state.brain]);
+
+  // Dynamically derive Competitive Strategy Blueprint from tracked competitors + Business Brain
+  const effectiveStrategy = useMemo(() => {
+    const base = state.competitiveStrategy;
+    const hasSaved = Boolean(
+      base?.whereToCompete?.trim() ||
+        base?.whereToDifferentiate?.trim() ||
+        base?.potentialMoat?.trim()
+    );
+    if (hasSaved) return base;
+
+    const businessName = state.brain.businessName || 'Your Brand';
+    const industry = state.brain.industry || 'your category';
+    const location = state.brain.location || 'your target region';
+    const topPeers = state.competitors.slice(0, 3);
+    const peerNames =
+      topPeers.length > 0 ? topPeers.map((c) => c.name).join(', ') : 'category incumbents';
+    const topWeakness = topPeers.find((c) => (c.weaknesses || []).length > 0)?.weaknesses?.[0];
+
+    return {
+      savedToBrain: false,
+      whereToCompete:
+        state.competitors.length > 0
+          ? `Compete in ${location} ${industry} where ${peerNames} leave an opening for transparent pricing, bespoke presentation, and direct-to-consumer speed.`
+          : `Focus on ${location} ${industry} buyers seeking higher craft quality and direct responsiveness.`,
+      whereToDifferentiate:
+        state.brain.brandPositioning ||
+        state.brain.valueProposition ||
+        (topWeakness
+          ? `Differentiate ${businessName} by solving "${topWeakness}" with verified quality standards and personalized packaging.`
+          : `Lead with ${businessName}'s artisanal craft, transparent ingredients, and fast local fulfillment.`),
+      whatToAvoid:
+        topPeers.length > 0
+          ? `Avoid competing on undifferentiated mass discounting against ${topPeers[0].name} or heavy fixed retail overhead before validating repeat demand.`
+          : `Avoid broad, untargeted ad spend or competing on lowest-price commodity tiers.`,
+      targetSegment:
+        state.brain.targetAudience ||
+        `Quality-conscious individual buyers and corporate/festive gifting leads in ${location}.`,
+      potentialMoat:
+        state.competitors.length > 0
+          ? `Proprietary customer preference memory, repeatable local gifting relationships, and continuous Market Watch defense against ${state.competitors.length} tracked peers (${peerNames}).`
+          : `Direct customer relationships, verified Business Brain proof points, and high repeat-order trust.`,
+    };
+  }, [state.competitiveStrategy, state.competitors, state.brain]);
   const [isAdvisorReplying, setIsAdvisorReplying] = useState(false);
 
   const handleAutonomousDiscovery = async (e?: React.FormEvent) => {
@@ -1551,28 +1669,82 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
         <div className="space-y-5">
           <SectionHeader
             title="Strategic Gap Analysis"
-            description="Six high-leverage openings uncovered across pricing, underserved buyers, and digital workflows"
+            description={
+              effectiveGaps.length > 0
+                ? `${effectiveGaps.length} high-leverage openings uncovered across ${state.competitors.length} tracked competitors`
+                : 'Uncover pricing, underserved buyer, and digital workflow openings from your tracked competitors'
+            }
+            action={
+              effectiveGaps.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setSectionTab('strategy')}
+                  className="px-3 py-1.5 text-xs font-semibold bg-[#171717] hover:bg-[#252525] text-white rounded-[8px] cursor-pointer"
+                >
+                  Open Strategy Blueprint →
+                </button>
+              ) : undefined
+            }
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {state.gapAnalysis.map((gap) => (
-              <div
-                key={gap.id}
-                className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-[#C44D00]">{gap.dimension}</span>
-                  <PriorityBadge priority={gap.impact} />
+          {effectiveGaps.length === 0 ? (
+            <GuidedActionEmptyCard
+              stepLabel="Gap Synthesis Standby"
+              title="Discover competitors to unlock Strategic Gap Analysis"
+              description="Run Autonomous Competitor Discovery or add a competitor manually so BrainWise can extract pricing gaps, review complaints, and positioning wedges."
+              actionLabel="Discover Competitors"
+              onAction={() => setSectionTab('discovery')}
+              secondaryLabel="Add Manually"
+              onSecondaryAction={() => setAddOpen(true)}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {effectiveGaps.map((gap) => (
+                <div
+                  key={gap.id}
+                  className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-[#C44D00]">{gap.dimension}</span>
+                      <PriorityBadge priority={gap.impact} />
+                    </div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">{gap.title}</h3>
+                    <div className="text-xs text-[#686864] leading-relaxed">
+                      <strong className="text-[#242424]">Market Observation:</strong> {gap.observation}
+                    </div>
+                    <div className="p-3 rounded-[8px] bg-[#F5F5F4] text-xs text-[#242424] leading-relaxed">
+                      <strong className="text-[#24724E]">Our Opportunity:</strong> {gap.opportunity}
+                    </div>
+                  </div>
+                  <div className="pt-2 flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        addExperiment({
+                          title: `Gap Test: ${gap.title.slice(0, 55)}`,
+                          hypothesis: gap.opportunity,
+                          objective: gap.observation,
+                          targetAudience: state.brain.targetAudience || 'Target buyers',
+                          action: `Execute positioning test for ${gap.dimension}`,
+                          successMetric: '>= 15% conversion or inquiry lift',
+                          budget: 'TBD',
+                          startDate: new Date().toISOString().slice(0, 10),
+                          endDate: 'TBD',
+                          status: 'Planned',
+                          results: '',
+                          learnings: '',
+                        });
+                        navigate('growth-director', { growthTab: 'experiments' });
+                      }}
+                      className="text-xs font-semibold text-[#C44D00] hover:text-[#A33E00] cursor-pointer"
+                    >
+                      Convert Gap to Experiment →
+                    </button>
+                  </div>
                 </div>
-                <h3 className="font-heading text-base font-bold text-[#242424]">{gap.title}</h3>
-                <div className="text-xs text-[#686864] leading-relaxed">
-                  <strong className="text-[#242424]">Market Observation:</strong> {gap.observation}
-                </div>
-                <div className="p-3 rounded-[8px] bg-[#F5F5F4] text-xs text-[#242424] leading-relaxed">
-                  <strong className="text-[#24724E]">Our Opportunity:</strong> {gap.opportunity}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1601,9 +1773,11 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
               </div>
               <StatusBadge
                 status={
-                  state.competitiveStrategy.savedToBrain
+                  effectiveStrategy.savedToBrain
                     ? 'Synced to Business Brain'
-                    : 'Draft Strategy'
+                    : state.competitors.length > 0
+                      ? 'Synthesized from Rivals'
+                      : 'Draft Strategy'
                 }
                 tone="success"
               />
@@ -1613,22 +1787,22 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
               {[
                 {
                   label: 'Where should we compete?',
-                  text: state.competitiveStrategy.whereToCompete,
+                  text: effectiveStrategy.whereToCompete,
                   icon: <Target className="w-4 h-4 text-[#FF8A36]" />,
                 },
                 {
                   label: 'Where should we differentiate?',
-                  text: state.competitiveStrategy.whereToDifferentiate,
+                  text: effectiveStrategy.whereToDifferentiate,
                   icon: <Sparkles className="w-4 h-4 text-[#FF8A36]" />,
                 },
                 {
                   label: 'What should we avoid?',
-                  text: state.competitiveStrategy.whatToAvoid,
+                  text: effectiveStrategy.whatToAvoid,
                   icon: <ShieldAlert className="w-4 h-4 text-[#FF8A36]" />,
                 },
                 {
                   label: 'Which customer segment should we target?',
-                  text: state.competitiveStrategy.targetSegment,
+                  text: effectiveStrategy.targetSegment,
                   icon: <CheckCircle2 className="w-4 h-4 text-[#FF8A36]" />,
                 },
               ].map((item) => (
@@ -1648,29 +1822,31 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
             <div className="p-4 rounded-[12px] bg-[#242424] border border-[#FF7417]/40">
               <div className="text-xs font-semibold text-[#FF8A36]">Defensible Moat</div>
               <p className="mt-1 text-sm text-white leading-relaxed">
-                {state.competitiveStrategy.potentialMoat}
+                {effectiveStrategy.potentialMoat}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
               <button
                 type="button"
-                onClick={saveCompetitiveStrategyToBrain}
+                onClick={() => saveCompetitiveStrategyToBrain(effectiveStrategy)}
                 className="px-4 py-2 text-xs font-semibold bg-[#FF7417] hover:bg-[#E55F08] text-white rounded-[8px] shadow-[0_1px_2px_rgba(255,116,23,0.3)] cursor-pointer"
               >
-                Save Strategy to Brain
+                {effectiveStrategy.savedToBrain ? '✓ Saved to Brain' : 'Save Strategy to Brain'}
               </button>
               <button
                 type="button"
                 onClick={() => {
+                  const topPeerNames =
+                    state.competitors.slice(0, 2).map((c) => c.name).join(' & ') || 'category rivals';
                   addTask({
-                    title: 'Deploy Competitive Differentiation Positioning',
-                    description: state.competitiveStrategy.whereToDifferentiate,
-                    whyItMatters: 'Locks in identified gap against Roastery House & The Coffee Co.',
+                    title: `Deploy ${state.brain.businessName} Competitive Differentiation`,
+                    description: effectiveStrategy.whereToDifferentiate,
+                    whyItMatters: `Locks in identified gap against ${topPeerNames}.`,
                     expectedOutcome: 'Consistent positioning across landing page & packaging.',
                     priority: 'high',
                     estimatedMinutes: 30,
-                    dueDate: '2026-11-21',
+                    dueDate: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
                     department: 'Competitive Intelligence',
                     status: 'pending',
                   });
@@ -1684,20 +1860,20 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                 type="button"
                 onClick={() => {
                   addExperiment({
-                    title: 'Positioning Hook A/B Test: 48h Roast Stamp',
-                    hypothesis: state.competitiveStrategy.whereToDifferentiate,
-                    objective: 'Verify click-through lift vs generic specialty coffee copy.',
-                    targetAudience: state.competitiveStrategy.targetSegment,
-                    action: 'Run headline split test on Discovery Flight landing page.',
+                    title: `Positioning Test: ${state.brain.businessName} Differentiation`,
+                    hypothesis: effectiveStrategy.whereToDifferentiate,
+                    objective: 'Verify click-through lift vs competitor category messaging.',
+                    targetAudience: effectiveStrategy.targetSegment,
+                    action: 'Run headline and offer split test on primary landing page.',
                     successMetric: '>= 25% CTR improvement',
-                    budget: '$100',
-                    startDate: '2026-11-18',
-                    endDate: '2026-12-02',
+                    budget: 'TBD',
+                    startDate: new Date().toISOString().slice(0, 10),
+                    endDate: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
                     status: 'Planned',
                     results: 'Queued from Competitive Strategy.',
                     learnings: 'Pending.',
                   });
-                  navigate('tasks-experiments');
+                  navigate('growth-director', { growthTab: 'experiments' });
                 }}
                 className="px-4 py-2 text-xs font-medium border border-[#3C3C3C] text-white hover:bg-[#242424] rounded-[8px] cursor-pointer"
               >
@@ -1705,7 +1881,10 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
               </button>
               <button
                 type="button"
-                onClick={() => navigate('brand-studio')}
+                onClick={() => {
+                  saveCompetitiveStrategyToBrain(effectiveStrategy);
+                  navigate('brand-studio');
+                }}
                 className="px-4 py-2 text-xs font-medium border border-[#FF7417] text-[#FF8A36] hover:bg-[#FF7417]/15 rounded-[8px] cursor-pointer"
               >
                 Build into Brand Studio →
@@ -1726,6 +1905,9 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
 
       <JourneyNextStep
         currentRoute={sectionTab === 'watch' ? 'market-watch' : 'competitive-intelligence'}
+        onBeforeNavigate={
+          sectionTab !== 'watch' ? () => saveCompetitiveStrategyToBrain(effectiveStrategy) : undefined
+        }
       />
 
       {/* Credit Unlock Modal for Teaser-Gated Competitors */}

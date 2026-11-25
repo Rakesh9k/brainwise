@@ -121,10 +121,18 @@ export const BusinessBrainContextBanner: React.FC<{
   );
 };
 
-export const JourneyNextStep: React.FC<{ currentRoute: AppRoute }> = ({ currentRoute }) => {
+export const JourneyNextStep: React.FC<{
+  currentRoute: AppRoute;
+  onBeforeNavigate?: () => void;
+}> = ({ currentRoute, onBeforeNavigate }) => {
   const { state, navigate } = useBrainWise();
   const next = getNextJourneyStep(currentRoute);
   if (!next) return null;
+
+  const handleContinue = () => {
+    if (onBeforeNavigate) onBeforeNavigate();
+    navigate(next.nextRoute);
+  };
 
   const comp = calculateBrainCompleteness(state.brain);
   if (comp.percentage < 100) {
@@ -142,7 +150,7 @@ export const JourneyNextStep: React.FC<{ currentRoute: AppRoute }> = ({ currentR
         </div>
         <button
           type="button"
-          onClick={() => navigate(next.nextRoute)}
+          onClick={handleContinue}
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium bg-[#FF7417] hover:bg-[#E55F08] text-white rounded-full transition-all whitespace-nowrap shrink-0 cursor-pointer"
         >
           <span>{next.cta}</span>

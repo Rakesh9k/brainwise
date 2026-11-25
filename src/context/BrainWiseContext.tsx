@@ -155,7 +155,7 @@ interface BrainWiseContextValue {
   ) => void;
   removeCompetitor: (compId: string) => void;
   updateOwnPosition: (x: number, y: number) => void;
-  saveCompetitiveStrategyToBrain: () => void;
+  saveCompetitiveStrategyToBrain: (strategyOverride?: Partial<BrainWiseState['competitiveStrategy']>) => void;
   selectBrandConcept: (conceptId: string) => void;
   updateBrandIdentity: (patch: Partial<BrainWiseState['brand']>) => void;
   addBrandAsset: (asset: Omit<BrandAsset, 'id' | 'createdAt'>) => void;
@@ -2111,24 +2111,35 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   };
 
-  const saveCompetitiveStrategyToBrain = () => {
+  const saveCompetitiveStrategyToBrain = (
+    strategyOverride?: Partial<BrainWiseState['competitiveStrategy']>
+  ) => {
+    const mergedStrategy = {
+      ...state.competitiveStrategy,
+      ...(strategyOverride || {}),
+      savedToBrain: true,
+    };
+    const differentiation =
+      mergedStrategy.whereToDifferentiate || state.brain.brandPositioning || '';
     setState((prev) => ({
       ...prev,
-      competitiveStrategy: { ...prev.competitiveStrategy, savedToBrain: true },
+      competitiveStrategy: mergedStrategy,
       brain: {
         ...prev.brain,
-        brandPositioning: prev.competitiveStrategy.whereToDifferentiate,
-        decisions: [
-          {
-            id: `dec-${Date.now()}`,
-            title: 'Adopted Competitive Differentiation Strategy',
-            rationale: prev.competitiveStrategy.whereToDifferentiate,
-            department: 'Competitive Intelligence',
-            decidedAt: new Date().toISOString().slice(0, 10),
-            status: 'active',
-          },
-          ...prev.brain.decisions,
-        ],
+        brandPositioning: differentiation || prev.brain.brandPositioning,
+        decisions: differentiation
+          ? [
+              {
+                id: `dec-${Date.now()}`,
+                title: 'Adopted Competitive Differentiation Strategy',
+                rationale: differentiation,
+                department: 'Competitive Intelligence',
+                decidedAt: new Date().toISOString().slice(0, 10),
+                status: 'active',
+              },
+              ...prev.brain.decisions,
+            ]
+          : prev.brain.decisions,
         lastUpdated: new Date().toISOString().slice(0, 10),
       },
     }));
