@@ -7,6 +7,7 @@ import {
   Play,
   Plus,
   Radar,
+  Radio,
   Trash2,
   TrendingUp,
 } from 'lucide-react';
