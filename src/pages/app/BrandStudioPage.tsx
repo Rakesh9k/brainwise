@@ -157,10 +157,18 @@ export const BrandStudioPage: React.FC = () => {
   const copyTimerRef = useRef<number | null>(null);
 
   const activeConcept =
-    state.brand.concepts.find((c) => c.id === state.brand.selectedConceptId) ??
-    state.brand.concepts[0];
-  const flagshipProduct = state.brain.products[0];
-  const topCompetitor = state.competitors[0];
+    state.brand?.concepts?.find((c) => c.id === state.brand?.selectedConceptId) ??
+    state.brand?.concepts?.[0] ?? {
+      id: 'default',
+      name: 'Primary Identity',
+      accentColor: '#FF7417',
+      primaryHex: '#18181B',
+      secondaryHex: '#F5F5F4',
+      typography: { heading: 'Plus Jakarta Sans', body: 'Inter', mono: 'JetBrains Mono' },
+      palette: [],
+    };
+  const flagshipProduct = state.brain?.products?.[0];
+  const topCompetitor = state.competitors?.[0];
 
   // AI Logo Studio state
   const [logoPrompt, setLogoPrompt] = useState(
@@ -706,9 +714,9 @@ export const BrandStudioPage: React.FC = () => {
       ? `5-slide carousel: Why ${flagshipProduct.name} beats mass-market options`
       : `5-slide educational carousel introducing ${state.brand.brandName}`,
     topCompetitor
-      ? `Counter-positioning post vs ${topCompetitor.name}'s ${topCompetitor.weaknesses[0] || 'pricing gap'}`
+      ? `Counter-positioning post vs ${topCompetitor.name}'s ${topCompetitor.weaknesses?.[0] || 'pricing gap'}`
       : 'Founder origin story & craftsmanship breakdown',
-    `Launch offer drop: ${state.brain.primaryGoals[0] || 'Claim our flagship starter pack'}`,
+    `Launch offer drop: ${state.brain?.primaryGoals?.[0] || 'Claim our flagship starter pack'}`,
   ];
 
   const brandHandle = `@${state.brand.brandName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'brainwisebrand'}`;

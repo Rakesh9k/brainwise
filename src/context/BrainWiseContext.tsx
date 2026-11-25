@@ -245,6 +245,82 @@ interface BrainWiseContextValue {
 
 const BrainWiseContext = createContext<BrainWiseContextValue | null>(null);
 
+export const ensureValidState = (
+  parsed: Partial<BrainWiseState>,
+  base: BrainWiseState
+): BrainWiseState => {
+  return {
+    ...base,
+    ...parsed,
+    brain: {
+      ...base.brain,
+      ...(parsed.brain ?? {}),
+      products: Array.isArray(parsed.brain?.products)
+        ? parsed.brain.products
+        : base.brain?.products ?? [],
+      personas: Array.isArray(parsed.brain?.personas)
+        ? parsed.brain.personas
+        : base.brain?.personas ?? [],
+      documents: Array.isArray(parsed.brain?.documents)
+        ? parsed.brain.documents
+        : base.brain?.documents ?? [],
+      decisions: Array.isArray(parsed.brain?.decisions)
+        ? parsed.brain.decisions
+        : base.brain?.decisions ?? [],
+      history: Array.isArray(parsed.brain?.history)
+        ? parsed.brain.history
+        : base.brain?.history ?? [],
+      primaryGoals: Array.isArray(parsed.brain?.primaryGoals)
+        ? parsed.brain.primaryGoals
+        : base.brain?.primaryGoals ?? [],
+      strengths: Array.isArray(parsed.brain?.strengths)
+        ? parsed.brain.strengths
+        : base.brain?.strengths ?? [],
+      weaknesses: Array.isArray(parsed.brain?.weaknesses)
+        ? parsed.brain.weaknesses
+        : base.brain?.weaknesses ?? [],
+    },
+    brand: {
+      ...base.brand,
+      ...(parsed.brand ?? {}),
+      concepts: Array.isArray(parsed.brand?.concepts)
+        ? parsed.brand.concepts
+        : base.brand?.concepts ?? [],
+      personalityTraits: Array.isArray(parsed.brand?.personalityTraits)
+        ? parsed.brand.personalityTraits
+        : base.brand?.personalityTraits ?? [],
+      attributes: Array.isArray(parsed.brand?.attributes)
+        ? parsed.brand.attributes
+        : base.brand?.attributes ?? [],
+    },
+    reports: Array.isArray(parsed.reports) ? parsed.reports : base.reports ?? [],
+    competitors: Array.isArray(parsed.competitors) ? parsed.competitors : base.competitors ?? [],
+    assets: Array.isArray(parsed.assets) ? parsed.assets : base.assets ?? [],
+    marketEvents: Array.isArray(parsed.marketEvents) ? parsed.marketEvents : base.marketEvents ?? [],
+    goals: Array.isArray(parsed.goals) ? parsed.goals : base.goals ?? [],
+    tasks: Array.isArray(parsed.tasks) ? parsed.tasks : base.tasks ?? [],
+    experiments: Array.isArray(parsed.experiments) ? parsed.experiments : base.experiments ?? [],
+    recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : base.recommendations ?? [],
+    notifications: Array.isArray(parsed.notifications) ? parsed.notifications : base.notifications ?? [],
+    teamMembers: Array.isArray(parsed.teamMembers) ? parsed.teamMembers : base.teamMembers ?? [],
+    workspacePrefs: {
+      ...base.workspacePrefs!,
+      ...(parsed.workspacePrefs ?? {}),
+    },
+    contextSharing: {
+      ...base.contextSharing!,
+      ...(parsed.contextSharing ?? {}),
+    },
+    subscription: {
+      ...base.subscription!,
+      ...(parsed.subscription ?? {}),
+    },
+    integrations: Array.isArray(parsed.integrations) ? parsed.integrations : base.integrations ?? [],
+    customScenarioB: parsed.customScenarioB ?? base.customScenarioB ?? null,
+    pinnedWidgetIds: Array.isArray(parsed.pinnedWidgetIds) ? parsed.pinnedWidgetIds : base.pinnedWidgetIds ?? [],
+  };
+};
+
 export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<BrainWiseState>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -270,37 +346,12 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           parsed.user?.email === 'vishesh.kakar@gmail.com';
 
         if (parsed.isExampleWorkspace) {
-          return {
-            ...SOLSTICE_EXAMPLE_STATE,
-            ...parsed,
-            isAuthenticated: true,
-            isExampleWorkspace: true,
-          };
+          return ensureValidState(parsed, SOLSTICE_EXAMPLE_STATE);
         }
 
         if (!isLegacyUneditedDemo) {
           const base = createCleanWorkspaceState(parsed.user, parsed.brain?.businessName);
-          const hydrated: BrainWiseState = {
-            ...base,
-            ...parsed,
-            teamMembers: parsed.teamMembers ?? base.teamMembers,
-            workspacePrefs: {
-              ...base.workspacePrefs!,
-              ...(parsed.workspacePrefs ?? {}),
-            },
-            contextSharing: {
-              ...base.contextSharing!,
-              ...(parsed.contextSharing ?? {}),
-            },
-            subscription: {
-              ...base.subscription!,
-              ...(parsed.subscription ?? {}),
-            },
-            integrations: parsed.integrations ?? base.integrations,
-            customScenarioB: parsed.customScenarioB ?? null,
-            pinnedWidgetIds: parsed.pinnedWidgetIds ?? [],
-            isExampleWorkspace: false,
-          };
+          const hydrated = ensureValidState(parsed, base);
           if (autostart) {
             return {
               ...hydrated,
@@ -1330,18 +1381,19 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // ignore
     }
 
+    const base = createCleanWorkspaceState(
+      state.user.email !== 'vishesh.kakar@gmail.com' ? state.user : undefined,
+      'My Venture'
+    );
+
     if (restored && !restored.isExampleWorkspace) {
       setState({
-        ...restored,
+        ...ensureValidState(restored, base),
         isExampleWorkspace: false,
       });
     } else {
-      const clean = createCleanWorkspaceState(
-        state.user.email !== 'vishesh.kakar@gmail.com' ? state.user : undefined,
-        'My Venture'
-      );
       setState({
-        ...clean,
+        ...base,
         isExampleWorkspace: false,
       });
     }

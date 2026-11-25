@@ -57,9 +57,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private handleResetCache = (): void => {
     try {
-      localStorage.removeItem('brainwise_user_workspace_v2');
-      localStorage.removeItem('brainwise_prototype_state_v1');
-      localStorage.removeItem('brainwise_ui_preferences_v1');
+      localStorage.clear();
       sessionStorage.clear();
     } catch {
       // ignore
@@ -116,19 +114,17 @@ export class ErrorBoundary extends Component<Props, State> {
               </button>
             </div>
 
-            {typeof import.meta !== 'undefined' && import.meta.env?.DEV && (
-              <details className="text-left bg-[#FAFAF9] border border-[#E6E6E2] rounded-[10px] p-3 text-[11px] text-[#686864] font-mono overflow-auto max-h-40">
-                <summary className="cursor-pointer text-[#C44D00] font-semibold mb-1">
-                  Technical Diagnostics
-                </summary>
-                <p className="text-[#991B1B] font-semibold mb-1">{errorMessage}</p>
-                {this.state.errorInfo?.componentStack && (
-                  <pre className="whitespace-pre-wrap text-[10px] text-[#858585]">
-                    {this.state.errorInfo.componentStack}
-                  </pre>
-                )}
-              </details>
-            )}
+            <details className="text-left bg-[#FAFAF9] border border-[#E6E6E2] rounded-[10px] p-3 text-[11px] text-[#686864] font-mono overflow-auto max-h-40">
+              <summary className="cursor-pointer text-[#C44D00] font-semibold mb-1">
+                Technical Diagnostics
+              </summary>
+              <p className="text-[#991B1B] font-semibold mb-1">{errorMessage}</p>
+              {this.state.errorInfo?.componentStack && (
+                <pre className="whitespace-pre-wrap text-[10px] text-[#858585]">
+                  {this.state.errorInfo.componentStack}
+                </pre>
+              )}
+            </details>
           </div>
         </div>
       );

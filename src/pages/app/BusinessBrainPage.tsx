@@ -1328,7 +1328,7 @@ export const BusinessBrainPage: React.FC = () => {
               x={18}
               y={24}
               label="Offerings"
-              sublabel={`${state.brain.products.length}`}
+              sublabel={`${state.brain.products?.length ?? 0}`}
               active={activeTab === 'products'}
               dark
               onClick={() => setActiveTab('products')}
@@ -1337,7 +1337,7 @@ export const BusinessBrainPage: React.FC = () => {
               x={82}
               y={24}
               label="Audience"
-              sublabel={`${state.brain.personas.length}`}
+              sublabel={`${state.brain.personas?.length ?? 0}`}
               active={activeTab === 'audience'}
               dark
               onClick={() => setActiveTab('audience')}
@@ -1362,7 +1362,7 @@ export const BusinessBrainPage: React.FC = () => {
               x={80}
               y={76}
               label="Docs & Queue"
-              sublabel={`${state.brain.documents.length + verificationQueue.length}`}
+              sublabel={`${(state.brain.documents?.length ?? 0) + (verificationQueue?.length ?? 0)}`}
               active={activeTab === 'documents' || activeTab === 'verification'}
               dark
               onClick={() => setActiveTab('documents')}
@@ -1543,19 +1543,19 @@ export const BusinessBrainPage: React.FC = () => {
         onChange={(id) => setActiveTab(id as BrainTab)}
         tabs={[
           { id: 'overview', label: 'Overview & Identity' },
-          { id: 'products', label: 'Products & Services', count: state.brain.products.length },
-          { id: 'audience', label: 'Customer Intelligence', count: state.brain.personas.length },
+          { id: 'products', label: 'Products & Services', count: state.brain?.products?.length ?? 0 },
+          { id: 'audience', label: 'Customer Intelligence', count: state.brain?.personas?.length ?? 0 },
           { id: 'brand', label: 'Brand Intelligence' },
           { id: 'strategy', label: 'Strategy & Constraints' },
           {
             id: 'documents',
             label: 'Documents & Extractions',
-            count: state.brain.documents.length + state.reports.length,
+            count: (state.brain?.documents?.length ?? 0) + (state.reports?.length ?? 0),
           },
           {
             id: 'verification',
             label: 'Verification Queue',
-            count: verificationQueue.length,
+            count: verificationQueue?.length ?? 0,
           },
           { id: 'history', label: 'Decisions & History' },
         ]}
@@ -1753,7 +1753,7 @@ export const BusinessBrainPage: React.FC = () => {
                     </button>
                   }
                 />
-                {state.brain.primaryGoals.length === 0 ? (
+                {(!state.brain?.primaryGoals || state.brain.primaryGoals.length === 0) ? (
                   <div className="p-4 rounded-[10px] bg-[#F5F5F4] border border-dashed border-[#D0D0C8] text-xs text-[#686864]">
                     No strategic goals added yet. Add your primary revenue, acquisition, or launch
                     target.
@@ -1776,9 +1776,9 @@ export const BusinessBrainPage: React.FC = () => {
                     Ground Truth AI Readout
                   </div>
                   <p className="text-xs text-[#686864] mt-1 leading-relaxed">
-                    Departments synchronize across {state.brain.products.length} products,{' '}
-                    {state.brain.personas.length} personas, {state.brain.documents.length} verified
-                    documents, and {verificationQueue.length} pending verification item(s).
+                    Departments synchronize across {state.brain?.products?.length ?? 0} products,{' '}
+                    {state.brain?.personas?.length ?? 0} personas, {state.brain?.documents?.length ?? 0} verified
+                    documents, and {verificationQueue?.length ?? 0} pending verification item(s).
                   </p>
                 </div>
               </div>
@@ -1874,7 +1874,7 @@ export const BusinessBrainPage: React.FC = () => {
               }
             />
 
-            {state.brain.products.length === 0 ? (
+            {(!state.brain?.products || state.brain.products.length === 0) ? (
               <GuidedActionEmptyCard
                 stepLabel="Product Catalog"
                 title="No offerings documented yet"
@@ -1978,7 +1978,7 @@ export const BusinessBrainPage: React.FC = () => {
               }
             />
 
-            {state.brain.personas.length === 0 ? (
+            {(!state.brain?.personas || state.brain.personas.length === 0) ? (
               <GuidedActionEmptyCard
                 stepLabel="Audience Intelligence"
                 title="No customer personas mapped yet"
@@ -2474,7 +2474,7 @@ export const BusinessBrainPage: React.FC = () => {
                 }
               />
 
-              {state.brain.documents.length === 0 ? (
+              {(!state.brain?.documents || state.brain.documents.length === 0) ? (
                 <GuidedActionEmptyCard
                   stepLabel="Document Repository"
                   title="No documents uploaded yet"
@@ -2832,7 +2832,7 @@ export const BusinessBrainPage: React.FC = () => {
                   </Button>
                 }
               />
-              {state.brain.decisions.length === 0 ? (
+              {(!state.brain?.decisions || state.brain.decisions.length === 0) ? (
                 <GuidedActionEmptyCard
                   stepLabel="Strategic Log"
                   title="No strategic decisions recorded yet"

@@ -409,7 +409,7 @@ export const DashboardPage: React.FC = () => {
                         />
                       </div>
                       <div className={`${typeClass.bodySm} font-semibold text-[#171717] mt-1`}>
-                        {state.brain.primaryGoals[0] ??
+                        {state.brain.primaryGoals?.[0] ??
                           'Set primary growth objective in Business Brain'}
                       </div>
                     </div>
@@ -879,7 +879,7 @@ export const DashboardPage: React.FC = () => {
                                 <PriorityBadge priority={ev.importance} />
                               </div>
                               <span className="text-[11px] font-mono-num text-[#858585] shrink-0">
-                                {ev.detectedAt.split('·')[0]}
+                                {ev.detectedAt?.split('·')?.[0] ?? ev.detectedAt ?? ''}
                               </span>
                             </div>
                             <p className={`${typeClass.bodySm} text-[#252525]`}>
