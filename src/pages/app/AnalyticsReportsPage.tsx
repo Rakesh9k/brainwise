@@ -646,52 +646,27 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
           )}
 
           {tab === 'marketing' && (
-            <FluidTransition
-              key="marketing"
-              direction="fade"
-              className="grid grid-cols-1 md:grid-cols-3 gap-4"
-            >
-              {[
-                {
-                  channel: 'Social & Organic Content',
-                  reach: '12,500',
-                  leads: '92 starter inquiries',
-                  cac: '$6.40 est.',
-                },
-                {
-                  channel: 'Direct B2B / Group Outreach',
-                  reach: '18 accounts',
-                  leads: '4 pilot agreements',
-                  cac: '$14.00 est.',
-                },
-                {
-                  channel: 'Search & Referral Links',
-                  reach: '3,100',
-                  leads: '48 site signups',
-                  cac: '$8.20 est.',
-                },
-              ].map((m) => (
-                <div
-                  key={m.channel}
-                  className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-3 bw-surface-raised"
-                >
-                  <div className="text-xs font-semibold text-[#C44D00]">
-                    Simulated Channel Attribution
-                  </div>
-                  <h3 className="font-heading text-base font-bold text-[#242424]">{m.channel}</h3>
-                  <div className="text-xs text-[#686864] space-y-1">
-                    <div>
-                      Reach: <strong className="font-mono-num text-[#242424]">{m.reach}</strong>
-                    </div>
-                    <div>
-                      Conversions: <strong className="text-[#242424]">{m.leads}</strong>
-                    </div>
-                    <div>
-                      Est. CAC: <strong className="font-mono-num text-[#242424]">{m.cac}</strong>
-                    </div>
+            <FluidTransition key="marketing" direction="fade" className="space-y-4">
+              {liveAnalytics?.dataHealth?.isProductionTelemetryReady ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-2 bw-surface-raised">
+                    <div className="text-xs font-semibold text-[#C44D00]">Live Channel Telemetry</div>
+                    <h3 className="font-heading text-base font-bold text-[#242424]">Connected Storefront &amp; Ads</h3>
+                    <p className="text-xs text-[#686864]">
+                      Active connectors: {liveAnalytics.dataHealth.activeConnectorsCount} · Health Score: {liveAnalytics.dataHealth.overallScorePercent}%
+                    </p>
                   </div>
                 </div>
-              ))}
+              ) : (
+                <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 bw-surface-raised">
+                  <EmptyState
+                    title="No Live Marketing Attribution Connected"
+                    description={`Connect Meta Ads, Google Analytics (GA4), or UTM tracking in Settings > Integrations to measure real reach, conversions, and CAC for ${state.brain.businessName}.`}
+                    actionLabel="Connect Integrations in Settings"
+                    onAction={() => navigate('settings', { settingsTab: 'integrations' })}
+                  />
+                </div>
+              )}
             </FluidTransition>
           )}
 

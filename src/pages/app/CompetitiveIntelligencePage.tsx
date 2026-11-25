@@ -964,26 +964,28 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
             <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[#E6E6E2]">
               <div>
                 <div className="text-xs text-[#686864]">
-                  {activeComp.category} · {activeComp.geography} · Discovered via{' '}
-                  {activeComp.discoveryMethod}
+                  {activeComp.category || 'Competitor'} · {activeComp.geography || 'Regional'} · Discovered via{' '}
+                  {activeComp.discoveryMethod || 'AI Market Scan'}
                 </div>
                 <h2 className={`${typeClass.h3} font-bold text-[#171717] mt-1`}>
                   {activeComp.name}
                 </h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void navigator.clipboard?.writeText(activeComp.website)?.catch(() => {});
-                    showToast(`Copied domain reference: ${activeComp.website}`);
-                  }}
-                  className="text-xs text-[#C44D00] hover:text-[#A33E00] mt-0.5 inline-flex items-center gap-1 cursor-pointer"
-                >
-                  <span>{activeComp.website}</span>
-                  <Copy className="w-3 h-3" />
-                </button>
+                {activeComp.website && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard?.writeText(activeComp.website)?.catch(() => {});
+                      showToast(`Copied domain reference: ${activeComp.website}`);
+                    }}
+                    className="text-xs text-[#C44D00] hover:text-[#A33E00] mt-0.5 inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>{activeComp.website}</span>
+                    <Copy className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-2">
-                <PriorityBadge priority={activeComp.threatLevel} />
+                <PriorityBadge priority={activeComp.threatLevel || 'medium'} />
                 <button
                   type="button"
                   onClick={() => {
@@ -1043,16 +1045,16 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
               <div className="md:col-span-8 text-sm text-[#242424] leading-relaxed">
                 {profileSubTab === 'overview' && (
                   <div className="space-y-4">
-                    <p>{activeComp.overview}</p>
+                    <p>{activeComp.overview || activeComp.positioning || 'Competitor profile summary pending deeper scan.'}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] text-xs">
                         <div className="text-[#686864]">Estimated Share Band</div>
-                        <div className="font-semibold mt-0.5">{activeComp.marketShareBand}</div>
+                        <div className="font-semibold mt-0.5">{activeComp.marketShareBand || 'Emerging / Regional'}</div>
                       </div>
                       <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] text-xs">
                         <div className="text-[#686864]">Retail Price Range</div>
                         <div className="font-mono-num font-semibold mt-0.5">
-                          {activeComp.priceRange}
+                          {activeComp.priceRange || 'Not yet benchmarked'}
                         </div>
                       </div>
                     </div>
@@ -1061,37 +1063,43 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
 
                 {profileSubTab === 'products' && (
                   <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
-                    {activeComp.productsAndServices.map((p) => (
-                      <div key={p.name} className="p-3.5 flex items-center justify-between gap-3">
-                        <div>
-                          <div className="font-semibold text-sm">{p.name}</div>
-                          <div className="text-xs text-[#686864]">{p.notes}</div>
-                        </div>
-                        <span className="font-mono-num text-xs font-semibold">{p.price}</span>
+                    {(activeComp.productsAndServices || []).length === 0 ? (
+                      <div className="p-4 text-xs text-[#686864]">
+                        No itemized product SKUs logged yet for {activeComp.name}.
                       </div>
-                    ))}
+                    ) : (
+                      (activeComp.productsAndServices || []).map((p) => (
+                        <div key={p.name} className="p-3.5 flex items-center justify-between gap-3">
+                          <div>
+                            <div className="font-semibold text-sm">{p.name}</div>
+                            <div className="text-xs text-[#686864]">{p.notes}</div>
+                          </div>
+                          <span className="font-mono-num text-xs font-semibold">{p.price}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
 
                 {profileSubTab === 'pricing' && (
                   <div className="space-y-3">
-                    <p>{activeComp.pricingModel.summary}</p>
+                    <p>{activeComp.pricingModel?.summary || activeComp.priceRange || 'Pricing structure pending analysis.'}</p>
                     <div className="grid grid-cols-3 gap-3 text-xs">
                       <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
                         <div className="text-[#686864]">Entry Price</div>
                         <div className="font-mono-num font-semibold mt-1">
-                          {activeComp.pricingModel.entryPrice}
+                          {activeComp.pricingModel?.entryPrice || 'N/A'}
                         </div>
                       </div>
                       <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
                         <div className="text-[#686864]">Flagship Price</div>
                         <div className="font-mono-num font-semibold mt-1">
-                          {activeComp.pricingModel.flagshipPrice}
+                          {activeComp.pricingModel?.flagshipPrice || 'N/A'}
                         </div>
                       </div>
                       <div className="p-3 rounded-[10px] bg-[#F5F5F4]">
                         <div className="text-[#686864]">Discounts</div>
-                        <div className="font-medium mt-1">{activeComp.pricingModel.discounts}</div>
+                        <div className="font-medium mt-1">{activeComp.pricingModel?.discounts || 'Standard retail'}</div>
                       </div>
                     </div>
                   </div>
@@ -1102,22 +1110,22 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                     <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
                       <div className="text-[#686864]">Archetype</div>
                       <div className="font-semibold text-sm mt-0.5">
-                        {activeComp.brandPositioningDetail.archetype}
+                        {activeComp.brandPositioningDetail?.archetype || activeComp.category || 'Category Competitor'}
                       </div>
                     </div>
                     <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
                       <div className="text-[#686864]">Core Tagline</div>
                       <div className="font-semibold text-sm mt-0.5">
-                        {activeComp.brandPositioningDetail.tagline}
+                        {activeComp.brandPositioningDetail?.tagline || activeComp.positioning || '—'}
                       </div>
                     </div>
                     <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
                       <div className="text-[#686864]">Target Buyer</div>
-                      <div className="mt-0.5">{activeComp.brandPositioningDetail.targetBuyer}</div>
+                      <div className="mt-0.5">{activeComp.brandPositioningDetail?.targetBuyer || 'General category buyers'}</div>
                     </div>
                     <div className="p-4 rounded-[10px] bg-[#F5F5F4]">
                       <div className="text-[#686864]">Visual Tone</div>
-                      <div className="mt-0.5">{activeComp.brandPositioningDetail.visualTone}</div>
+                      <div className="mt-0.5">{activeComp.brandPositioningDetail?.visualTone || 'Standard storefront'}</div>
                     </div>
                   </div>
                 )}
@@ -1127,20 +1135,24 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                     <div className="flex flex-wrap gap-4 p-3.5 rounded-[10px] bg-[#F5F5F4]">
                       <div>
                         <span className="text-[#686864]">Clarity:</span>{' '}
-                        <strong>{activeComp.websiteAnalysis.clarityScore}</strong>
+                        <strong>{activeComp.websiteAnalysis?.clarityScore || 'Pending scan'}</strong>
                       </div>
                       <div>
                         <span className="text-[#686864]">Primary CTA:</span>{' '}
-                        <strong>{activeComp.websiteAnalysis.primaryCTA}</strong>
+                        <strong>{activeComp.websiteAnalysis?.primaryCTA || 'Shop / Learn More'}</strong>
                       </div>
                     </div>
-                    <p className="text-sm">{activeComp.websiteAnalysis.speedNote}</p>
+                    <p className="text-sm">{activeComp.websiteAnalysis?.speedNote || 'Storefront audit pending.'}</p>
                     <div>
                       <div className="font-semibold mb-1.5">Observed Conversion Gaps</div>
                       <ul className="space-y-1 text-[#686864]">
-                        {activeComp.websiteAnalysis.conversionGaps.map((g) => (
-                          <li key={g}>• {g}</li>
-                        ))}
+                        {(activeComp.websiteAnalysis?.conversionGaps || []).length === 0 ? (
+                          <li>• No conversion gaps logged yet.</li>
+                        ) : (
+                          (activeComp.websiteAnalysis?.conversionGaps || []).map((g) => (
+                            <li key={g}>• {g}</li>
+                          ))
+                        )}
                       </ul>
                     </div>
                   </div>
@@ -1150,15 +1162,19 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                   <div className="space-y-3 text-xs">
                     <div>
                       <span className="text-[#686864]">Primary Channels:</span>{' '}
-                      <strong>{activeComp.marketingStrategy.channels.join(', ')}</strong>
+                      <strong>
+                        {(activeComp.marketingStrategy?.channels || []).length > 0
+                          ? activeComp.marketingStrategy.channels.join(', ')
+                          : 'Organic & Social'}
+                      </strong>
                     </div>
                     <div>
                       <span className="text-[#686864]">Content Cadence:</span>{' '}
-                      <strong>{activeComp.marketingStrategy.contentCadence}</strong>
+                      <strong>{activeComp.marketingStrategy?.contentCadence || 'Not tracked'}</strong>
                     </div>
                     <div>
                       <span className="text-[#686864]">Paid Signals:</span>{' '}
-                      <strong>{activeComp.marketingStrategy.paidSignals}</strong>
+                      <strong>{activeComp.marketingStrategy?.paidSignals || 'None detected'}</strong>
                     </div>
                   </div>
                 )}
@@ -1167,27 +1183,35 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                   <div className="space-y-4 text-xs">
                     <div className="p-3.5 rounded-[10px] bg-[#F5F5F4] flex items-center gap-4">
                       <span className="text-lg font-bold font-mono-num">
-                        {activeComp.customerReviews.averageRating}
+                        {activeComp.customerReviews?.averageRating || 'N/A'}
                       </span>
                       <span className="text-[#686864]">
-                        {activeComp.customerReviews.reviewCount}
+                        {activeComp.customerReviews?.reviewCount || 'No review volume logged'}
                       </span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <div className="font-semibold text-[#24724E] mb-1.5">Praised For</div>
                         <ul className="space-y-1 text-[#686864]">
-                          {activeComp.customerReviews.praisedFor.map((p) => (
-                            <li key={p}>• {p}</li>
-                          ))}
+                          {(activeComp.customerReviews?.praisedFor || []).length === 0 ? (
+                            <li>• Pending review synthesis</li>
+                          ) : (
+                            (activeComp.customerReviews?.praisedFor || []).map((p) => (
+                              <li key={p}>• {p}</li>
+                            ))
+                          )}
                         </ul>
                       </div>
                       <div>
                         <div className="font-semibold text-[#BC3E3E] mb-1.5">Common Complaints</div>
                         <ul className="space-y-1 text-[#686864]">
-                          {activeComp.customerReviews.complaints.map((c) => (
-                            <li key={c}>• {c}</li>
-                          ))}
+                          {(activeComp.customerReviews?.complaints || []).length === 0 ? (
+                            <li>• No recurring complaints logged</li>
+                          ) : (
+                            (activeComp.customerReviews?.complaints || []).map((c) => (
+                              <li key={c}>• {c}</li>
+                            ))
+                          )}
                         </ul>
                       </div>
                     </div>
@@ -1199,9 +1223,11 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                     <div className="p-4 rounded-[10px] border border-[#E6E6E2]">
                       <div className="font-semibold text-[#24724E] mb-2">Strengths</div>
                       <ul className="space-y-1.5 text-[#242424]">
-                        {activeComp.strengths.map((s) => (
-                          <li key={s}>• {s}</li>
-                        ))}
+                        {(activeComp.strengths || []).length === 0 ? (
+                          <li className="text-[#686864]">• Pending SWOT analysis</li>
+                        ) : (
+                          (activeComp.strengths || []).map((s) => <li key={s}>• {s}</li>)
+                        )}
                       </ul>
                     </div>
                     <div className="p-4 rounded-[10px] border border-[#E6E6E2]">
@@ -1209,9 +1235,11 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                         Exploitable Weaknesses
                       </div>
                       <ul className="space-y-1.5 text-[#242424]">
-                        {activeComp.weaknesses.map((w) => (
-                          <li key={w}>• {w}</li>
-                        ))}
+                        {(activeComp.weaknesses || []).length === 0 ? (
+                          <li className="text-[#686864]">• Pending SWOT analysis</li>
+                        ) : (
+                          (activeComp.weaknesses || []).map((w) => <li key={w}>• {w}</li>)
+                        )}
                       </ul>
                     </div>
                   </div>
@@ -1219,15 +1247,21 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
 
                 {profileSubTab === 'changes' && (
                   <div className="divide-y divide-[#E6E6E2] border border-[#E6E6E2] rounded-[10px]">
-                    {activeComp.historicalChanges.map((hc, i) => (
-                      <div key={i} className="p-3.5 text-xs">
-                        <div className="flex items-center justify-between text-[#686864]">
-                          <span className="font-mono-num">{hc.date}</span>
-                          <span>{hc.source}</span>
-                        </div>
-                        <div className="text-sm text-[#242424] mt-1">{hc.change}</div>
+                    {(activeComp.historicalChanges || []).length === 0 ? (
+                      <div className="p-4 text-xs text-[#686864]">
+                        No historical changes recorded yet for {activeComp.name}.
                       </div>
-                    ))}
+                    ) : (
+                      (activeComp.historicalChanges || []).map((hc, i) => (
+                        <div key={i} className="p-3.5 text-xs">
+                          <div className="flex items-center justify-between text-[#686864]">
+                            <span className="font-mono-num">{hc.date}</span>
+                            <span>{hc.source}</span>
+                          </div>
+                          <div className="text-sm text-[#242424] mt-1">{hc.change}</div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
@@ -1414,37 +1448,43 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
               <tbody className="divide-y divide-[#E6E6E2]">
                 <tr>
                   <td className="p-3.5 font-medium text-[#686864]">Pricing</td>
-                  <td className="p-3.5 font-semibold">$15 Flight / $18 mo</td>
+                  <td className="p-3.5 font-semibold">
+                    {state.brain.products?.[0]?.price || 'Positioned in Business Brain'}
+                  </td>
                   {state.competitors.slice(0, 3).map((c) => (
                     <td key={c.id} className="p-3.5 font-mono-num">
-                      {c.priceRange}
+                      {c.priceRange || 'N/A'}
                     </td>
                   ))}
                 </tr>
                 <tr>
                   <td className="p-3.5 font-medium text-[#686864]">Core Offering</td>
-                  <td className="p-3.5">48h Tuesday Roast Subscription</td>
+                  <td className="p-3.5">
+                    {state.brain.products?.[0]?.name || state.brain.valueProposition || 'Core Offer'}
+                  </td>
                   {state.competitors.slice(0, 3).map((c) => (
                     <td key={c.id} className="p-3.5">
-                      {c.category}
+                      {c.category || 'Peer'}
                     </td>
                   ))}
                 </tr>
                 <tr>
                   <td className="p-3.5 font-medium text-[#686864]">Digital Experience</td>
-                  <td className="p-3.5">Grind-calibrated QR + 1-click pause</td>
+                  <td className="p-3.5">{state.brain.website || 'Primary Storefront'}</td>
                   {state.competitors.slice(0, 3).map((c) => (
                     <td key={c.id} className="p-3.5">
-                      {c.websiteAnalysis.clarityScore}
+                      {c.websiteAnalysis?.clarityScore || 'Pending'}
                     </td>
                   ))}
                 </tr>
                 <tr>
                   <td className="p-3.5 font-medium text-[#686864]">Differentiation</td>
-                  <td className="p-3.5">Warm architectural clarity + 48h stamp</td>
+                  <td className="p-3.5">
+                    {state.brain.brandPositioning || 'Unique Strategic Wedge'}
+                  </td>
                   {state.competitors.slice(0, 3).map((c) => (
                     <td key={c.id} className="p-3.5">
-                      {c.brandPositioningDetail.archetype}
+                      {c.brandPositioningDetail?.archetype || c.category || 'Peer'}
                     </td>
                   ))}
                 </tr>
