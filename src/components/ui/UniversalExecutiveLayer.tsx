@@ -186,29 +186,29 @@ export const UniversalExecutiveLayer: React.FC<UniversalExecutiveLayerProps> = (
           </div>
         </div>
 
-        {/* Lower Row: Plain English Purpose + Real-Time Status Indicators */}
-        <div className="pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <p className="text-xs sm:text-[13px] text-[#52524E] leading-relaxed max-w-2xl font-normal">
+        {/* Middle: Plain-English Purpose Statement (Full Width, Never Squished) */}
+        <div className="py-2.5">
+          <p className="text-xs sm:text-[13px] text-[#52524E] leading-relaxed font-normal">
             {oneLiner}
           </p>
-
-          {/* Status Pills */}
-          {statusPills && statusPills.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-              {statusPills.map((pill, idx) => (
-                <span
-                  key={idx}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border ${toneClasses(
-                    pill.tone
-                  )}`}
-                >
-                  {pill.icon}
-                  {pill.label}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
+
+        {/* Bottom Row: Real-Time Operational Status Chips */}
+        {statusPills && statusPills.length > 0 && (
+          <div className="pt-2.5 border-t border-[#F5F5F3] flex items-center gap-1.5 flex-wrap">
+            {statusPills.map((pill, idx) => (
+              <span
+                key={idx}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border ${toneClasses(
+                  pill.tone
+                )}`}
+              >
+                {pill.icon}
+                {pill.label}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* LAYER 3: THE PROOF DRAWER / INSPECTOR (Slide-out) */}
