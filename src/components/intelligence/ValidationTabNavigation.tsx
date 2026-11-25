@@ -49,7 +49,7 @@ export const ValidationTabNavigation: React.FC<ValidationTabNavigationProps> = (
   const activeStepNum = currentIdx >= 0 ? VALIDATION_TABS[currentIdx].stepNum : '01';
 
   return (
-    <div className="w-full bg-[#111111] text-white rounded-[14px] p-2 flex flex-wrap items-center justify-between gap-3 shadow-md border border-[#262626] no-print">
+    <div className="w-full bg-[#111111]/95 backdrop-blur-md text-white rounded-[14px] p-2 flex flex-wrap items-center justify-between gap-3 shadow-lg border border-[#262626] no-print sticky top-[52px] z-40">
       {/* Horizontal Tabs */}
       <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto py-0.5">
         {VALIDATION_TABS.map((tab) => {
@@ -64,7 +64,9 @@ export const ValidationTabNavigation: React.FC<ValidationTabNavigationProps> = (
                 onSelectTab(tab.key);
                 const el = document.getElementById(tab.targetAnchor);
                 if (el) {
-                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  const yOffset = -120; // clear sticky banner + tab bar
+                  const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
+                  window.scrollTo({ top: y, behavior: 'smooth' });
                 }
               }}
               className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-[9px] text-xs font-semibold cursor-pointer transition-all ${
