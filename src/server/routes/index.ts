@@ -71,7 +71,34 @@ export function createApiRouter(): Router {
   v1.use('/auth', authRoutes);
   v1.use('/users', authRoutes);
   v1.use('/onboarding', onboardingRoutes);
-  v1.use('/workspaces', workspaceRoutes);
+
+  // Top-level public idea understanding route (zero mutations/credits)
+  v1.post('/research/understand-idea', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { ideaPrompt } = req.body;
+      if (!ideaPrompt || !ideaPrompt.trim()) {
+        res.status(400).json({
+          success: false,
+          error: { code: 'MISSING_PROMPT', message: 'ideaPrompt is required.' },
+        });
+        return;
+      }
+      const { ideaIntelligenceService } = await import('../services/ideaIntelligenceService');
+      const understanding = await ideaIntelligenceService.understandIdea(ideaPrompt);
+      res.json({
+        success: true,
+        data: understanding,
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'IDEA_UNDERSTANDING_FAILED', message: err.message },
+      });
+    }
+  });
+
+  // Specific workspace sub-resources MUST be mounted BEFORE generic /workspaces router
+  v1.use('/workspaces/:workspaceId/research', researchRoutes);
   v1.use('/workspaces/:workspaceId/business-profile', businessProfileRoutes);
   v1.use('/workspaces/:workspaceId/business-brain', businessProfileRoutes);
   v1.use('/workspaces/:workspaceId/products', productRoutes);
@@ -87,7 +114,6 @@ export function createApiRouter(): Router {
   v1.use('/workspaces/:workspaceId/evidence', evidenceRoutes);
   v1.use('/workspaces/:workspaceId/goals', goalRoutes);
   v1.use('/workspaces/:workspaceId/competitors', competitorRoutes);
-  v1.use('/workspaces/:workspaceId/research', researchRoutes);
   v1.use('/workspaces/:workspaceId/market-watch', marketWatchRoutes);
   v1.use('/workspaces/:workspaceId/reports', executiveReportRoutes);
   v1.use('/workspaces/:workspaceId/analytics', analyticsRoutes);
@@ -97,12 +123,9 @@ export function createApiRouter(): Router {
   v1.use('/workspaces/:workspaceId/assets', assetRoutes);
   v1.use('/workspaces/:workspaceId/integrations', integrationRoutes);
   v1.use('/workspaces/:workspaceId/billing', billingRoutes);
-  v1.use('/workspaces/:workspaceId', billingRoutes);
-  v1.use('/billing/webhook', billingWebhookRouter);
-  v1.use('/billing', billingRoutes);
-  v1.use('/admin/billing', adminBillingRouter);
   v1.use('/workspaces/:workspaceId/support', supportRoutes);
   v1.use('/workspaces/:workspaceId/jobs', jobRoutes);
+  v1.use('/workspaces', workspaceRoutes);
   v1.use('/workspaces/:workspaceId/ai', aiRoutes);
   v1.use('/ai', aiRoutes);
 

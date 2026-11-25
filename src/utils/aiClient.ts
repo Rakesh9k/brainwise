@@ -209,14 +209,26 @@ export async function understandIdeaApi(
   workspaceId?: string
 ): Promise<IdeaUnderstandingResult> {
   const wsId = validateWorkspaceId(workspaceId || apiClient.getActiveWorkspaceId() || 'default');
-  const res = await postJson<{ success: boolean; data: IdeaUnderstandingResult }>(
-    `/api/v1/workspaces/${wsId}/research/understand-idea`,
+  try {
+    const res = await postJson<{ success: boolean; data: IdeaUnderstandingResult }>(
+      `/api/v1/workspaces/${wsId}/research/understand-idea`,
+      {
+        ideaPrompt,
+      },
+      wsId
+    );
+    if (res?.data) return res.data;
+  } catch (err) {
+    console.debug('Workspace-scoped idea understanding fallback to top-level route:', err);
+  }
+
+  const fallbackRes = await postJson<{ success: boolean; data: IdeaUnderstandingResult }>(
+    `/api/v1/research/understand-idea`,
     {
       ideaPrompt,
-    },
-    wsId
+    }
   );
-  return res.data;
+  return fallbackRes.data;
 }
 
 export async function sendConversationalResearchApi(params: {
