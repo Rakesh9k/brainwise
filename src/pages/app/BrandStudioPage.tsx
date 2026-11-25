@@ -139,6 +139,7 @@ export const BrandStudioPage: React.FC = () => {
     updateBrandIdentity,
     addBrandAsset,
     addTask,
+    addExperiment,
     recordStrategicAngleUsage,
     showToast,
     departmentResetNonce,
@@ -175,6 +176,158 @@ export const BrandStudioPage: React.FC = () => {
     (state.brand?.brandName && state.brand.brandName !== 'My Venture'
       ? state.brand.brandName
       : state.brain?.businessName) || 'Your Brand';
+
+  const activeIdeaReport =
+    state.reports?.find((r) => r.id === state.activeReportId) || state.reports?.[0] || null;
+
+  // Dynamically derive Brand Guidelines from Finalized Idea + Brand Identity when defaults are generic
+  const effectiveGuidelines = React.useMemo(() => {
+    const raw = state.brand?.guidelines;
+    const rawPillars = raw?.messagingPillars || [];
+    const isGenericBoilerplate =
+      rawPillars.length === 0 ||
+      rawPillars.some((p) =>
+        /Verified Ground Truth|Deterministic Engineering|Customer-Obsessed Clarity/i.test(p)
+      );
+
+    const ideaPillar1 =
+      state.brain?.valueProposition ||
+      activeIdeaReport?.ideaSummary ||
+      `${effectiveBrandName} Craft Quality`;
+    const ideaPillar2 =
+      state.brain?.brandPositioning ||
+      state.competitiveStrategy?.whereToDifferentiate ||
+      `Tailored for ${state.brain?.location || 'Local'} Buyers`;
+    const ideaPillar3 = flagshipProduct
+      ? `${flagshipProduct.name} (${flagshipProduct.priceRange || 'Transparent Pricing'})`
+      : `Built for ${state.brain?.targetAudience || 'Modern Customers'}`;
+
+    return {
+      logoUsage:
+        raw?.logoUsage ||
+        `Keep clearspace equal to 1x mark height around the ${effectiveBrandName} emblem on packaging, cards, and social headers.`,
+      spacingRule:
+        raw?.spacingRule ||
+        `Consistent 8px baseline grid with clean whitespace framing ${effectiveBrandName}'s primary offer.`,
+      visualStyle: !isGenericBoilerplate && raw?.visualStyle
+        ? raw.visualStyle
+        : `${state.brand?.visualDirection || 'Warm artisanal editorial'} tailored for ${state.brain?.industry || 'your category'} in ${state.brain?.location || 'your market'}.`,
+      brandVoice:
+        state.brand?.brandVoice ||
+        raw?.brandVoice ||
+        `Clear, warm, and authentic to ${state.brain?.targetAudience || 'your target audience'} — zero generic hype.`,
+      messagingPillars: isGenericBoilerplate
+        ? [
+            ideaPillar1.slice(0, 72),
+            ideaPillar2.slice(0, 72),
+            ideaPillar3.slice(0, 72),
+          ]
+        : rawPillars,
+    };
+  }, [
+    state.brand?.guidelines,
+    state.brand?.visualDirection,
+    state.brand?.brandVoice,
+    state.brain?.valueProposition,
+    state.brain?.brandPositioning,
+    state.brain?.industry,
+    state.brain?.location,
+    state.brain?.targetAudience,
+    state.competitiveStrategy?.whereToDifferentiate,
+    activeIdeaReport?.ideaSummary,
+    effectiveBrandName,
+    flagshipProduct,
+  ]);
+
+  // Create a real 30-day launch campaign grounded in the finalized Idea + Brand Identity
+  const handleCreateLaunchCampaignFromBrand = () => {
+    const campaignPrefix = `Launch ${effectiveBrandName}:`;
+    const alreadyCreated = state.tasks.some((t) => t.title.startsWith(campaignPrefix));
+    if (alreadyCreated) {
+      showToast(`Launch campaign for ${effectiveBrandName} is already active in Growth Planner.`);
+      return;
+    }
+
+    const location = state.brain?.location || 'your target market';
+    const topOpportunity = activeIdeaReport?.opportunities?.[0]?.title;
+    const targetAudience =
+      state.brain?.targetAudience || activeIdeaReport?.targetMarket || 'initial target buyers';
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const addDaysIso = (days: number) =>
+      new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+
+    addTask(
+      {
+        title: `${campaignPrefix} Publish Brand Identity, Logo & Flagship Offer Page`,
+        description: `Deploy ${effectiveBrandName}'s finalized tagline ("${state.brand.tagline}") and ${activeConcept.name} visual tokens across storefront & packaging.`,
+        whyItMatters: `Turns your Brand Studio identity into a customer-ready storefront for ${targetAudience}.`,
+        expectedOutcome: 'Live brand-consistent storefront & collateral ready for launch traffic.',
+        priority: 'high',
+        estimatedMinutes: 45,
+        dueDate: addDaysIso(2),
+        department: 'Brand Studio',
+        status: 'pending',
+        isTodayPriority: true,
+      },
+      { silent: true }
+    );
+
+    addTask(
+      {
+        title: `${campaignPrefix} 14-Day ${location} Acquisition & Carousel Sprint`,
+        description: topOpportunity
+          ? `Execute launch outreach and static carousel campaign targeting "${topOpportunity}" in ${location}.`
+          : `Run targeted ${location} outreach and static social carousel drops highlighting ${effectiveBrandName}'s core differentiation.`,
+        whyItMatters: `Grounded in your finalized Idea Intelligence report for ${effectiveBrandName}.`,
+        expectedOutcome: 'First 10–15 qualified launch inquiries or pre-orders.',
+        priority: 'high',
+        estimatedMinutes: 40,
+        dueDate: addDaysIso(7),
+        department: 'Growth Director',
+        status: 'pending',
+        isTodayPriority: false,
+      },
+      { silent: true }
+    );
+
+    addTask(
+      {
+        title: `${campaignPrefix} 30-Day Conversion & Repeat Feedback Audit`,
+        description: `Review early buyer feedback in ${location}, tighten messaging pillars, and log conversion learnings in Analytics.`,
+        whyItMatters: 'Closes the 30-day launch loop from Brand Studio back into Business Brain.',
+        expectedOutcome: 'Validated messaging pillar winning highest conversion.',
+        priority: 'medium',
+        estimatedMinutes: 30,
+        dueDate: addDaysIso(21),
+        department: 'Analytics',
+        status: 'pending',
+        isTodayPriority: false,
+      },
+      { silent: true }
+    );
+
+    addExperiment(
+      {
+        title: `30-Day Launch Test: ${effectiveBrandName} Positioning Hook`,
+        hypothesis: `${effectiveGuidelines.messagingPillars[0]} will drive higher conversion among ${targetAudience} in ${location}.`,
+        objective: 'Validate brand messaging & offer conversion during initial 30-day launch.',
+        targetAudience,
+        action: `Publish ${effectiveBrandName} launch carousel & flagship offer card and track qualified inquiries.`,
+        successMetric: '>= 10 qualified inquiries or >= 3.0% landing CTR within 14 days',
+        budget: 'TBD',
+        startDate: todayIso,
+        endDate: addDaysIso(30),
+        status: 'Planned',
+        results: '',
+        learnings: '',
+      },
+      { silent: true }
+    );
+
+    showToast(
+      `Created 30-day launch campaign (3 tasks + 1 experiment) for ${effectiveBrandName}!`
+    );
+  };
 
   // Dynamically recommend Style Archetype & Visual Mood based on Brand Identity, Industry & Competitors
   const recommendedLogoProfile = React.useMemo(() => {
@@ -2315,10 +2468,27 @@ export const BrandStudioPage: React.FC = () => {
           className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 sm:p-8 space-y-6 bw-surface-raised"
         >
           <SectionHeader
-            title={`${state.brand.brandName} Brand Guidelines`}
-            description="Single source of truth automatically injected as AI constraints across Logo, Asset, and Social generators"
+            title={`${effectiveBrandName} Brand Guidelines`}
+            description="Guided by your finalized Idea Intelligence & Brand Identity — automatically injected across Logo, Asset, and Social generators"
             action={
               <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    updateBrandIdentity({
+                      brandName: effectiveBrandName,
+                      guidelines: {
+                        ...state.brand.guidelines,
+                        ...effectiveGuidelines,
+                      },
+                    });
+                    showToast(`Synced Brand Guidelines with ${effectiveBrandName}'s finalized idea & identity.`);
+                  }}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+                  Sync from Idea &amp; Identity
+                </Button>
                 <LiquidButton
                   variant="secondary"
                   size="sm"
@@ -2342,10 +2512,10 @@ export const BrandStudioPage: React.FC = () => {
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
             {[
-              { title: 'Logo Usage & Clearspace', body: state.brand?.guidelines?.logoUsage || 'Balanced clearspace around mark' },
-              { title: 'Layout Spacing Grid', body: state.brand?.guidelines?.spacingRule || '4px / 8px baseline rhythm' },
-              { title: 'Visual & Photography Style', body: state.brand?.guidelines?.visualStyle || 'Authentic, candid, high contrast' },
-              { title: 'Brand Voice & Tone', body: state.brand?.guidelines?.brandVoice || 'Direct, confident, and grounded' },
+              { title: 'Logo Usage & Clearspace', body: effectiveGuidelines.logoUsage },
+              { title: 'Layout Spacing Grid', body: effectiveGuidelines.spacingRule },
+              { title: 'Visual & Photography Style', body: effectiveGuidelines.visualStyle },
+              { title: 'Brand Voice & Tone', body: effectiveGuidelines.brandVoice },
             ].map((item) => (
               <div
                 key={item.title}
@@ -2357,9 +2527,11 @@ export const BrandStudioPage: React.FC = () => {
             ))}
           </div>
           <div className="pt-4 border-t border-[#E6E6E2]">
-            <div className="text-xs font-semibold text-[#242424] mb-2">Core Messaging Pillars</div>
+            <div className="text-xs font-semibold text-[#242424] mb-2">
+              Core Messaging Pillars (Grounded in Finalized Idea &amp; Positioning)
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {(state.brand?.guidelines?.messagingPillars || []).map((m) => (
+              {effectiveGuidelines.messagingPillars.map((m) => (
                 <div
                   key={m}
                   className="p-3.5 rounded-[10px] border border-[#E6E6E2] text-xs font-medium text-[#242424]"
@@ -3334,7 +3506,10 @@ export const BrandStudioPage: React.FC = () => {
         </FluidTransition>
       )}
 
-      <JourneyNextStep currentRoute="brand-studio" />
+      <JourneyNextStep
+        currentRoute="brand-studio"
+        onBeforeNavigate={handleCreateLaunchCampaignFromBrand}
+      />
     </div>
   );
 };
