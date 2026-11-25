@@ -387,8 +387,8 @@ export const BrandStudioPage: React.FC = () => {
         secondaryColor: '#5C5C58',
         accentColor: /^#[0-9a-fA-F]{3,6}$/.test(c.accentColor || '') ? c.accentColor! : logoAccent,
         surfaceColor: '#FFFFFF',
-        headingFont: state.brand.typography.heading,
-        bodyFont: state.brand.typography.body,
+        headingFont: state.brand?.typography?.heading || 'Plus Jakarta Sans',
+        bodyFont: state.brand?.typography?.body || 'Inter',
         personality: [c.styleTag || logoArchetype, logoMood],
         markStyle:
           c.markStyle === 'monogram' || c.markStyle === 'emblem' ? c.markStyle : 'geometric',
@@ -454,12 +454,12 @@ export const BrandStudioPage: React.FC = () => {
           tagline: state.brand.tagline,
           positioningStatement: state.brand.positioningStatement,
           visualDirection: state.brand.visualDirection,
-          voice: state.brand.guidelines.brandVoice,
+          voice: state.brand?.guidelines?.brandVoice || 'Direct, confident, and grounded',
         },
         brain: {
           industry: state.brain.industry,
           targetAudience: state.brain.targetAudience,
-          products: state.brain.products.slice(0, 2),
+          products: (state.brain.products || []).slice(0, 2),
         },
       };
 
@@ -563,7 +563,7 @@ export const BrandStudioPage: React.FC = () => {
         brain: {
           industry: state.brain.industry,
           location: state.brain.location,
-          products: state.brain.products.slice(0, 2),
+          products: (state.brain.products || []).slice(0, 2),
         },
       };
 
@@ -799,7 +799,7 @@ export const BrandStudioPage: React.FC = () => {
             },
             {
               label: 'Logo Concepts',
-              value: state.brand.concepts.length || 3,
+              value: (state.brand?.concepts || []).length || 3,
               subtext: 'SVG vector marks',
               status: 'optimal',
             },
@@ -1199,13 +1199,13 @@ export const BrandStudioPage: React.FC = () => {
                         </button>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {state.brand.concepts.map((c) => (
+                        {(state.brand?.concepts || []).map((c) => (
                           <button
                             key={c.id}
                             type="button"
                             onClick={() => selectBrandConcept(c.id)}
                             className={`p-3 rounded-[10px] border text-left bg-white cursor-pointer ${
-                              c.id === state.brand.selectedConceptId
+                              c.id === state.brand?.selectedConceptId
                                 ? 'border-[#FF7417]'
                                 : 'border-[#E6E6E2]'
                             }`}
@@ -1229,13 +1229,13 @@ export const BrandStudioPage: React.FC = () => {
                           { name: 'Burnished Amber', hex: '#C44D00' },
                           { name: 'Deep Charcoal', hex: '#171717' },
                         ].map((opt) => {
-                          const active = state.brand.palette.some((p) => p.hex === opt.hex);
+                          const active = (state.brand?.palette || []).some((p) => p.hex === opt.hex);
                           return (
                             <button
                               key={opt.hex}
                               type="button"
                               onClick={() => {
-                                const updatedPalette = state.brand.palette.map((p, idx) =>
+                                const updatedPalette = (state.brand?.palette || []).map((p, idx) =>
                                   idx === 2 ? { ...p, name: opt.name, hex: opt.hex } : p
                                 );
                                 updateBrandIdentity({ palette: updatedPalette });
@@ -1269,7 +1269,7 @@ export const BrandStudioPage: React.FC = () => {
                           { heading: 'Manrope', body: 'Plus Jakarta Sans', mono: 'JetBrains Mono' },
                           { heading: 'Newsreader', body: 'Inter', mono: 'IBM Plex Mono' },
                         ].map((pair) => {
-                          const selected = state.brand.typography.heading === pair.heading;
+                          const selected = (state.brand?.typography?.heading || 'Plus Jakarta Sans') === pair.heading;
                           return (
                             <button
                               key={pair.heading}
@@ -1294,7 +1294,7 @@ export const BrandStudioPage: React.FC = () => {
                   {builderStep === 11 && (
                     <div className="space-y-2 text-xs">
                       <div className="font-semibold text-[#24724E]">Brand Guidelines Ready</div>
-                      <p className="text-[#686864]">{state.brand.guidelines.brandVoice}</p>
+                      <p className="text-[#686864]">{state.brand?.guidelines?.brandVoice || 'Authoritative and clear'}</p>
                     </div>
                   )}
                 </div>
@@ -1404,7 +1404,7 @@ export const BrandStudioPage: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {state.brand.palette.map((c) => (
+                {(state.brand?.palette || []).map((c) => (
                   <div key={`${c.name}-${c.hex}`} className="space-y-1.5">
                     <div
                       className="h-14 rounded-[10px] border border-[#E6E6E2]"
@@ -1420,13 +1420,13 @@ export const BrandStudioPage: React.FC = () => {
                 <div className="p-3 rounded-[10px] bg-[#FAFAF9] border border-[#E6E6E2]">
                   <div className="text-[#5C5C58]">Display &amp; Headings</div>
                   <div className="font-heading font-bold text-sm text-[#252525] mt-0.5">
-                    {state.brand.typography.heading}
+                    {state.brand?.typography?.heading || 'Plus Jakarta Sans'}
                   </div>
                 </div>
                 <div className="p-3 rounded-[10px] bg-[#FAFAF9] border border-[#E6E6E2]">
                   <div className="text-[#5C5C58]">Interface &amp; Copy</div>
                   <div className="font-semibold text-sm text-[#252525] mt-0.5">
-                    {state.brand.typography.body}
+                    {state.brand?.typography?.body || 'Inter'}
                   </div>
                 </div>
               </div>
@@ -1760,13 +1760,13 @@ export const BrandStudioPage: React.FC = () => {
           {/* 3 Generated AI Logo Concept Cards with Liquid Skeleton Reveal */}
           <LiquidSkeletonReveal
             loading={logoGenerating}
-            contentKey={`logos-${state.brand.concepts.map((c) => c.id).join('-')}`}
+            contentKey={`logos-${(state.brand?.concepts || []).map((c) => c.id).join('-')}`}
             statusLabel="Generating 3 AI logo concepts"
             skeleton={<LogoConceptSkeletonGrid />}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {state.brand.concepts.map((concept, idx) => {
-                const selected = concept.id === state.brand.selectedConceptId;
+              {(state.brand?.concepts || []).map((concept, idx) => {
+                const selected = concept.id === state.brand?.selectedConceptId;
                 return (
                   <ProgressiveResultReveal key={concept.id} index={idx}>
                     <div
@@ -2028,10 +2028,10 @@ export const BrandStudioPage: React.FC = () => {
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
             {[
-              { title: 'Logo Usage & Clearspace', body: state.brand.guidelines.logoUsage },
-              { title: 'Layout Spacing Grid', body: state.brand.guidelines.spacingRule },
-              { title: 'Visual & Photography Style', body: state.brand.guidelines.visualStyle },
-              { title: 'Brand Voice & Tone', body: state.brand.guidelines.brandVoice },
+              { title: 'Logo Usage & Clearspace', body: state.brand?.guidelines?.logoUsage || 'Balanced clearspace around mark' },
+              { title: 'Layout Spacing Grid', body: state.brand?.guidelines?.spacingRule || '4px / 8px baseline rhythm' },
+              { title: 'Visual & Photography Style', body: state.brand?.guidelines?.visualStyle || 'Authentic, candid, high contrast' },
+              { title: 'Brand Voice & Tone', body: state.brand?.guidelines?.brandVoice || 'Direct, confident, and grounded' },
             ].map((item) => (
               <div
                 key={item.title}
@@ -2045,7 +2045,7 @@ export const BrandStudioPage: React.FC = () => {
           <div className="pt-4 border-t border-[#E6E6E2]">
             <div className="text-xs font-semibold text-[#242424] mb-2">Core Messaging Pillars</div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {state.brand.guidelines.messagingPillars.map((m) => (
+              {(state.brand?.guidelines?.messagingPillars || []).map((m) => (
                 <div
                   key={m}
                   className="p-3.5 rounded-[10px] border border-[#E6E6E2] text-xs font-medium text-[#242424]"
@@ -2093,7 +2093,7 @@ export const BrandStudioPage: React.FC = () => {
                 />
                 <span>
                   Auto-context: <strong className="text-[#252525]">{state.brand.brandName}</strong>{' '}
-                  · {state.brand.typography.heading}
+                  · {state.brand?.typography?.heading || 'Plus Jakarta Sans'}
                 </span>
               </span>
               <button

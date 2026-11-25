@@ -283,9 +283,29 @@ export const ensureValidState = (
     brand: {
       ...base.brand,
       ...(parsed.brand ?? {}),
-      concepts: Array.isArray(parsed.brand?.concepts)
+      concepts: Array.isArray(parsed.brand?.concepts) && parsed.brand.concepts.length > 0
         ? parsed.brand.concepts
         : base.brand?.concepts ?? [],
+      palette: Array.isArray(parsed.brand?.palette) && parsed.brand.palette.length > 0
+        ? parsed.brand.palette
+        : base.brand?.palette ?? [],
+      typography: {
+        ...(base.brand?.typography ?? { heading: 'Plus Jakarta Sans', body: 'Inter', mono: 'JetBrains Mono' }),
+        ...(parsed.brand?.typography ?? {}),
+      },
+      guidelines: {
+        ...(base.brand?.guidelines ?? {
+          logoUsage: 'Clean and uncrowded with adequate whitespace',
+          spacingRule: 'Balanced margin hierarchy',
+          visualStyle: 'Modern minimalism with strong typographic clarity',
+          brandVoice: 'Authoritative, clear, and unpretentious',
+          messagingPillars: ['Verified Ground Truth', 'Deterministic Engineering', 'Customer-Obsessed Clarity'],
+        }),
+        ...(parsed.brand?.guidelines ?? {}),
+        messagingPillars: Array.isArray(parsed.brand?.guidelines?.messagingPillars) && parsed.brand.guidelines.messagingPillars.length > 0
+          ? parsed.brand.guidelines.messagingPillars
+          : base.brand?.guidelines?.messagingPillars ?? ['Verified Ground Truth', 'Deterministic Engineering', 'Customer-Obsessed Clarity'],
+      },
       personalityTraits: Array.isArray(parsed.brand?.personalityTraits)
         ? parsed.brand.personalityTraits
         : base.brand?.personalityTraits ?? [],
