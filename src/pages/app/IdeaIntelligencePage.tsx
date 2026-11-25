@@ -27,6 +27,7 @@ import {
   X,
 } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
+import { apiClient } from '../../services/apiClient';
 import {
   buildDynamicDossier,
   calculateCacChurnSensitivityMatrix,
@@ -295,7 +296,7 @@ export const IdeaIntelligencePage: React.FC = () => {
     const effectiveWsId =
       state.activeWorkspaceId?.trim() ||
       state.workspaceId?.trim() ||
-      apiClient.getActiveWorkspaceId()?.trim() ||
+      apiClient?.getActiveWorkspaceId?.()?.trim() ||
       'default';
 
     const isLiveBackendViable = Boolean(
@@ -443,9 +444,9 @@ export const IdeaIntelligencePage: React.FC = () => {
 
   const handleExportFinancialModelCsv = () => {
     if (!activeReport) return;
-    const tamVal = activeReport.tamSamSom.assumptions[0]?.value ?? 2.6;
-    const samVal = activeReport.tamSamSom.assumptions[1]?.value ?? 12;
-    const somVal = activeReport.tamSamSom.assumptions[2]?.value ?? 0.8;
+    const tamVal = activeReport.tamSamSom?.assumptions?.[0]?.value ?? 2.6;
+    const samVal = activeReport.tamSamSom?.assumptions?.[1]?.value ?? 12;
+    const somVal = activeReport.tamSamSom?.assumptions?.[2]?.value ?? 0.8;
     const dynamicBands = estimateMarketSizing(tamVal, samVal, somVal);
     const sensitivity = calculateCacChurnSensitivityMatrix(
       dynamicBands.somMidpointMillion,
@@ -1320,9 +1321,9 @@ export const IdeaIntelligencePage: React.FC = () => {
   }
 
   if (view === 'report' && activeReport) {
-    const tamVal = activeReport.tamSamSom.assumptions[0]?.value ?? 2.6;
-    const samVal = activeReport.tamSamSom.assumptions[1]?.value ?? 12;
-    const somVal = activeReport.tamSamSom.assumptions[2]?.value ?? 0.8;
+    const tamVal = activeReport.tamSamSom?.assumptions?.[0]?.value ?? 2.6;
+    const samVal = activeReport.tamSamSom?.assumptions?.[1]?.value ?? 12;
+    const somVal = activeReport.tamSamSom?.assumptions?.[2]?.value ?? 0.8;
     const dynamicBands = estimateMarketSizing(tamVal, samVal, somVal);
 
     return (
@@ -1578,14 +1579,14 @@ export const IdeaIntelligencePage: React.FC = () => {
               id="section-02"
               number="02"
               title="Market Overview"
-              factType={activeReport.marketOverview.factType}
+              factType={activeReport.marketOverview?.factType || 'estimate'}
               collapsible
               expanded={Boolean(expandedSections['02'])}
               onToggle={() => toggleReportSection('02')}
             >
-              <p>{activeReport.marketOverview.text}</p>
+              <p>{activeReport.marketOverview?.text}</p>
               <div className="mt-2 text-xs text-[#686864]">
-                Sources: {activeReport.marketOverview.sources.join(' · ')}
+                Sources: {(activeReport.marketOverview?.sources || []).join(' · ')}
               </div>
             </ResearchReportSection>
 
