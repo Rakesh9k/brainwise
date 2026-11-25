@@ -15,6 +15,11 @@ import {
 import { apiClient, getStoredAuthToken, setStoredAuthToken } from '../services/apiClient';
 import { signInWithGoogle, signOutClient } from '../services/firebaseClient';
 import { recordStrategicAngle, ensureStrategicMemory } from '../utils/strategicMemory';
+import {
+  synthesizeClosestCompetitors,
+  mapSeedsToCompetitorProfiles,
+  generateMarketWatchEvents,
+} from '../utils/competitorDiscovery';
 import type {
   AnyRoute,
   AppRoute,
@@ -142,6 +147,7 @@ interface BrainWiseContextValue {
   deleteReportScenario: (reportId: string, scenarioId: string) => void;
   selectReportScenario: (reportId: string, scenarioId: string) => void;
   addCompetitor: (comp: Omit<CompetitorProfileData, 'id'>) => void;
+  autoDiscoverCompetitorsForBrain: (brainOverride?: Partial<BusinessBrainData>) => CompetitorProfileData[];
   toggleCompetitorMonitoring: (compId: string) => void;
   updateCompetitorFrequency: (
     compId: string,
@@ -454,6 +460,61 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     }
   }, [state]);
+
+  // Autonomous Competitor & Market Watch Discovery Synchronization
+  useEffect(() => {
+    if (
+      state.brain?.businessName &&
+      state.brain.businessName !== 'New Venture Workspace' &&
+      state.brain.businessName !== 'Idea Exploration Workspace' &&
+      !state.isExampleWorkspace
+    ) {
+      const currentCat = (state.brain.industry || state.brain.businessName).toLowerCase();
+      const needsDiscovery =
+        state.competitors.length === 0 ||
+        (currentCat.includes('chocolate') &&
+          !state.competitors.some(
+            (c) =>
+              c.name.toLowerCase().includes('paul') ||
+              c.name.toLowerCase().includes('manam') ||
+              c.category.toLowerCase().includes('confectionery') ||
+              c.overview.toLowerCase().includes('chocolate')
+          )) ||
+        (currentCat.includes('coffee') &&
+          !state.competitors.some(
+            (c) =>
+              c.name.toLowerCase().includes('tokai') ||
+              c.name.toLowerCase().includes('third wave') ||
+              c.category.toLowerCase().includes('coffee') ||
+              c.overview.toLowerCase().includes('coffee')
+          ));
+
+      if (needsDiscovery) {
+        const seeds = synthesizeClosestCompetitors(
+          state.brain.overviewSummary || state.brain.businessName,
+          state.brain
+        );
+        const autoComps = mapSeedsToCompetitorProfiles(seeds, state.brain.location || 'India');
+        const autoEvents = generateMarketWatchEvents(autoComps, state.brain);
+
+        setState((prev) => {
+          // Guard against redundant state updates
+          if (
+            prev.competitors.length === autoComps.length &&
+            prev.competitors[0]?.name === autoComps[0]?.name
+          ) {
+            return prev;
+          }
+          return {
+            ...prev,
+            competitors: autoComps,
+            selectedCompetitorId: autoComps[0]?.id || prev.selectedCompetitorId,
+            marketEvents: prev.marketEvents.length === 0 ? autoEvents : prev.marketEvents,
+          };
+        });
+      }
+    }
+  }, [state.brain?.businessName, state.brain?.industry, state.brain?.location, state.isExampleWorkspace, state.competitors.length]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -1697,10 +1758,18 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         lastUpdated: new Date().toISOString().slice(0, 10),
       };
 
+      // Autonomous Closest Competitor Discovery for this graduated idea
+      const competitorSeeds = synthesizeClosestCompetitors(target.title || target.industry, nextBrain);
+      const graduatedCompetitors = mapSeedsToCompetitorProfiles(competitorSeeds, target.geography || nextBrain.location || 'India');
+      const graduatedEvents = generateMarketWatchEvents(graduatedCompetitors, nextBrain);
+
       return {
         ...prev,
         reports: prev.reports.map((r) => (r.id === reportId ? { ...r, savedToBrain: true } : r)),
         brain: nextBrain,
+        competitors: graduatedCompetitors,
+        selectedCompetitorId: graduatedCompetitors[0]?.id || prev.selectedCompetitorId,
+        marketEvents: graduatedEvents.length > 0 ? graduatedEvents : prev.marketEvents,
       };
     });
     showToast('🚀 Idea Validated! Your Business Brain has been officially hatched & activated.');
@@ -1943,6 +2012,30 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     }
   };
+
+  const autoDiscoverCompetitorsForBrain = useCallback(
+    (brainOverride?: Partial<BusinessBrainData>): CompetitorProfileData[] => {
+      const activeBrain = brainOverride || state.brain;
+      const prompt =
+        activeBrain.overviewSummary ||
+        activeBrain.businessName ||
+        activeBrain.industry ||
+        'Specialty Business';
+      const seeds = synthesizeClosestCompetitors(prompt, activeBrain);
+      const discovered = mapSeedsToCompetitorProfiles(seeds, activeBrain.location || 'India');
+      const autoEvents = generateMarketWatchEvents(discovered, activeBrain);
+
+      setState((prev) => ({
+        ...prev,
+        competitors: discovered,
+        selectedCompetitorId: discovered[0]?.id || prev.selectedCompetitorId,
+        marketEvents: prev.marketEvents.length === 0 ? autoEvents : prev.marketEvents,
+      }));
+
+      return discovered;
+    },
+    [state.brain]
+  );
 
   const toggleCompetitorMonitoring = (compId: string) => {
     setState((prev) => ({
@@ -3018,6 +3111,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       deleteReportScenario,
       selectReportScenario,
       addCompetitor,
+      autoDiscoverCompetitorsForBrain,
       toggleCompetitorMonitoring,
       updateCompetitorFrequency,
       removeCompetitor,

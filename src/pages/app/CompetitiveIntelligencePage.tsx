@@ -43,6 +43,10 @@ import {
   JourneyNextStep,
 } from '../../components/ui/DepartmentCards';
 import { MarketWatchPage } from './MarketWatchPage';
+import {
+  synthesizeClosestCompetitors,
+  mapSeedsToCompetitorProfiles,
+} from '../../utils/competitorDiscovery';
 import { TeaserGatedCompetitorCard } from '../../components/intelligence/TeaserGatedCompetitorCard';
 import { CreditUnlockModal } from '../../components/billing/CreditUnlockModal';
 import { UniversalExecutiveLayer } from '../../components/ui/UniversalExecutiveLayer';
@@ -104,250 +108,9 @@ const PROFILE_SECTION_GROUPS: Array<{
 export type CompetitiveTabId =
   'overview' | 'profile' | 'comparison' | 'gaps' | 'strategy' | 'watch';
 
-function synthesizeCompetitorProfiles(prompt: string, brain: any) {
-  const pLower = prompt.toLowerCase();
-  const indLower = (brain.industry || '').toLowerCase();
-  const isChoc = pLower.includes('chocolate') || pLower.includes('cacao') || indLower.includes('confectionery') || indLower.includes('chocolate');
-  const isCoffee = pLower.includes('coffee') || pLower.includes('roast') || indLower.includes('coffee') || indLower.includes('beverage');
-
-  if (isChoc) {
-    return [
-      {
-        companyName: 'Paul And Mike',
-        website: 'https://paulandmike.co',
-        classification: 'DIRECT',
-        geographyServed: 'Pan-India & Export',
-        positioning: 'India’s premier farm-to-bar chocolate maker winning International Chocolate Awards.',
-        priceRange: '₹350 – ₹950 per bar / ₹1,250 – ₹3,500 hampers',
-        xValueScore: 78,
-        yDiffScore: 84,
-        threatLevel: 'high',
-        marketShareBand: '14% – 18%',
-        uniqueValueProposition: 'Traceable farm-to-bar single-origin cacao with creative tropical inclusions.',
-        targetSegments: ['Dark chocolate connoisseurs', 'Corporate luxury gifters'],
-        strengths: ['Award-winning recipes', 'Direct farm traceability', 'Strong metro retail presence'],
-        weaknesses: ['Vulnerable to warm transit without cold-chain insulation', 'Premium pricing barrier'],
-        productsAndServices: [
-          { name: 'Single-Origin 70% Dark Bar', price: '₹350', description: 'Award-winning farm-to-bar dark bar' },
-          { name: 'Fine Flavored Flight Casket', price: '₹1,450', description: 'Curated 4-bar tasting hamper' },
-        ],
-        pricingTiers: [{ tierName: 'Standard Bar', price: 350 }, { tierName: 'Signature Hamper', price: 1450 }],
-      },
-      {
-        companyName: 'Manam Chocolate',
-        website: 'https://manamchocolate.com',
-        classification: 'EMERGING',
-        geographyServed: 'Hyderabad, Tier-1 Metros & D2C',
-        positioning: 'Experiential West Godavari single-estate cacao and high-design luxury confection.',
-        priceRange: '₹450 – ₹1,200 per bar / ₹2,200 – ₹5,000 gift boxes',
-        xValueScore: 88,
-        yDiffScore: 92,
-        threatLevel: 'high',
-        marketShareBand: '8% – 12%',
-        uniqueValueProposition: 'Design-forward Indian luxury chocolate with transparent farm-level storytelling.',
-        targetSegments: ['Affluent millennial foodies', 'Luxury wedding planners'],
-        strengths: ['Stunning packaging aesthetic', 'West Godavari terroir heritage', 'High experiential retail buzz'],
-        weaknesses: ['Limited physical points of sale outside Hyderabad', 'High unit price'],
-        productsAndServices: [
-          { name: 'Signature Terroir Dark Bar', price: '₹450', description: 'Single-estate 72% dark chocolate' },
-          { name: 'Karkhana Reserve Gift Box', price: '₹2,600', description: 'Luxury bespoke presentation box' },
-        ],
-        pricingTiers: [{ tierName: 'Reserve Bar', price: 450 }, { tierName: 'Karkhana Hamper', price: 2600 }],
-      },
-      {
-        companyName: 'Subko Cacao',
-        website: 'https://subko.coffee',
-        classification: 'DIRECT',
-        geographyServed: 'Mumbai, Bengaluru & National D2C',
-        positioning: 'Design-led Subcontinent craft roastery pairing single-origin coffee and regional cacao.',
-        priceRange: '₹395 – ₹850 per bar / ₹1,650 – ₹3,200 flight sets',
-        xValueScore: 82,
-        yDiffScore: 86,
-        threatLevel: 'medium',
-        marketShareBand: '7% – 11%',
-        uniqueValueProposition: 'Hyper-curated aesthetic identity celebrating South Asian growers and craft.',
-        targetSegments: ['Designers', 'Specialty coffee and cacao purists', 'Urban creatives'],
-        strengths: ['Cult brand loyalty in Mumbai/Bengaluru', 'Exceptional packaging and storytelling', 'Cross-category synergy with coffee'],
-        weaknesses: ['Focus split between bakery, coffee, and chocolate', 'Higher CAC outside top metros'],
-        productsAndServices: [
-          { name: 'Craft Pod Chocolate Bar', price: '₹395', description: 'Direct-trade bean-to-bar confection' },
-          { name: 'Subcontinent Tasting Flight', price: '₹1,850', description: 'Coffee & cacao pairing ensemble' },
-        ],
-        pricingTiers: [{ tierName: 'Craft Bar', price: 395 }, { tierName: 'Tasting Flight', price: 1850 }],
-      },
-      {
-        companyName: 'Mason & Co',
-        website: 'https://masonchocolate.com',
-        classification: 'DIRECT',
-        geographyServed: 'Pan-India Organic Stores & D2C',
-        positioning: 'Pioneering organic, vegan, single-origin bean-to-bar dark chocolate maker in India.',
-        priceRange: '₹325 – ₹495 per bar / ₹1,100 – ₹2,400 gift boxes',
-        xValueScore: 68,
-        yDiffScore: 74,
-        threatLevel: 'medium',
-        marketShareBand: '6% – 9%',
-        uniqueValueProposition: '100% clean-label, vegan, and certified organic bean-to-bar confectionery.',
-        targetSegments: ['Clean-label shoppers', 'Health-conscious foodies', 'Vegans'],
-        strengths: ['Established category pioneer', 'Strong organic retail placement', 'Loyal niche follower base'],
-        weaknesses: ['Conservative packaging evolution', 'Lower corporate gifting presence'],
-        productsAndServices: [
-          { name: 'Organic Single-Origin 75% Dark', price: '₹325', description: 'Certified organic vegan bean-to-bar' },
-          { name: 'Assorted Organic Gift Set', price: '₹1,250', description: '4-flavor organic bar set' },
-        ],
-        pricingTiers: [{ tierName: 'Organic Bar', price: 325 }, { tierName: 'Gift Set', price: 1250 }],
-      },
-      {
-        companyName: 'Fabelle Exquisite Chocolates (ITC)',
-        website: 'https://fabelle.in',
-        classification: 'ASPIRATIONAL_BENCHMARK',
-        geographyServed: 'Pan-India ITC Luxury Hotels & Boutiques',
-        positioning: 'ITC’s luxury hospitality-backed couverture chocolate lounges and festive gifting.',
-        priceRange: '₹400 – ₹1,500 per box / ₹2,500 – ₹8,000 corporate hampers',
-        xValueScore: 62,
-        yDiffScore: 58,
-        threatLevel: 'high',
-        marketShareBand: '22% – 28%',
-        uniqueValueProposition: 'Institutional luxury scale with master chocolatiers and corporate vendor networks.',
-        targetSegments: ['Corporate executive gifting', 'Luxury hotel clientele', 'Wedding registries'],
-        strengths: ['Massive institutional distribution via ITC hotels', 'Deep corporate procurement trust', 'Heavy festive marketing budgets'],
-        weaknesses: ['Perceived as corporate/industrial luxury rather than authentic small-batch craft'],
-        productsAndServices: [
-          { name: 'Elements Chocolate Pralines', price: '₹650', description: 'Luxury hotel handcrafted pralines' },
-          { name: 'Corporate Masterpiece Hamper', price: '₹3,500', description: 'Curated corporate gifting casket' },
-        ],
-        pricingTiers: [{ tierName: 'Praline Box', price: 650 }, { tierName: 'Executive Hamper', price: 3500 }],
-      },
-      {
-        companyName: 'Smoor Chocolates',
-        website: 'https://smoor.in',
-        classification: 'INDIRECT',
-        geographyServed: 'Bengaluru, Mumbai, Delhi & E-Commerce',
-        positioning: 'Modern couverture chocolate lounge and bakery chain with wide retail range.',
-        priceRange: '₹350 – ₹850 bars / ₹1,200 – ₹4,000 hampers',
-        xValueScore: 70,
-        yDiffScore: 64,
-        threatLevel: 'medium',
-        marketShareBand: '12% – 16%',
-        uniqueValueProposition: 'Accessible urban cafe lounge experience with extensive couverture confectionery.',
-        targetSegments: ['Casual gift buyers', 'Cafe visitors', 'Festival shoppers'],
-        strengths: ['Wide cafe lounge footprint', 'Extensive product range (bars, macarons, cakes)', 'Strong quick-commerce availability'],
-        weaknesses: ['Uses imported couverture blocks rather than direct farm bean-to-bar crafting'],
-        productsAndServices: [
-          { name: 'Couverture Dark Chocolate Bar', price: '₹350', description: 'Single-origin couverture bar' },
-          { name: 'Signature Luxury Box', price: '₹1,500', description: 'Assorted couverture truffles' },
-        ],
-        pricingTiers: [{ tierName: 'Couverture Bar', price: 350 }, { tierName: 'Luxury Box', price: 1500 }],
-      },
-    ];
-  }
-
-  if (isCoffee) {
-    return [
-      {
-        companyName: 'Blue Tokai Coffee Roasters',
-        website: 'https://bluetokaicoffee.com',
-        classification: 'DIRECT',
-        geographyServed: 'Pan-India Cafes & D2C',
-        positioning: 'India’s largest specialty coffee roaster sourcing single-estate Arabica beans.',
-        priceRange: '₹450 – ₹750 per 250g / ₹1,500 – ₹3,000 subscriptions',
-        xValueScore: 85,
-        yDiffScore: 82,
-        threatLevel: 'high',
-        marketShareBand: '32% – 38%',
-        uniqueValueProposition: 'Pioneered transparent single-estate Indian specialty coffee roasting.',
-        targetSegments: ['Home brewers', 'Specialty cafe lovers', 'Corporate teams'],
-        strengths: ['Market leadership in specialty coffee', '100+ company-owned cafes', 'Direct farmer relationships'],
-        weaknesses: ['Growing footprint makes small-batch positioning harder to maintain'],
-        productsAndServices: [
-          { name: 'Single-Estate Whole Bean 250g', price: '₹490', description: 'Freshly roasted estate Arabica' },
-          { name: 'Monthly Roaster’s Choice Subscription', price: '₹1,800', description: '4x bags monthly delivery' },
-        ],
-        pricingTiers: [{ tierName: 'Single Bag', price: 490 }, { tierName: 'Subscription', price: 1800 }],
-      },
-      {
-        companyName: 'Third Wave Coffee',
-        website: 'https://thirdwavecoffeeroasters.com',
-        classification: 'DIRECT',
-        geographyServed: 'Major Metros Across India',
-        positioning: 'VC-funded fast-expanding specialty cafe chain emphasizing modern third-wave culture.',
-        priceRange: '₹480 – ₹790 per 250g / Cafe beverages ₹220 – ₹380',
-        xValueScore: 78,
-        yDiffScore: 72,
-        threatLevel: 'high',
-        marketShareBand: '24% – 30%',
-        uniqueValueProposition: 'High-energy contemporary cafe spaces paired with specialty roast quality.',
-        targetSegments: ['Remote workers', 'Urban youth', 'Coffee enthusiasts'],
-        strengths: ['Aggressive metro cafe expansion', 'Strong mobile app loyalty ecosystem'],
-        weaknesses: ['Higher cafe overheads'],
-        productsAndServices: [
-          { name: 'Arabica Blend 250g', price: '₹520', description: 'Medium-dark cafe blend' },
-          { name: 'Cold Brew Blend 250g', price: '₹550', description: 'Slow-drip specialty beans' },
-        ],
-        pricingTiers: [{ tierName: 'Retail Bag', price: 520 }, { tierName: 'Cold Brew Pack', price: 550 }],
-      },
-      {
-        companyName: 'Sleepy Owl Coffee',
-        website: 'https://sleepyowl.co',
-        classification: 'INDIRECT',
-        geographyServed: 'Pan-India Quick Commerce & Modern Retail',
-        positioning: 'Convenient real coffee: cold brew brew-packs, dip bags, and ready-to-drink cans.',
-        priceRange: '₹350 – ₹600 per pack / Ready-to-drink cans ₹120 – ₹150',
-        xValueScore: 65,
-        yDiffScore: 68,
-        threatLevel: 'medium',
-        marketShareBand: '15% – 20%',
-        uniqueValueProposition: 'Effortless gourmet coffee without machines or grinding equipment.',
-        targetSegments: ['Convenience-first young professionals', 'Gym-goers', 'Travelers'],
-        strengths: ['Dominant presence on quick commerce', 'Youth-centric fun marketing', 'Accessible price point'],
-        weaknesses: ['Less artisanal credibility among third-wave purists'],
-        productsAndServices: [
-          { name: 'Cold Brew Brew-Packs (5-pack)', price: '₹400', description: 'Overnight steeping pitcher packs' },
-          { name: 'Hot Brew Dip Bags (10-pack)', price: '₹350', description: 'Tea-bag style pour-over coffee' },
-        ],
-        pricingTiers: [{ tierName: 'Brew Pack', price: 400 }, { tierName: 'Dip Bag Box', price: 350 }],
-      },
-    ];
-  }
-
-  const baseName = brain.businessName || 'Category Leader';
-  return [
-    {
-      companyName: `${baseName} Direct Benchmark`,
-      website: 'https://example-benchmark.com',
-      classification: 'DIRECT',
-      geographyServed: brain.location || 'India',
-      positioning: `Established direct player in ${brain.industry || 'specialty commerce'}.`,
-      priceRange: '₹500 – ₹1,500',
-      xValueScore: 72,
-      yDiffScore: 76,
-      threatLevel: 'high',
-      marketShareBand: '15% – 22%',
-      uniqueValueProposition: `Leading commercial presence in ${brain.industry || 'the category'}.`,
-      targetSegments: [brain.targetAudience || 'Target category buyers'],
-      strengths: ['Established brand recognition', 'Distribution footprint'],
-      weaknesses: ['Higher overheads', 'Slower agile turnaround'],
-      productsAndServices: [{ name: 'Flagship Offer', price: '₹650', description: 'Standard offering' }],
-      pricingTiers: [{ tierName: 'Standard', price: 650 }, { tierName: 'Premium', price: 1250 }],
-    },
-    {
-      companyName: `${baseName} Emerging Challenger`,
-      website: 'https://example-challenger.com',
-      classification: 'EMERGING',
-      geographyServed: brain.location || 'India',
-      positioning: `High-growth digital-native challenger in ${brain.industry || 'category'}.`,
-      priceRange: '₹400 – ₹1,200',
-      xValueScore: 82,
-      yDiffScore: 88,
-      threatLevel: 'medium',
-      marketShareBand: '6% – 10%',
-      uniqueValueProposition: 'D2C storytelling and agile community-led launches.',
-      targetSegments: ['Early adopters', 'Online shoppers'],
-      strengths: ['Agile product drops', 'High social media engagement'],
-      weaknesses: ['Limited retail distribution'],
-      productsAndServices: [{ name: 'Challenger Edition', price: '₹490', description: 'Direct offer' }],
-      pricingTiers: [{ tierName: 'Edition 1', price: 490 }, { tierName: 'Bundle', price: 990 }],
-    },
-  ];
+function synthesizeCompetitorProfiles(prompt: string, brain: any): CompetitorProfileData[] {
+  const seeds = synthesizeClosestCompetitors(prompt, brain);
+  return mapSeedsToCompetitorProfiles(seeds, brain.location || 'India');
 }
 
 export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTabId }> = ({
@@ -363,6 +126,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
     addTask,
     showToast,
     addCompetitor,
+    autoDiscoverCompetitorsForBrain,
     departmentResetNonce,
     pendingCompetitorProfile,
     consumeCompetitorProfile,
@@ -646,6 +410,13 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
   useEffect(() => {
     setSectionTab(initialTab);
   }, [initialTab]);
+
+  // Autonomous Closest Competitor Discovery: Populate closest regional competitors if none exist
+  useEffect(() => {
+    if (state.competitors.length === 0 && !state.isExampleWorkspace) {
+      autoDiscoverCompetitorsForBrain();
+    }
+  }, [state.competitors.length, state.isExampleWorkspace, autoDiscoverCompetitorsForBrain]);
 
   useEffect(() => {
     if (pendingCompetitorProfile && state.selectedCompetitorId) {

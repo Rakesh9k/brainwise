@@ -28,7 +28,7 @@ export const Header: React.FC<{
   return (
     <header
       data-frosted-nav="header"
-      className="sticky top-0 z-30 h-16 bg-[#FAFAF9]/95 backdrop-blur-md bw-frosted-nav border-b border-[#E6E6E2]/75 px-5 sm:px-8 lg:px-12 flex items-center justify-between gap-4"
+      className="sticky top-0 z-30 h-16 bg-[#FAFAF9] border-b border-[#E6E6E2] px-5 sm:px-8 lg:px-12 flex items-center justify-between gap-4"
     >
       <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
         <button

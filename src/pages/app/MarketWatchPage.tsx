@@ -53,6 +53,7 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
     markMarketEventRead,
     updateScheduledReports,
     departmentResetNonce,
+    autoDiscoverCompetitorsForBrain,
   } = useBrainWise();
 
   const [tab, setTab] = useState<'overview' | 'watchlist' | 'feed' | 'reports'>('overview');
@@ -60,6 +61,13 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
   const [selectedEvent, setSelectedEvent] = useState<MarketEvent | null>(null);
   const [addWatchOpen, setAddWatchOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<CompetitorProfileData | null>(null);
+
+  // Autonomous Competitor & Event Discovery on mount if none exist
+  useEffect(() => {
+    if (state.competitors.length === 0 && !state.isExampleWorkspace) {
+      autoDiscoverCompetitorsForBrain();
+    }
+  }, [state.competitors.length, state.isExampleWorkspace, autoDiscoverCompetitorsForBrain]);
 
   const resetRef = useRef(departmentResetNonce);
   useEffect(() => {
