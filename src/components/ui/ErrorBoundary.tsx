@@ -116,7 +116,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </button>
             </div>
 
-            {process.env.NODE_ENV !== 'production' && (
+            {typeof import.meta !== 'undefined' && import.meta.env?.DEV && (
               <details className="text-left bg-[#FAFAF9] border border-[#E6E6E2] rounded-[10px] p-3 text-[11px] text-[#686864] font-mono overflow-auto max-h-40">
                 <summary className="cursor-pointer text-[#C44D00] font-semibold mb-1">
                   Technical Diagnostics

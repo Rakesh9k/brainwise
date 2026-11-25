@@ -24,10 +24,137 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+
+    <!-- Immediate Browser Recovery, Stale Worker Purge & Global Error Trapping -->
+    <script>
+      (function() {
+        // 1. Unregister legacy service workers and clear stale caches immediately
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (var i = 0; i < registrations.length; i++) {
+              registrations[i].unregister().catch(function() {});
+            }
+          }).catch(function() {});
+        }
+        if (typeof window !== 'undefined' && 'caches' in window) {
+          caches.keys().then(function(keys) {
+            for (var i = 0; i < keys.length; i++) {
+              caches.delete(keys[i]).catch(function() {});
+            }
+          }).catch(function() {});
+        }
+
+        // 2. Global fallback UI if script chunks fail to evaluate
+        window.__bw_show_error = function(detail) {
+          var root = document.getElementById('root');
+          if (root && (!root.getAttribute('data-mounted') || root.innerHTML.indexOf('bw-preloader') !== -1)) {
+            root.innerHTML = 
+              '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F5F5F4;padding:24px;font-family:system-ui,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;">' +
+                '<div style="max-width:440px;width:100%;background:#FFFFFF;border:1px solid #E6E6E2;border-radius:20px;padding:32px;box-shadow:0 12px 40px -12px rgba(0,0,0,0.08);text-align:center;">' +
+                  '<div style="display:flex;justify-content:center;margin-bottom:16px;">' +
+                    '<img src="/brainwise-logo.png" alt="BrainWise" style="height:32px;width:auto;" onerror="this.style.display=\'none\'" />' +
+                  '</div>' +
+                  '<div style="font-weight:700;font-size:18px;color:#171717;margin-bottom:8px;">Workspace Ready for Recovery</div>' +
+                  '<p style="font-size:13px;color:#686864;line-height:1.5;margin-bottom:20px;">' +
+                    'We noticed your browser is running an older cached version or encountered an asset sync delay. Click below to load the latest application build.' +
+                  '</p>' +
+                  '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">' +
+                    '<button onclick="window.location.reload(true)" style="padding:10px 20px;background:#FF7417;color:#ffffff;border:none;border-radius:9999px;font-size:13px;font-weight:600;cursor:pointer;">Refresh Page</button>' +
+                    '<button onclick="try{localStorage.clear();sessionStorage.clear();}catch(e){}if(\'caches\' in window){caches.keys().then(function(k){k.forEach(function(c){caches.delete(c);});});}window.location.href=\'/?demo=1&t=\'+Date.now();" style="padding:10px 20px;background:#FAFAF9;color:#242424;border:1px solid #E6E6E2;border-radius:9999px;font-size:13px;font-weight:500;cursor:pointer;">Clear Cache & Launch Fresh</button>' +
+                  '</div>' +
+                  (detail ? '<div style="margin-top:16px;text-align:left;font-family:monospace;font-size:11px;color:#991B1B;background:#FEF2F2;border:1px solid #FEE2E2;border-radius:8px;padding:8px;overflow-x:auto;">' + detail + '</div>' : '') +
+                '</div>' +
+              '</div>';
+          }
+        };
+
+        // 3. Catch resource load failures (e.g. 404 or CORS on JS chunk)
+        window.addEventListener('error', function(event) {
+          if (event.target && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')) {
+            var url = event.target.src || event.target.href || 'asset';
+            console.warn('[BrainWise] Failed to load static asset:', url);
+            var reloadLock = 'bw_resource_reload_lock';
+            var lastReload = sessionStorage.getItem(reloadLock);
+            var now = Date.now();
+            if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+              sessionStorage.setItem(reloadLock, String(now));
+              window.location.reload();
+              return;
+            }
+            window.__bw_show_error('Unable to fetch latest build chunk: ' + url);
+          }
+        }, true);
+
+        // 4. Catch unhandled promise rejections for dynamic module imports
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event.reason ? (event.reason.message || String(event.reason)) : '';
+          if (
+            reason.indexOf('Failed to fetch dynamically imported module') !== -1 ||
+            reason.indexOf('error loading dynamically imported module') !== -1 ||
+            reason.indexOf('Importing a module script failed') !== -1
+          ) {
+            console.warn('[BrainWise] Dynamic import failed. Attempting reload.');
+            var reloadLock = 'bw_chunk_reload_lock';
+            var lastReload = sessionStorage.getItem(reloadLock);
+            var now = Date.now();
+            if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+              sessionStorage.setItem(reloadLock, String(now));
+              window.location.reload();
+              return;
+            }
+            window.__bw_show_error('A new application update is available. Please refresh.');
+          }
+        });
+
+        // 5. Watchdog: Reveal fallback options if React takes > 4.5 seconds
+        setTimeout(function() {
+          var slowHint = document.getElementById('bw-slow-hint');
+          if (slowHint) {
+            slowHint.style.opacity = '1';
+            slowHint.style.pointerEvents = 'auto';
+          }
+        }, 4500);
+      })();
+    </script>
   </head>
   <body class="bg-[#F5F5F4] text-[#242424] antialiased selection:bg-[#FFF0E5] selection:text-[#C44D00]">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Instant Zero-Latency Preloader (replaces blank white screen immediately) -->
+      <div id="bw-preloader" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F5F5F4;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#242424;padding:24px;text-align:center;">
+        <div style="width:48px;height:48px;margin-bottom:16px;position:relative;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;width:100%;height:100%;border:3px solid #E6E6E2;border-top-color:#FF7417;border-radius:50%;animation:bw-spin 0.85s linear infinite;"></div>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF7417" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4 4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z" />
+            <path d="M6 14v1a6 6 0 0 0 12 0v-1" />
+            <path d="M12 20v2" />
+          </svg>
+        </div>
+        <div style="font-weight:700;font-size:16px;color:#171717;letter-spacing:-0.01em;margin-bottom:4px;">BrainWise</div>
+        <div style="font-size:12px;color:#686864;font-weight:500;">Initializing AI Business Intelligence Partner...</div>
+
+        <div id="bw-slow-hint" style="opacity:0;pointer-events:none;transition:opacity 0.4s ease;margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <div style="font-size:12px;color:#858585;">Taking longer than expected?</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="window.location.reload(true)" style="padding:6px 14px;background:#FF7417;color:#ffffff;border:none;border-radius:9999px;font-size:12px;font-weight:600;cursor:pointer;">Reload</button>
+            <button onclick="try{localStorage.clear();sessionStorage.clear();}catch(e){}if('caches' in window){caches.keys().then(function(k){k.forEach(function(c){caches.delete(c);});});}window.location.href='/?demo=1&t='+Date.now();" style="padding:6px 14px;background:#FAFAF9;color:#242424;border:1px solid #E6E6E2;border-radius:9999px;font-size:12px;font-weight:500;cursor:pointer;">Clear Cache & Launch</button>
+          </div>
+        </div>
+      </div>
+      <style>
+        @keyframes bw-spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

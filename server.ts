@@ -62,8 +62,42 @@ async function startServer(): Promise<void> {
       candidates.find((dir) => fs.existsSync(path.join(dir, 'index.html'))) ||
       path.resolve(__dirname, 'dist');
     console.log(`[BRAINWISE_SERVER] Serving production frontend from: ${distDir}`);
-    app.use(express.static(distDir));
-    app.get('*', (_req: Request, res: Response) => {
+
+    // Immutable caching for hashed assets in /assets (never fall through to index.html on missing assets)
+    const assetsDir = path.join(distDir, 'assets');
+    if (fs.existsSync(assetsDir)) {
+      app.use(
+        '/assets',
+        express.static(assetsDir, {
+          maxAge: '1y',
+          immutable: true,
+          fallthrough: false,
+        })
+      );
+    }
+
+    // Static files with explicit no-cache headers on HTML
+    app.use(
+      express.static(distDir, {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+          }
+        },
+      })
+    );
+
+    // SPA fallback route: Prevent missing static assets (.js, .css, .ico, etc.) from returning index.html
+    app.get('*', (req: Request, res: Response) => {
+      if (/\.[a-zA-Z0-9]+$/.test(req.path)) {
+        res.status(404).type('text/plain').send('Resource not found');
+        return;
+      }
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.sendFile(path.join(distDir, 'index.html'));
     });
   }
