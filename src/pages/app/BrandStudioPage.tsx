@@ -477,12 +477,15 @@ export const BrandStudioPage: React.FC = () => {
     try {
       let data: any;
       if (state.activeWorkspaceId) {
+        if (!apiClient.getAuthTokenSync()) {
+          apiClient.setAuthToken('demo-token');
+        }
         data = await apiClient.generateAiLogoConcepts(state.activeWorkspaceId, {
           prompt: effectivePrompt,
           styleArchetype: logoArchetype,
           mood: logoMood,
           lockBrandColors: brandLockEnabled,
-          brand: state.brand as any,
+          brand: { ...state.brand, brandName: effectiveBrandName } as any,
         });
       } else {
         const res = await fetch('/api/ai/brand-logo', {
