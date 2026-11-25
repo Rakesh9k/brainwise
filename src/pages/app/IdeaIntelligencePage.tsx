@@ -565,49 +565,61 @@ export const IdeaIntelligencePage: React.FC = () => {
         'What are the minimum capital expenditures required for initial market validation?',
       ];
 
-      if (lower.includes('chocolate') || lower.includes('confectionery')) {
+      if (/\b(chocolate|chocolates|confectionery|cacao|cocoa)\b/i.test(lower)) {
         fallbackIndustry = 'Specialty Food & Confectionery';
         fallbackSubIndustry = 'Artisan & Premium Chocolate';
         fallbackCat = 'Craft Food & Beverage';
         fallbackGroups = ['Affluent urban millennials', 'Corporate gifting managers', 'Wedding gift curators'];
         fallbackCompetitors = ['Paul And Mike', 'Cadbury Bournville', 'Fabelle', 'Manam Chocolate'];
         fallbackModels = ['D2C Online E-Commerce', 'B2B Corporate Gifting', 'Modern Trade Consignment'];
-      } else if (lower.includes('software') || lower.includes('saas') || lower.includes('accounting') || lower.includes('ai tool')) {
+      } else if (/\b(mental|wellness|therapy|mindfulness|meditation|counseling|psychology|stress|anxiety|depression|mood|psychiatry)\b/i.test(lower)) {
+        fallbackIndustry = 'Healthcare & Life Sciences';
+        fallbackSubIndustry = 'Digital Mental Health & Behavioral Wellness';
+        fallbackCat = 'Mobile Mental Health Application & Tele-Counseling';
+        fallbackGroups = ['Urban working professionals managing stress and burnout', 'Young adults seeking accessible confidential therapy', 'Corporate HR leaders seeking employee wellness programs'];
+        fallbackCompetitors = ['Wysa', 'Headspace', 'Calm', 'BetterHelp', 'Amaha Health (InnerHour)'];
+        fallbackModels = ['Monthly/Annual Premium In-App Subscription', 'B2B Corporate Employee Wellness Licenses', 'Pay-per-Session Verified Tele-Therapy'];
+        fallbackQuestions = [
+          'What is the Day-30 customer retention rate and daily session engagement frequency?',
+          'What clinical or self-help differentiation wins users over free meditation podcasts?',
+          'Can corporate B2B sales cycles be kept under 60 days via pilot demonstrations?',
+        ];
+      } else if (/\b(accounting|software|saas|ai tool|fintech|invoice|invoicing|crm|erp)\b/i.test(lower)) {
         fallbackIndustry = 'B2B Software & Commercial Technology';
         fallbackSubIndustry = 'Cloud Application SaaS & FinTech';
         fallbackCat = 'SaaS Application';
         fallbackGroups = ['MSME business owners', 'Chartered accountants', 'Digital agency founders'];
         fallbackCompetitors = ['Zoho Books', 'TallyPrime', 'Khatabook', 'QuickBooks'];
         fallbackModels = ['Monthly/Annual Tiered Subscription', 'Usage-Based API add-ons'];
-      } else if (lower.includes('drone') || lower.includes('uav') || lower.includes('aviation')) {
+      } else if (/\b(drone|drones|uav|aviation)\b/i.test(lower)) {
         fallbackIndustry = 'Aerospace & Autonomous Logistics';
         fallbackSubIndustry = 'Autonomous Drone Delivery & Fleet Solutions';
         fallbackCat = 'Autonomous Air Logistics';
         fallbackGroups = ['District hospitals & diagnostic lab chains', 'Rural emergency healthcare centers', 'Express e-commerce operators'];
         fallbackCompetitors = ['Skye Air Mobility', 'TechEagle Innovations', 'Redwing Labs', 'IdeaForge'];
         fallbackModels = ['Per-Flight Autonomous Transport Contracts', 'Turnkey Fleet Leasing'];
-      } else if (lower.includes('solar') || lower.includes('clean energy') || lower.includes('ev') || lower.includes('charging')) {
+      } else if (/\b(solar|clean energy|renewable|photovoltaic|charging station)\b/i.test(lower) || /\b(ev|evs|electric vehicle)\b/i.test(lower)) {
         fallbackIndustry = 'Clean Energy & Sustainable Infrastructure';
-        fallbackSubIndustry = lower.includes('ev') || lower.includes('charging') ? 'EV Mobility & Charging Infrastructure' : 'Rooftop Solar & Distributed Power';
+        fallbackSubIndustry = /\b(ev|evs|electric vehicle|charging)\b/i.test(lower) ? 'EV Mobility & Charging Infrastructure' : 'Rooftop Solar & Distributed Power';
         fallbackCat = 'CleanTech Infrastructure';
         fallbackGroups = ['Commercial complex & warehouse operators', 'Residential apartment RWAs', 'Urban fleet operators'];
-        fallbackCompetitors = lower.includes('ev') || lower.includes('charging') ? ['Ather Grid', 'BluSmart', 'Ola Electric', 'Statiq'] : ['Tata Power Solar', 'Freyr Energy', 'Waaree Energies'];
+        fallbackCompetitors = /\b(ev|evs|electric vehicle)\b/i.test(lower) ? ['Ather Grid', 'BluSmart', 'Ola Electric', 'Statiq'] : ['Tata Power Solar', 'Freyr Energy', 'Waaree Energies'];
         fallbackModels = ['Zero-Capex RESCO / PPA', 'Turnkey EPC with Long-Term O&M'];
-      } else if (lower.includes('salon') || lower.includes('spa') || lower.includes('beauty')) {
+      } else if (/\b(salon|salons|spa|spas|beauty|skincare|cosmetics)\b/i.test(lower)) {
         fallbackIndustry = 'Personal Care & Wellness Services';
         fallbackSubIndustry = 'Premium Salon & Aesthetics';
         fallbackCat = 'Brick-and-Mortar Consumer Services';
         fallbackGroups = ['High-net-worth urban professionals', 'Bridal & event styling clients'];
         fallbackCompetitors = ['Toni & Guy', 'Bounce Salon & Spa', 'Looks Salon'];
         fallbackModels = ['High-Margin In-Salon Appointments', 'Annual Privilege Membership'];
-      } else if (lower.includes('coffee') || lower.includes('cafe')) {
+      } else if (/\b(coffee|roastery|cafe|cafes|espresso)\b/i.test(lower)) {
         fallbackIndustry = 'Food & Beverage Services';
         fallbackSubIndustry = 'Specialty Coffee & Roastery';
         fallbackCat = 'Food Hospitality';
         fallbackGroups = ['Urban office workers & specialty coffee connoisseurs', 'Remote workers seeking cafe work hubs'];
         fallbackCompetitors = ['Blue Tokai Coffee Roasters', 'Third Wave Coffee', 'Subko Coffee'];
         fallbackModels = ['Omnichannel Cafe + Bean Subscription', 'Direct D2C E-Commerce'];
-      } else if (lower.includes('pet') || lower.includes('dog') || lower.includes('cat') || lower.includes('veterinary')) {
+      } else if (/\b(pet|pets|dog|dogs|cat|cats|puppy|puppies|kitten|kittens|veterinary|vet|vets)\b/i.test(lower)) {
         fallbackIndustry = 'Pet Care & Veterinary Services';
         fallbackSubIndustry = 'Premium Pet Nutrition & Veterinary Telehealth';
         fallbackCat = 'Pet Lifestyle & Animal Health';

@@ -27,16 +27,18 @@ import type {
 } from '../../types/brainwise';
 
 function getGeminiClient(): GoogleGenAI | null {
+  const apiKey = (serverConfig.geminiApiKey || process.env.GEMINI_API_KEY || '').trim();
   if (
+    !apiKey ||
+    apiKey === 'MY_GEMINI_API_KEY' ||
     process.env.NODE_ENV === 'test' ||
     process.env.TEST_MODE === 'true' ||
-    serverConfig.isTest ||
-    !serverConfig.geminiApiKey
+    serverConfig.isTest
   ) {
     return null;
   }
   return new GoogleGenAI({
-    apiKey: serverConfig.geminiApiKey,
+    apiKey,
     httpOptions: {
       timeout: 25000,
       headers: { 'User-Agent': 'brainwise-backend' },
@@ -309,7 +311,7 @@ Respond with strict JSON matching this exact structure:
       'Distribution preference (online-first, retail wholesale, or physical store)',
     ];
 
-    if (lower.includes('chocolate') || lower.includes('confectionery') || lower.includes('cacao') || lower.includes('cocoa')) {
+    if (/\b(chocolate|chocolates|confectionery|cacao|cocoa)\b/i.test(lower)) {
       industry = 'Specialty Food & Confectionery';
       subIndustry = 'Artisan & Premium Chocolate';
       category = 'Craft Food & Beverage';
@@ -344,7 +346,33 @@ Respond with strict JSON matching this exact structure:
         'Bean-to-bar owned manufacturing vs contract couverture compounding.',
         'Target retail price point per 70g–100g bar (e.g. ₹250 vs ₹450).',
       ];
-    } else if (lower.includes('accounting') || lower.includes('software') || lower.includes('saas') || lower.includes('ai tool')) {
+    } else if (/\b(mental|wellness|therapy|mindfulness|meditation|counseling|psychology|stress|anxiety|depression|mood|psychiatry)\b/i.test(lower)) {
+      industry = 'Healthcare & Life Sciences';
+      subIndustry = 'Digital Mental Health & Behavioral Wellness';
+      category = 'Mobile Mental Health Application & Tele-Counseling';
+      customerGroups = [
+        'Urban working professionals managing chronic stress and workplace burnout',
+        'Young adults seeking accessible, destigmatized psychological counseling',
+        'Corporate HR leaders seeking subsidized preventative wellness benefits',
+      ];
+      businessModels = [
+        'Monthly/Annual In-App Premium Subscription (Guided CBT, Habit Tracking)',
+        'B2B Corporate Wellness Enterprise Licenses (Per-Employee-Per-Month)',
+        'Pay-per-Session Verified Tele-Therapy Marketplace Commission (20%)',
+      ];
+      marketCategory = 'Digital Behavioral Health & Preventive Wellness';
+      relevantCompetitors = ['Wysa', 'Headspace', 'Calm', 'BetterHelp', 'Amaha Health (InnerHour)', 'Mindhouse'];
+      researchQuestions = [
+        'What is the Day-30 customer retention rate and daily active engagement frequency?',
+        'What clinical or self-help differentiation wins users over free meditation podcasts and content?',
+        'Can corporate B2B sales cycles be kept under 60 days via pilot demonstrations?',
+      ];
+      keyAssumptions = [
+        'Subscribers will pay ₹499–₹1,499/month for structured, habit-forming mental health routines.',
+        'Privacy-first encrypted data storage establishes essential user safety and trust.',
+      ];
+      missingInfo = ['Clinical telehealth focus (licensed therapist sessions vs asynchronous AI coaching).'];
+    } else if (/\b(accounting|software|saas|ai tool|fintech|invoice|invoicing|crm|erp)\b/i.test(lower)) {
       industry = 'B2B Software & Commercial Technology';
       subIndustry = 'Financial Technology & SME Accounting SaaS';
       category = 'Cloud Application Software';
@@ -378,7 +406,7 @@ Respond with strict JSON matching this exact structure:
         'Target company size by annual turnover (Under ₹40 Lakh exempt vs ₹40L-₹5Cr GST filers).',
         'Platform scope (mobile-first app vs desktop web portal).',
       ];
-    } else if (lower.includes('salon') || lower.includes('spa') || lower.includes('parlor') || lower.includes('beauty')) {
+    } else if (/\b(salon|salons|spa|spas|parlor|parlour|beauty|skincare|cosmetics)\b/i.test(lower)) {
       industry = 'Personal Care & Wellness Services';
       subIndustry = 'Premium Salon & Aesthetics';
       category = 'Brick-and-Mortar Consumer Services';
@@ -412,7 +440,7 @@ Respond with strict JSON matching this exact structure:
         'Initial store floor area (e.g. 800 sq ft boutique vs 2,500 sq ft full-service luxury spa).',
         'Franchise brand license vs independent private brand.',
       ];
-    } else if (lower.includes('drone') || lower.includes('uav') || lower.includes('aerial') || lower.includes('aviation')) {
+    } else if (/\b(drone|drones|uav|aerial|aviation)\b/i.test(lower)) {
       industry = 'Aerospace & Autonomous Logistics';
       subIndustry = 'Autonomous Drone Delivery & Fleet Solutions';
       category = 'Hardware & Autonomous Air Services';
@@ -438,9 +466,9 @@ Respond with strict JSON matching this exact structure:
         'Drone payloads of 3kg–5kg cover 90% of routine diagnostic medical pooling requirements.',
       ];
       missingInfo = ['Cold-chain payload capacity requirements', 'Dedicated flight corridor permits.'];
-    } else if (lower.includes('solar') || lower.includes('ev') || lower.includes('clean energy') || lower.includes('battery') || lower.includes('charging')) {
+    } else if (/\b(solar|clean energy|renewable|photovoltaic|charging station|charging stations)\b/i.test(lower) || /\b(ev|evs|electric vehicle|electric vehicles)\b/i.test(lower)) {
       industry = 'Clean Energy & Sustainable Infrastructure';
-      subIndustry = lower.includes('ev') || lower.includes('charging') ? 'Electric Vehicle Infrastructure & Fleet Services' : 'Rooftop Solar & Distributed Power';
+      subIndustry = /\b(ev|evs|electric vehicle|charging)\b/i.test(lower) ? 'Electric Vehicle Infrastructure & Fleet Services' : 'Rooftop Solar & Distributed Power';
       category = 'Commercial CleanTech Infrastructure';
       customerGroups = [
         'Commercial complex & warehouse operators facing high grid peak tariffs',
@@ -453,7 +481,7 @@ Respond with strict JSON matching this exact structure:
         'Pay-per-kWh Fast Charging Station Revenue Sharing',
       ];
       marketCategory = 'Renewable Energy & Cleantech Solutions';
-      relevantCompetitors = lower.includes('ev')
+      relevantCompetitors = /\b(ev|evs|electric vehicle)\b/i.test(lower)
         ? ['Ather Grid', 'BluSmart Fleet', 'Ola Electric Network', 'Statiq Charging', 'Jio-bp pulse']
         : ['Tata Power Solar', 'Freyr Energy', 'Loom Solar', 'Waaree Energies', 'CleanMax Solar'];
       researchQuestions = [
@@ -465,7 +493,7 @@ Respond with strict JSON matching this exact structure:
         'Customers prefer bundled financing and maintenance over unmanaged hardware ownership.',
       ];
       missingInfo = ['Target customer segment (residential vs commercial/industrial)', 'Financing partnership structure.'];
-    } else if (lower.includes('health') || lower.includes('clinic') || lower.includes('telemedicine') || lower.includes('pharma') || lower.includes('diagnostic')) {
+    } else if (/\b(health|hospital|clinic|telemedicine|pharma|diagnostic|biotech)\b/i.test(lower)) {
       industry = 'Healthcare & Life Sciences';
       subIndustry = 'Digital Health & Ambulatory Clinical Care';
       category = 'Clinical Technology & Healthcare Services';
@@ -489,7 +517,7 @@ Respond with strict JSON matching this exact structure:
         'Patients prioritize speed of diagnostic report delivery and specialist trust over discount pricing.',
       ];
       missingInfo = ['Accredited diagnostic lab tie-ups vs in-house laboratory facilities.'];
-    } else if (lower.includes('pet') || lower.includes('dog') || lower.includes('cat') || lower.includes('veterinary')) {
+    } else if (/\b(pet|pets|dog|dogs|cat|cats|puppy|puppies|kitten|kittens|veterinary|vet|vets)\b/i.test(lower)) {
       industry = 'Pet Care & Veterinary Services';
       subIndustry = 'Premium Pet Nutrition, Grooming & Veterinary Telehealth';
       category = 'Pet Lifestyle & Animal Health';
@@ -513,9 +541,9 @@ Respond with strict JSON matching this exact structure:
         'Pet humanization trend supports premium pricing 2x-3x higher than mass dry kibble.',
       ];
       missingInfo = ['Focus category (fresh nutrition vs medical services vs retail accessories).'];
-    } else if (lower.includes('coffee') || lower.includes('tea') || lower.includes('food') || lower.includes('restaurant') || lower.includes('cafe') || lower.includes('cloud kitchen')) {
+    } else if (/\b(coffee|roastery|cafe|cafes|espresso)\b/i.test(lower) || /\b(tea|chai|food|restaurant|restaurants|cloud kitchen|bakery|qsr)\b/i.test(lower)) {
       industry = 'Food & Beverage Services';
-      subIndustry = lower.includes('coffee') ? 'Specialty Coffee & Roastery' : 'Quick-Service Restaurant & Cloud Kitchen';
+      subIndustry = /\b(coffee|roastery|cafe|cafes|espresso)\b/i.test(lower) ? 'Specialty Coffee & Roastery' : 'Quick-Service Restaurant & Cloud Kitchen';
       category = 'Food Hospitality';
       customerGroups = [
         'Urban office workers seeking hygienic, premium daily meals',
@@ -527,7 +555,7 @@ Respond with strict JSON matching this exact structure:
         'Catering for Corporate Working Lunches',
       ];
       marketCategory = 'QSR & Digital Food Service';
-      relevantCompetitors = lower.includes('coffee')
+      relevantCompetitors = /\b(coffee|roastery|cafe|cafes|espresso)\b/i.test(lower)
         ? ['Blue Tokai Coffee Roasters', 'Third Wave Coffee', 'Subko Coffee', 'Sleepy Owl']
         : ['Rebel Foods (Faasos, Behrouz)', 'Box8', 'Chaayos', 'Local Standalone Kitchens'];
       researchQuestions = [

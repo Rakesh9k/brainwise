@@ -102,31 +102,40 @@ export async function generateAiDossier(params: {
   brain: BusinessBrainData;
 }): Promise<{ report: ResearchReport; model: string }> {
   const wsId = validateWorkspaceId(params.workspaceId || apiClient.getActiveWorkspaceId() || 'default');
-  return postJson<{ report: ResearchReport; model: string }>(
-    `/api/v1/workspaces/${wsId}/research/orchestrate`,
-    {
-      ideaSummary: params.ideaSummary,
-      industry: params.industry,
-      targetMarket: params.targetMarket,
-      geography: params.geography,
-      depth: params.depth,
-      brain: {
-        businessName: params.brain.businessName,
-        industry: params.brain.industry,
-        stage: params.brain.stage,
-        location: params.brain.location,
-        brandPositioning: params.brain.brandPositioning,
-        targetAudience: params.brain.targetAudience,
+  const unpackResponse = (raw: any): { report: ResearchReport; model: string } => {
+    const report = raw?.data || raw?.report || raw;
+    const model = raw?.meta?.modelUsed || raw?.model || 'gemini-3.8-flash';
+    return { report, model };
+  };
+
+  try {
+    const raw = await postJson<any>(
+      `/api/v1/workspaces/${wsId}/research/orchestrate`,
+      {
+        ideaSummary: params.ideaSummary,
+        industry: params.industry,
+        targetMarket: params.targetMarket,
+        geography: params.geography,
+        depth: params.depth,
+        brain: {
+          businessName: params.brain.businessName,
+          industry: params.brain.industry,
+          stage: params.brain.stage,
+          location: params.brain.location,
+          brandPositioning: params.brain.brandPositioning,
+          targetAudience: params.brain.targetAudience,
+        },
       },
-    },
-    wsId
-  ).catch(async (err) => {
+      wsId
+    );
+    return unpackResponse(raw);
+  } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     if (errMsg.includes('401') || errMsg.includes('404') || errMsg.includes('UNAUTHENTICATED')) {
       throw err;
     }
     // Fallback to backward-compatible workspace route alias
-    return postJson<{ report: ResearchReport; model: string }>(
+    const rawFallback = await postJson<any>(
       `/api/v1/workspaces/${wsId}/ai/dossier`,
       {
         ideaSummary: params.ideaSummary,
@@ -138,7 +147,8 @@ export async function generateAiDossier(params: {
       },
       wsId
     );
-  });
+    return unpackResponse(rawFallback);
+  }
 }
 
 export async function generateAiPlaybookAngle(
