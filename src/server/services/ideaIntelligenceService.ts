@@ -4,6 +4,7 @@
  */
 
 import crypto from 'node:crypto';
+import { GoogleGenAI } from '@google/genai';
 import { serverConfig } from '../config/index';
 import { creditService } from './creditService';
 import { creditWalletRepository } from '../repositories/creditWalletRepository';
@@ -24,6 +25,24 @@ import type {
   ResearchReport,
   BusinessBrainData,
 } from '../../types/brainwise';
+
+function getGeminiClient(): GoogleGenAI | null {
+  if (
+    process.env.NODE_ENV === 'test' ||
+    process.env.TEST_MODE === 'true' ||
+    serverConfig.isTest ||
+    !serverConfig.geminiApiKey
+  ) {
+    return null;
+  }
+  return new GoogleGenAI({
+    apiKey: serverConfig.geminiApiKey,
+    httpOptions: {
+      timeout: 25000,
+      headers: { 'User-Agent': 'brainwise-backend' },
+    },
+  });
+}
 
 export type ExecutiveVerdict = 'GO' | 'CAUTION' | 'NO_GO';
 
@@ -132,6 +151,7 @@ export class IdeaIntelligenceService {
    * IDEA UNDERSTANDING ENGINE:
    * Extracts 12 critical business dimensions from a single natural-language sentence.
    * If location is not provided, defaults to India (or relevant hub) and explicitly states the assumption.
+   * Uses Gemini Generative AI in production runtime; gracefully falls back to multi-domain semantic engine.
    */
   public async understandIdea(rawPrompt: string, _workspaceContext?: any): Promise<IdeaUnderstandingResult> {
     const text = rawPrompt.trim();
@@ -158,10 +178,22 @@ export class IdeaIntelligenceService {
       assumedLocation = 'Delhi NCR, India';
       isUserSpecified = true;
       assumptionReason = 'Identified national capital region from prompt.';
+    } else if (lower.includes('chennai')) {
+      assumedLocation = 'Chennai, Tamil Nadu, India';
+      isUserSpecified = true;
+      assumptionReason = 'Identified specific coastal metro hub from prompt.';
+    } else if (lower.includes('pune')) {
+      assumedLocation = 'Pune, Maharashtra, India';
+      isUserSpecified = true;
+      assumptionReason = 'Identified regional automotive & IT hub from prompt.';
     } else if (lower.includes('india')) {
       assumedLocation = 'India (Tier-1 & Tier-2 Metros)';
       isUserSpecified = true;
       assumptionReason = 'Explicit country specified by user.';
+    } else if (lower.includes('dubai') || lower.includes('uae')) {
+      assumedLocation = 'Dubai, United Arab Emirates';
+      isUserSpecified = true;
+      assumptionReason = 'Explicit Gulf/Middle East territory specified by user.';
     } else if (lower.includes('us') || lower.includes('usa') || lower.includes('united states') || lower.includes('austin')) {
       assumedLocation = 'United States';
       isUserSpecified = true;
@@ -172,7 +204,90 @@ export class IdeaIntelligenceService {
       assumptionReason = 'Explicit UK market specified by user.';
     }
 
-    // 2. Classify Industry & Domain
+    // 2. Try Gemini Generative AI Model if API key is active and not in test environment
+    const client = getGeminiClient();
+    if (client) {
+      try {
+        const prompt = `You are the BrainWise Idea Understanding Engine.
+Analyze the following natural-language business idea submitted by an entrepreneur.
+Extract authentic, concrete, domain-specific market intelligence with ZERO generic placeholders.
+
+Business Idea: "${text}"
+
+Respond with strict JSON matching this exact structure:
+{
+  "businessConcept": "A clean, concise 1-sentence title or concept summary of what they are offering",
+  "industry": "Accurate macro industry (e.g. Specialty Food & Confectionery, Healthcare & Medical Technology, Clean Energy & Sustainable Infrastructure, B2B Software & Commercial Technology, Aerospace & Autonomous Logistics, etc.)",
+  "subIndustry": "Specific micro-niche domain (e.g. Autonomous Drone Logistics, Artisan Single-Origin Chocolate, Cloud SME Accounting, etc.)",
+  "productServiceCategory": "Primary category (e.g. Autonomous Air Logistics as a Service, Craft Food & Beverage, SaaS Application, D2C Subscription, etc.)",
+  "potentialCustomerGroups": ["2 to 4 specific, distinct target customer personas with clear pain points"],
+  "geographicContext": {
+    "assumedLocation": "${assumedLocation}",
+    "isUserSpecified": ${isUserSpecified},
+    "assumptionReason": "${assumptionReason}"
+  },
+  "possibleBusinessModels": ["2 to 3 viable, specific monetization and go-to-market business models"],
+  "likelyMarketCategory": "Category classification (e.g. Premium Health Logistics, Direct-to-Consumer Food, B2B Enterprise SaaS)",
+  "relevantCompetitors": ["3 to 5 REAL, ACTUAL companies or startups that actively operate in this specific domain and geography. NEVER output generic names like 'Mass Brands' or 'Competitor A'."],
+  "importantResearchQuestions": ["3 critical, non-obvious questions regarding unit economics, customer willingness to pay, regulations, or channel margins"],
+  "keyAssumptions": ["2 foundational assumptions that must hold true for this business to succeed"],
+  "missingInformation": ["1 to 2 key pieces of operational context the founder should clarify (e.g. target price tier, owned vs contract manufacturing, delivery SLA)"]
+}`;
+
+        const response = await client.models.generateContent({
+          model: serverConfig.geminiModel || 'gemini-3.8-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        });
+
+        const outputText = response.text?.trim();
+        if (outputText) {
+          const parsed = JSON.parse(outputText) as Partial<IdeaUnderstandingResult>;
+          if (
+            parsed.industry &&
+            parsed.businessConcept &&
+            Array.isArray(parsed.potentialCustomerGroups) &&
+            Array.isArray(parsed.relevantCompetitors) &&
+            parsed.relevantCompetitors.length > 0
+          ) {
+            return {
+              rawPrompt: text,
+              businessConcept: parsed.businessConcept,
+              industry: parsed.industry,
+              subIndustry: parsed.subIndustry || parsed.industry,
+              productServiceCategory: parsed.productServiceCategory || 'Commercial Service',
+              potentialCustomerGroups: parsed.potentialCustomerGroups,
+              geographicContext: {
+                assumedLocation: parsed.geographicContext?.assumedLocation || assumedLocation,
+                isUserSpecified: parsed.geographicContext?.isUserSpecified ?? isUserSpecified,
+                assumptionReason: parsed.geographicContext?.assumptionReason || assumptionReason,
+              },
+              possibleBusinessModels: parsed.possibleBusinessModels || ['Direct Commercial Sales', 'B2B Contracts'],
+              likelyMarketCategory: parsed.likelyMarketCategory || parsed.industry,
+              relevantCompetitors: parsed.relevantCompetitors,
+              importantResearchQuestions: parsed.importantResearchQuestions || [
+                'What is the customer acquisition cost?',
+                'What is the gross margin achievable?',
+              ],
+              keyAssumptions: parsed.keyAssumptions || [
+                'Target customers demonstrate strong willingness to pay for differentiated value.',
+              ],
+              missingInformation: parsed.missingInformation || ['Target pricing tier.'],
+            };
+          }
+        }
+      } catch (aiErr) {
+        console.warn(
+          '[IdeaIntelligenceService] Gemini online idea understanding failed, falling back to deterministic intelligence:',
+          aiErr
+        );
+      }
+    }
+
+    // 3. High-Fidelity Deterministic Semantic Intelligence Engine (Fallback & Test Mode)
     let industry = 'Consumer Goods & Retail';
     let subIndustry = 'Specialty Products';
     let category = 'Direct-to-Consumer (D2C)';
@@ -297,6 +412,107 @@ export class IdeaIntelligenceService {
         'Initial store floor area (e.g. 800 sq ft boutique vs 2,500 sq ft full-service luxury spa).',
         'Franchise brand license vs independent private brand.',
       ];
+    } else if (lower.includes('drone') || lower.includes('uav') || lower.includes('aerial') || lower.includes('aviation')) {
+      industry = 'Aerospace & Autonomous Logistics';
+      subIndustry = 'Autonomous Drone Delivery & Fleet Solutions';
+      category = 'Hardware & Autonomous Air Services';
+      customerGroups = [
+        'Rural and district hospital networks needing rapid blood/organ transit',
+        'E-commerce & quick-commerce logistics operators expanding into remote regions',
+        'Diagnostic laboratory chains (pathology sample pooling)',
+      ];
+      businessModels = [
+        'Per-Kilometer / Per-Flight Autonomous Fleet Service Contracts',
+        'Long-Term Hub-and-Spoke Subscription with Public Health Authorities',
+        'Turnkey Drone Fleet Leasing with Remote Pilot Licensing Support',
+      ];
+      marketCategory = 'Autonomous Transport & Logistics Infrastructure';
+      relevantCompetitors = ['Skye Air Mobility', 'TechEagle Innovations', 'Redwing Labs', 'IdeaForge', 'Garuda Aerospace'];
+      researchQuestions = [
+        'What is the DGCA beyond-visual-line-of-sight (BVLOS) regulatory approval lead time?',
+        'What is the battery recharge cycle and payload penalty in adverse weather/high winds?',
+        'Can delivery cost per sample flight be kept under ₹150 for regional medical pooling?',
+      ];
+      keyAssumptions = [
+        'District healthcare authorities have budgetary mandate for emergency aerial sample transit.',
+        'Drone payloads of 3kg–5kg cover 90% of routine diagnostic medical pooling requirements.',
+      ];
+      missingInfo = ['Cold-chain payload capacity requirements', 'Dedicated flight corridor permits.'];
+    } else if (lower.includes('solar') || lower.includes('ev') || lower.includes('clean energy') || lower.includes('battery') || lower.includes('charging')) {
+      industry = 'Clean Energy & Sustainable Infrastructure';
+      subIndustry = lower.includes('ev') || lower.includes('charging') ? 'Electric Vehicle Infrastructure & Fleet Services' : 'Rooftop Solar & Distributed Power';
+      category = 'Commercial CleanTech Infrastructure';
+      customerGroups = [
+        'Commercial complex & warehouse operators facing high grid peak tariffs',
+        'Residential apartment resident welfare associations (RWAs)',
+        'Urban EV fleet operators (delivery two-wheelers, auto-rickshaws)',
+      ];
+      businessModels = [
+        'Zero-Capex RESCO / Power Purchase Agreement (PPA)',
+        'Turnkey EPC (Engineering, Procurement, Construction) with 5-Year O&M',
+        'Pay-per-kWh Fast Charging Station Revenue Sharing',
+      ];
+      marketCategory = 'Renewable Energy & Cleantech Solutions';
+      relevantCompetitors = lower.includes('ev')
+        ? ['Ather Grid', 'BluSmart Fleet', 'Ola Electric Network', 'Statiq Charging', 'Jio-bp pulse']
+        : ['Tata Power Solar', 'Freyr Energy', 'Loom Solar', 'Waaree Energies', 'CleanMax Solar'];
+      researchQuestions = [
+        'What is the net-metering DISCOM approval turnaround time in target states?',
+        'What payback period (target < 4 years) achieves customer conversion without upfront debt?',
+      ];
+      keyAssumptions = [
+        'Commercial electricity tariffs will continue to rise by 4%-7% annually.',
+        'Customers prefer bundled financing and maintenance over unmanaged hardware ownership.',
+      ];
+      missingInfo = ['Target customer segment (residential vs commercial/industrial)', 'Financing partnership structure.'];
+    } else if (lower.includes('health') || lower.includes('clinic') || lower.includes('telemedicine') || lower.includes('pharma') || lower.includes('diagnostic')) {
+      industry = 'Healthcare & Life Sciences';
+      subIndustry = 'Digital Health & Ambulatory Clinical Care';
+      category = 'Clinical Technology & Healthcare Services';
+      customerGroups = [
+        'Chronic disease management patients (diabetes, hypertension, cardiac care)',
+        'Working professionals requiring on-demand at-home preventative diagnostics',
+        'Independent private medical practitioners managing patient cohorts',
+      ];
+      businessModels = [
+        'Annual Patient Health Subscription with Bundled Lab Diagnostics',
+        'Pay-per-Consultation Marketplace Fee (15% - 20%)',
+        'Corporate Employee Wellness Healthcare Retainers',
+      ];
+      marketCategory = 'Digital Health & Outpatient Care';
+      relevantCompetitors = ['Practo', 'Tata 1mg', 'Apollo 24|7', 'PharmEasy', 'HealthifyMe'];
+      researchQuestions = [
+        'What is the customer retention rate across annual preventive checkups?',
+        'Can CAC be suppressed through organic practitioner referrals and corporate ties?',
+      ];
+      keyAssumptions = [
+        'Patients prioritize speed of diagnostic report delivery and specialist trust over discount pricing.',
+      ];
+      missingInfo = ['Accredited diagnostic lab tie-ups vs in-house laboratory facilities.'];
+    } else if (lower.includes('pet') || lower.includes('dog') || lower.includes('cat') || lower.includes('veterinary')) {
+      industry = 'Pet Care & Veterinary Services';
+      subIndustry = 'Premium Pet Nutrition, Grooming & Veterinary Telehealth';
+      category = 'Pet Lifestyle & Animal Health';
+      customerGroups = [
+        'Urban pet parents seeking human-grade clean nutrition for companion animals',
+        'First-time dog/cat adopters needing scheduled veterinary and behavioral guidance',
+        'Frequent travelers requiring verified boarding and cage-free daycare',
+      ];
+      businessModels = [
+        'Recurring Monthly Nutrition Subscription Box',
+        'On-Demand At-Home Pet Grooming & Vet Mobile Vans',
+        'Premium Veterinary Outpatient Clinic & Boarding Retreat',
+      ];
+      marketCategory = 'Pet Care & Companion Animal Wellness';
+      relevantCompetitors = ['Heads Up For Tails (HUFT)', 'Supertails', 'Zigly (Cosmo First)', 'Wiggles.in', 'Royal Canin'];
+      researchQuestions = [
+        'What is the average monthly pet spend per household in Tier-1 cities?',
+        'What customer referral mechanism reduces reliance on meta advertising?',
+      ];
+      keyAssumptions = [
+        'Pet humanization trend supports premium pricing 2x-3x higher than mass dry kibble.',
+      ];
+      missingInfo = ['Focus category (fresh nutrition vs medical services vs retail accessories).'];
     } else if (lower.includes('coffee') || lower.includes('tea') || lower.includes('food') || lower.includes('restaurant') || lower.includes('cafe') || lower.includes('cloud kitchen')) {
       industry = 'Food & Beverage Services';
       subIndustry = lower.includes('coffee') ? 'Specialty Coffee & Roastery' : 'Quick-Service Restaurant & Cloud Kitchen';
@@ -311,7 +527,9 @@ export class IdeaIntelligenceService {
         'Catering for Corporate Working Lunches',
       ];
       marketCategory = 'QSR & Digital Food Service';
-      relevantCompetitors = ['Rebel Foods (Faasos, Behrouz)', 'Box8', 'Chaayos', 'Local Standalone Kitchens'];
+      relevantCompetitors = lower.includes('coffee')
+        ? ['Blue Tokai Coffee Roasters', 'Third Wave Coffee', 'Subko Coffee', 'Sleepy Owl']
+        : ['Rebel Foods (Faasos, Behrouz)', 'Box8', 'Chaayos', 'Local Standalone Kitchens'];
       researchQuestions = [
         'Can food cost percentage be maintained strictly below 32% including packaging?',
         'What aggregator commission blended rate (22%-28%) can the unit economics sustain?',

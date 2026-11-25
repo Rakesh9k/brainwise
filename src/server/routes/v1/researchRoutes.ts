@@ -17,6 +17,34 @@ import type { GrowthTaskEntity, GrowthExperimentEntity } from '../../types/api';
 
 const router = Router({ mergeParams: true });
 
+/**
+ * POST /api/v1/workspaces/:workspaceId/research/understand-idea
+ * Natural-language idea extraction: extracts concept, industry, geography, customer segments.
+ * Unauthenticated & public exploration allowed for preliminary idea understanding (zero mutations/credits).
+ */
+router.post('/understand-idea', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { ideaPrompt } = req.body;
+    if (!ideaPrompt || !ideaPrompt.trim()) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_PROMPT', message: 'ideaPrompt is required.' },
+      });
+      return;
+    }
+    const understanding = await ideaIntelligenceService.understandIdea(ideaPrompt);
+    res.json({
+      success: true,
+      data: understanding,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'IDEA_UNDERSTANDING_FAILED', message: err.message },
+    });
+  }
+});
+
 router.use(authenticateToken);
 router.use(requireWorkspaceMember);
 
@@ -238,37 +266,6 @@ router.patch(
 // =============================================================================
 // PHASE 3: IDEA INTELLIGENCE & MARKET INTELLIGENCE (DEPARTMENTS 1 & 2)
 // =============================================================================
-
-/**
- * POST /api/v1/workspaces/:workspaceId/research/understand-idea
- * Natural-language idea extraction: extracts concept, industry, geography, customer segments
- */
-router.post(
-  '/understand-idea',
-  requireWorkspaceRole(['owner', 'admin', 'member']),
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { ideaPrompt } = req.body;
-      if (!ideaPrompt || !ideaPrompt.trim()) {
-        res.status(400).json({
-          success: false,
-          error: { code: 'MISSING_PROMPT', message: 'ideaPrompt is required.' },
-        });
-        return;
-      }
-      const understanding = await ideaIntelligenceService.understandIdea(ideaPrompt);
-      res.json({
-        success: true,
-        data: understanding,
-      });
-    } catch (err: any) {
-      res.status(500).json({
-        success: false,
-        error: { code: 'IDEA_UNDERSTANDING_FAILED', message: err.message },
-      });
-    }
-  }
-);
 
 /**
  * POST /api/v1/workspaces/:workspaceId/research/orchestrate

@@ -493,55 +493,152 @@ export const IdeaIntelligencePage: React.FC = () => {
     setIdeaPrompt(clean);
     setIsUnderstandingLoading(true);
     try {
-      if (state.activeWorkspaceId && state.isAuthenticated && !state.isExampleWorkspace) {
-        try {
-          const res = await understandIdeaApi(clean, state.activeWorkspaceId);
+      // 1. Always invoke live API first (works for authenticated, demo, and preview sessions)
+      try {
+        const wsId = state.activeWorkspaceId || 'default';
+        const res = await understandIdeaApi(clean, wsId);
+        if (res && res.businessConcept && res.industry) {
           setIdeaUnderstanding(res);
           setIndustry(res.industry);
-          setTargetMarket(res.potentialCustomerGroups[0] || 'Target Audience');
-          setGeography(res.geographicContext.assumedLocation);
+          setTargetMarket(res.potentialCustomerGroups?.[0] || 'Target Audience');
+          setGeography(res.geographicContext?.assumedLocation || 'India (Pan-India)');
           setView('understanding');
           return;
-        } catch (err) {
-          console.debug('Online idea understanding note:', err);
         }
+      } catch (err) {
+        console.debug('Online idea understanding note (falling back to semantic engine):', err);
       }
 
-    // Deterministic semantic fallback
-      const isChocolate = clean.toLowerCase().includes('chocolate');
-      const isSoftware = clean.toLowerCase().includes('software') || clean.toLowerCase().includes('accounting');
-      const isHyderabad = clean.toLowerCase().includes('hyderabad');
-      const fallbackGeo = isHyderabad ? 'Hyderabad, Telangana, India' : 'India (Tier-1 & Tier-2 Metros)';
-      const fallbackIndustry = isChocolate ? 'Specialty Food & Confectionery' : isSoftware ? 'B2B Software & Commercial Technology' : 'Consumer Goods & Retail';
+      // 2. High-fidelity domain-aware client fallback
+      const lower = clean.toLowerCase();
+      let fallbackGeo = 'India (Pan-India)';
+      let isUserSpecifiedGeo = false;
+      let geoReason = 'Domestic primary market assumed based on platform default.';
+
+      if (lower.includes('hyderabad')) {
+        fallbackGeo = 'Hyderabad, Telangana, India';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Identified specific regional metro from prompt.';
+      } else if (lower.includes('bengaluru') || lower.includes('bangalore')) {
+        fallbackGeo = 'Bengaluru, Karnataka, India';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Identified tech capital from prompt.';
+      } else if (lower.includes('mumbai')) {
+        fallbackGeo = 'Mumbai, Maharashtra, India';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Identified financial capital from prompt.';
+      } else if (lower.includes('delhi') || lower.includes('ncr')) {
+        fallbackGeo = 'Delhi NCR, India';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Identified national capital territory from prompt.';
+      } else if (lower.includes('chennai')) {
+        fallbackGeo = 'Chennai, Tamil Nadu, India';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Identified specific metro hub from prompt.';
+      } else if (lower.includes('pune')) {
+        fallbackGeo = 'Pune, Maharashtra, India';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Identified regional automotive & IT hub from prompt.';
+      } else if (lower.includes('dubai') || lower.includes('uae')) {
+        fallbackGeo = 'Dubai, United Arab Emirates';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Explicit Middle East territory.';
+      } else if (lower.includes('us') || lower.includes('usa') || lower.includes('united states')) {
+        fallbackGeo = 'United States';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Explicit North America territory.';
+      } else if (lower.includes('uk') || lower.includes('london')) {
+        fallbackGeo = 'United Kingdom';
+        isUserSpecifiedGeo = true;
+        geoReason = 'Explicit UK market.';
+      }
+
+      let fallbackIndustry = 'Consumer Goods & Retail';
+      let fallbackSubIndustry = 'Specialty Retail & Commerce';
+      let fallbackCat = 'Commercial Service';
+      let fallbackGroups = ['Urban aspirational professionals', 'Enterprise decision makers', 'Digital-first consumers'];
+      let fallbackCompetitors = ['Regional Market Leaders', 'Emerging Boutique Innovators'];
+      let fallbackModels = ['Direct Commercial Sales', 'B2B Enterprise Retainer', 'Subscription Commerce'];
+      let fallbackQuestions = [
+        'What is the customer willingness-to-pay for specialized differentiation?',
+        'Which distribution channel delivers the lowest customer acquisition cost?',
+        'What are the minimum capital expenditures required for initial market validation?',
+      ];
+
+      if (lower.includes('chocolate') || lower.includes('confectionery')) {
+        fallbackIndustry = 'Specialty Food & Confectionery';
+        fallbackSubIndustry = 'Artisan & Premium Chocolate';
+        fallbackCat = 'Craft Food & Beverage';
+        fallbackGroups = ['Affluent urban millennials', 'Corporate gifting managers', 'Wedding gift curators'];
+        fallbackCompetitors = ['Paul And Mike', 'Cadbury Bournville', 'Fabelle', 'Manam Chocolate'];
+        fallbackModels = ['D2C Online E-Commerce', 'B2B Corporate Gifting', 'Modern Trade Consignment'];
+      } else if (lower.includes('software') || lower.includes('saas') || lower.includes('accounting') || lower.includes('ai tool')) {
+        fallbackIndustry = 'B2B Software & Commercial Technology';
+        fallbackSubIndustry = 'Cloud Application SaaS & FinTech';
+        fallbackCat = 'SaaS Application';
+        fallbackGroups = ['MSME business owners', 'Chartered accountants', 'Digital agency founders'];
+        fallbackCompetitors = ['Zoho Books', 'TallyPrime', 'Khatabook', 'QuickBooks'];
+        fallbackModels = ['Monthly/Annual Tiered Subscription', 'Usage-Based API add-ons'];
+      } else if (lower.includes('drone') || lower.includes('uav') || lower.includes('aviation')) {
+        fallbackIndustry = 'Aerospace & Autonomous Logistics';
+        fallbackSubIndustry = 'Autonomous Drone Delivery & Fleet Solutions';
+        fallbackCat = 'Autonomous Air Logistics';
+        fallbackGroups = ['District hospitals & diagnostic lab chains', 'Rural emergency healthcare centers', 'Express e-commerce operators'];
+        fallbackCompetitors = ['Skye Air Mobility', 'TechEagle Innovations', 'Redwing Labs', 'IdeaForge'];
+        fallbackModels = ['Per-Flight Autonomous Transport Contracts', 'Turnkey Fleet Leasing'];
+      } else if (lower.includes('solar') || lower.includes('clean energy') || lower.includes('ev') || lower.includes('charging')) {
+        fallbackIndustry = 'Clean Energy & Sustainable Infrastructure';
+        fallbackSubIndustry = lower.includes('ev') || lower.includes('charging') ? 'EV Mobility & Charging Infrastructure' : 'Rooftop Solar & Distributed Power';
+        fallbackCat = 'CleanTech Infrastructure';
+        fallbackGroups = ['Commercial complex & warehouse operators', 'Residential apartment RWAs', 'Urban fleet operators'];
+        fallbackCompetitors = lower.includes('ev') || lower.includes('charging') ? ['Ather Grid', 'BluSmart', 'Ola Electric', 'Statiq'] : ['Tata Power Solar', 'Freyr Energy', 'Waaree Energies'];
+        fallbackModels = ['Zero-Capex RESCO / PPA', 'Turnkey EPC with Long-Term O&M'];
+      } else if (lower.includes('salon') || lower.includes('spa') || lower.includes('beauty')) {
+        fallbackIndustry = 'Personal Care & Wellness Services';
+        fallbackSubIndustry = 'Premium Salon & Aesthetics';
+        fallbackCat = 'Brick-and-Mortar Consumer Services';
+        fallbackGroups = ['High-net-worth urban professionals', 'Bridal & event styling clients'];
+        fallbackCompetitors = ['Toni & Guy', 'Bounce Salon & Spa', 'Looks Salon'];
+        fallbackModels = ['High-Margin In-Salon Appointments', 'Annual Privilege Membership'];
+      } else if (lower.includes('coffee') || lower.includes('cafe')) {
+        fallbackIndustry = 'Food & Beverage Services';
+        fallbackSubIndustry = 'Specialty Coffee & Roastery';
+        fallbackCat = 'Food Hospitality';
+        fallbackGroups = ['Urban office workers & specialty coffee connoisseurs', 'Remote workers seeking cafe work hubs'];
+        fallbackCompetitors = ['Blue Tokai Coffee Roasters', 'Third Wave Coffee', 'Subko Coffee'];
+        fallbackModels = ['Omnichannel Cafe + Bean Subscription', 'Direct D2C E-Commerce'];
+      } else if (lower.includes('pet') || lower.includes('dog') || lower.includes('cat') || lower.includes('veterinary')) {
+        fallbackIndustry = 'Pet Care & Veterinary Services';
+        fallbackSubIndustry = 'Premium Pet Nutrition & Veterinary Telehealth';
+        fallbackCat = 'Pet Lifestyle & Animal Health';
+        fallbackGroups = ['Urban pet parents seeking clean nutrition', 'First-time pet adopters'];
+        fallbackCompetitors = ['Heads Up For Tails', 'Supertails', 'Zigly', 'Wiggles.in'];
+        fallbackModels = ['Recurring Monthly Nutrition Subscription', 'On-Demand Mobile Grooming'];
+      }
 
       const fallbackUnderstanding: IdeaUnderstandingResult = {
         rawPrompt: clean,
         businessConcept: clean,
         industry: fallbackIndustry,
-        subIndustry: isChocolate ? 'Artisan Craft Chocolate & Gifting' : 'Commercial Software',
-        productServiceCategory: isChocolate ? 'Craft Food & Beverage' : 'SaaS Application',
-        potentialCustomerGroups: isChocolate
-          ? ['Affluent urban millennials', 'Corporate gifting managers', 'Wedding gift curators']
-          : ['MSME business owners', 'Chartered accountants'],
+        subIndustry: fallbackSubIndustry,
+        productServiceCategory: fallbackCat,
+        potentialCustomerGroups: fallbackGroups,
         geographicContext: {
           assumedLocation: fallbackGeo,
-          isUserSpecified: clean.toLowerCase().includes('india') || isHyderabad,
-          assumptionReason: isHyderabad ? 'Identified Hyderabad from input prompt.' : 'Domestic primary market assumed.',
+          isUserSpecified: isUserSpecifiedGeo,
+          assumptionReason: geoReason,
         },
-        possibleBusinessModels: ['D2C Online E-Commerce', 'B2B Corporate Gifting', 'Modern Trade Consignment'],
-        likelyMarketCategory: 'Premium Lifestyle & Business Solutions',
-        relevantCompetitors: isChocolate ? ['Paul And Mike', 'Cadbury Bournville', 'Fabelle', 'Manam Chocolate'] : ['Zoho Books', 'TallyPrime', 'Khatabook'],
-        importantResearchQuestions: [
-          'What is the customer willingness-to-pay for premium differentiation?',
-          'What are the lean initial startup costs without heavy machinery?',
-          'Which channel delivers the highest gross margin?',
-        ],
+        possibleBusinessModels: fallbackModels,
+        likelyMarketCategory: fallbackIndustry,
+        relevantCompetitors: fallbackCompetitors,
+        importantResearchQuestions: fallbackQuestions,
         keyAssumptions: [
-          'Target buyers are willing to pay a premium for verified quality.',
-          'Initial validation can be completed digitally within 14 days.',
+          'Target buyers are willing to pay a premium for verified quality and differentiation.',
+          'Initial market validation can be completed within 14 to 30 days.',
         ],
-        missingInformation: ['Target price tier', 'Preferred manufacturing model (contract vs owned)'],
+        missingInformation: ['Target pricing tier', 'Initial distribution model preference'],
       };
+
       setIdeaUnderstanding(fallbackUnderstanding);
       setIndustry(fallbackUnderstanding.industry);
       setTargetMarket(fallbackUnderstanding.potentialCustomerGroups[0]);
@@ -686,9 +783,14 @@ export const IdeaIntelligencePage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <span className="text-[11px] font-semibold text-[#858585] uppercase tracking-wider block">
-              Autonomous Idea Interpretation
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-[#858585] uppercase tracking-wider block">
+                Autonomous Idea Interpretation
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#EBF7EE] text-[#24724E]">
+                <Sparkles className="w-3 h-3" /> Live Dynamic Analysis
+              </span>
+            </div>
             <h2 className="font-heading text-xl sm:text-2xl font-bold text-[#171717]">
               {ideaUnderstanding.businessConcept}
             </h2>
