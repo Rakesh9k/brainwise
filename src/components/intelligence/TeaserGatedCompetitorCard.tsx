@@ -17,13 +17,16 @@ export const TeaserGatedCompetitorCard: React.FC<TeaserGatedCompetitorCardProps>
   onUnlockRequest,
 }) => {
   const isGated = Boolean(competitor.isTeaserGated && !competitor.unlocked && !isUnlocked);
+  const compName = competitor.name || (competitor as any).companyName || 'Competitor';
+  const strengths = Array.isArray(competitor.strengths) ? competitor.strengths : [];
+  const weaknesses = Array.isArray(competitor.weaknesses) ? competitor.weaknesses : [];
 
   // Derive 1-5 price level and feature depth scores
-  const priceLevel = Math.min(5, Math.max(1, Math.round((competitor.xValueScore / 100) * 5)));
-  const featureDepth = Math.min(5, Math.max(1, Math.round((competitor.yDiffScore / 100) * 5)));
+  const priceLevel = Math.min(5, Math.max(1, Math.round(((competitor.xValueScore ?? 50) / 100) * 5)));
+  const featureDepth = Math.min(5, Math.max(1, Math.round(((competitor.yDiffScore ?? 50) / 100) * 5)));
 
-  const opportunityText = competitor.weaknesses[0]
-    ? `Exploit their gap in ${competitor.weaknesses[0].toLowerCase()} by leading with our transparent outcome guarantee.`
+  const opportunityText = weaknesses[0]
+    ? `Exploit their gap in ${weaknesses[0].toLowerCase()} by leading with our transparent outcome guarantee.`
     : 'Focus on specialized onboarding tailored to dissatisfied switchers.';
 
   return (
@@ -33,27 +36,29 @@ export const TeaserGatedCompetitorCard: React.FC<TeaserGatedCompetitorCardProps>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2] flex items-center justify-center font-bold text-sm text-[#171717]">
-              {competitor.name.slice(0, 2).toUpperCase()}
+              {compName.slice(0, 2).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h4 className="text-sm font-bold text-[#171717]">{competitor.name}</h4>
-                <a
-                  href={competitor.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[#858585] hover:text-[#171717]"
-                  title={competitor.website}
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                <h4 className="text-sm font-bold text-[#171717]">{compName}</h4>
+                {competitor.website && (
+                  <a
+                    href={competitor.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[#858585] hover:text-[#171717]"
+                    title={competitor.website}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
               </div>
-              <span className="text-[11px] text-[#686864]">{competitor.category}</span>
+              <span className="text-[11px] text-[#686864]">{competitor.category || 'Peer'}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <PriorityBadge priority={competitor.threatLevel} />
+            <PriorityBadge priority={competitor.threatLevel || 'medium'} />
           </div>
         </div>
 
@@ -106,11 +111,15 @@ export const TeaserGatedCompetitorCard: React.FC<TeaserGatedCompetitorCardProps>
               STRENGTHS
             </span>
             <ul className="text-xs text-[#2D4A3E] space-y-1 list-disc list-inside">
-              {competitor.strengths.slice(0, 2).map((s, idx) => (
-                <li key={idx} className="leading-snug">
-                  {s}
-                </li>
-              ))}
+              {strengths.length === 0 ? (
+                <li className="leading-snug text-[#686864]">Strengths pending deeper scan</li>
+              ) : (
+                strengths.slice(0, 2).map((s, idx) => (
+                  <li key={idx} className="leading-snug">
+                    {s}
+                  </li>
+                ))
+              )}
             </ul>
           </div>
 
@@ -120,11 +129,15 @@ export const TeaserGatedCompetitorCard: React.FC<TeaserGatedCompetitorCardProps>
               WEAKNESSES
             </span>
             <ul className="text-xs text-[#5C2B2D] space-y-1 list-disc list-inside">
-              {competitor.weaknesses.slice(0, 2).map((w, idx) => (
-                <li key={idx} className="leading-snug">
-                  {w}
-                </li>
-              ))}
+              {weaknesses.length === 0 ? (
+                <li className="leading-snug text-[#686864]">Weaknesses pending deeper scan</li>
+              ) : (
+                weaknesses.slice(0, 2).map((w, idx) => (
+                  <li key={idx} className="leading-snug">
+                    {w}
+                  </li>
+                ))
+              )}
             </ul>
           </div>
 
