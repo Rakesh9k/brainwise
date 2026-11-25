@@ -196,7 +196,10 @@ interface BrainWiseContextValue {
   updateTaskNotes: (taskId: string, notes: string) => void;
   addGoal: (goal: Omit<GrowthGoal, 'id'>) => void;
   updateGoalProgress: (goalId: string, currentValue: number) => void;
-  addExperiment: (exp: Omit<GrowthExperiment, 'id'>) => void;
+  addExperiment: (
+    exp: Omit<GrowthExperiment, 'id'>,
+    options?: { silent?: boolean; toastMessage?: string }
+  ) => void;
   updateExperimentStatus: (
     expId: string,
     status: GrowthExperiment['status'],
@@ -2746,22 +2749,29 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const addExperiment = (exp: Omit<GrowthExperiment, 'id'>) => {
+  const addExperiment = (
+    exp: Omit<GrowthExperiment, 'id'>,
+    options?: { silent?: boolean; toastMessage?: string }
+  ) => {
     const id = `exp-${Date.now()}`;
     const prevExperiments = state.experiments;
     setState((prev) => ({
       ...prev,
       experiments: [{ ...exp, id }, ...prev.experiments],
     }));
-    showToast('Growth experiment created.');
+    if (!options?.silent) {
+      showToast(options?.toastMessage || 'Growth experiment created.');
+    }
     if (state.activeWorkspaceId) {
-      apiClient.createExperiment(state.activeWorkspaceId, exp).catch((err: any) => {
-        setState((prev) => ({
-          ...prev,
-          experiments: prevExperiments,
-        }));
-        showToast(`Failed to persist experiment: ${err?.message || 'Error'}`, { tone: 'error' });
-      });
+      apiClient
+        .createExperiment(state.activeWorkspaceId, { ...exp, experimentId: id } as any)
+        .catch((err: any) => {
+          setState((prev) => ({
+            ...prev,
+            experiments: prevExperiments,
+          }));
+          showToast(`Failed to persist experiment: ${err?.message || 'Error'}`, { tone: 'error' });
+        });
     }
   };
 

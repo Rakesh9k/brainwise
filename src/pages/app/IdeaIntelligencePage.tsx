@@ -2527,28 +2527,51 @@ export const IdeaIntelligencePage: React.FC = () => {
               <div id="section-KS">
                 <KillSwitchesSection
                   assumptions={activeReport.criticalAssumptions}
+                  isPromoted={(assumption) =>
+                    state.experiments.some(
+                      (e) =>
+                        e.hypothesis === assumption.assumption ||
+                        e.title === `Validation Test: ${assumption.assumption.slice(0, 60)}` ||
+                        e.title === `Kill Switch: ${assumption.assumption.slice(0, 60)}`
+                    )
+                  }
+                  onViewInGrowthPlanner={() =>
+                    navigate('growth-director', { growthTab: 'experiments' })
+                  }
                   onPromoteToExperiment={(assumption) => {
-                    addExperiment({
-                      title: `Kill Switch: ${assumption.assumption.slice(0, 60)}`,
-                      hypothesis: assumption.assumption,
-                      objective: 'Validate critical assumption before committing capital',
-                      targetAudience: activeReport.targetMarket,
-                      action: assumption.howToTest,
-                      successMetric: assumption.successSignal,
-                      budget: 'TBD',
-                      startDate: new Date().toISOString().slice(0, 10),
-                      endDate: 'TBD',
-                      status: 'Planned',
-                      results: '',
-                      learnings: '',
-                      riskLevel: assumption.riskLevel,
-                      howToTest: assumption.howToTest,
-                      timeline: assumption.timeline,
-                      successSignal: assumption.successSignal,
-                      stopIfCondition: assumption.stopIfCondition,
-                      isKillSwitch: true,
-                    });
-                    showToast('Kill switch promoted to Growth Planner experiment');
+                    const alreadyExists = state.experiments.some(
+                      (e) =>
+                        e.hypothesis === assumption.assumption ||
+                        e.title === `Validation Test: ${assumption.assumption.slice(0, 60)}` ||
+                        e.title === `Kill Switch: ${assumption.assumption.slice(0, 60)}`
+                    );
+                    if (alreadyExists) {
+                      showToast('Already in Growth Planner → Experiments');
+                      return;
+                    }
+                    addExperiment(
+                      {
+                        title: `Validation Test: ${assumption.assumption.slice(0, 60)}`,
+                        hypothesis: assumption.assumption,
+                        objective: 'Validate critical assumption before committing capital',
+                        targetAudience: activeReport.targetMarket,
+                        action: assumption.howToTest,
+                        successMetric: assumption.successSignal,
+                        budget: 'TBD',
+                        startDate: new Date().toISOString().slice(0, 10),
+                        endDate: 'TBD',
+                        status: 'Planned',
+                        results: '',
+                        learnings: '',
+                        riskLevel: assumption.riskLevel,
+                        howToTest: assumption.howToTest,
+                        timeline: assumption.timeline,
+                        successSignal: assumption.successSignal,
+                        stopIfCondition: assumption.stopIfCondition,
+                        isKillSwitch: true,
+                      },
+                      { toastMessage: 'Validation test added to Growth Planner → Experiments' }
+                    );
                   }}
                 />
               </div>
@@ -3073,7 +3096,9 @@ export const IdeaIntelligencePage: React.FC = () => {
           </div>
         )}
 
-        <JourneyNextStep currentRoute="idea-intelligence" />
+        <div id="section-journey">
+          <JourneyNextStep currentRoute="idea-intelligence" />
+        </div>
       </LiquidSkeletonReveal>
     );
   }

@@ -1,5 +1,14 @@
 import React from 'react';
-import { AlertOctagon, CheckCircle2, Clock, FlaskConical, Plus, ShieldAlert } from 'lucide-react';
+import {
+  AlertOctagon,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Clock,
+  FlaskConical,
+  Plus,
+  ShieldAlert,
+} from 'lucide-react';
 import type { KillSwitchAssumption } from '../../types/brainwise';
 import { typeClass } from '../../theme/typography';
 
@@ -7,6 +16,8 @@ interface KillSwitchesSectionProps {
   assumptions: KillSwitchAssumption[];
   onPromoteToExperiment?: (assumption: KillSwitchAssumption) => void;
   onUpdateStatus?: (id: string, status: 'pending' | 'tested_pass' | 'tested_killed') => void;
+  isPromoted?: (assumption: KillSwitchAssumption) => boolean;
+  onViewInGrowthPlanner?: () => void;
   title?: string;
   subtitle?: string;
   showPromoteAction?: boolean;
@@ -16,6 +27,8 @@ export const KillSwitchesSection: React.FC<KillSwitchesSectionProps> = ({
   assumptions,
   onPromoteToExperiment,
   onUpdateStatus,
+  isPromoted,
+  onViewInGrowthPlanner,
   title = 'Test Before You Build — Critical Assumptions',
   subtitle = 'Each assumption has a concrete test, a deadline, a quantifiable success threshold, and an explicit stop-if trigger.',
   showPromoteAction = true,
@@ -117,16 +130,35 @@ export const KillSwitchesSection: React.FC<KillSwitchesSectionProps> = ({
                     </div>
                   )}
 
-                  {showPromoteAction && onPromoteToExperiment && (
-                    <button
-                      type="button"
-                      onClick={() => onPromoteToExperiment(item)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#171717] hover:bg-[#252525] text-white text-xs font-semibold cursor-pointer transition-colors"
-                    >
-                      <Plus className="w-3 h-3 text-[#FF7417]" />
-                      <span>Promote to Growth Planner</span>
-                    </button>
-                  )}
+                  {showPromoteAction &&
+                    onPromoteToExperiment &&
+                    (isPromoted?.(item) ? (
+                      <div className="inline-flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] text-xs font-semibold">
+                          <Check className="w-3.5 h-3.5 text-[#10B981]" />
+                          <span>Added to Growth Planner</span>
+                        </span>
+                        {onViewInGrowthPlanner && (
+                          <button
+                            type="button"
+                            onClick={onViewInGrowthPlanner}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] bg-white border border-[#E6E6E2] hover:bg-[#F5F5F4] text-[#171717] text-xs font-semibold cursor-pointer transition-colors"
+                          >
+                            <span>View</span>
+                            <ArrowRight className="w-3 h-3 text-[#FF7417]" />
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onPromoteToExperiment(item)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#171717] hover:bg-[#252525] text-white text-xs font-semibold cursor-pointer transition-colors"
+                      >
+                        <Plus className="w-3 h-3 text-[#FF7417]" />
+                        <span>Promote to Growth Planner</span>
+                      </button>
+                    ))}
                 </div>
               </div>
 
