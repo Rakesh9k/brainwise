@@ -823,7 +823,7 @@ export const BrandStudioPage: React.FC = () => {
               timestamp: 'Calibrated',
               confidence: 0.99,
               type: 'GROUND_TRUTH',
-              details: `Primary Color: ${state.brand.palette.primary} · Heading Font: ${state.brand.typography.headingFont}`,
+              details: `Primary Color: ${(state.brand.palette as any)?.primary || state.brand.palette?.[0]?.hex || activeConcept?.accentColor || '#18181B'} · Heading Font: ${(state.brand.typography as any)?.headingFont || state.brand.typography?.heading || 'Plus Jakarta Sans'}`,
             },
             {
               title: 'Tone of Voice Parameters',
@@ -831,7 +831,7 @@ export const BrandStudioPage: React.FC = () => {
               timestamp: 'Grounded',
               confidence: 0.98,
               type: 'USER_CONFIRMED',
-              details: state.brand.guidelines.toneOfVoice || 'Authoritative and approachable',
+              details: (state.brand as any)?.guidelines?.toneOfVoice || (state.brand as any)?.guidelines?.brandVoice || 'Authoritative and approachable',
             },
           ],
           guardrails: {
