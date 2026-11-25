@@ -51,6 +51,7 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
     convertEventToExperiment,
     dismissMarketEvent,
     markMarketEventRead,
+    runLiveMarketWatchScan,
     updateScheduledReports,
     departmentResetNonce,
     autoDiscoverCompetitorsForBrain,
@@ -61,6 +62,16 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
   const [selectedEvent, setSelectedEvent] = useState<MarketEvent | null>(null);
   const [addWatchOpen, setAddWatchOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<CompetitorProfileData | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+
+  const handleRunLiveScan = async () => {
+    setIsScanning(true);
+    try {
+      await runLiveMarketWatchScan();
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   // Autonomous Competitor & Event Discovery on mount if none exist
   useEffect(() => {
@@ -440,27 +451,40 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
 
       {tab === 'feed' && (
         <FluidTransition key="mw-feed" direction="fade" className="space-y-4">
-          <FilterBar
-            activeId={catFilter}
-            onChange={setCatFilter}
-            options={[
-              { id: 'all', label: 'All Signals' },
-              { id: 'Pricing changes', label: 'Pricing' },
-              { id: 'Product launches', label: 'Launches' },
-              { id: 'Public social media activity', label: 'Social' },
-              { id: 'Market trends', label: 'Trends' },
-            ]}
-          />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <FilterBar
+              activeId={catFilter}
+              onChange={setCatFilter}
+              options={[
+                { id: 'all', label: 'All Signals' },
+                { id: 'Pricing changes', label: 'Pricing' },
+                { id: 'Product launches', label: 'Launches' },
+                { id: 'Public social media activity', label: 'Social' },
+                { id: 'Market trends', label: 'Trends' },
+              ]}
+            />
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleRunLiveScan}
+              disabled={isScanning}
+            >
+              <Radio className={`w-3.5 h-3.5 ${isScanning ? 'animate-pulse' : ''}`} />
+              {isScanning ? 'Scanning Live Web Sources…' : 'Scan Live Signals'}
+            </Button>
+          </div>
 
           {filteredFeed.length === 0 ? (
             <GuidedActionEmptyCard
               stepLabel="Intelligence Feed"
               title="No matching market signals"
-              description="Clear the category filter or add a new competitor monitor to receive live pricing, launch, and review signals."
-              actionLabel="Add Competitor to Watchlist"
-              onAction={() => setAddWatchOpen(true)}
-              secondaryLabel={catFilter !== 'all' ? 'Show All Signals' : undefined}
-              onSecondaryAction={catFilter !== 'all' ? () => setCatFilter('all') : undefined}
+              description="Run a live Google-grounded scan for your industry & tracked competitors, or clear the category filter."
+              actionLabel={isScanning ? 'Scanning Live Sources…' : 'Scan Live Signals'}
+              onAction={handleRunLiveScan}
+              secondaryLabel={catFilter !== 'all' ? 'Show All Signals' : 'Add Competitor to Watchlist'}
+              onSecondaryAction={
+                catFilter !== 'all' ? () => setCatFilter('all') : () => setAddWatchOpen(true)
+              }
             />
           ) : (
             <div className="space-y-3">
@@ -489,7 +513,19 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
                         {ev.detectedChange}
                       </p>
                       <div className="text-[11px] text-[#686864] mt-2">
-                        Source: {ev.sourceReference}
+                        Source:{' '}
+                        {ev.sourceReference?.startsWith('http') ? (
+                          <a
+                            href={ev.sourceReference}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[#24724E] underline hover:text-[#1B563A] break-all"
+                          >
+                            {ev.sourceReference}
+                          </a>
+                        ) : (
+                          ev.sourceReference
+                        )}
                       </div>
                     </div>
                     <div className="p-3.5 rounded-[10px] bg-[#FFF0E5]/60 border border-[#FFD3B3]">

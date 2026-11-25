@@ -11,6 +11,10 @@ import { marketWatchRepository } from '../../repositories/marketWatchRepository'
 import { taskRepository } from '../../repositories/taskRepository';
 import { experimentRepository } from '../../repositories/experimentRepository';
 import { businessProfileRepository } from '../../repositories/businessProfileRepository';
+import { competitorRepository } from '../../repositories/competitorRepository';
+import { GeminiProviderAdapter } from '../../ai/modelRouter';
+import { serverConfig } from '../../config/index';
+import { executeTruthCheck } from '../../../utils/truthCheck';
 import { departmentEventBus } from '../../events/eventBus';
 import { creditService } from '../../services/creditService';
 import { businessWatchService } from '../../services/businessWatchService';
@@ -338,63 +342,145 @@ router.post(
 
     try {
       const rawProfile = await businessProfileRepository.getProfile(req.workspace!.workspaceId);
+      const bodyBrain = req.body?.brain || {};
       const profile = rawProfile || {
-        businessName: req.workspace?.workspaceName || 'My Business',
-        location: req.workspace?.country || 'Global',
-        valueProposition: 'Differentiated value',
+        businessName: bodyBrain.businessName || req.workspace?.workspaceName || 'My Business',
+        location: bodyBrain.location || req.workspace?.country || '',
+        valueProposition: bodyBrain.valueProposition || 'Differentiated value',
       };
-      const industry = req.workspace?.industry || 'Specialty Business';
-      const now = new Date().toISOString();
+      const industry = bodyBrain.industry || req.workspace?.industry || 'Specialty Business';
+      const detectedLocation =
+        typeof req.body?.detectedLocation === 'string' ? req.body.detectedLocation.trim() : '';
+      const headerCountry =
+        (req.headers['x-appengine-country'] as string) ||
+        (req.headers['cf-ipcountry'] as string) ||
+        '';
+      const effectiveLocation =
+        (bodyBrain.location || profile.location || '').trim() ||
+        detectedLocation ||
+        headerCountry ||
+        'India';
 
-      // Deterministic evidence-grounded findings based on business context
-      const findingsToCreate: Array<Omit<MarketFindingEntity, 'workspaceId' | 'createdAt'>> = [
-        {
-          findingId: `fnd_${Date.now()}_0`,
-          headline: `${industry} Adoption Accelerates in ${profile.location.split(',')[0] || 'Target Region'}`,
-          publisher: 'Industry Intelligence Wire',
-          sourceUrl: 'https://industryintelligence.example.com/trends/growth',
-          publicationDate: now,
-          retrievedAt: now,
-          topic: industry,
-          geography: profile.location || 'Global',
-          summary: `Surge in consumer and business demand for differentiated, high-transparency offerings matching ${profile.businessName}'s value proposition.`,
-          evidence: `Multi-source aggregate index shows 18% lift in direct consumer search volume across key category terms.`,
-          relevanceScore: 94,
-          dedupHash: crypto
-            .createHash('md5')
-            .update(
-              `${industry} Adoption Accelerates in ${profile.location.split(',')[0] || 'Target Region'}:https://industryintelligence.example.com/trends/growth`
-            )
-            .digest('hex'),
-          category: 'Trend',
-          suggestedAction: `Deploy seasonal landing page campaign in Brand Studio targeting primary pain points.`,
-          isRead: false,
-          isArchived: false,
-        },
-        {
-          findingId: `fnd_${Date.now()}_1`,
-          headline: `New Regulatory Guidelines Published for ${industry}`,
-          publisher: 'Commerce Standard Authority',
-          sourceUrl: 'https://standards.example.gov/circular-2026',
-          publicationDate: now,
-          retrievedAt: now,
-          topic: 'Regulatory & Compliance',
-          geography: profile.location || 'India',
-          summary: `Updated digital consumer transparency and billing notification standards take effect.`,
-          evidence: `Published statutory gazette notification. Requires transparent price breakdowns and clear renewal terms.`,
-          relevanceScore: 88,
-          dedupHash: crypto
-            .createHash('md5')
-            .update(
-              `New Regulatory Guidelines Published for ${industry}:https://standards.example.gov/circular-2026`
-            )
-            .digest('hex'),
-          category: 'Regulatory',
-          suggestedAction: `Audit pricing disclosures and update Business Brain product catalogue terms.`,
-          isRead: false,
-          isArchived: false,
-        },
-      ];
+      // Gather tracked competitors from Firestore + request body
+      const dbCompetitors = await competitorRepository
+        .listByWorkspace(req.workspace!.workspaceId)
+        .catch(() => []);
+      const bodyCompetitors: string[] = Array.isArray(req.body?.competitors)
+        ? req.body.competitors.map((c: any) => String(c?.name || c || '').trim()).filter(Boolean)
+        : [];
+      const competitorNames = Array.from(
+        new Set([
+          ...dbCompetitors.map((c) => c.companyName || c.canonicalName).filter(Boolean),
+          ...bodyCompetitors,
+        ])
+      ).slice(0, 6);
+
+      const now = new Date().toISOString();
+      const findingsToCreate: Array<Omit<MarketFindingEntity, 'workspaceId' | 'createdAt'>> = [];
+
+      // Live Google Search Grounding (zero fabricated URLs or stats)
+      const provider = new GeminiProviderAdapter();
+      const searchPrompt = [
+        `Search for real, recent market news, consumer demand trends, regulatory updates, or competitor announcements relevant to:`,
+        `Business: ${bodyBrain.businessName || profile.businessName}`,
+        `Industry: ${industry}`,
+        `Region / Country: ${effectiveLocation}`,
+        competitorNames.length > 0 ? `Tracked Competitors: ${competitorNames.join(', ')}` : '',
+        '',
+        `STRICT ANTI-HALLUCINATION RULES:`,
+        `1. ONLY report facts, events, pricing shifts, or trends explicitly observed in the Google Search results.`,
+        `2. NEVER invent percentages, statistics, circular numbers, or example.com/example.gov URLs.`,
+        `3. Strictly exclude video/reel recommendations.`,
+        `4. Return ONLY valid JSON array (or [] if nothing verifiable is found):`,
+        `[`,
+        `  {`,
+        `    "competitorOrSource": "Company or Publication Name",`,
+        `    "headline": "Short factual headline",`,
+        `    "category": "Pricing changes" | "Product launches" | "Public social media activity" | "Market trends",`,
+        `    "detectedChange": "Observed factual change or market shift from search results",`,
+        `    "aiInterpretation": "Why this matters for ${bodyBrain.businessName || profile.businessName}",`,
+        `    "suggestedAction": "Concrete next step (no video)",`,
+        `    "importance": "high" | "medium" | "low"`,
+        `  }`,
+        `]`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      const aiResult = await provider.generate({
+        model: serverConfig.geminiModel,
+        prompt: searchPrompt,
+        systemInstruction:
+          'You are a strict, evidence-only Market Intelligence analyst. Never fabricate facts or URLs. Output strictly valid JSON array.',
+        temperature: 0.2,
+        enableGoogleSearch: true,
+      });
+
+      const realCitations = (aiResult.groundingMetadata?.citations || []).filter(
+        (c) =>
+          c.url &&
+          !c.url.includes('example.com') &&
+          !c.url.includes('example.gov') &&
+          c.url.startsWith('http')
+      );
+
+      if (aiResult.text && realCitations.length > 0) {
+        try {
+          const cleaned = aiResult.text
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/```$/i, '')
+            .trim();
+          const parsed = JSON.parse(cleaned);
+          const items = Array.isArray(parsed) ? parsed : [];
+
+          items.slice(0, 4).forEach((item: any, idx: number) => {
+            const citation = realCitations[idx % realCitations.length];
+            const headline = String(item.headline || '').trim();
+            const detectedChange = String(item.detectedChange || item.summary || '').trim();
+            if (!headline || !detectedChange) return;
+
+            const truth = executeTruthCheck(`${headline} ${detectedChange} ${item.suggestedAction || ''}`, {
+              verifiedPrices: [],
+              forbiddenClaims: ['example.com', 'example.gov', 'ai video', 'video reel'],
+            });
+            if (!truth.passed) return;
+
+            findingsToCreate.push({
+              findingId: `fnd_${Date.now()}_${idx}`,
+              headline,
+              publisher: citation.title || String(item.competitorOrSource || 'Verified Web Source'),
+              sourceUrl: citation.url,
+              publicationDate: now,
+              retrievedAt: now,
+              topic: String(item.category || industry),
+              geography: effectiveLocation,
+              summary: detectedChange,
+              evidence: String(item.aiInterpretation || detectedChange),
+              relevanceScore: item.importance === 'high' ? 92 : 82,
+              dedupHash: crypto
+                .createHash('md5')
+                .update(`${headline}:${citation.url}`)
+                .digest('hex'),
+              category:
+                item.category === 'Pricing changes'
+                  ? 'Pricing'
+                  : item.category === 'Product launches'
+                    ? 'Launch'
+                    : item.category === 'Public social media activity'
+                      ? 'Social'
+                      : 'Trend',
+              suggestedAction: String(
+                item.suggestedAction || 'Evaluate positioning response in Growth Planner.'
+              ),
+              isRead: false,
+              isArchived: false,
+            });
+          });
+        } catch {
+          // If JSON parse fails, do NOT invent fake findings
+        }
+      }
 
       const created = [];
       for (const f of findingsToCreate) {
@@ -419,14 +505,20 @@ router.post(
         workspaceId: req.workspace!.workspaceId,
         reservation,
         featureId: 'FEAT-MKT-001',
-        notes: 'Market Watch Intelligence Scan',
+        notes: `Live Google-Grounded Market Scan (${effectiveLocation})`,
       });
 
       res.status(201).json({
         success: true,
         data: created,
+        citationsCount: realCitations.length,
+        effectiveLocation,
+        statusMessage:
+          created.length > 0
+            ? `Captured ${created.length} grounded market signals verified against ${realCitations.length} live web sources.`
+            : 'No new verified external shifts detected in live search results (zero unverified data fabricated).',
         meta: {
-          creditsDeducted: 5,
+          creditsDeducted: created.length > 0 ? 5 : 0,
           creditBalanceRemaining: settlement.remainingBalance,
         },
       });

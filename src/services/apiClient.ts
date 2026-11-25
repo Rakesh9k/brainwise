@@ -1029,8 +1029,11 @@ export class BrainWiseApiClient {
     return this.request(`/api/v1/workspaces/${workspaceId}/market-watch/findings`, 'POST', finding);
   }
 
-  public async runMarketScan(workspaceId: string): Promise<any> {
-    return this.request(`/api/v1/workspaces/${workspaceId}/market-watch/scan`, 'POST');
+  public async runMarketScan(
+    workspaceId: string,
+    payload?: Record<string, any>
+  ): Promise<any> {
+    return this.request(`/api/v1/workspaces/${workspaceId}/market-watch/scan`, 'POST', payload);
   }
 
   public async convertFindingToExperiment(workspaceId: string, findingId: string): Promise<any> {

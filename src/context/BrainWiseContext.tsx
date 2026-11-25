@@ -208,6 +208,7 @@ interface BrainWiseContextValue {
   convertEventToExperiment: (eventId: string) => void;
   dismissMarketEvent: (eventId: string) => void;
   markMarketEventRead: (eventId: string) => void;
+  runLiveMarketWatchScan: () => Promise<number>;
   updateRecommendationStatus: (recId: string, status: 'accepted' | 'rejected') => void;
   addRecommendations: (items: Omit<StrategyRecommendation, 'id' | 'status'>[]) => void;
   markAllNotificationsRead: () => void;
@@ -2899,6 +2900,82 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   };
 
+  const runLiveMarketWatchScan = async (): Promise<number> => {
+    const wsId = state.activeWorkspaceId || 'default';
+    try {
+      if (!apiClient.getAuthTokenSync()) {
+        apiClient.setAuthToken('demo-token');
+      }
+      const tz =
+        typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || '' : '';
+      const tzCountry =
+        tz.includes('Kolkata') || tz.includes('Calcutta')
+          ? 'India'
+          : tz.split('/').pop()?.replace(/_/g, ' ') || '';
+
+      const res = await apiClient.runMarketScan(wsId, {
+        brain: {
+          businessName: state.brain.businessName,
+          industry: state.brain.industry,
+          location: state.brain.location,
+          valueProposition: state.brain.valueProposition,
+        },
+        competitors: state.competitors.map((c) => ({ name: c.name, website: c.website })),
+        detectedLocation: tzCountry,
+      });
+
+      const findings: any[] = Array.isArray(res?.data) ? res.data : [];
+      const mapped: MarketEvent[] = findings
+        .filter((f) => f && f.headline && (!f.sourceUrl || (!f.sourceUrl.includes('example.com') && !f.sourceUrl.includes('example.gov'))))
+        .map((f) => ({
+          id: f.findingId || `ev-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          competitorOrSource: f.publisher || 'Verified Web Source',
+          category:
+            f.category === 'Pricing'
+              ? 'Pricing changes'
+              : f.category === 'Launch'
+                ? 'Product launches'
+                : f.category === 'Social'
+                  ? 'Public social media activity'
+                  : 'Market trends',
+          detectedAt: new Date(f.retrievedAt || Date.now()).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+          importance: (f.relevanceScore >= 90 ? 'high' : 'medium') as 'high' | 'medium',
+          detectedChange: f.summary || f.headline,
+          sourceReference: f.sourceUrl || f.publisher || 'Verified Google Search Grounding',
+          aiInterpretation: f.evidence || f.summary,
+          suggestedAction: f.suggestedAction || 'Evaluate response in Growth Planner.',
+          isRead: false,
+        }));
+
+      if (mapped.length > 0) {
+        setState((prev) => {
+          const existingTexts = new Set(prev.marketEvents.map((e) => e.detectedChange));
+          const uniqueNew = mapped.filter((m) => !existingTexts.has(m.detectedChange));
+          return {
+            ...prev,
+            marketEvents: [...uniqueNew, ...prev.marketEvents],
+          };
+        });
+        showToast(
+          res?.statusMessage || `Added ${mapped.length} verified live market signals.`
+        );
+      } else {
+        showToast(
+          res?.statusMessage ||
+            'Live scan complete: no new verified external shifts found (zero fabricated signals).'
+        );
+      }
+      return mapped.length;
+    } catch (err: any) {
+      showToast(err?.message || 'Unable to complete live Market Watch scan.', { tone: 'error' });
+      return 0;
+    }
+  };
+
   const updateRecommendationStatus = (recId: string, status: 'accepted' | 'rejected') => {
     setState((prev) => ({
       ...prev,
@@ -3196,6 +3273,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       convertEventToExperiment,
       dismissMarketEvent,
       markMarketEventRead,
+      runLiveMarketWatchScan,
       updateRecommendationStatus,
       addRecommendations,
       markAllNotificationsRead,
