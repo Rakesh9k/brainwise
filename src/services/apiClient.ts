@@ -149,10 +149,12 @@ export class BrainWiseApiClient {
     endpoint: string,
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
     body?: unknown,
-    customHeaders: Record<string, string> = {}
+    customHeaders: Record<string, string> = {},
+    timeoutOverrideMs?: number
   ): Promise<TResponse> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+    const effectiveTimeoutMs = timeoutOverrideMs ?? this.timeoutMs;
+    const timeoutId = setTimeout(() => controller.abort(), effectiveTimeoutMs);
 
     try {
       const headers: Record<string, string> = {
@@ -2865,7 +2867,9 @@ export class BrainWiseApiClient {
     return this.request(
       `/api/v1/workspaces/${workspaceId}/ai/brand-logo`,
       'POST',
-      payload
+      payload,
+      {},
+      60000
     );
   }
 
@@ -2906,7 +2910,9 @@ export class BrainWiseApiClient {
     return this.request(
       `/api/v1/workspaces/${workspaceId}/ai/social-creative`,
       'POST',
-      payload
+      payload,
+      {},
+      60000
     );
   }
 
@@ -2937,7 +2943,9 @@ export class BrainWiseApiClient {
     return this.request(
       `/api/v1/workspaces/${workspaceId}/ai/brand-asset`,
       'POST',
-      payload
+      payload,
+      {},
+      60000
     );
   }
 

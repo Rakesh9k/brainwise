@@ -436,6 +436,11 @@ export class CloudFirestoreDatabase implements IDatabaseService {
         });
       }
       this.firestore = getFirestore();
+      try {
+        this.firestore.settings({ ignoreUndefinedProperties: true });
+      } catch {
+        // Ignore if settings were already applied to this Firestore instance
+      }
       dbLogger.info('CloudFirestoreDatabase initialized successfully', {
         operation: 'DATABASE_INITIALIZATION',
         details: { projectId: serverConfig.firebaseProjectId },
