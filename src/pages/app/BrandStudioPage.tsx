@@ -151,6 +151,12 @@ export const BrandStudioPage: React.FC = () => {
   const [brandLockEnabled, setBrandLockEnabled] = useState(true);
   const copyTimerRef = useRef<number | null>(null);
 
+  const hasApprovedLogo = Boolean(
+    state.brand?.selectedConceptId ||
+      state.brand?.status === 'Completed' ||
+      state.assets.some((a) => a.type === 'logo')
+  );
+
   const activeConcept =
     state.brand?.concepts?.find((c) => c.id === state.brand?.selectedConceptId) ??
     state.brand?.concepts?.[0] ?? {
@@ -1357,6 +1363,18 @@ export const BrandStudioPage: React.FC = () => {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => {
                               setSelectedDirection(dir.label);
+                              updateBrandIdentity({
+                                brandName: effectiveBrandName,
+                                visualDirection: dir.label,
+                                brandVoice: dir.voice,
+                                palette: [
+                                  { name: 'Primary', hex: dir.swatches[0], role: 'Primary brand ink' },
+                                  { name: 'Accent', hex: dir.swatches[1], role: 'Highlight & CTA accent' },
+                                  { name: 'Surface', hex: dir.swatches[2], role: 'Background surface' },
+                                  { name: 'Dark Ink', hex: '#18181B', role: 'High-contrast text' },
+                                  { name: 'Muted Slate', hex: '#71717A', role: 'Secondary metadata' },
+                                ],
+                              });
                               void handleSendIdentityChat(dir.prompt);
                             }}
                             className={`text-left rounded-[12px] border p-3.5 transition-all cursor-pointer relative ${
@@ -1526,6 +1544,13 @@ export const BrandStudioPage: React.FC = () => {
                                 brandName: effectiveBrandName,
                                 visualDirection: activeDir.label,
                                 brandVoice: state.brand.brandVoice || activeDir.voice,
+                                palette: [
+                                  { name: 'Primary', hex: activeDir.swatches[0], role: 'Primary brand ink' },
+                                  { name: 'Accent', hex: activeDir.swatches[1], role: 'Highlight & CTA accent' },
+                                  { name: 'Surface', hex: activeDir.swatches[2], role: 'Background surface' },
+                                  { name: 'Dark Ink', hex: '#18181B', role: 'High-contrast text' },
+                                  { name: 'Muted Slate', hex: '#71717A', role: 'Secondary metadata' },
+                                ],
                                 status: 'Finalized',
                               });
                               showToast(`Brand Identity finalized & locked for ${effectiveBrandName}!`);
@@ -1971,28 +1996,63 @@ export const BrandStudioPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
             <DarkSurfacePanel className="lg:col-span-5 p-6 flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-[#A8A8A2]">Approved Master Logo</span>
-                <StatusBadge status={state.brand.status} tone="success" />
+                <span className="text-xs text-[#A8A8A2]">
+                  {hasApprovedLogo ? 'Approved Master Logo' : 'Master Logo · Awaiting Your Approval'}
+                </span>
+                <StatusBadge
+                  status={hasApprovedLogo ? 'Approved ✓' : 'Not Generated Yet'}
+                  tone={hasApprovedLogo ? 'success' : 'warning'}
+                />
               </div>
-              <div className="py-8 flex items-center gap-4">
-                {renderLogoMark(activeConcept, activeConcept.accentColor, false)}
-                <div className="min-w-0">
-                  <div className="font-heading text-2xl font-bold truncate">
-                    {state.brand.brandName}
+              {hasApprovedLogo ? (
+                <>
+                  <div className="py-8 flex items-center gap-4">
+                    {renderLogoMark(activeConcept, activeConcept.accentColor, false)}
+                    <div className="min-w-0">
+                      <div className="font-heading text-2xl font-bold truncate">
+                        {effectiveBrandName}
+                      </div>
+                      <div className="text-xs text-[#FF8A36] mt-0.5">{state.brand.tagline}</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-[#FF8A36] mt-0.5">{state.brand.tagline}</div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-4 border-t border-[#2E2E2E] text-xs">
-                <span className="text-[#A8A8A2]">Concept: {activeConcept.name}</span>
-                <button
-                  type="button"
-                  onClick={() => setTab('logos')}
-                  className="text-[#FF8A36] font-medium cursor-pointer"
-                >
-                  Open AI Logo Studio →
-                </button>
-              </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-[#2E2E2E] text-xs">
+                    <span className="text-[#A8A8A2]">Concept: {activeConcept.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setTab('logos')}
+                      className="text-[#FF8A36] font-medium cursor-pointer"
+                    >
+                      Open AI Logo Studio →
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="py-6 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[12px] border border-dashed border-[#4A4A46] bg-[#242424] flex items-center justify-center text-sm font-mono-num text-[#8E8E88] shrink-0">
+                      ?
+                    </div>
+                    <div className="min-w-0 space-y-1">
+                      <div className="font-heading text-base font-bold text-white">
+                        No logo approved yet
+                      </div>
+                      <p className="text-xs text-[#A8A8A2] leading-relaxed">
+                        BrainWise will never auto-lock a logo for you. Generate 3 custom marks grounded in your Business Brain and approve your favorite.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-[#2E2E2E] text-xs">
+                    <span className="text-[#8E8E88]">Awaiting your selection</span>
+                    <button
+                      type="button"
+                      onClick={() => setTab('logos')}
+                      className="px-3 py-1.5 rounded-[8px] bg-[#FF7417] hover:bg-[#E5620A] text-white font-semibold cursor-pointer transition-colors"
+                    >
+                      Generate Logo Concepts →
+                    </button>
+                  </div>
+                </>
+              )}
             </DarkSurfacePanel>
 
             <div className="lg:col-span-7 rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 space-y-5 bw-surface-raised">
@@ -2002,20 +2062,32 @@ export const BrandStudioPage: React.FC = () => {
                     <h2 className="font-heading text-base font-bold text-[#252525]">
                       Color System &amp; Typography
                     </h2>
-                    <BrainLineagePopover
-                      align="left"
-                      sourceDepartment="Competitive Intelligence"
-                      insight={`Palette and editorial contrast respond directly to "${state.brand.visualDirection}".`}
-                      targetRoute="competitive-intelligence"
-                      editLabel="Review competitive differentiation"
-                    />
+                    <span
+                      className={`text-[10px] font-mono-num px-2 py-0.5 rounded-full ${
+                        state.brand.status === 'Finalized' || state.brand.status === 'Completed'
+                          ? 'bg-[#ECF7F1] text-[#24724E]'
+                          : 'bg-[#FFF0E5] text-[#C44D00]'
+                      }`}
+                    >
+                      {state.brand.status === 'Finalized' || state.brand.status === 'Completed'
+                        ? 'Locked by You ✓'
+                        : 'Workspace Default · Customize Below'}
+                    </span>
                   </div>
-                  <p className="text-xs text-[#5C5C58] mt-0.5">
-                    Automatically injected into every AI Logo, Collateral, and Instagram Carousel
-                    prompt
+                  <p className="text-xs text-[#5C5C58] mt-1">
+                    {state.brand.status === 'Finalized' || state.brand.status === 'Completed'
+                      ? 'Your locked palette & typography are injected into every AI Logo, Collateral, and Carousel prompt.'
+                      : 'These are starting defaults—pick a preset below or open the 11-Step Builder so you have full control before generating logos.'}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 no-print">
+                  <button
+                    type="button"
+                    onClick={() => setBuilderOpen(true)}
+                    className="px-2.5 py-1.5 text-xs font-semibold rounded-[8px] bg-[#171717] hover:bg-[#2A2A2A] text-white cursor-pointer transition-colors"
+                  >
+                    Customize Colors &amp; Fonts
+                  </button>
                   <LiquidButton
                     variant="secondary"
                     size="sm"
@@ -2035,6 +2107,68 @@ export const BrandStudioPage: React.FC = () => {
                     {copiedToken === 'json' ? 'Copied JSON' : 'Copy JSON'}
                   </LiquidButton>
                 </div>
+              </div>
+
+              {/* Quick Interactive Palette & Font Switcher */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-medium text-[#686864]">Quick apply:</span>
+                {[
+                  {
+                    name: 'Warm Artisan Craft',
+                    palette: [
+                      { name: 'Cacao Ink', hex: '#5C3422', role: 'Primary brand ink' },
+                      { name: 'Terracotta', hex: '#D97724', role: 'Accent & CTA' },
+                      { name: 'Warm Cream', hex: '#F7EFE6', role: 'Surface' },
+                      { name: 'Espresso', hex: '#2A1810', role: 'Deep contrast' },
+                      { name: 'Oat Slate', hex: '#8C7A6B', role: 'Secondary text' },
+                    ],
+                    typography: { heading: 'Instrument Serif', body: 'DM Sans', mono: 'JetBrains Mono' },
+                  },
+                  {
+                    name: 'Modern Minimalist Luxury',
+                    palette: [
+                      { name: 'Obsidian', hex: '#171717', role: 'Primary ink' },
+                      { name: 'Champagne', hex: '#B89B72', role: 'Luxury accent' },
+                      { name: 'Ivory Paper', hex: '#FAF9F6', role: 'Surface' },
+                      { name: 'Charcoal', hex: '#262624', role: 'Secondary dark' },
+                      { name: 'Warm Gray', hex: '#71717A', role: 'Metadata' },
+                    ],
+                    typography: { heading: 'Playfair Display', body: 'Inter', mono: 'JetBrains Mono' },
+                  },
+                  {
+                    name: 'Vibrant D2C Everyday',
+                    palette: [
+                      { name: 'Ember Orange', hex: '#FF7417', role: 'Primary accent' },
+                      { name: 'Forest Mint', hex: '#1E6543', role: 'Trust badge' },
+                      { name: 'Soft Peach', hex: '#FFF6EE', role: 'Surface' },
+                      { name: 'Dark Ink', hex: '#18181B', role: 'Headlines' },
+                      { name: 'Slate', hex: '#686864', role: 'Body copy' },
+                    ],
+                    typography: { heading: 'Plus Jakarta Sans', body: 'DM Sans', mono: 'JetBrains Mono' },
+                  },
+                ].map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => {
+                      setSelectedDirection(preset.name);
+                      updateBrandIdentity({
+                        brandName: effectiveBrandName,
+                        visualDirection: preset.name,
+                        palette: preset.palette,
+                        typography: preset.typography,
+                      });
+                      showToast(`Applied ${preset.name} color system & typography.`);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#E6E6E2] hover:border-[#FF7417] bg-[#FAFAF9] hover:bg-[#FFF9F4] text-[11px] font-medium text-[#242424] cursor-pointer transition-colors"
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: preset.palette[0].hex }}
+                    />
+                    <span>{preset.name}</span>
+                  </button>
+                ))}
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -2075,32 +2209,55 @@ export const BrandStudioPage: React.FC = () => {
                   Live Real-World Touchpoint Previews
                 </h2>
                 <p className="text-xs text-[#686864] mt-0.5">
-                  Verify how {state.brand.brandName}&rsquo;s approved AI mark, tagline, and tokens
-                  render across surfaces
+                  {hasApprovedLogo
+                    ? `Verify how ${effectiveBrandName}’s approved AI mark, tagline, and palette tokens render across real surfaces`
+                    : `Preview how ${effectiveBrandName}’s approved logo, palette, and tagline will appear once you approve a mark in AI Logo Studio`}
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { id: 'packaging', label: 'Flagship Offer Card' },
-                  { id: 'instagram', label: '4:5 Social Launch' },
-                  { id: 'hero', label: 'Hero Landing Header' },
-                ].map((surface) => (
-                  <button
-                    key={surface.id}
-                    type="button"
-                    onClick={() => setShowcaseSurface(surface.id as typeof showcaseSurface)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-[8px] border cursor-pointer transition-colors ${
-                      showcaseSurface === surface.id
-                        ? 'bg-[#171717] text-white border-[#171717]'
-                        : 'bg-[#F5F5F4] text-[#242424] border-[#E6E6E2] hover:border-[#D0D0C8]'
-                    }`}
-                  >
-                    {surface.label}
-                  </button>
-                ))}
-              </div>
+              {hasApprovedLogo && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[
+                    { id: 'packaging', label: 'Flagship Offer Card' },
+                    { id: 'instagram', label: '4:5 Social Launch' },
+                    { id: 'hero', label: 'Hero Landing Header' },
+                  ].map((surface) => (
+                    <button
+                      key={surface.id}
+                      type="button"
+                      onClick={() => setShowcaseSurface(surface.id as typeof showcaseSurface)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-[8px] border cursor-pointer transition-colors ${
+                        showcaseSurface === surface.id
+                          ? 'bg-[#171717] text-white border-[#171717]'
+                          : 'bg-[#F5F5F4] text-[#242424] border-[#E6E6E2] hover:border-[#D0D0C8]'
+                      }`}
+                    >
+                      {surface.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
+            {!hasApprovedLogo ? (
+              <div className="rounded-[12px] border border-dashed border-[#DCDCD6] bg-[#FAFAF9] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-[#171717]">
+                    Touchpoint Previews Locked Until You Approve a Logo
+                  </div>
+                  <p className="text-xs text-[#5C5C58] max-w-xl leading-relaxed">
+                    Instead of showing a generic placeholder card, BrainWise renders your real Offer Card, 4:5 Instagram Launch Post, and Landing Header once you approve a logo concept and color palette.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <Button variant="primary" size="sm" onClick={() => setTab('logos')}>
+                    Open AI Logo Studio →
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => setBuilderOpen(true)}>
+                    Customize Identity
+                  </Button>
+                </div>
+              </div>
+            ) : (
             <AnimatePresence mode="wait">
               <MorphingPanel key={showcaseSurface}>
                 {showcaseSurface === 'packaging' && (
@@ -2216,6 +2373,7 @@ export const BrandStudioPage: React.FC = () => {
                 )}
               </MorphingPanel>
             </AnimatePresence>
+            )}
           </div>
 
           <SectionHeader
