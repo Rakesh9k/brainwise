@@ -167,6 +167,34 @@ export const BrandStudioPage: React.FC = () => {
   const topCompetitorName =
     topCompetitor?.name || (topCompetitor as any)?.companyName || 'category incumbents';
 
+  const normalizeBrandPalette = (
+    raw: unknown
+  ): Array<{ name: string; hex: string; role?: string }> => {
+    if (Array.isArray(raw)) {
+      return raw.filter(
+        (item): item is { name: string; hex: string; role?: string } =>
+          Boolean(item && typeof item === 'object' && typeof (item as any).hex === 'string')
+      );
+    }
+    if (raw && typeof raw === 'object') {
+      const obj = raw as Record<string, unknown>;
+      const mapped = [
+        { name: 'Primary', hex: obj.primary, role: 'primary' },
+        { name: 'Secondary', hex: obj.secondary, role: 'secondary' },
+        { name: 'Accent', hex: obj.accent, role: 'accent' },
+        { name: 'Surface', hex: obj.surface, role: 'surface' },
+      ].filter((c): c is { name: string; hex: string; role: string } => typeof c.hex === 'string' && c.hex.startsWith('#'));
+      if (mapped.length > 0) return mapped;
+    }
+    return [];
+  };
+
+  const safePalette = normalizeBrandPalette(state.brand?.palette);
+  const safeTraits = Array.isArray(state.brand?.personalityTraits)
+    ? state.brand.personalityTraits
+    : [];
+  const safeAttributes = Array.isArray(state.brand?.attributes) ? state.brand.attributes : [];
+
   const effectiveBrandName =
     (state.brand?.brandName && state.brand.brandName !== 'My Venture'
       ? state.brand.brandName
@@ -403,11 +431,12 @@ export const BrandStudioPage: React.FC = () => {
 
       if (res?.suggestedPatch) {
         const p = res.suggestedPatch;
+        const normalizedPatchPalette = p.palette ? normalizeBrandPalette(p.palette) : [];
         updateBrandIdentity({
           ...(p.brandName ? { brandName: p.brandName } : {}),
           ...(p.tagline ? { tagline: p.tagline } : {}),
           ...(p.brandVoice ? { brandVoice: p.brandVoice } : {}),
-          ...(p.palette ? { palette: { ...state.brand.palette, ...p.palette } } : {}),
+          ...(normalizedPatchPalette.length > 0 ? { palette: normalizedPatchPalette } : {}),
           ...(p.typography ? { typography: { ...state.brand.typography, ...p.typography } } : {}),
           ...(Array.isArray(p.personalityTraits) ? { personalityTraits: p.personalityTraits } : {}),
         });
@@ -1479,7 +1508,7 @@ export const BrandStudioPage: React.FC = () => {
                       <div className="flex flex-wrap gap-2">
                         {Array.from(
                           new Set([
-                            ...state.brand.personalityTraits,
+                            ...safeTraits,
                             'Warm & Tactile',
                             'Precision-Led',
                             'Editorial',
@@ -1487,15 +1516,15 @@ export const BrandStudioPage: React.FC = () => {
                             'Independent Craft',
                           ])
                         ).map((t) => {
-                          const active = state.brand.personalityTraits.includes(t);
+                          const active = safeTraits.includes(t);
                           return (
                             <button
                               key={t}
                               type="button"
                               onClick={() => {
                                 const next = active
-                                  ? state.brand.personalityTraits.filter((x) => x !== t)
-                                  : [...state.brand.personalityTraits, t];
+                                  ? safeTraits.filter((x) => x !== t)
+                                  : [...safeTraits, t];
                                 if (next.length > 0)
                                   updateBrandIdentity({ personalityTraits: next });
                               }}
@@ -1546,7 +1575,7 @@ export const BrandStudioPage: React.FC = () => {
                       <div className="flex flex-wrap gap-2">
                         {Array.from(
                           new Set([
-                            ...state.brand.attributes,
+                            ...safeAttributes,
                             'Traceable Sourcing',
                             'Zero Jargon',
                             'Direct-to-Member',
@@ -1554,15 +1583,15 @@ export const BrandStudioPage: React.FC = () => {
                             'Predictable Cadence',
                           ])
                         ).map((a) => {
-                          const active = state.brand.attributes.includes(a);
+                          const active = safeAttributes.includes(a);
                           return (
                             <button
                               key={a}
                               type="button"
                               onClick={() => {
                                 const next = active
-                                  ? state.brand.attributes.filter((x) => x !== a)
-                                  : [...state.brand.attributes, a];
+                                  ? safeAttributes.filter((x) => x !== a)
+                                  : [...safeAttributes, a];
                                 if (next.length > 0) updateBrandIdentity({ attributes: next });
                               }}
                               className={`px-3 py-1.5 rounded-[8px] border text-xs font-medium cursor-pointer transition-colors ${
@@ -1662,13 +1691,13 @@ export const BrandStudioPage: React.FC = () => {
                           { name: 'Burnished Amber', hex: '#C44D00' },
                           { name: 'Deep Charcoal', hex: '#171717' },
                         ].map((opt) => {
-                          const active = (state.brand?.palette || []).some((p) => p.hex === opt.hex);
+                          const active = safePalette.some((p) => p.hex === opt.hex);
                           return (
                             <button
                               key={opt.hex}
                               type="button"
                               onClick={() => {
-                                const updatedPalette = (state.brand?.palette || []).map((p, idx) =>
+                                const updatedPalette = safePalette.map((p, idx) =>
                                   idx === 2 ? { ...p, name: opt.name, hex: opt.hex } : p
                                 );
                                 updateBrandIdentity({ palette: updatedPalette });
@@ -1837,7 +1866,7 @@ export const BrandStudioPage: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {(state.brand?.palette || []).map((c) => (
+                {safePalette.map((c) => (
                   <div key={`${c.name}-${c.hex}`} className="space-y-1.5">
                     <div
                       className="h-14 rounded-[10px] border border-[#E6E6E2]"
