@@ -846,13 +846,20 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
             </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 space-y-4">
-              <SectionHeader
-                title="Daily Action Plan"
-                description={`${taskStats.highPriorityPending} high priority · ${taskStats.remainingMinutes} mins estimated remaining`}
-                action={
-                  <div className="flex flex-wrap items-center gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="lg:col-span-8 space-y-5">
+              {/* Clean Non-Cramped Header + Controls */}
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-heading text-lg font-bold text-[#171717]">
+                      Daily Action Plan
+                    </h2>
+                    <p className="text-xs text-[#5C5C58] mt-0.5">
+                      {taskStats.highPriorityPending} high priority · {taskStats.remainingMinutes} mins estimated remaining
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="secondary"
                       size="sm"
@@ -862,27 +869,14 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                       <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
                       {weeklyAiLoading ? 'Planning 7-Day Sprint…' : 'AI 7-Day Plan'}
                     </Button>
-                    <div className="inline-flex p-0.5 bg-[#ECECE9] border border-[#E6E6E2] rounded-[8px]">
-                      {(
-                        [
-                          { id: 'all', label: `All Tasks (${state.tasks.length})` },
-                          { id: 'today', label: 'Today & High Priority' },
-                        ] as const
-                      ).map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setTaskFilter(opt.id)}
-                          className={`px-2.5 py-1 text-[11px] font-medium rounded-[6px] cursor-pointer transition-colors ${
-                            taskFilter === opt.id
-                              ? 'bg-[#FFFFFF] text-[#242424] shadow-xs'
-                              : 'text-[#686864] hover:text-[#242424]'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setTaskModalOpen(true)}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Task
+                    </Button>
                     <BrainLineagePopover
                       sourceDepartment="Competitive Intelligence & Idea Research"
                       insight={`Daily tasks prioritize ${state.brain.businessName}'s highest-leverage positioning moves from your Strategy Blueprint.`}
@@ -890,38 +884,121 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                       editLabel="Edit strategic wedge"
                     />
                   </div>
-                }
-              />
+                </div>
 
-              {/* Live 7-Day Weekly Velocity & Location Grounding Strip */}
-              {(weeklyVelocity.total > 0 || weeklyPlanMeta) && (
-                <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FAF9F6] px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-[#171717]">
-                      <Calendar className="w-3.5 h-3.5 text-[#FF7417] shrink-0" />
-                      <span className="truncate">
-                        {weeklyPlanMeta?.weeklyTheme || '7-Day Sprint Execution Velocity'}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-[#686864]">
-                      {weeklyVelocity.completed}/{weeklyVelocity.total} weekly tasks completed ·{' '}
-                      <span className="font-mono-num font-semibold text-[#171717]">
-                        {weeklyVelocity.rate}%
-                      </span>{' '}
-                      velocity
-                      {weeklyPlanMeta?.effectiveLocation
-                        ? ` · Grounded in ${weeklyPlanMeta.effectiveLocation}`
-                        : state.brain.location
-                          ? ` · Grounded in ${state.brain.location}`
-                          : ''}
-                    </div>
-                  </div>
-                  <div className="w-full sm:w-44 shrink-0">
-                    <FluidProgress value={weeklyVelocity.rate} className="h-2" />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="inline-flex p-0.5 bg-[#ECECE9] border border-[#E6E6E2] rounded-[8px]">
+                    {(
+                      [
+                        { id: 'all', label: `All Tasks (${state.tasks.length})` },
+                        { id: 'today', label: 'Today & High Priority' },
+                      ] as const
+                    ).map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setTaskFilter(opt.id)}
+                        className={`px-3 py-1 text-xs font-medium rounded-[6px] cursor-pointer transition-colors ${
+                          taskFilter === opt.id
+                            ? 'bg-[#FFFFFF] text-[#242424] shadow-xs'
+                            : 'text-[#686864] hover:text-[#242424]'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
+              </div>
 
+              {/* Ref-Inspired Concentric Orbital Sprint Arc Card */}
+              <div className="relative rounded-[18px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 sm:p-6 bw-surface-raised overflow-hidden">
+                <div className="relative max-w-[540px] mx-auto pt-2 pb-1">
+                  <svg
+                    viewBox="0 0 400 148"
+                    className="w-full h-auto overflow-visible"
+                    aria-hidden="true"
+                  >
+                    {/* Outer & Inner Concentric Tracks */}
+                    <path
+                      d="M 28 140 A 172 132 0 0 1 372 140"
+                      fill="none"
+                      stroke="#EFEFEB"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M 68 140 A 132 100 0 0 1 332 140"
+                      fill="none"
+                      stroke="#EFEFEB"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 68 140 A 132 100 0 0 1 332 140"
+                      fill="none"
+                      stroke="#FF7417"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      pathLength={100}
+                      strokeDasharray={`${Math.max(4, weeklyVelocity.rate)} 100`}
+                    />
+                  </svg>
+
+                  {/* Floating Milestone Pills on Arc */}
+                  <div className="hidden sm:flex items-center justify-between -mt-32 mb-6 px-2 relative z-10 pointer-events-none">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECF7F1] border border-[#CEE8DA] text-[#24724E] text-[10px] font-semibold shadow-xs">
+                      <CheckCircle2 className="w-3 h-3" />
+                      {weeklyVelocity.rate >= 100 ? 'Sprint Complete' : 'Sprint Active'}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFFFFF] border border-[#E6E6E2] text-[#171717] text-[10px] font-semibold shadow-xs max-w-[210px] truncate">
+                      <Calendar className="w-3 h-3 text-[#FF7417] shrink-0" />
+                      <span className="truncate">
+                        {weeklyPlanMeta?.weeklyTheme || '7-Day Execution Sprint'}
+                      </span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFF0E5] border border-[#FFD3B3] text-[#C44D00] text-[10px] font-semibold shadow-xs">
+                      {taskStats.highPriorityPending} High Priority
+                    </span>
+                  </div>
+
+                  {/* Centered 3 KPIs Inside the Arc */}
+                  <div className="grid grid-cols-3 gap-2 text-center pt-1 relative z-10">
+                    <div>
+                      <div className="font-heading text-xl sm:text-2xl font-bold text-[#171717] tabular-nums">
+                        {weeklyVelocity.completed}/{weeklyVelocity.total}
+                      </div>
+                      <div className="text-[11px] text-[#686864]">Tasks Done</div>
+                    </div>
+                    <div>
+                      <div className="font-heading text-xl sm:text-2xl font-bold text-[#FF7417] tabular-nums">
+                        {weeklyVelocity.rate}%
+                      </div>
+                      <div className="text-[11px] text-[#686864]">Sprint Velocity</div>
+                    </div>
+                    <div>
+                      <div className="font-heading text-xl sm:text-2xl font-bold text-[#171717] tabular-nums">
+                        {taskStats.remainingMinutes}m
+                      </div>
+                      <div className="text-[11px] text-[#686864]">Est. Remaining</div>
+                    </div>
+                  </div>
+                </div>
+
+                {weeklyPlanMeta?.effectiveLocation || state.brain.location ? (
+                  <div className="mt-3 pt-2.5 border-t border-[#F1F1EE] flex items-center justify-center gap-2 text-[11px] text-[#686864]">
+                    <span>
+                      Grounded in{' '}
+                      <strong className="text-[#242424]">
+                        {weeklyPlanMeta?.effectiveLocation || state.brain.location}
+                      </strong>
+                    </span>
+                    <span>·</span>
+                    <span>{state.brain.businessName || 'Workspace'}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Ref-Inspired Numbered Pill-Card Task Queue */}
               {displayedTasks.length === 0 ? (
                 <GuidedActionEmptyCard
                   stepLabel="Execution Queue"
@@ -933,42 +1010,133 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                   onSecondaryAction={() => setTaskModalOpen(true)}
                 />
               ) : (
-                <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] divide-y divide-[#E6E6E2] overflow-hidden">
-                  {displayedTasks.map((t) => (
-                    <TaskCard
-                      key={t.id}
-                      flat
-                      task={t}
-                      onToggleComplete={(id) => toggleTaskStatus(id)}
-                      onSkip={(id) => toggleTaskStatus(id, 'skipped')}
-                      onInspect={(task) => {
-                        setSelectedTask(task);
-                        setTaskNoteDraft(task.notes ?? '');
-                      }}
-                    />
-                  ))}
+                <div className="space-y-3">
+                  {displayedTasks.map((t, idx) => {
+                    const isDone = t.status === 'completed';
+                    const isSkipped = t.status === 'skipped';
+                    const barColor = isDone
+                      ? 'from-[#24724E] to-[#3CC481]'
+                      : t.priority === 'high'
+                        ? 'from-[#FF7417] to-[#FF9B42]'
+                        : t.priority === 'medium'
+                          ? 'from-[#D97706] to-[#FBBF24]'
+                          : 'from-[#8E8E88] to-[#C2C2BC]';
+                    const stepNum = String(idx + 1).padStart(2, '0');
+
+                    return (
+                      <div
+                        key={t.id}
+                        className={`group rounded-[16px] border p-4 transition-all flex items-center gap-4 ${
+                          isDone
+                            ? 'bg-[#FAF9F6] border-[#E6E6E2]'
+                            : 'bg-[#FFFFFF] border-[#E6E6E2] hover:border-[#FF7417]/60 shadow-[0_6px_20px_-14px_rgba(23,23,23,0.2)]'
+                        }`}
+                      >
+                        {/* Left Numbered Step Index */}
+                        <div className="hidden sm:flex flex-col items-center justify-center w-11 shrink-0">
+                          <span className="text-[9px] font-mono-num uppercase tracking-wider text-[#858585]">
+                            Task
+                          </span>
+                          <span className="font-heading text-xl font-bold text-[#686864] tabular-nums leading-none mt-0.5">
+                            {stepNum}
+                          </span>
+                        </div>
+
+                        {/* Vertical Color-Coded Pill Bar */}
+                        <div
+                          className={`w-1.5 h-11 rounded-full bg-gradient-to-b ${barColor} shrink-0`}
+                        />
+
+                        {/* Main Task Body */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedTask(t);
+                                setTaskNoteDraft(t.notes ?? '');
+                              }}
+                              className={`text-left text-sm font-semibold transition-colors cursor-pointer ${
+                                isDone
+                                  ? 'text-[#686864] hover:text-[#171717]'
+                                  : 'text-[#171717] hover:text-[#C44D00]'
+                              }`}
+                            >
+                              {t.title}
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#686864]">
+                            <span className="px-2 py-0.5 rounded-full bg-[#F5F5F4] border border-[#E6E6E2] font-medium text-[#242424]">
+                              {t.department}
+                            </span>
+                            <span
+                              className={`font-medium ${
+                                t.priority === 'high'
+                                  ? 'text-[#C44D00]'
+                                  : t.priority === 'medium'
+                                    ? 'text-[#B45309]'
+                                    : 'text-[#686864]'
+                              }`}
+                            >
+                              ● {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)} Priority
+                            </span>
+                            {t.estimatedMinutes ? <span>· {t.estimatedMinutes}m</span> : null}
+                            {t.dueDate ? <span>· Due {t.dueDate}</span> : null}
+                            {isSkipped && <span className="text-[#858585]">· Skipped</span>}
+                          </div>
+                        </div>
+
+                        {/* Right Quick Action Controls */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => toggleTaskStatus(t.id)}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] text-xs font-semibold border transition-colors cursor-pointer ${
+                              isDone
+                                ? 'bg-[#ECF7F1] border-[#CEE8DA] text-[#24724E] hover:bg-[#DCF1E6]'
+                                : 'bg-[#FAFAF9] border-[#E6E6E2] text-[#242424] hover:border-[#FF7417] hover:text-[#C44D00]'
+                            }`}
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{isDone ? 'Done' : 'Complete'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTask(t);
+                              setTaskNoteDraft(t.notes ?? '');
+                            }}
+                            className="hidden sm:inline-flex px-2.5 py-1.5 rounded-[8px] text-xs font-medium text-[#686864] hover:text-[#171717] hover:bg-[#F5F5F4] cursor-pointer transition-colors"
+                          >
+                            Details →
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             <div className="lg:col-span-4 space-y-4">
-              <SectionHeader
-                title="Active Goals"
-                action={
-                  <button
-                    type="button"
-                    onClick={() => setTab('goals')}
-                    className="text-xs font-medium text-[#C44D00] hover:text-[#A33E00] cursor-pointer"
-                  >
-                    Manage →
-                  </button>
-                }
-              />
-              <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] bw-surface-raised p-5 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-heading text-lg font-bold text-[#171717]">Active Goals</h2>
+                <button
+                  type="button"
+                  onClick={() => setTab('goals')}
+                  className="text-xs font-semibold text-[#C44D00] hover:text-[#A33E00] cursor-pointer"
+                >
+                  Manage →
+                </button>
+              </div>
+              <div className="rounded-[16px] border border-[#E6E6E2] bg-[#FFFFFF] bw-surface-raised p-5 space-y-4">
                 {state.goals.length === 0 ? (
                   <div className="space-y-3 text-xs text-[#686864]">
-                    <p>No quantitative growth goals configured yet.</p>
-                    <Button variant="secondary" size="sm" onClick={() => setGoalModalOpen(true)}>
+                    <p className="leading-relaxed">
+                      Set measurable targets (leads, revenue, or retention) so every daily sprint task rolls up to an outcome.
+                    </p>
+                    <Button variant="primary" size="sm" onClick={() => setGoalModalOpen(true)}>
+                      <Plus className="w-3.5 h-3.5" />
                       Set First Goal
                     </Button>
                   </div>
@@ -976,7 +1144,7 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
                   state.goals.map((g) => {
                     const prog = calculateGoalProgress(g);
                     return (
-                      <div key={g.id} className="space-y-1.5">
+                      <div key={g.id} className="space-y-1.5 pb-3 border-b border-[#F1F1EE] last:border-b-0 last:pb-0">
                         <div className="flex items-center justify-between text-xs gap-2">
                           <span className="font-semibold text-[#242424] truncate">{g.title}</span>
                           <span className="font-mono-num text-[#686864] shrink-0">
