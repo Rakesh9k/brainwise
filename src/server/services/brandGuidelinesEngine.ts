@@ -849,7 +849,7 @@ Zero AI video generation, video editing, or video rendering pipelines.
     const report: BrandConsistencyReport = {
       evaluationId,
       workspaceId,
-      assetId: params.asset?.assetId,
+      assetId: params.asset?.assetId ?? evaluationId,
       assetType,
       guidelineVersionEvaluated: activeVersion,
       overallScore,
