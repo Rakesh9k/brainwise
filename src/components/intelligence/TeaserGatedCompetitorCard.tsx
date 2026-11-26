@@ -17,7 +17,15 @@ export const TeaserGatedCompetitorCard: React.FC<TeaserGatedCompetitorCardProps>
   onUnlockRequest,
 }) => {
   const isGated = Boolean(competitor.isTeaserGated && !competitor.unlocked && !isUnlocked);
-  const compName = competitor.name || (competitor as any).companyName || 'Competitor';
+  const cleanHost = String(competitor.website || '')
+    .replace(/^https?:\/\/(www\.)?/i, '')
+    .split('/')[0]
+    .trim();
+  const domainFallback = cleanHost
+    ? cleanHost.split('.')[0].charAt(0).toUpperCase() + cleanHost.split('.')[0].slice(1)
+    : '';
+  const compName =
+    competitor.name || (competitor as any).companyName || domainFallback || 'Tracked Rival';
   const strengths = Array.isArray(competitor.strengths) ? competitor.strengths : [];
   const weaknesses = Array.isArray(competitor.weaknesses) ? competitor.weaknesses : [];
 
@@ -53,7 +61,10 @@ export const TeaserGatedCompetitorCard: React.FC<TeaserGatedCompetitorCardProps>
                   </a>
                 )}
               </div>
-              <span className="text-[11px] text-[#686864]">{competitor.category || 'Peer'}</span>
+              <span className="text-[11px] text-[#686864]">
+                {competitor.category || 'Peer'}
+                {cleanHost ? ` · ${cleanHost}` : ''}
+              </span>
             </div>
           </div>
 
