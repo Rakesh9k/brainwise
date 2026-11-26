@@ -748,28 +748,43 @@ export const AssetLibraryPage: React.FC = () => {
         (state.brand?.palette as any)?.[0]?.hex ||
         '#FF7417';
 
+      const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> =>
+        Promise.race([
+          p,
+          new Promise<never>((_, reject) =>
+            window.setTimeout(() => reject(new Error('Timed out')), ms)
+          ),
+        ]);
+
       const [recsRes, aiDesignRes] = await Promise.allSettled([
-        recommendAssets({
-          campaignBrief: recommendBrief,
-          targetChannel: recommendChannel,
-        }),
-        apiClient.generateAiCollateralVariations(state.activeWorkspaceId || 'default', {
-          category: targetCategory,
-          prompt: recommendBrief,
-          surfaceMode: 'mixed',
-          brand: {
-            brandName,
-            tagline: state.brand?.tagline,
-            positioningStatement: state.brand?.positioningStatement || state.brain?.brandPositioning,
-            visualDirection: state.brand?.visualDirection,
-            voice: state.brand?.brandVoice,
-          },
-          brain: {
-            industry: state.brain?.industry,
-            targetAudience: state.brain?.targetAudience,
-            products: (state.brain?.products || []).slice(0, 2),
-          },
-        }),
+        withTimeout(
+          recommendAssets({
+            campaignBrief: recommendBrief,
+            targetChannel: recommendChannel,
+          }),
+          8000
+        ),
+        withTimeout(
+          apiClient.generateAiCollateralVariations(state.activeWorkspaceId || 'default', {
+            category: targetCategory,
+            prompt: recommendBrief,
+            surfaceMode: 'mixed',
+            brand: {
+              brandName,
+              tagline: state.brand?.tagline,
+              positioningStatement:
+                state.brand?.positioningStatement || state.brain?.brandPositioning,
+              visualDirection: state.brand?.visualDirection,
+              voice: state.brand?.brandVoice,
+            },
+            brain: {
+              industry: state.brain?.industry,
+              targetAudience: state.brain?.targetAudience,
+              products: (state.brain?.products || []).slice(0, 2),
+            },
+          }),
+          12000
+        ),
       ]);
 
       const recs = recsRes.status === 'fulfilled' && Array.isArray(recsRes.value) ? recsRes.value : [];
