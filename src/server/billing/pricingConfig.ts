@@ -159,8 +159,8 @@ export const COMMERCIAL_PLANS: Record<string, CommercialPlanDefinition> = {
       'Unlimited Idea & Market Intelligence dossiers',
       '20 tracked competitors with automated teardowns',
       '250 Brand Studio assets & multi-slide carousels',
-      'All 9 external integrations & 10 automations',
-      'Priority Gemini 2.5 Flash / Pro reasoning',
+      'All external integrations & 10 automations',
+      'Priority Gemini Flash / Pro deep reasoning',
       'White-label executive PDF exports & daily briefs',
     ],
     departmentAccess: [

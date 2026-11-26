@@ -229,7 +229,7 @@ export const AuthPages: React.FC<{
           <>
             <h1 className={`${typeClass.h3} font-bold text-[#171717]`}>Create your account</h1>
             <p className={`${typeClass.bodySm} text-[#686864] mt-1`}>
-              Initialize your Business Brain in under two minutes.
+              Initialize your Business Brain in under two minutes — includes 150 one-time registration credits.
             </p>
           </>
         )}

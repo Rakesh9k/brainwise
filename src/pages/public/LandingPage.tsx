@@ -42,7 +42,7 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     title: 'Validate & Size With Evidence',
     role: 'Idea Intelligence',
     summary:
-      'Transform a raw business concept into a structured 15-section market dossier—separating verified category references from editable TAM/SAM/SOM range bands.',
+      'Transform a raw business concept into a structured 15-section market dossier & 7-framework validation hub—separating verified category references from editable TAM/SAM/SOM bands.',
     outcome: 'Feeds validated customer pain points into Business Brain',
     paths: [
       'M9 18h6',
@@ -58,7 +58,7 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     title: 'Discover Rivals & Claim White Space',
     role: 'Competitive Intelligence',
     summary:
-      'Dissect competitor pricing ladders, review complaints, and channel playbooks on a live positioning map to isolate where your offer wins cleanly.',
+      'Dissect competitor pricing ladders, review complaints, and positioning white space—then generate Strategic Gaps and a source-cited Competitive Strategy Blueprint.',
     outcome: 'Shapes creative direction inside Brand Studio',
     paths: ['M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', 'M9 12l2 2 4-4'],
     fillPath: 'M12 2L4 5v7c0 6 8 10 8 10s8-4 8-10V5l-8-3z',
@@ -69,7 +69,7 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     title: 'Build Cohesive Brand & Collateral',
     role: 'Brand Studio',
     summary:
-      'Lock your visual direction, primary wordmark, typography, and surface tokens once—then export packaging sleeves, launch cards, and social carousels.',
+      'Lock your visual direction, AI-generated logos & wordmarks, color/typography tokens, and brand voice—then export launch cards and multi-slide social carousels.',
     outcome: 'Deploys approved creative into Growth Planner',
     paths: [
       'M12 2a10 10 0 1 0 10 10c0-1.1-.9-2-2-2h-2.5a1.5 1.5 0 0 1 0-3H19a3 3 0 0 0 3-3',
@@ -84,7 +84,7 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     title: 'Execute Weekly & Watch the Market',
     role: 'Growth Planner & Market Watch',
     summary:
-      'Turn strategic insights into a 30-day execution cadence with prioritized daily tasks, structured experiments, and live Market Watch competitor triggers.',
+      'Turn strategic gaps into a 30-day execution roadmap, prioritized daily sprint tasks, structured hypothesis experiments, and live Market Watch competitor alerts.',
     outcome: 'Converts competitor shifts into measurable experiments',
     paths: [
       'M12 2v4',
@@ -115,14 +115,14 @@ const IMPACT_METRICS = [
   {
     value: 7,
     suffix: '',
-    label: 'Guided Research Steps',
-    context: 'Structured concept-to-dossier intake with live TAM assumptions',
+    label: 'Validation Frameworks',
+    context: 'Hero Verdict, TAM/SAM/SOM, SWOT, Porter’s 5 Forces, PESTLE & Kill Switches',
   },
   {
     value: 30,
     suffix: 'd',
     label: 'Execution Sprint Cadence',
-    context: 'Prioritized daily queue synced with Market Watch counter-tests',
+    context: 'Prioritized daily queue, 30/60/90 roadmap & hypothesis experiments',
   },
 ];
 
@@ -196,6 +196,16 @@ export const LandingPage: React.FC = () => {
   const [sandboxIdea, setSandboxIdea] = useState('');
   const [caseStudyMode, setCaseStudyMode] = useState<'after' | 'before'>('after');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [journeyStep, setJourneyStep] = useState(0);
+  const [journeyPaused, setJourneyPaused] = useState(false);
+
+  useEffect(() => {
+    if (reduced || journeyPaused) return;
+    const timer = window.setInterval(() => {
+      setJourneyStep((prev) => (prev + 1) % 4);
+    }, 3400);
+    return () => window.clearInterval(timer);
+  }, [reduced, journeyPaused]);
 
   const showcaseGridRef = useRef<HTMLDivElement | null>(null);
   const manualOverrideUntilRef = useRef(0);
@@ -508,81 +518,176 @@ export const LandingPage: React.FC = () => {
       {/* GPU Kinetic Statement Ticker */}
       <KineticMarquee items={MARQUEE_PHRASES} />
 
-      {/* Public Unauthenticated Centric Graphical Idea-to-Launch Prompt */}
-      <section className="py-16 sm:py-20 bg-[#FAFAF9] border-b border-[#EFEFEB]">
-        <div className="max-w-[960px] mx-auto px-5 sm:px-8 text-center space-y-8">
+      {/* Public Unauthenticated Centric Graphical Idea-to-Launch Interactive Stepper */}
+      <section
+        className="py-16 sm:py-22 bg-[#FAFAF9] border-b border-[#EFEFEB]"
+        onMouseEnter={() => setJourneyPaused(true)}
+        onMouseLeave={() => setJourneyPaused(false)}
+      >
+        <div className="max-w-[1040px] mx-auto px-5 sm:px-8 text-center space-y-9">
           <div className="space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0E5] text-[#C44D00] text-[11px] font-mono-num font-semibold uppercase tracking-wide">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FFF0E5] border border-[#FFD6BA] text-[#C44D00] text-[11px] font-mono-num font-semibold uppercase tracking-wide">
               <Sparkles className="w-3.5 h-3.5" />
               From Raw Idea to Launch Plan
             </span>
             <h2 className="font-heading text-2xl sm:text-4xl font-bold text-[#171717] tracking-tight">
               Not sure where to start? Validate your idea first.
             </h2>
-            <p className="text-sm sm:text-base text-[#5C5C58] max-w-xl mx-auto">
-              Sign in or start a free workspace to turn a single sentence into a market dossier,
-              competitor edge, brand identity, and 30-day execution roadmap.
+            <p className="text-sm sm:text-base text-[#5C5C58] max-w-2xl mx-auto">
+              Register once to get <strong className="text-[#171717]">150 free onboarding credits</strong> and turn a single sentence into a 15-section dossier, competitor edge, brand identity, and 30-day execution roadmap.
             </p>
           </div>
 
-          {/* Minimalistic Graphical 4-Stage Wave */}
-          <div className="relative max-w-3xl mx-auto pt-2 pb-4">
-            <svg
-              viewBox="0 0 800 100"
-              className="w-full h-20 overflow-visible hidden sm:block"
-              aria-hidden="true"
-            >
-              <path
-                d="M 80 65 C 190 65, 210 25, 300 25 C 390 25, 410 70, 500 70 C 590 70, 610 30, 720 30"
-                fill="none"
-                stroke="#E6E6E2"
-                strokeWidth="3"
-                strokeDasharray="6 6"
-              />
-              <motion.path
-                d="M 80 65 C 190 65, 210 25, 300 25 C 390 25, 410 70, 500 70 C 590 70, 610 30, 720 30"
-                fill="none"
-                stroke="#FF7417"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                initial={{ pathLength: 0 }}
-                whileInView={{ pathLength: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-              />
-            </svg>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:-mt-6 relative z-10">
-              {[
-                { num: '01', title: 'Validate Idea', sub: 'Market size & demand' },
-                { num: '02', title: 'Map Rivals', sub: 'Find pricing & gaps' },
-                { num: '03', title: 'Shape Brand', sub: 'Logos, voice & assets' },
-                { num: '04', title: 'Launch 30d', sub: 'Daily tasks & tests' },
-              ].map((step, i) => (
-                <div
-                  key={step.num}
-                  className={`rounded-[14px] border p-3.5 text-left transition-all ${
-                    i === 0
-                      ? 'bg-[#FFFFFF] border-[#FF7417] shadow-sm'
-                      : 'bg-[#FFFFFF] border-[#E6E6E2]'
-                  }`}
-                >
-                  <div className="text-[10px] font-mono-num font-bold text-[#C44D00]">
-                    STEP {step.num}
-                  </div>
-                  <div className="text-xs font-bold text-[#171717] mt-0.5">{step.title}</div>
-                  <div className="text-[11px] text-[#686864] mt-0.5">{step.sub}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          {(() => {
+            const journeyStages = [
+              {
+                num: '01',
+                title: 'Validate Idea',
+                sub: 'Market size & demand',
+                badge: '15-Section Dossier + Verdict',
+                preview: 'Outputs Go/Stop Verdict, live TAM/SAM/SOM slider, SWOT, Porter’s 5 Forces & Kill Switches.',
+              },
+              {
+                num: '02',
+                title: 'Map Rivals',
+                sub: 'Pricing, reviews & gaps',
+                badge: 'Positioning Map & Citations',
+                preview: 'Surfaces real competitor pricing ladders, complaint clusters, Strategic Gaps & source-cited Strategy Blueprint.',
+              },
+              {
+                num: '03',
+                title: 'Shape Brand',
+                sub: 'Logos, voice & assets',
+                badge: 'Brand Kit + Social Carousels',
+                preview: 'Generates AI wordmarks/logos, color & typography tokens, brand voice rules, and launch carousels.',
+              },
+              {
+                num: '04',
+                title: 'Launch 30d',
+                sub: 'Daily tasks & experiments',
+                badge: 'Growth Roadmap & Tests',
+                preview: 'Converts gaps into prioritized daily sprint tasks, 30/60/90 milestones, and hypothesis experiments.',
+              },
+            ];
+            const current = journeyStages[journeyStep] || journeyStages[0];
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
+            return (
+              <div className="space-y-4 text-left">
+                {/* Connected Animated Progress Rail (Desktop) */}
+                <div className="hidden sm:block relative max-w-3xl mx-auto px-10 pt-2 pb-1">
+                  <div className="relative h-1 rounded-full bg-[#E6E6E2]">
+                    <motion.div
+                      className="absolute left-0 top-0 bottom-0 rounded-full bg-gradient-to-r from-[#FF7417] to-[#FF9B42]"
+                      animate={{ width: `${(journeyStep / 3) * 100}%` }}
+                      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                  </div>
+                  <div className="relative -mt-4 flex items-center justify-between">
+                    {journeyStages.map((s, idx) => {
+                      const isActive = idx === journeyStep;
+                      const isDone = idx < journeyStep;
+                      return (
+                        <button
+                          key={s.num}
+                          type="button"
+                          onClick={() => setJourneyStep(idx)}
+                          aria-label={`Select Step ${s.num}: ${s.title}`}
+                          className={`relative w-7 h-7 rounded-full text-[11px] font-mono-num font-bold flex items-center justify-center transition-all cursor-pointer ${
+                            isActive
+                              ? 'bg-[#FF7417] text-white shadow-[0_0_0_5px_rgba(255,116,23,0.18)] scale-110'
+                              : isDone
+                                ? 'bg-[#171717] text-white'
+                                : 'bg-[#FFFFFF] text-[#686864] border border-[#DCDCD6] hover:border-[#FF7417]'
+                          }`}
+                        >
+                          {s.num}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 4 Interactive Stage Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+                  {journeyStages.map((step, idx) => {
+                    const active = idx === journeyStep;
+                    return (
+                      <motion.button
+                        key={step.num}
+                        type="button"
+                        onClick={() => setJourneyStep(idx)}
+                        onMouseEnter={() => setJourneyStep(idx)}
+                        whileHover={reduced ? undefined : { y: -2 }}
+                        transition={{ duration: 0.18 }}
+                        className={`relative rounded-[16px] border p-4 text-left transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#FFFFFF] border-[#FF7417] shadow-[0_14px_30px_-14px_rgba(255,116,23,0.3)]'
+                            : 'bg-[#FFFFFF]/80 border-[#E6E6E2] hover:bg-[#FFFFFF] hover:border-[#D4D4CE]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span
+                            className={`text-[10px] font-mono-num font-bold uppercase tracking-wider ${
+                              active ? 'text-[#C44D00]' : 'text-[#858585]'
+                            }`}
+                          >
+                            STEP {step.num}
+                          </span>
+                          {active && (
+                            <span className="w-2 h-2 rounded-full bg-[#FF7417] animate-pulse" />
+                          )}
+                        </div>
+                        <div className="text-sm font-bold text-[#171717] mt-1">{step.title}</div>
+                        <div className="text-xs text-[#686864] mt-0.5">{step.sub}</div>
+                        <div
+                          className={`mt-3 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            active
+                              ? 'bg-[#FFF0E5] text-[#C44D00]'
+                              : 'bg-[#F5F5F4] text-[#686864]'
+                          }`}
+                        >
+                          {step.badge}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Animated Output Preview Strip */}
+                <div className="rounded-[14px] bg-[#171717] text-white px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#FF7417]/20 border border-[#FF7417]/40 text-[#FF8A36] text-[10px] font-mono-num font-semibold shrink-0">
+                      STEP {current.num} OUTPUT
+                    </span>
+                    <motion.p
+                      key={current.num}
+                      initial={reduced ? false : { opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-xs sm:text-sm text-[#ECECE9]"
+                    >
+                      {current.preview}
+                    </motion.p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('signup')}
+                    className="text-xs font-semibold text-[#FF8A36] hover:text-white whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                  >
+                    Try with 150 free credits →
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
             <button
               type="button"
               onClick={() => navigate('signup')}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FF7417] hover:bg-[#E5620A] text-white text-sm font-semibold shadow-[0_10px_24px_-6px_rgba(255,116,23,0.45)] transition-all cursor-pointer"
             >
-              <span>Validate My Idea Free</span>
+              <span>Claim 150 Free Credits &amp; Validate</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
@@ -1042,26 +1147,51 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {/* One-Time Registration Credits Callout (No 14-day trial lock-in) */}
+          <div className="mt-10 max-w-5xl mx-auto rounded-[20px] bg-[#FFFFFF] border border-[#FFD6BA] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF0E5] text-[#C44D00] text-[10px] font-mono-num font-bold uppercase tracking-wider">
+                ONE-TIME REGISTRATION CREDITS · NO 14-DAY TRIAL
+              </span>
+              <h3 className="font-heading text-lg font-bold text-[#171717]">
+                Start free with 150 one-time onboarding credits
+              </h3>
+              <p className="text-xs sm:text-sm text-[#5C5C58]">
+                Every new account gets 150 one-time registration credits to test your Business Brain, Idea Dossier, and Competitor Radar. No expiring trial timer—upgrade whenever you need monthly credits.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('signup')}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#171717] hover:bg-[#2A2A2A] text-white text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer"
+            >
+              <span>Claim 150 Free Credits</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
               {
                 name: 'Starter',
                 audience: 'For solo founders & early idea validation',
+                cta: 'Choose Starter',
                 monthly: 2763,
                 annual: 2210,
                 featured: false,
                 features: [
                   '800 credits refreshed monthly',
-                  '1 Business Brain workspace',
+                  '1 Business Brain workspace (up to 2 seats)',
                   '10 Idea Intelligence dossiers / mo',
                   '5 tracked competitors in Market Watch',
                   '50 Brand Studio assets & SVG collateral',
-                  '3 active external platform integrations',
+                  'External platform integrations',
                 ],
               },
               {
                 name: 'Professional',
                 audience: 'Hero tier for scaling brands & product teams',
+                cta: 'Choose Professional',
                 monthly: 6999,
                 annual: 5599,
                 featured: true,
@@ -1071,14 +1201,15 @@ export const LandingPage: React.FC = () => {
                   'Unlimited Idea & Market Intelligence',
                   '20 tracked competitors & teardowns',
                   '250 Brand Studio assets & carousels',
-                  'All 9 external integrations & automations',
-                  'Priority Gemini 2.5 Flash / Pro reasoning',
+                  'All external integrations & automations',
+                  'Priority Gemini Flash / Pro deep reasoning',
                   'White-label executive PDF exports & daily briefs',
                 ],
               },
               {
                 name: 'Business Enterprise',
                 audience: 'For multi-brand operators & high-velocity teams',
+                cta: 'Choose Enterprise',
                 monthly: 16499,
                 annual: 13199,
                 featured: false,
@@ -1150,7 +1281,7 @@ export const LandingPage: React.FC = () => {
                         : 'bg-[#FAFAF9] hover:bg-[#F1F1EF] text-[#171717] border border-[#E8E8E4]'
                     }`}
                   >
-                    Start 14-day Trial
+                    {plan.cta}
                   </button>
                 </motion.div>
               );
