@@ -37,10 +37,13 @@ import {
   X,
 } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
+import { apiClient } from '../../services/apiClient';
 import {
   buildAssetSvgMarkup,
   buildCarouselSlideSvgMarkup,
+  buildLocalBrandAssetVariations,
   sanitizeAiSvgMarkup,
+  type GeneratedCollateralVariation,
 } from '../../utils/logic';
 import type { BrandAsset } from '../../types/brainwise';
 import type {
@@ -80,6 +83,7 @@ export const AssetLibraryPage: React.FC = () => {
   const {
     state,
     navigate,
+    addBrandAsset,
     archiveBrandAsset,
     duplicateBrandAsset,
     bulkArchiveBrandAssets,
@@ -176,6 +180,10 @@ export const AssetLibraryPage: React.FC = () => {
   const [recommendBrief, setRecommendBrief] = useState('');
   const [recommendChannel, setRecommendChannel] = useState<'Instagram' | 'Print' | 'Packaging' | 'Web'>('Instagram');
   const [recommendationList, setRecommendationList] = useState<AssetRecommendationItem[]>([]);
+  const [generatedRecommendDesigns, setGeneratedRecommendDesigns] = useState<
+    GeneratedCollateralVariation[]
+  >([]);
+  const [savedRecommendIds, setSavedRecommendIds] = useState<Record<string, boolean>>({});
   const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
 
   // Conversational Asset Assistant State (Phase 8)
@@ -722,17 +730,75 @@ export const AssetLibraryPage: React.FC = () => {
   const handleRecommendSubmit = async () => {
     if (!recommendBrief.trim()) return;
     setIsFetchingRecommendations(true);
+    setSavedRecommendIds({});
     try {
-      const recs = await recommendAssets({
-        campaignBrief: recommendBrief,
-        targetChannel: recommendChannel,
-      });
-      if (recs) {
-        setRecommendationList(recs);
-        showToast(`Generated ${recs.length} context-aware asset recommendations.`);
+      const channelCategoryMap: Record<typeof recommendChannel, BrandAsset['category']> = {
+        Packaging: 'Packaging',
+        Instagram: 'Social Post',
+        Print: 'Flyer',
+        Web: 'Pitch Slide',
+      };
+      const targetCategory = channelCategoryMap[recommendChannel] || 'Packaging';
+      const brandName =
+        (state.brand?.brandName && state.brand.brandName !== 'My Venture'
+          ? state.brand.brandName
+          : state.brain?.businessName) || 'Your Brand';
+      const accentHex =
+        (state.brand?.palette as any)?.[1]?.hex ||
+        (state.brand?.palette as any)?.[0]?.hex ||
+        '#FF7417';
+
+      const [recsRes, aiDesignRes] = await Promise.allSettled([
+        recommendAssets({
+          campaignBrief: recommendBrief,
+          targetChannel: recommendChannel,
+        }),
+        apiClient.generateAiCollateral(state.activeWorkspaceId || 'default', {
+          category: targetCategory,
+          prompt: recommendBrief,
+          surfaceMode: 'mixed',
+          brand: {
+            brandName,
+            tagline: state.brand?.tagline,
+            positioningStatement: state.brand?.positioningStatement || state.brain?.brandPositioning,
+            visualDirection: state.brand?.visualDirection,
+            voice: state.brand?.brandVoice,
+          },
+          brain: {
+            industry: state.brain?.industry,
+            targetAudience: state.brain?.targetAudience,
+            products: (state.brain?.products || []).slice(0, 2),
+          },
+        }),
+      ]);
+
+      const recs = recsRes.status === 'fulfilled' && Array.isArray(recsRes.value) ? recsRes.value : [];
+      setRecommendationList(recs);
+
+      let designs: GeneratedCollateralVariation[] = [];
+      if (aiDesignRes.status === 'fulfilled' && Array.isArray((aiDesignRes.value as any)?.variations)) {
+        designs = (aiDesignRes.value as any).variations.slice(0, 3);
       }
+      if (designs.length === 0) {
+        designs = buildLocalBrandAssetVariations({
+          category: targetCategory,
+          prompt: recommendBrief,
+          brandName,
+          tagline: state.brand?.tagline || state.brain?.valueProposition || `${brandName} Signature`,
+          positioning:
+            state.brand?.positioningStatement ||
+            state.brain?.brandPositioning ||
+            `Tailored ${recommendChannel} design for ${brandName}`,
+          accentHex,
+          surfaceMode: 'mixed',
+        });
+      }
+      setGeneratedRecommendDesigns(designs);
+      showToast(
+        `Generated ${designs.length} custom ${recommendChannel} design(s)${recs.length > 0 ? ` & ${recs.length} library match(es)` : ''}.`
+      );
     } catch {
-      showToast('Recommendations generated.');
+      showToast('Failed to generate recommendations.', { tone: 'error' });
     } finally {
       setIsFetchingRecommendations(false);
     }
@@ -2871,13 +2937,111 @@ export const AssetLibraryPage: React.FC = () => {
               onClick={handleRecommendSubmit}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              {isFetchingRecommendations ? 'Analyzing...' : 'Generate Recommendations'}
+              {isFetchingRecommendations ? 'Generating Designs…' : 'Generate Designs & Recommendations'}
             </Button>
           </div>
 
+          {generatedRecommendDesigns.length > 0 && (
+            <div className="space-y-2.5 pt-2 border-t border-[#ECECE8]">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold text-[#252525]">
+                  Generated {recommendChannel} Designs ({generatedRecommendDesigns.length})
+                </div>
+                <span className="text-[10px] font-mono-num text-[#C44D00]">
+                  Grounded in Business Brain
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 max-h-72 overflow-y-auto pr-1">
+                {generatedRecommendDesigns.map((design) => {
+                  const brandName =
+                    (state.brand?.brandName && state.brand.brandName !== 'My Venture'
+                      ? state.brand.brandName
+                      : state.brain?.businessName) || 'Your Brand';
+                  const accentHex =
+                    (state.brand?.palette as any)?.[1]?.hex ||
+                    (state.brand?.palette as any)?.[0]?.hex ||
+                    '#FF7417';
+                  const channelCat: BrandAsset['category'] =
+                    recommendChannel === 'Instagram'
+                      ? 'Social Post'
+                      : recommendChannel === 'Print'
+                        ? 'Flyer'
+                        : recommendChannel === 'Web'
+                          ? 'Pitch Slide'
+                          : 'Packaging';
+                  const svgPreview = buildAssetSvgMarkup({
+                    title: design.title,
+                    category: channelCat,
+                    format: 'Scalable Vector (.svg)',
+                    status: 'Draft',
+                    headlineText: design.headlineText,
+                    subtext: design.subtext,
+                    footerNote: design.footerNote,
+                    accentHex,
+                    darkVariant: design.darkVariant,
+                    brandName,
+                    svgMarkup: design.svgMotif,
+                  } as BrandAsset);
+                  const isSaved = Boolean(savedRecommendIds[design.id]);
+
+                  return (
+                    <div
+                      key={design.id}
+                      className="p-3 rounded-[10px] border border-[#E6E6E2] bg-[#FAF9F5] flex flex-col sm:flex-row gap-3 items-start"
+                    >
+                      <div
+                        className="w-full sm:w-40 aspect-[4/3] rounded-[8px] overflow-hidden border border-[#E6E6E2] bg-white shrink-0 [&>svg]:w-full [&>svg]:h-full"
+                        dangerouslySetInnerHTML={{ __html: svgPreview }}
+                      />
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono-num px-2 py-0.5 rounded-full bg-[#FFF0E5] text-[#C44D00]">
+                            {design.layoutLabel}
+                          </span>
+                        </div>
+                        <div className="font-semibold text-xs text-[#171717]">{design.title}</div>
+                        <p className="text-[11px] text-[#5C5C58] leading-relaxed">
+                          {design.artDirectionNote}
+                        </p>
+                        <div className="pt-1 flex flex-wrap items-center gap-2">
+                          <Button
+                            variant={isSaved ? 'secondary' : 'primary'}
+                            size="sm"
+                            disabled={isSaved}
+                            onClick={() => {
+                              addBrandAsset({
+                                title: design.title,
+                                category: channelCat,
+                                folder: recommendChannel === 'Instagram' ? 'Social' : 'Print',
+                                format: 'Scalable Vector (.svg)',
+                                status: 'Draft',
+                                headlineText: design.headlineText,
+                                subtext: design.subtext,
+                                footerNote: design.footerNote,
+                                accentHex,
+                                darkVariant: design.darkVariant,
+                                aiGenerated: true,
+                                aiPrompt: recommendBrief,
+                                svgMarkup: svgPreview,
+                              });
+                              setSavedRecommendIds((prev) => ({ ...prev, [design.id]: true }));
+                              showToast(`Saved "${design.title}" to Asset Library.`);
+                            }}
+                          >
+                            {isSaved ? '✓ Saved to Library' : 'Save to Asset Library'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {recommendationList.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-[#ECECE8]">
-              <div className="font-semibold text-[#252525]">Top Recommended Assets</div>
+              <div className="font-semibold text-[#252525]">Matched Existing Library Assets</div>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {recommendationList.map((rec, idx) => (
                   <div key={idx} className="p-2.5 rounded-[8px] border border-[#ECECE8] bg-[#FAF9F5] flex items-center justify-between">
