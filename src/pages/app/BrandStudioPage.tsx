@@ -622,38 +622,24 @@ export const BrandStudioPage: React.FC = () => {
     setLogoGenerating(true);
     setLogoError(null);
     try {
-      let data: any;
-      if (state.activeWorkspaceId) {
-        if (!apiClient.getAuthTokenSync()) {
-          apiClient.setAuthToken('demo-token');
-        }
-        data = await apiClient.generateAiLogoConcepts(state.activeWorkspaceId, {
-          prompt: effectivePrompt,
-          styleArchetype: logoArchetype,
-          mood: logoMood,
-          lockBrandColors: brandLockEnabled,
-          brand: { ...state.brand, brandName: effectiveBrandName } as any,
-        });
-      } else {
-        const res = await fetch('/api/ai/brand-logo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: effectivePrompt,
-            styleArchetype: logoArchetype,
-            mood: logoMood,
-            lockBrandColors: brandLockEnabled,
-            brand: state.brand,
-          }),
-        });
-        data = (await res.json()) as any;
-        if (!res.ok) {
-          throw new Error(data.error || `AI logo request failed (${res.status}).`);
-        }
+      if (!apiClient.getAuthTokenSync()) {
+        apiClient.setAuthToken('demo-token');
       }
+      const targetWsId = state.activeWorkspaceId || 'default';
+      const data: any = await apiClient.generateAiLogoConcepts(targetWsId, {
+        prompt: effectivePrompt,
+        styleArchetype: logoArchetype,
+        mood: logoMood,
+        lockBrandColors: brandLockEnabled,
+        brand: { ...state.brand, brandName: effectiveBrandName } as any,
+      });
 
       if (!data || !Array.isArray(data.concepts) || data.concepts.length === 0) {
-        throw new Error(data?.error || `AI logo request returned no concepts.`);
+        const errMsg =
+          typeof data?.error === 'string'
+            ? data.error
+            : data?.error?.message || `AI logo request returned no concepts.`;
+        throw new Error(errMsg);
       }
 
       const nextConcepts: BrandConcept[] = data.concepts.slice(0, 3).map((c: any, idx: number) => ({
@@ -748,29 +734,22 @@ export const BrandStudioPage: React.FC = () => {
         },
       };
 
-      if (state.activeWorkspaceId) {
-        if (!apiClient.getAuthTokenSync()) {
-          apiClient.setAuthToken('demo-token');
-        }
-        data = await apiClient.generateAiSocialCreative(state.activeWorkspaceId, {
-          ...socialPayload,
-          brand: { ...socialPayload.brand, brandName: effectiveBrandName },
-        });
-      } else {
-        const res = await fetch('/api/ai/social-creative', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(socialPayload),
-        });
-        data = (await res.json()) as any;
-        if (!res.ok) {
-          throw new Error(data.error || `AI social generation failed (${res.status}).`);
-        }
+      if (!apiClient.getAuthTokenSync()) {
+        apiClient.setAuthToken('demo-token');
       }
+      const targetWsId = state.activeWorkspaceId || 'default';
+      data = await apiClient.generateAiSocialCreative(targetWsId, {
+        ...socialPayload,
+        brand: { ...socialPayload.brand, brandName: effectiveBrandName },
+      });
 
       const creativePkg = data.creative || (Array.isArray(data.slides) ? data : null);
       if (!creativePkg || !Array.isArray(creativePkg.slides)) {
-        throw new Error(data?.error || `AI social generation returned invalid format.`);
+        const errMsg =
+          typeof data?.error === 'string'
+            ? data.error
+            : data?.error?.message || `AI social generation returned invalid format.`;
+        throw new Error(errMsg);
       }
 
       const cleanedSlides: CarouselSlide[] = creativePkg.slides.map((s: any, idx: number) => ({
@@ -789,10 +768,10 @@ export const BrandStudioPage: React.FC = () => {
         showToast(`Regenerated Slide 0${regenerateSlideNumber} with AI.`);
       } else {
         setSocialPackage({
-          title: data.creative.title || `${socialPlatform}: ${socialPrompt.slice(0, 32)}`,
-          caption: data.creative.caption || '',
-          hashtags: Array.isArray(data.creative.hashtags) ? data.creative.hashtags : [],
-          postingRationale: data.creative.postingRationale || '',
+          title: creativePkg.title || `${socialPlatform}: ${socialPrompt.slice(0, 32)}`,
+          caption: creativePkg.caption || '',
+          hashtags: Array.isArray(creativePkg.hashtags) ? creativePkg.hashtags : [],
+          postingRationale: creativePkg.postingRationale || '',
           slides: cleanedSlides,
         });
         setActiveSlideIdx(0);
@@ -864,26 +843,13 @@ export const BrandStudioPage: React.FC = () => {
         },
       };
 
-      if (state.activeWorkspaceId) {
-        if (!apiClient.getAuthTokenSync()) {
-          apiClient.setAuthToken('demo-token');
-        }
-        data = await apiClient.generateAiCollateralVariations(state.activeWorkspaceId, collateralPayload);
-      } else {
-        const res = await fetch('/api/ai/brand-asset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(collateralPayload),
-        });
-        data = (await res.json()) as any;
-        if (!res.ok) {
-          const errMsg =
-            typeof data?.error === 'string'
-              ? data.error
-              : data?.error?.message || `AI asset request failed (${res.status}).`;
-          throw new Error(errMsg);
-        }
+      if (!apiClient.getAuthTokenSync()) {
+        apiClient.setAuthToken('demo-token');
       }
+      data = await apiClient.generateAiCollateralVariations(
+        state.activeWorkspaceId || 'default',
+        collateralPayload
+      );
 
       if (!data || !Array.isArray(data.variations) || data.variations.length === 0) {
         const errMsg =
