@@ -43,6 +43,7 @@ import {
 } from '../../components/ui/DepartmentCards';
 import { ContextualCard } from '../../components/ui/ContextualActionLedger';
 import { UniversalExecutiveLayer } from '../../components/ui/UniversalExecutiveLayer';
+import { FounderJourneyFlowBar } from '../../components/ui/FounderJourneyFlowBar';
 import { typeClass } from '../../theme/typography';
 
 export const DashboardPage: React.FC = () => {
@@ -310,6 +311,9 @@ export const DashboardPage: React.FC = () => {
         };
       })()}
       />
+
+      {/* Interactive Animated Founder Journey Flow Bar */}
+      <FounderJourneyFlowBar state={state} onNavigate={navigate} />
 
       <LiquidSkeletonReveal
         loading={isSyncingBriefing}
