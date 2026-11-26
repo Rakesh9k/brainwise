@@ -111,11 +111,10 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
     departmentResetNonce,
   } = useBrainWise();
 
-  const readPendingGrowthTab = (): GrowthTabId | null => {
+  const peekPendingGrowthTab = (): GrowthTabId | null => {
     try {
       const pending = window.sessionStorage.getItem('bw_pending_growth_tab') as GrowthTabId | null;
       if (pending && pending in GROWTH_TAB_LABELS) {
-        window.sessionStorage.removeItem('bw_pending_growth_tab');
         return pending;
       }
     } catch {
@@ -124,13 +123,25 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
     return null;
   };
 
+  const consumePendingGrowthTab = (): GrowthTabId | null => {
+    const pending = peekPendingGrowthTab();
+    if (pending) {
+      try {
+        window.sessionStorage.removeItem('bw_pending_growth_tab');
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return pending;
+  };
+
   const defaultTab: GrowthTabId =
-    readPendingGrowthTab() ?? (initialMode === 'tasks' ? 'experiments' : 'overview');
+    peekPendingGrowthTab() ?? (initialMode === 'tasks' ? 'experiments' : 'overview');
   const [tab, setTab] = useState<GrowthTabId>(defaultTab);
   const [taskFilter, setTaskFilter] = useState<'all' | 'today'>('all');
 
   useEffect(() => {
-    const pending = readPendingGrowthTab();
+    const pending = consumePendingGrowthTab();
     if (pending) {
       setTab(pending);
       return;
