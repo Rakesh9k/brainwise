@@ -2984,19 +2984,24 @@ export const AssetLibraryPage: React.FC = () => {
                         : recommendChannel === 'Web'
                           ? 'Pitch Slide'
                           : 'Packaging';
-                  const svgPreview = buildAssetSvgMarkup({
-                    title: design.title,
-                    category: channelCat,
-                    format: 'Scalable Vector (.svg)',
-                    status: 'Draft',
-                    headlineText: design.headlineText,
-                    subtext: design.subtext,
-                    footerNote: design.footerNote,
-                    accentHex,
-                    darkVariant: design.darkVariant,
+                  const svgPreview = buildAssetSvgMarkup(
+                    {
+                      id: design.id,
+                      title: design.title,
+                      category: channelCat,
+                      folder: recommendChannel === 'Instagram' ? 'Social' : 'Print',
+                      format: 'Scalable Vector (.svg)',
+                      status: 'Draft',
+                      headlineText: design.headlineText || design.title,
+                      subtext: design.subtext || design.artDirectionNote || '',
+                      footerNote: design.footerNote || brandName,
+                      accentHex,
+                      darkVariant: Boolean(design.darkVariant),
+                      createdAt: new Date().toISOString().slice(0, 10),
+                    } as BrandAsset,
                     brandName,
-                    svgMarkup: design.svgMotif,
-                  } as BrandAsset);
+                    'geometric'
+                  );
                   const isSaved = Boolean(savedRecommendIds[design.id]);
 
                   return (
