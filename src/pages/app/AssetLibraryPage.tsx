@@ -753,7 +753,7 @@ export const AssetLibraryPage: React.FC = () => {
           campaignBrief: recommendBrief,
           targetChannel: recommendChannel,
         }),
-        apiClient.generateAiCollateral(state.activeWorkspaceId || 'default', {
+        apiClient.generateAiCollateralVariations(state.activeWorkspaceId || 'default', {
           category: targetCategory,
           prompt: recommendBrief,
           surfaceMode: 'mixed',
