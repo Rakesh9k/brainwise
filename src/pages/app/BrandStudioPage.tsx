@@ -1204,58 +1204,6 @@ export const BrandStudioPage: React.FC = () => {
       {/* A. Brand Identity Home + Inline 11-Step Identity Builder */}
       {tab === 'home' && (
         <FluidTransition key="home" direction="fade" className="space-y-6">
-          {/* Quick AI Generation Entry Strip */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                index: '01',
-                title: 'AI Logo Studio',
-                desc: 'Prompt, generate 3 geometric marks, refine with AI, and inspect on dark/light mockups.',
-                cta: 'Generate Logo Concepts →',
-                onClick: () => setTab('logos'),
-              },
-              {
-                index: '02',
-                title: 'AI Instagram Post & Carousel',
-                desc: 'Generate swipeable 3–7 slide carousels, captions, hashtags, and per-slide AI rewrites.',
-                cta: 'Open Social Studio →',
-                onClick: () => {
-                  setTab('studio');
-                  setStudioMode('social');
-                },
-              },
-              {
-                index: '03',
-                title: 'AI Brand Assets & Collateral',
-                desc: 'Prompt packaging sleeves, business cards, posters, and pitch slides locked to your brand.',
-                cta: 'Generate Brand Assets →',
-                onClick: () => {
-                  setTab('studio');
-                  setStudioMode('collateral');
-                },
-              },
-            ].map((entry) => (
-              <button
-                key={entry.index}
-                type="button"
-                onClick={entry.onClick}
-                className="text-left rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] hover:border-[#FF7417] p-5 bw-surface-raised transition-all cursor-pointer group flex flex-col justify-between gap-3"
-              >
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-mono-num text-[#858585]">
-                    <span>AI WORKFLOW {entry.index}</span>
-                    <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
-                  </div>
-                  <div className="font-heading text-base font-bold text-[#171717] group-hover:text-[#C44D00] transition-colors">
-                    {entry.title}
-                  </div>
-                  <p className="text-xs text-[#5C5C58] leading-relaxed">{entry.desc}</p>
-                </div>
-                <span className="text-xs font-semibold text-[#C44D00]">{entry.cta}</span>
-              </button>
-            ))}
-          </div>
-
           <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 sm:p-6 space-y-5 bw-surface-raised">
             {/* 1. Competitor Brand Glimpse & Whitespace Suggestion */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-[#E6E6E2]">
@@ -1264,9 +1212,26 @@ export const BrandStudioPage: React.FC = () => {
                   Competitor Brand Glimpse
                 </div>
                 <p className="text-xs text-[#252525] leading-relaxed">
-                  {state.competitors.length > 0
-                    ? `${state.competitors.slice(0, 3).map((c) => c.name).join(', ')} lean on ${state.competitors[0]?.brandPositioningDetail?.visualTone || 'traditional category styling'} (${state.competitors[0]?.priceRange || 'standard tier'}).`
-                    : `Most peers in ${state.brain.industry || 'your category'} default to generic templates and formal corporate copy.`}
+                  {(() => {
+                    const peerNames = Array.from(
+                      new Set(
+                        state.competitors
+                          .map((c) => {
+                            const raw = (c.name || (c as any).companyName || '').trim();
+                            if (raw) return raw;
+                            if (c.website) {
+                              return c.website.replace(/^https?:\/\/(www\.)?/i, '').split('/')[0].trim();
+                            }
+                            return '';
+                          })
+                          .filter(Boolean)
+                      )
+                    ).slice(0, 3);
+                    if (peerNames.length > 0) {
+                      return `${peerNames.join(', ')} lean on ${state.competitors[0]?.brandPositioningDetail?.visualTone || 'traditional category styling'} (${state.competitors[0]?.priceRange || 'standard tier'}).`;
+                    }
+                    return `Most peers in ${state.brain.industry || 'your category'} default to generic templates and formal corporate copy.`;
+                  })()}
                 </p>
               </div>
               <div className="p-3.5 rounded-[10px] bg-[#FFF0E5]/50 border border-[#FFD3B3] space-y-1">
@@ -1276,7 +1241,7 @@ export const BrandStudioPage: React.FC = () => {
                 <p className="text-xs text-[#252525] leading-relaxed">
                   Lead with <strong>{recommendedLogoProfile.mood}</strong> styling and{' '}
                   <strong>{recommendedLogoProfile.archetype}</strong> visual identity to stand apart
-                  for {state.brain.targetAudience || 'your buyers'}.
+                  for {(state.brain.targetAudience || 'your buyers').replace(/\.+$/, '')}.
                 </p>
               </div>
             </div>
