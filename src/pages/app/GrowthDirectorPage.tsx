@@ -111,13 +111,32 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
     departmentResetNonce,
   } = useBrainWise();
 
-  const defaultTab: GrowthTabId = initialMode === 'tasks' ? 'experiments' : 'overview';
+  const readPendingGrowthTab = (): GrowthTabId | null => {
+    try {
+      const pending = window.sessionStorage.getItem('bw_pending_growth_tab') as GrowthTabId | null;
+      if (pending && pending in GROWTH_TAB_LABELS) {
+        window.sessionStorage.removeItem('bw_pending_growth_tab');
+        return pending;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return null;
+  };
+
+  const defaultTab: GrowthTabId =
+    readPendingGrowthTab() ?? (initialMode === 'tasks' ? 'experiments' : 'overview');
   const [tab, setTab] = useState<GrowthTabId>(defaultTab);
   const [taskFilter, setTaskFilter] = useState<'all' | 'today'>('all');
 
   useEffect(() => {
+    const pending = readPendingGrowthTab();
+    if (pending) {
+      setTab(pending);
+      return;
+    }
     setTab(initialMode === 'tasks' ? 'experiments' : 'overview');
-  }, [initialMode]);
+  }, [initialMode, state.currentRoute]);
 
   const [selectedTask, setSelectedTask] = useState<GrowthTask | null>(null);
   const [taskNoteDraft, setTaskNoteDraft] = useState('');

@@ -60,7 +60,12 @@ interface BrainWiseContextValue {
   state: BrainWiseState;
   navigate: (
     route: AnyRoute,
-    options?: { settingsTab?: SettingsTabId; competitorId?: string; reportId?: string }
+    options?: {
+      settingsTab?: SettingsTabId;
+      competitorId?: string;
+      reportId?: string;
+      growthTab?: 'overview' | 'today' | 'roadmap' | 'goals' | 'experiments' | 'suggestions';
+    }
   ) => void;
   loginDemo: (firstName?: string, email?: string) => void;
   loginWithGoogle: () => Promise<{ success: boolean; nextRoute?: string; error?: string }>;
@@ -567,12 +572,20 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const navigate: BrainWiseContextValue['navigate'] = useCallback((route, options) => {
     setBreadcrumbTrail([]);
+    if (options?.growthTab) {
+      try {
+        window.sessionStorage.setItem('bw_pending_growth_tab', options.growthTab);
+      } catch {
+        // ignore storage errors
+      }
+    }
     setState((prev) => {
       const shouldReset =
         prev.currentRoute === route &&
         !options?.settingsTab &&
         !options?.competitorId &&
-        !options?.reportId;
+        !options?.reportId &&
+        !options?.growthTab;
       if (shouldReset) {
         setDepartmentResetNonce((n) => n + 1);
       }
