@@ -2772,35 +2772,40 @@ export const BrandStudioPage: React.FC = () => {
             </div>
           </LiquidSkeletonReveal>
 
-          {/* Interactive Inspection & AI Iterative Refinement Stage */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <div className="lg:col-span-6 rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-4 bw-surface-raised">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="font-heading text-sm font-bold text-[#242424]">
+          {/* Interactive Full-Width Master Mark Inspection & AI Iterative Refinement Stage */}
+          <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 sm:p-6 space-y-4 bw-surface-raised">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="font-heading text-base font-bold text-[#171717]">
                   Master Mark Inspection &amp; AI Refinement
                 </h3>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setLogoLightMode((l) => !l)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-[#E6E6E2] rounded-[8px] cursor-pointer"
-                  >
-                    {logoLightMode ? (
-                      <Moon className="w-3.5 h-3.5" />
-                    ) : (
-                      <Sun className="w-3.5 h-3.5" />
-                    )}
-                    {logoLightMode ? 'Dark' : 'Light'}
-                  </button>
+                <p className="text-xs text-[#686864] mt-0.5">
+                  Inspect your selected mark at full scale across light, dark, and icon lockups before exporting.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLogoLightMode((l) => !l)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-[#E6E6E2] bg-[#FAFAF9] hover:bg-[#F1F1EF] rounded-[8px] cursor-pointer"
+                >
+                  {logoLightMode ? (
+                    <Moon className="w-3.5 h-3.5" />
+                  ) : (
+                    <Sun className="w-3.5 h-3.5" />
+                  )}
+                  {logoLightMode ? 'Dark Backdrop' : 'Light Backdrop'}
+                </button>
+                <div className="inline-flex p-0.5 rounded-[8px] bg-[#ECECE9]">
                   {(['horizontal', 'stacked', 'icon'] as const).map((v) => (
                     <button
                       key={v}
                       type="button"
                       onClick={() => setLogoVariant(v)}
-                      className={`px-2.5 py-1 text-xs rounded-[6px] capitalize cursor-pointer ${
+                      className={`px-3 py-1 text-xs font-medium rounded-[6px] capitalize cursor-pointer transition-colors ${
                         logoVariant === v
                           ? 'bg-[#171717] text-white'
-                          : 'bg-[#ECECE9] text-[#686864]'
+                          : 'text-[#686864] hover:text-[#171717]'
                       }`}
                     >
                       {v}
@@ -2808,130 +2813,99 @@ export const BrandStudioPage: React.FC = () => {
                   ))}
                 </div>
               </div>
+            </div>
 
+            <div
+              style={
+                logoLightMode
+                  ? {
+                      backgroundImage:
+                        'linear-gradient(45deg, #F3F3F0 25%, transparent 25%), linear-gradient(-45deg, #F3F3F0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #F3F3F0 75%), linear-gradient(-45deg, transparent 75%, #F3F3F0 75%)',
+                      backgroundSize: '18px 18px',
+                      backgroundPosition: '0 0, 0 9px, 9px -9px, -9px 0px',
+                    }
+                  : undefined
+              }
+              className={`h-64 rounded-[12px] border flex items-center justify-center p-8 transition-colors ${
+                logoLightMode
+                  ? 'bg-[#FFFFFF] border-[#E6E6E2] text-[#171717]'
+                  : 'bg-[#171717] border-[#2C2C2C] text-white bw-dark-ambient-glow'
+              }`}
+            >
               <div
-                className={`h-48 rounded-[12px] border flex items-center justify-center p-6 transition-colors ${
-                  logoLightMode
-                    ? 'bg-[#FFFFFF] border-[#E6E6E2] text-[#242424]'
-                    : 'bg-[#171717] border-[#2C2C2C] text-white bw-dark-ambient-glow'
-                }`}
+                className={`flex items-center gap-5 ${logoVariant === 'stacked' ? 'flex-col text-center gap-3' : ''}`}
               >
-                <div
-                  className={`flex items-center gap-3.5 ${logoVariant === 'stacked' ? 'flex-col text-center' : ''}`}
-                >
-                  {renderLogoMark(activeConcept, logoAccent, logoLightMode, 'w-20 h-20')}
-                  {logoVariant !== 'icon' && (
-                    <div>
-                      <div className="font-heading text-xl font-bold tracking-tight">
-                        {effectiveBrandName}
-                      </div>
-                      <div className="text-[11px] opacity-70">{state.brand.tagline}</div>
+                {renderLogoMark(
+                  activeConcept,
+                  logoAccent,
+                  logoLightMode,
+                  logoVariant === 'icon' ? 'w-40 h-40' : 'w-32 h-32'
+                )}
+                {logoVariant !== 'icon' && (
+                  <div className="min-w-0">
+                    <div className="font-heading text-2xl sm:text-3xl font-bold tracking-tight">
+                      {effectiveBrandName}
                     </div>
-                  )}
-                </div>
+                    <div className="text-xs opacity-75 mt-1">{state.brand.tagline}</div>
+                  </div>
+                )}
               </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-[11px] text-[#686864]">
-                  Transparent 2048×2048px PNG export ready for print &amp; web
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => downloadLogoTransparentPng(activeConcept, logoLightMode)}
-                >
-                  <Download className="w-3.5 h-3.5 text-[#FF7417]" />
-                  Download HD Transparent PNG (2048px)
-                </Button>
-              </div>
-
-              {/* Direct Follow-Up AI Refinement Prompt */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!logoRefineInput.trim()) return;
-                  const nextPrompt = `${logoPrompt}. Refinement: ${logoRefineInput.trim()}`;
-                  setLogoPrompt(nextPrompt);
-                  void handleGenerateAiLogos(nextPrompt);
-                }}
-                className="flex items-center gap-2 pt-2 border-t border-[#E6E6E2]"
-              >
-                <Input
-                  type="text"
-                  value={logoRefineInput}
-                  onChange={(e) => setLogoRefineInput(e.target.value)}
-                  placeholder='Refine with AI (e.g. "Bolder strokes, sharper corners")'
-                  aria-label="Refine logo with AI"
-                />
-                <Button
-                  type="submit"
-                  variant="dark"
-                  size="sm"
-                  disabled={logoGenerating || !logoRefineInput.trim()}
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Refine
-                </Button>
-              </form>
             </div>
 
-            <div className="lg:col-span-6 rounded-[12px] border border-[#E6E6E2] bg-[#F5F5F4] p-5 space-y-4">
-              <h3 className="font-heading text-sm font-bold text-[#242424]">
-                Real-World Surface Check: Card, Packaging &amp; Social Avatar
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <DarkSurfacePanel className="aspect-[1.6/1] p-4 flex flex-col justify-between">
-                  <div className="flex items-center gap-2">
-                    {renderLogoMark(activeConcept, logoAccent, false, 'w-9 h-9')}
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold">
-                      {state.user.firstName} {state.user.lastName}
-                    </div>
-                    <div className="text-[10px] text-[#A8A8A2]">
-                      {state.user.role} · {state.brand.brandName}
-                    </div>
-                  </div>
-                </DarkSurfacePanel>
-
-                <div className="aspect-[1.6/1] rounded-[10px] bg-[#FFFFFF] border border-[#E6E6E2] p-4 flex flex-col justify-between shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono-num text-[#C44D00] uppercase">
-                      {flagshipProduct?.category ?? 'SOCIAL AVATAR'}
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-[#171717] text-white flex items-center justify-center p-1.5">
-                      {renderLogoMark(activeConcept, logoAccent, false, 'w-5 h-5')}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="font-heading text-sm font-bold text-[#242424] truncate">
-                      {brandHandle}
-                    </div>
-                    <div className="text-[10px] text-[#686864] truncate">
-                      {flagshipProduct?.name ?? state.brand.tagline}
-                    </div>
-                  </div>
-                </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs text-[#5C5C58]">
+                <span>Accent test:</span>
+                {['#FF7417', '#171717', '#24724E', '#A85E16'].map((hex) => (
+                  <button
+                    key={hex}
+                    type="button"
+                    aria-label={`Test accent ${hex}`}
+                    onClick={() => setLogoAccent(hex)}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-transform ${
+                      logoAccent === hex ? 'border-[#171717] scale-110' : 'border-transparent'
+                    }`}
+                    style={{ backgroundColor: hex }}
+                  />
+                ))}
               </div>
-              <div className="flex items-center justify-between pt-2 text-xs text-[#5C5C58]">
-                <div className="flex items-center gap-2">
-                  <span>Accent test:</span>
-                  {['#FF7417', '#171717', '#24724E', '#A85E16'].map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      aria-label={`Test accent ${hex}`}
-                      onClick={() => setLogoAccent(hex)}
-                      className={`w-5 h-5 rounded-full border-2 cursor-pointer ${
-                        logoAccent === hex ? 'border-[#171717] scale-110' : 'border-transparent'
-                      }`}
-                      style={{ backgroundColor: hex }}
-                    />
-                  ))}
-                </div>
-                <span className="text-[11px] font-mono-num text-[#858585]">SVG Vector Ready</span>
-              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => downloadLogoTransparentPng(activeConcept, logoLightMode)}
+              >
+                <Download className="w-3.5 h-3.5 text-[#FF7417]" />
+                Download HD Transparent PNG (2048px)
+              </Button>
             </div>
+
+            {/* Direct Follow-Up AI Refinement Prompt */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!logoRefineInput.trim()) return;
+                const nextPrompt = `${logoPrompt}. Refinement: ${logoRefineInput.trim()}`;
+                setLogoPrompt(nextPrompt);
+                void handleGenerateAiLogos(nextPrompt);
+              }}
+              className="flex items-center gap-2 pt-3 border-t border-[#E6E6E2]"
+            >
+              <Input
+                type="text"
+                value={logoRefineInput}
+                onChange={(e) => setLogoRefineInput(e.target.value)}
+                placeholder='Refine with AI (e.g. "Bolder strokes, sharper corners, minimal cacao icon")'
+                aria-label="Refine logo with AI"
+              />
+              <Button
+                type="submit"
+                variant="dark"
+                size="sm"
+                disabled={logoGenerating || !logoRefineInput.trim()}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Refine
+              </Button>
+            </form>
           </div>
         </FluidTransition>
       )}
