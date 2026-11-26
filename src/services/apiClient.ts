@@ -231,7 +231,7 @@ export class BrainWiseApiClient {
       }
       if (err instanceof Error && err.name === 'AbortError') {
         throw new ApiError(
-          `Request timeout after ${this.timeoutMs / 1000}s`,
+          `Request timeout after ${effectiveTimeoutMs / 1000}s`,
           504,
           'REQUEST_TIMEOUT'
         );

@@ -333,13 +333,18 @@ export class LogoDesignEngine {
           `[{ "conceptName": "string", "markStyle": "geometric"|"emblem"|"monogram", "designRationale": "string", "svgIconInner": "string" }]`,
         ].join('\n');
 
-        const aiRes = await provider.generate({
-          model: serverConfig.geminiModel,
-          prompt: svgPrompt,
-          systemInstruction:
-            'You are a world-class Swiss geometric brand identity designer. Return strictly valid JSON array of 3 clean SVG icon concepts.',
-          temperature: 0.45,
-        });
+        const aiRes = await Promise.race([
+          provider.generate({
+            model: serverConfig.geminiModel,
+            prompt: svgPrompt,
+            systemInstruction:
+              'You are a world-class Swiss geometric brand identity designer. Return strictly valid JSON array of 3 clean SVG icon concepts.',
+            temperature: 0.45,
+          }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Logo AI generation timed out after 18s')), 18000)
+          ),
+        ]);
 
         if (aiRes.text) {
           const cleaned = aiRes.text

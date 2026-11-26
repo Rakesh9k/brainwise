@@ -752,11 +752,28 @@ export const BrandStudioPage: React.FC = () => {
         throw new Error(errMsg);
       }
 
-      const cleanedSlides: CarouselSlide[] = creativePkg.slides.map((s: any, idx: number) => ({
-        ...s,
-        slideNumber: regenerateSlideNumber ?? s.slideNumber ?? idx + 1,
-        svgMotif: sanitizeAiSvgMarkup(s.svgMotif || s.artSvg, '0 0 120 48'),
-      }));
+      const defaultRoles = ['Hook', 'Problem', 'Insight', 'Proof', 'CTA'];
+      const cleanedSlides: CarouselSlide[] = creativePkg.slides.map((s: any, idx: number) => {
+        const slideNum = regenerateSlideNumber ?? s.slideNumber ?? idx + 1;
+        return {
+          ...s,
+          slideNumber: slideNum,
+          role:
+            s.role ||
+            defaultRoles[idx] ||
+            (idx === creativePkg.slides.length - 1 ? 'CTA' : `Slide ${slideNum}`),
+          kicker: s.kicker || `${socialAngle.toUpperCase()} · 0${slideNum}`,
+          headline: s.headline || s.title || `${effectiveBrandName} Highlight`,
+          body:
+            s.body ||
+            (Array.isArray(s.points) ? s.points.join(' · ') : s.subtitle) ||
+            '',
+          artDirectionPrompt:
+            s.artDirectionPrompt ||
+            `Brand-locked ${socialDark ? 'dark charcoal' : 'Swiss minimal'} composition for ${effectiveBrandName}.`,
+          svgMotif: sanitizeAiSvgMarkup(s.svgMotif || s.artSvg, '0 0 120 48'),
+        };
+      });
 
       if (regenerateSlideNumber && cleanedSlides[0]) {
         setSocialPackage((prev) => ({
@@ -2866,7 +2883,7 @@ export const BrandStudioPage: React.FC = () => {
                               <span className="font-semibold text-[#171717]">{brandHandle}</span>
                             </div>
                             <span className="font-mono-num text-[10px] text-[#858585]">
-                              {activeSlide.role.toUpperCase()} · {activeSlide.slideNumber}/
+                              {(activeSlide.role || 'SLIDE').toUpperCase()} · {activeSlide.slideNumber}/
                               {socialPackage.slides.length}
                             </span>
                           </div>
