@@ -545,10 +545,131 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
     }
   }, [pendingCompetitorProfile, state.selectedCompetitorId, consumeCompetitorProfile]);
 
-  const activeComp = state.competitors.find((c) => c.id === selectedId) ?? state.competitors[0];
+  const [overviewViewMode, setOverviewViewMode] = useState<'deck' | 'table'>('deck');
+
+  // Deduplicate competitors by normalized domain or name, preferring the richest profile
+  const uniqueCompetitors = React.useMemo(() => {
+    const scoreComp = (c: CompetitorProfileData) => {
+      const isBareDomain = /^[a-z0-9.-]+\.[a-z]{2,}$/i.test((c.name || '').trim());
+      return (
+        (isBareDomain ? 0 : 100) +
+        (c.strengths?.length || 0) * 5 +
+        (c.weaknesses?.length || 0) * 5 +
+        (c.reviews?.complaintClusters?.length || 0) * 5 +
+        (c.positioning?.length || 0) * 0.1
+      );
+    };
+    const byKey = new Map<string, CompetitorProfileData>();
+    for (const c of state.competitors) {
+      const domainKey = (c.website || '')
+        .replace(/^https?:\/\/(www\.)?/i, '')
+        .split('/')[0]
+        .toLowerCase()
+        .trim();
+      const key = domainKey || (c.name || c.id).toLowerCase().trim();
+      const existing = byKey.get(key);
+      if (!existing || scoreComp(c) > scoreComp(existing)) {
+        byKey.set(key, c);
+      }
+    }
+    return Array.from(byKey.values());
+  }, [state.competitors]);
+
+  const activeComp = uniqueCompetitors.find((c) => c.id === selectedId) ?? uniqueCompetitors[0];
   const ownPos = state.ownPositionScore ?? { x: 58, y: 80 };
-  const proximity = findNearestCompetitors(ownPos.x, ownPos.y, state.competitors);
-  const complaintRows = filterReviewComplaints(state.competitors, complaintTopic);
+  const proximity = findNearestCompetitors(ownPos.x, ownPos.y, uniqueCompetitors);
+
+  const classifyComplaintTopic = (text: string, fallbackTopic?: string): Exclude<ComplaintClusterTopic, 'All'> => {
+    const t = text.toLowerCase();
+    if (/pric|expensive|cost|margin|value|mrp|overpriced|unit pricing/.test(t)) return 'Pricing';
+    if (/transit|ship|deliver|cold-chain|melt|hot month|packaging|courier|delay/.test(t)) return 'Delivery';
+    if (/fresh|stale|batch|roast|expiry|shelf|quality|taste|melted/.test(t)) return 'Freshness';
+    if (/onboard|checkout|support|ui|order|wait|friction|website/.test(t)) return 'Onboarding';
+    if (fallbackTopic === 'Pricing' || fallbackTopic === 'Delivery' || fallbackTopic === 'Freshness') {
+      return fallbackTopic;
+    }
+    return 'Onboarding';
+  };
+
+  const inferPlatform = (c: CompetitorProfileData, idx: number): string => {
+    const domain = (c.website || '').toLowerCase();
+    const platforms = ['Google Reviews', 'Amazon India', 'Instagram & Social', 'D2C Storefront'];
+    if (domain.includes('amazon')) return 'Amazon India';
+    return platforms[idx % platforms.length];
+  };
+
+  const buildCounterPlay = (topic: Exclude<ComplaintClusterTopic, 'All'>): string => {
+    if (topic === 'Pricing') return 'Offer a transparent starter tasting pack or smaller entry SKU.';
+    if (topic === 'Delivery') return 'Guarantee insulated dispatch & 48-hour metro cold-chain delivery.';
+    if (topic === 'Freshness') return 'Stamp batch-roast/make dates on every pack for instant trust.';
+    return 'Streamline 1-click checkout & WhatsApp order tracking.';
+  };
+
+  const enrichedComplaintRows = React.useMemo(() => {
+    const raw = filterReviewComplaints(uniqueCompetitors, 'All');
+    const seen = new Set<string>();
+    const compMap = new Map(uniqueCompetitors.map((c) => [c.id, c]));
+    const rows: Array<{
+      competitorId: string;
+      competitorName: string;
+      competitorDomain: string;
+      platform: string;
+      topic: Exclude<ComplaintClusterTopic, 'All'>;
+      complaint: string;
+      averageRating: number;
+      counterPlay: string;
+    }> = [];
+
+    raw.forEach((r, idx) => {
+      const comp = compMap.get(r.competitorId);
+      const compName = comp?.name || r.competitorName;
+      const dedupeKey = `${compName.toLowerCase()}::${r.complaint.toLowerCase().trim()}`;
+      if (seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      const topic = classifyComplaintTopic(r.complaint, r.topic);
+      rows.push({
+        competitorId: r.competitorId,
+        competitorName: compName,
+        competitorDomain: (comp?.website || '').replace(/^https?:\/\/(www\.)?/i, '').split('/')[0],
+        platform: comp ? inferPlatform(comp, idx) : 'Verified Reviews',
+        topic,
+        complaint: r.complaint,
+        averageRating: r.averageRating,
+        counterPlay: buildCounterPlay(topic),
+      });
+    });
+
+    if (complaintTopic === 'All') return rows;
+    return rows.filter((r) => r.topic === complaintTopic);
+  }, [uniqueCompetitors, complaintTopic]);
+
+  const handleSnapToBestWhiteSpace = () => {
+    if (uniqueCompetitors.length === 0) {
+      updateOwnPosition(68, 82);
+      return;
+    }
+    let bestX = 65;
+    let bestY = 80;
+    let bestMinDist = -1;
+    for (let x = 20; x <= 85; x += 5) {
+      for (let y = 20; y <= 85; y += 5) {
+        let minDist = Infinity;
+        for (const c of uniqueCompetitors) {
+          const dx = x - (c.xValueScore ?? 50);
+          const dy = y - (c.yDiffScore ?? 50);
+          const d = Math.hypot(dx, dy);
+          if (d < minDist) minDist = d;
+        }
+        if (minDist > bestMinDist) {
+          bestMinDist = minDist;
+          bestX = x;
+          bestY = y;
+        }
+      }
+    }
+    updateOwnPosition(bestX, bestY);
+    showToast(`Snapped to highest white-space clearance (${Math.round(bestMinDist)} pts) at X:${bestX}, Y:${bestY}.`);
+  };
 
   const applyMapPosition = (clientX: number, clientY: number) => {
     const el = mapRef.current;
@@ -592,7 +713,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
     [sectionTab, profileSubTab, activeComp?.id, activeComp?.name]
   );
 
-  const filteredCompetitors = state.competitors.filter((c) => {
+  const filteredCompetitors = uniqueCompetitors.filter((c) => {
     const q = search.toLowerCase();
     return (
       !q ||
@@ -880,69 +1001,152 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
             </button>
           </div>
 
-          <DataTable
-            data={filteredCompetitors}
-            keyExtractor={(c) => c.id}
-            onRowClick={(c) => {
-              setSelectedId(c.id);
-              setSectionTab('profile');
-            }}
-            columns={[
-              {
-                key: 'name',
-                header: 'Competitor',
-                sortValue: (c) => c.name,
-                render: (c) => (
-                  <div>
-                    <div className="font-semibold text-[#242424]">{c.name}</div>
-                    <div className="text-xs text-[#686864]">
-                      {c.website.replace('https://', '')}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-xs text-[#686864]">
+              Showing <strong className="text-[#171717]">{filteredCompetitors.length}</strong> unique tracked rivals
+            </div>
+            <div className="flex items-center gap-1 bg-[#FAFAF9] p-1 rounded-[9px] border border-[#E6E6E2] text-xs">
+              <button
+                type="button"
+                onClick={() => setOverviewViewMode('deck')}
+                className={`px-3 py-1 rounded-[7px] font-semibold cursor-pointer transition-colors ${
+                  overviewViewMode === 'deck' ? 'bg-[#171717] text-white' : 'text-[#5C5C58]'
+                }`}
+              >
+                Visual Deck
+              </button>
+              <button
+                type="button"
+                onClick={() => setOverviewViewMode('table')}
+                className={`px-3 py-1 rounded-[7px] font-semibold cursor-pointer transition-colors ${
+                  overviewViewMode === 'table' ? 'bg-[#171717] text-white' : 'text-[#5C5C58]'
+                }`}
+              >
+                Compact Table
+              </button>
+            </div>
+          </div>
+
+          {overviewViewMode === 'deck' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredCompetitors.map((c, idx) => (
+                <div
+                  key={c.id}
+                  onClick={() => {
+                    setSelectedId(c.id);
+                    setSectionTab('profile');
+                  }}
+                  className="group rounded-[16px] border border-[#E6E6E2] bg-[#FFFFFF] hover:border-[#FF7417] p-5 flex flex-col justify-between gap-4 shadow-xs hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-heading text-2xl font-black leading-none text-[#E6E6E2] group-hover:text-[#FF7417]/35 transition-colors select-none">
+                        0{idx + 1}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#FAFAF9] border border-[#E6E6E2] text-[10px] font-semibold text-[#5C5C58]">
+                        {c.category}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="font-heading text-base font-bold text-[#171717] group-hover:text-[#C44D00] transition-colors">
+                        {c.name}
+                      </h3>
+                      <div className="text-[11px] font-mono-num text-[#858585] mt-0.5">
+                        {c.website.replace(/^https?:\/\/(www\.)?/i, '').split('/')[0]}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-[#5C5C58] leading-relaxed line-clamp-2">
+                      {c.positioning}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 pt-3 border-t border-[#EFEFEB]">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-[#858585]">Price Band</span>
+                      <span className="font-mono-num font-semibold text-[#171717] truncate max-w-[180px]">
+                        {c.priceRange}
+                      </span>
+                    </div>
+                    {c.weaknesses?.[0] && (
+                      <div className="rounded-[8px] bg-[#FFF8F3] border border-[#FDE2CE] px-2.5 py-1.5 text-[11px] text-[#A85E16] line-clamp-1">
+                        <strong className="font-semibold">Gap:</strong> {c.weaknesses[0]}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-xs font-semibold text-[#C44D00]">
+                      <span>Inspect Teardown</span>
+                      <span className="group-hover:translate-x-1 transition-transform">→</span>
                     </div>
                   </div>
-                ),
-              },
-              {
-                key: 'category',
-                header: 'Category',
-                sortValue: (c) => c.category,
-                render: (c) => <span className="text-xs text-[#242424]">{c.category}</span>,
-              },
-              {
-                key: 'positioning',
-                header: 'Positioning',
-                render: (c) => (
-                  <span className="text-xs text-[#686864] line-clamp-2 max-w-xs">
-                    {c.positioning}
-                  </span>
-                ),
-              },
-              {
-                key: 'price',
-                header: 'Price Range',
-                sortValue: (c) => c.priceRange,
-                render: (c) => <span className="font-mono-num text-xs">{c.priceRange}</span>,
-              },
-              {
-                key: 'status',
-                header: 'Status',
-                render: (c) => (
-                  <StatusBadge
-                    status={c.researchStatus}
-                    tone={c.researchStatus === 'Complete' ? 'success' : 'warning'}
-                  />
-                ),
-              },
-              {
-                key: 'date',
-                header: 'Last Researched',
-                align: 'right',
-                sortValue: (c) => c.lastResearched,
-                render: (c) => (
-                  <span className="font-mono-num text-xs text-[#686864]">{c.lastResearched}</span>
-                ),
-              },
-            ]}
-          />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <DataTable
+              data={filteredCompetitors}
+              keyExtractor={(c) => c.id}
+              onRowClick={(c) => {
+                setSelectedId(c.id);
+                setSectionTab('profile');
+              }}
+              columns={[
+                {
+                  key: 'name',
+                  header: 'Competitor',
+                  sortValue: (c) => c.name,
+                  render: (c) => (
+                    <div>
+                      <div className="font-semibold text-[#242424]">{c.name}</div>
+                      <div className="text-xs text-[#686864]">
+                        {c.website.replace('https://', '')}
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'category',
+                  header: 'Category',
+                  sortValue: (c) => c.category,
+                  render: (c) => <span className="text-xs text-[#242424]">{c.category}</span>,
+                },
+                {
+                  key: 'positioning',
+                  header: 'Positioning',
+                  render: (c) => (
+                    <span className="text-xs text-[#686864] line-clamp-2 max-w-xs">
+                      {c.positioning}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'price',
+                  header: 'Price Range',
+                  sortValue: (c) => c.priceRange,
+                  render: (c) => <span className="font-mono-num text-xs">{c.priceRange}</span>,
+                },
+                {
+                  key: 'status',
+                  header: 'Status',
+                  render: (c) => (
+                    <StatusBadge
+                      status={c.researchStatus}
+                      tone={c.researchStatus === 'Complete' ? 'success' : 'warning'}
+                    />
+                  ),
+                },
+                {
+                  key: 'date',
+                  header: 'Last Researched',
+                  align: 'right',
+                  sortValue: (c) => c.lastResearched,
+                  render: (c) => (
+                    <span className="font-mono-num text-xs text-[#686864]">{c.lastResearched}</span>
+                  ),
+                },
+              ]}
+            />
+          )}
 
           {/* AI Conversational Research Advisor Card */}
           <div className="rounded-[14px] border border-[#E6E6E2] bg-white p-5 sm:p-6 space-y-4 shadow-xs">
@@ -1395,18 +1599,27 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
             <div className="flex flex-wrap items-start justify-between gap-3">
               <SectionHeader
                 title="Interactive Positioning Map"
-                description="Click or drag your orange Target badge (or use arrow keys) to test white-space clearance"
+                description="Used to spot uncrowded market white-space between Mass vs. Premium pricing and Traditional vs. Digital/Craft specialization. Drag your orange Target pill into open space to avoid head-on price wars."
               />
-              <button
-                type="button"
-                onClick={() => {
-                  updateOwnPosition(58, 80);
-                  showToast('Reset target position to recommended white-space coordinates.');
-                }}
-                className="px-3 py-1.5 text-xs font-medium bg-[#F5F5F4] hover:bg-[#ECECE9] border border-[#E6E6E2] rounded-[8px] cursor-pointer"
-              >
-                Reset Target (58, 80)
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSnapToBestWhiteSpace}
+                  className="px-3 py-1.5 text-xs font-semibold bg-[#FF7417] hover:bg-[#E5620A] text-white rounded-[8px] cursor-pointer transition-colors shadow-xs"
+                >
+                  Snap to Best White-Space
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateOwnPosition(58, 80);
+                    showToast('Reset target position to recommended white-space coordinates.');
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium bg-[#F5F5F4] hover:bg-[#ECECE9] border border-[#E6E6E2] rounded-[8px] cursor-pointer"
+                >
+                  Reset (58, 80)
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
@@ -1453,23 +1666,37 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                   Premium Tier
                 </span>
 
-                {/* Competitors */}
-                {state.competitors.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    data-competitor-pin="true"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedId(c.id);
-                      setSectionTab('profile');
-                    }}
-                    style={{ left: `${c.xValueScore}%`, bottom: `${c.yDiffScore}%` }}
-                    className="z-10 hover:z-30 absolute -translate-x-1/2 translate-y-1/2 px-2 py-0.5 rounded-[7px] bg-[#FFFFFF] border border-[#D6D6D0] text-[10px] font-medium text-[#252525] shadow-[0_1px_2px_rgba(23,23,23,0.06)] hover:border-[#FF7417] hover:-translate-y-[calc(50%+1px)] transition-all cursor-pointer whitespace-nowrap"
-                  >
-                    {c.name}
-                  </button>
-                ))}
+                {/* Competitors (Deduplicated, numbered dots + smart staggered labels to prevent overlap) */}
+                {uniqueCompetitors.map((c, idx) => {
+                  const labelOnLeft = (c.xValueScore ?? 50) > 62;
+                  const labelBelow = idx % 2 === 1;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      data-competitor-pin="true"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedId(c.id);
+                        setSectionTab('profile');
+                      }}
+                      title={`${c.name} (${c.priceRange})`}
+                      style={{ left: `${c.xValueScore}%`, bottom: `${c.yDiffScore}%` }}
+                      className="z-10 hover:z-30 absolute -translate-x-1/2 translate-y-1/2 group cursor-pointer"
+                    >
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border-2 border-[#171717] group-hover:border-[#FF7417] text-[10px] font-mono-num font-bold text-[#171717] flex items-center justify-center shadow-sm transition-transform group-hover:scale-110">
+                        {idx + 1}
+                      </span>
+                      <span
+                        className={`pointer-events-none absolute whitespace-nowrap px-2 py-0.5 rounded-[6px] bg-white/95 border border-[#E6E6E2] text-[10px] font-semibold text-[#171717] shadow-xs transition-all group-hover:border-[#FF7417] ${
+                          labelOnLeft ? 'right-7' : 'left-7'
+                        } ${labelBelow ? 'top-1' : '-top-2'}`}
+                      >
+                        {c.name}
+                      </span>
+                    </button>
+                  );
+                })}
 
                 {/* Interactive Target Marker */}
                 <button
@@ -1540,11 +1767,12 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                       </span>
                     </div>
                   ))}
-                  {proximity.nearest.length === 0 && (
-                    <div className="text-xs text-[#686864]">
-                      Add competitors to measure proximity.
-                    </div>
-                  )}
+                  <div className="p-2.5 rounded-[8px] bg-[#FFF8F3] border border-[#FDE2CE] text-[11px] text-[#252525] leading-relaxed">
+                    <strong className="text-[#C44D00]">Positioning Advice:</strong>{' '}
+                    {proximity.whiteSpaceClearance >= 14
+                      ? `Strong open white-space (${proximity.whiteSpaceClearance} pts). You avoid direct price-war overlap.`
+                      : `Crowded zone (${proximity.whiteSpaceClearance} pts from ${proximity.nearest[0]?.competitor.name || 'closest rival'}). Click "Snap to Best White-Space" or drag into open space.`}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1637,24 +1865,45 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
               </div>
             </div>
 
-            {complaintRows.length === 0 ? (
+            {enrichedComplaintRows.length === 0 ? (
               <div className="p-4 rounded-[10px] bg-[#F5F5F4] text-xs text-[#686864]">
                 No logged complaints match "{complaintTopic}". Try switching to All clusters.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {complaintRows.map((row, idx) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {enrichedComplaintRows.map((row, idx) => (
                   <div
                     key={`${row.competitorId}-${idx}`}
-                    className="p-3.5 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2] flex flex-col justify-between gap-2"
+                    className="rounded-[14px] bg-[#FFFFFF] border border-[#E6E6E2] hover:border-[#FF7417]/60 p-4 flex flex-col justify-between gap-3 shadow-xs transition-all"
                   >
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-semibold text-[#242424]">{row.competitorName}</span>
-                      <span className="font-medium text-[#C44D00]">{row.topic}</span>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-heading text-xl font-black leading-none text-[#E6E6E2] select-none">
+                          {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
+                        </span>
+                        <div>
+                          <div className="text-xs font-bold text-[#171717]">{row.competitorName}</div>
+                          <div className="text-[10px] font-mono-num text-[#858585]">
+                            {row.platform}{row.competitorDomain ? ` · ${row.competitorDomain}` : ''}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="px-2 py-0.5 rounded-full bg-[#FFF0E5] text-[#C44D00] text-[10px] font-semibold">
+                          {row.topic}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-[#FAFAF9] border border-[#E6E6E2] text-[10px] font-mono-num text-[#5C5C58]">
+                          ★ {row.averageRating}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-[#242424] leading-relaxed">“{row.complaint}”</p>
-                    <div className="text-[11px] font-mono-num text-[#686864]">
-                      Avg rating: {row.averageRating}
+
+                    <p className="text-xs sm:text-[13px] text-[#171717] font-medium leading-relaxed bg-[#FAFAF9] rounded-[10px] p-3 border border-[#EFEFEB]">
+                      “{row.complaint}”
+                    </p>
+
+                    <div className="text-[11px] text-[#1E6543] bg-[#ECF7F1]/70 border border-[#CDE5D7] rounded-[8px] px-3 py-2">
+                      <strong>Your Counter-Wedge:</strong> {row.counterPlay}
                     </div>
                   </div>
                 ))}
