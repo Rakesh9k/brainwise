@@ -2605,13 +2605,13 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const chatAssetAssistant = async (payload: { query: string; conversationId?: string; confirmationToken?: string; context?: any }) => {
-    if (!state.activeWorkspaceId) return null;
-    return apiClient.chatAssetAssistant(state.activeWorkspaceId, payload);
+    const wsId = state.activeWorkspaceId || 'default';
+    return apiClient.chatAssetAssistant(wsId, payload);
   };
 
   const confirmAssetAssistantAction = async (payload: { confirmationToken: string; conversationId?: string }) => {
-    if (!state.activeWorkspaceId) return null;
-    const res = await apiClient.confirmAssetAssistantAction(state.activeWorkspaceId, payload);
+    const wsId = state.activeWorkspaceId || 'default';
+    const res = await apiClient.confirmAssetAssistantAction(wsId, payload);
     showToast('Action confirmed and executed.');
     return res;
   };
