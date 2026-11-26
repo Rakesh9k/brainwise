@@ -515,8 +515,18 @@ export const BrandStudioPage: React.FC = () => {
   };
 
   const downloadLogoTransparentPng = (concept: BrandConcept, darkInk = true) => {
-    const rawSvg = sanitizeAiSvgMarkup(concept.customSvg, '0 0 120 120');
     const ink = darkInk ? '#171717' : '#FFFFFF';
+    const accent = concept.accentColor || logoAccent || '#FF7417';
+    let rawSvg = sanitizeAiSvgMarkup(concept.customSvg, '0 0 120 120');
+    if (!rawSvg) {
+      if (concept.markStyle === 'monogram') {
+        rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none"><rect x="12" y="12" width="96" height="96" rx="26" stroke="${ink}" stroke-width="5"/><path d="M40 76C40 62 60 62 60 48C60 38 42 36 40 44" stroke="${accent}" stroke-width="6" stroke-linecap="round"/><circle cx="76" cy="74" r="7" fill="${accent}"/></svg>`;
+      } else if (concept.markStyle === 'emblem') {
+        rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="46" stroke="${ink}" stroke-width="5"/><circle cx="60" cy="60" r="32" stroke="${ink}" stroke-width="3" stroke-dasharray="6 6"/><circle cx="60" cy="60" r="12" fill="${accent}"/></svg>`;
+      } else {
+        rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none"><rect x="14" y="14" width="92" height="92" rx="22" stroke="${ink}" stroke-width="5"/><path d="M30 78H90" stroke="${ink}" stroke-width="5" stroke-linecap="round"/><path d="M42 78C42 54 50 42 60 42C70 42 78 54 78 78" stroke="${accent}" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="30" r="6" fill="${accent}"/></svg>`;
+      }
+    }
     // Preserve exact viewBox aspect ratio so landscape (600x400) or square (120x120) logos never squish
     const vbMatch = rawSvg.match(/viewBox\s*=\s*["']\s*[\d.-]+\s+[\d.-]+\s+([\d.]+)\s+([\d.]+)\s*["']/i);
     const vbW = vbMatch ? Math.max(1, parseFloat(vbMatch[1])) : 120;
@@ -525,12 +535,14 @@ export const BrandStudioPage: React.FC = () => {
     const canvasH = Math.max(512, Math.round(canvasW * (vbH / vbW)));
 
     const cleanedSvg = rawSvg
+      .replace(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-f]+;)/gi, '&amp;')
       .replace(/currentColor/g, ink)
       .replace(/<svg\b([^>]*)>/i, (_m, attrs) => {
         const stripped = attrs
           .replace(/\bwidth\s*=\s*["'][^"']*["']/gi, '')
           .replace(/\bheight\s*=\s*["'][^"']*["']/gi, '');
-        return `<svg${stripped} width="${canvasW}" height="${canvasH}">`;
+        const hasXmlns = /\bxmlns\s*=/i.test(stripped);
+        return `<svg${stripped}${hasXmlns ? '' : ' xmlns="http://www.w3.org/2000/svg"'} width="${canvasW}" height="${canvasH}">`;
       });
     const blob = new Blob([cleanedSvg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
