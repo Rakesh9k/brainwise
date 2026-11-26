@@ -210,6 +210,14 @@ export const BrandStudioPage: React.FC = () => {
     state.reports?.find((r) => r.id === state.activeReportId) || state.reports?.[0] || null;
 
   const [pillarRotationOffset, setPillarRotationOffset] = useState(0);
+  const [editingGuidelines, setEditingGuidelines] = useState(false);
+  const [guidelineDraft, setGuidelineDraft] = useState<{
+    logoUsage: string;
+    spacingRule: string;
+    visualStyle: string;
+    brandVoice: string;
+    messagingPillars: string[];
+  } | null>(null);
 
   // Dynamically derive Brand Guidelines from Finalized Idea + Brand Identity when defaults are generic
   const effectiveGuidelines = React.useMemo(() => {
@@ -266,7 +274,9 @@ export const BrandStudioPage: React.FC = () => {
         raw?.brandVoice ||
         `Clear, warm, and authentic to ${state.brain?.targetAudience || 'your target audience'} — zero generic hype.`,
       messagingPillars:
-        pillarRotationOffset > 0 || isGenericBoilerplate ? dailyPillars : dailyPillars,
+        pillarRotationOffset === 0 && !isGenericBoilerplate && rawPillars.length > 0
+          ? rawPillars
+          : dailyPillars,
     };
   }, [
     pillarRotationOffset,
@@ -3119,13 +3129,72 @@ export const BrandStudioPage: React.FC = () => {
         >
           <SectionHeader
             title={`${effectiveBrandName} Brand Guidelines`}
-            description="Guided by your finalized Idea Intelligence & Brand Identity — automatically injected across Logo, Asset, and Social generators"
+            description="Guided by your finalized Idea Intelligence & Brand Identity — edit any rule below or sync from your Business Brain"
             action={
               <div className="flex flex-wrap items-center gap-2">
+                {editingGuidelines && guidelineDraft ? (
+                  <>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        updateBrandIdentity({
+                          brandName: effectiveBrandName,
+                          brandVoice: guidelineDraft.brandVoice,
+                          guidelines: {
+                            ...state.brand.guidelines,
+                            ...guidelineDraft,
+                            messagingPillars: guidelineDraft.messagingPillars
+                              .map((p) => p.trim())
+                              .filter(Boolean),
+                          },
+                        });
+                        setPillarRotationOffset(0);
+                        setEditingGuidelines(false);
+                        setGuidelineDraft(null);
+                        showToast('Saved custom Brand Guidelines.');
+                      }}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Save Guidelines
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setEditingGuidelines(false);
+                        setGuidelineDraft(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setGuidelineDraft({
+                        logoUsage: effectiveGuidelines.logoUsage,
+                        spacingRule: effectiveGuidelines.spacingRule,
+                        visualStyle: effectiveGuidelines.visualStyle,
+                        brandVoice: effectiveGuidelines.brandVoice,
+                        messagingPillars: [...effectiveGuidelines.messagingPillars],
+                      });
+                      setEditingGuidelines(true);
+                    }}
+                  >
+                    <Sliders className="w-3.5 h-3.5" />
+                    Edit Guidelines
+                  </Button>
+                )}
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => {
+                    setEditingGuidelines(false);
+                    setGuidelineDraft(null);
+                    setPillarRotationOffset((prev) => prev + 1);
                     updateBrandIdentity({
                       brandName: effectiveBrandName,
                       guidelines: {
@@ -3162,17 +3231,49 @@ export const BrandStudioPage: React.FC = () => {
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
             {[
-              { title: 'Logo Usage & Clearspace', body: effectiveGuidelines.logoUsage },
-              { title: 'Layout Spacing Grid', body: effectiveGuidelines.spacingRule },
-              { title: 'Visual & Photography Style', body: effectiveGuidelines.visualStyle },
-              { title: 'Brand Voice & Tone', body: effectiveGuidelines.brandVoice },
+              { key: 'logoUsage' as const, title: 'Logo Usage & Clearspace', body: effectiveGuidelines.logoUsage },
+              { key: 'spacingRule' as const, title: 'Layout Spacing Grid', body: effectiveGuidelines.spacingRule },
+              { key: 'visualStyle' as const, title: 'Visual & Photography Style', body: effectiveGuidelines.visualStyle },
+              { key: 'brandVoice' as const, title: 'Brand Voice & Tone', body: effectiveGuidelines.brandVoice },
             ].map((item) => (
               <div
                 key={item.title}
-                className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2]"
+                className="p-4 rounded-[10px] bg-[#F5F5F4] border border-[#E6E6E2] space-y-2"
               >
-                <div className="text-xs font-semibold text-[#C44D00]">{item.title}</div>
-                <p className="mt-1.5 text-sm text-[#242424] leading-relaxed">{item.body}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-[#C44D00]">{item.title}</span>
+                  {!editingGuidelines && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGuidelineDraft({
+                          logoUsage: effectiveGuidelines.logoUsage,
+                          spacingRule: effectiveGuidelines.spacingRule,
+                          visualStyle: effectiveGuidelines.visualStyle,
+                          brandVoice: effectiveGuidelines.brandVoice,
+                          messagingPillars: [...effectiveGuidelines.messagingPillars],
+                        });
+                        setEditingGuidelines(true);
+                      }}
+                      className="text-[11px] font-medium text-[#686864] hover:text-[#171717] cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                {editingGuidelines && guidelineDraft ? (
+                  <Textarea
+                    rows={2}
+                    value={guidelineDraft[item.key]}
+                    onChange={(e) =>
+                      setGuidelineDraft((prev) =>
+                        prev ? { ...prev, [item.key]: e.target.value } : prev
+                      )
+                    }
+                  />
+                ) : (
+                  <p className="text-sm text-[#242424] leading-relaxed">{item.body}</p>
+                )}
               </div>
             ))}
           </div>
@@ -3189,6 +3290,8 @@ export const BrandStudioPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
+                  setEditingGuidelines(false);
+                  setGuidelineDraft(null);
                   setPillarRotationOffset((prev) => prev + 1);
                   showToast('Rotated fresh daily messaging angles.');
                 }}
@@ -3199,9 +3302,12 @@ export const BrandStudioPage: React.FC = () => {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {effectiveGuidelines.messagingPillars.map((m, idx) => (
+              {(editingGuidelines && guidelineDraft
+                ? guidelineDraft.messagingPillars
+                : effectiveGuidelines.messagingPillars
+              ).map((m, idx) => (
                 <div
-                  key={`${idx}-${m.slice(0, 20)}`}
+                  key={`pillar-${idx}`}
                   className="p-3.5 rounded-[10px] border border-[#E6E6E2] bg-[#FAFAF9] flex flex-col justify-between gap-2"
                 >
                   <div className="space-y-1.5">
@@ -3209,20 +3315,38 @@ export const BrandStudioPage: React.FC = () => {
                       {['Angle 01 · Core Hook', 'Angle 02 · Wedge', 'Angle 03 · Proof'][idx] ||
                         `Angle 0${idx + 1}`}
                     </span>
-                    <p className="text-xs font-medium text-[#242424] leading-relaxed">
-                      &ldquo;{m}&rdquo;
-                    </p>
+                    {editingGuidelines && guidelineDraft ? (
+                      <Textarea
+                        rows={3}
+                        value={m}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setGuidelineDraft((prev) => {
+                            if (!prev) return prev;
+                            const next = [...prev.messagingPillars];
+                            next[idx] = val;
+                            return { ...prev, messagingPillars: next };
+                          });
+                        }}
+                      />
+                    ) : (
+                      <p className="text-xs font-medium text-[#242424] leading-relaxed">
+                        &ldquo;{m}&rdquo;
+                      </p>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard?.writeText(m);
-                      showToast('Copied messaging pillar to clipboard.');
-                    }}
-                    className="self-start text-[11px] font-medium text-[#686864] hover:text-[#171717] cursor-pointer"
-                  >
-                    Copy message
-                  </button>
+                  {!editingGuidelines && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(m);
+                        showToast('Copied messaging pillar to clipboard.');
+                      }}
+                      className="self-start text-[11px] font-medium text-[#686864] hover:text-[#171717] cursor-pointer"
+                    >
+                      Copy message
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
