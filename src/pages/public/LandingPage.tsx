@@ -508,6 +508,94 @@ export const LandingPage: React.FC = () => {
       {/* GPU Kinetic Statement Ticker */}
       <KineticMarquee items={MARQUEE_PHRASES} />
 
+      {/* Public Unauthenticated Centric Graphical Idea-to-Launch Prompt */}
+      <section className="py-16 sm:py-20 bg-[#FAFAF9] border-b border-[#EFEFEB]">
+        <div className="max-w-[960px] mx-auto px-5 sm:px-8 text-center space-y-8">
+          <div className="space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0E5] text-[#C44D00] text-[11px] font-mono-num font-semibold uppercase tracking-wide">
+              <Sparkles className="w-3.5 h-3.5" />
+              From Raw Idea to Launch Plan
+            </span>
+            <h2 className="font-heading text-2xl sm:text-4xl font-bold text-[#171717] tracking-tight">
+              Not sure where to start? Validate your idea first.
+            </h2>
+            <p className="text-sm sm:text-base text-[#5C5C58] max-w-xl mx-auto">
+              Sign in or start a free workspace to turn a single sentence into a market dossier,
+              competitor edge, brand identity, and 30-day execution roadmap.
+            </p>
+          </div>
+
+          {/* Minimalistic Graphical 4-Stage Wave */}
+          <div className="relative max-w-3xl mx-auto pt-2 pb-4">
+            <svg
+              viewBox="0 0 800 100"
+              className="w-full h-20 overflow-visible hidden sm:block"
+              aria-hidden="true"
+            >
+              <path
+                d="M 80 65 C 190 65, 210 25, 300 25 C 390 25, 410 70, 500 70 C 590 70, 610 30, 720 30"
+                fill="none"
+                stroke="#E6E6E2"
+                strokeWidth="3"
+                strokeDasharray="6 6"
+              />
+              <motion.path
+                d="M 80 65 C 190 65, 210 25, 300 25 C 390 25, 410 70, 500 70 C 590 70, 610 30, 720 30"
+                fill="none"
+                stroke="#FF7417"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </svg>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:-mt-6 relative z-10">
+              {[
+                { num: '01', title: 'Validate Idea', sub: 'Market size & demand' },
+                { num: '02', title: 'Map Rivals', sub: 'Find pricing & gaps' },
+                { num: '03', title: 'Shape Brand', sub: 'Logos, voice & assets' },
+                { num: '04', title: 'Launch 30d', sub: 'Daily tasks & tests' },
+              ].map((step, i) => (
+                <div
+                  key={step.num}
+                  className={`rounded-[14px] border p-3.5 text-left transition-all ${
+                    i === 0
+                      ? 'bg-[#FFFFFF] border-[#FF7417] shadow-sm'
+                      : 'bg-[#FFFFFF] border-[#E6E6E2]'
+                  }`}
+                >
+                  <div className="text-[10px] font-mono-num font-bold text-[#C44D00]">
+                    STEP {step.num}
+                  </div>
+                  <div className="text-xs font-bold text-[#171717] mt-0.5">{step.title}</div>
+                  <div className="text-[11px] text-[#686864] mt-0.5">{step.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('signup')}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FF7417] hover:bg-[#E5620A] text-white text-sm font-semibold shadow-[0_10px_24px_-6px_rgba(255,116,23,0.45)] transition-all cursor-pointer"
+            >
+              <span>Validate My Idea Free</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenDemo}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#FFFFFF] hover:bg-[#F5F5F4] border border-[#E6E6E2] text-[#171717] text-sm font-medium transition-colors cursor-pointer"
+            >
+              <span>Preview Live Workspace</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Product Architecture Specs + Interactive Scrollytelling Feature Breakdown & Device Showcase */}
       <section id="capabilities" className="py-24 sm:py-28 bg-[#FFFFFF] border-b border-[#EFEFEB]">
         <div className="max-w-[1240px] mx-auto px-5 sm:px-8">

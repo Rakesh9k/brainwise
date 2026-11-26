@@ -43,7 +43,7 @@ import {
 } from '../../components/ui/DepartmentCards';
 import { ContextualCard } from '../../components/ui/ContextualActionLedger';
 import { UniversalExecutiveLayer } from '../../components/ui/UniversalExecutiveLayer';
-import { FounderJourneyFlowBar } from '../../components/ui/FounderJourneyFlowBar';
+import { FounderJourneyFlowBar, FreshWorkspaceLaunchpad } from '../../components/ui/FounderJourneyFlowBar';
 import { typeClass } from '../../theme/typography';
 
 export const DashboardPage: React.FC = () => {
@@ -311,6 +311,18 @@ export const DashboardPage: React.FC = () => {
         };
       })()}
       />
+
+      {/* Minimalistic Centric Launchpad when user hasn't generated or interacted with anything yet */}
+      {state.reports.length === 0 &&
+        state.competitors.length === 0 &&
+        state.tasks.length === 0 &&
+        state.assets.length === 0 && (
+          <FreshWorkspaceLaunchpad
+            businessName={state.brain?.businessName}
+            onValidateIdea={() => navigate('idea-intelligence')}
+            onOpenBrain={() => navigate('business-brain')}
+          />
+        )}
 
       {/* Interactive Animated Founder Journey Flow Bar */}
       <FounderJourneyFlowBar state={state} onNavigate={navigate} />

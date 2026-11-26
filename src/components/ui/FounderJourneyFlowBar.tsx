@@ -521,3 +521,122 @@ export const FounderJourneyFlowBar: React.FC<FounderJourneyFlowBarProps> = ({
     </section>
   );
 };
+
+interface FreshWorkspaceLaunchpadProps {
+  businessName?: string;
+  onValidateIdea: () => void;
+  onOpenBrain: () => void;
+}
+
+export const FreshWorkspaceLaunchpad: React.FC<FreshWorkspaceLaunchpadProps> = ({
+  businessName,
+  onValidateIdea,
+  onOpenBrain,
+}) => {
+  const displayTitle =
+    businessName && businessName !== 'My Venture' ? businessName : 'your venture';
+
+  return (
+    <motion.section
+      aria-label="Start Your Founder Journey"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="rounded-[24px] border border-[#E6E6E2] bg-[#FFFFFF] p-7 sm:p-12 text-center shadow-[0_6px_30px_-10px_rgba(23,23,23,0.06)] relative overflow-hidden"
+    >
+      {/* Subtle centric radial glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 w-[520px] h-[220px] bg-gradient-to-b from-[#FFF0E5]/70 to-transparent rounded-full blur-2xl"
+      />
+
+      <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+        {/* Minimalistic Animated Graphical SVG Representation */}
+        <div className="mx-auto w-full max-w-[380px] h-[110px] flex items-center justify-center">
+          <svg viewBox="0 0 380 110" className="w-full h-full overflow-visible" aria-hidden="true">
+            <defs>
+              <linearGradient id="bw-fresh-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#FF7417" />
+                <stop offset="100%" stopColor="#FFB07A" />
+              </linearGradient>
+            </defs>
+            {/* Dashed architectural orbit */}
+            <path
+              d="M 45 72 Q 190 12 335 72"
+              fill="none"
+              stroke="#E6E6E2"
+              strokeWidth="2.5"
+              strokeDasharray="5 5"
+            />
+            <motion.path
+              d="M 45 72 Q 190 12 335 72"
+              fill="none"
+              stroke="url(#bw-fresh-grad)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+            />
+            {/* Node 1: Idea (Active Pulse) */}
+            <g transform="translate(45, 72)">
+              <circle r="20" fill="#FFF0E5" />
+              <circle r="13" fill="#FF7417" />
+              <circle r="4" fill="#FFFFFF" />
+            </g>
+            {/* Node 2: Market */}
+            <g transform="translate(142, 40)">
+              <rect x="-13" y="-13" width="26" height="26" rx="8" fill="#FFFFFF" stroke="#E6E6E2" strokeWidth="1.8" />
+              <circle r="4" fill="#171717" />
+            </g>
+            {/* Node 3: Brand */}
+            <g transform="translate(238, 40)">
+              <rect x="-13" y="-13" width="26" height="26" rx="8" fill="#FFFFFF" stroke="#E6E6E2" strokeWidth="1.8" />
+              <circle r="4" fill="#71717A" />
+            </g>
+            {/* Node 4: Launch */}
+            <g transform="translate(335, 72)">
+              <rect x="-13" y="-13" width="26" height="26" rx="8" fill="#FFFFFF" stroke="#E6E6E2" strokeWidth="1.8" />
+              <circle r="4" fill="#A1A1AA" />
+            </g>
+          </svg>
+        </div>
+
+        <div className="space-y-2.5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0E5] text-[#C44D00] text-[11px] font-mono-num font-semibold uppercase tracking-wide">
+            <Sparkles className="w-3.5 h-3.5" />
+            Workspace Ready · Start Here
+          </span>
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-[#171717] tracking-tight">
+            Validate your idea to launch {displayTitle}
+          </h2>
+          <p className="text-sm text-[#5C5C58] max-w-lg mx-auto leading-relaxed">
+            You haven&apos;t generated any market intelligence or assets yet. Start by validating
+            your core idea — BrainWise will map competitors, shape your brand, and build your
+            30-day launch plan.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+          <button
+            type="button"
+            onClick={onValidateIdea}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FF7417] hover:bg-[#E5620A] text-white text-sm font-semibold shadow-[0_10px_24px_-6px_rgba(255,116,23,0.5)] transition-all cursor-pointer"
+          >
+            <Lightbulb className="w-4 h-4" />
+            <span>Validate Your Idea</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onOpenBrain}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#FAFAF9] hover:bg-[#F0F0EC] border border-[#E6E6E2] text-[#171717] text-sm font-medium transition-colors cursor-pointer"
+          >
+            <Brain className="w-4 h-4 text-[#5C5C58]" />
+            <span>Set Up Business Brain</span>
+          </button>
+        </div>
+      </div>
+    </motion.section>
+  );
+};
