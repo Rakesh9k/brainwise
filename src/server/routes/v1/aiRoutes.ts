@@ -810,6 +810,10 @@ router.post('/brand-logo', async (req: Request, res: Response): Promise<void> =>
       mood,
       lockBrandColors,
       brand,
+      referenceImageDataUrl,
+      referenceImageName,
+      businessIdea,
+      competitors,
     } = req.body;
 
     const brandName = (brand?.brandName as string) || req.workspace?.workspaceName || 'BrainWise';
@@ -823,6 +827,10 @@ router.post('/brand-logo', async (req: Request, res: Response): Promise<void> =>
       mood,
       lockBrandColors,
       brand,
+      referenceImageDataUrl,
+      referenceImageName,
+      businessIdea,
+      competitors,
       idempotencyKey: req.headers['x-idempotency-key'] as string,
     });
 

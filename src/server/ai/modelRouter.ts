@@ -68,9 +68,21 @@ export class GeminiProviderAdapter implements AiProvider {
         generateConfig.tools = [{ googleSearch: {} }];
       }
 
+      let contents: unknown = req.prompt;
+      const refDataUrl = (req as unknown as { referenceImageDataUrl?: string }).referenceImageDataUrl;
+      if (typeof refDataUrl === 'string') {
+        const match = refDataUrl.match(/^data:(image\/(?:png|jpeg|jpg|webp|gif));base64,(.+)$/i);
+        if (match) {
+          contents = [
+            { inlineData: { mimeType: match[1].toLowerCase(), data: match[2] } },
+            req.prompt,
+          ];
+        }
+      }
+
       const response = await this.client.models.generateContent({
         model: req.model || serverConfig.geminiModel,
-        contents: req.prompt,
+        contents: contents as any,
         config: generateConfig,
       });
 

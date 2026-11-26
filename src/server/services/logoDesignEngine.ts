@@ -225,6 +225,10 @@ export class LogoDesignEngine {
     styleArchetype?: string;
     mood?: string;
     lockBrandColors?: boolean;
+    referenceImageDataUrl?: string;
+    referenceImageName?: string;
+    businessIdea?: string;
+    competitors?: Array<{ name?: string; visualTone?: string }>;
     skipBilling?: boolean;
     idempotencyKey?: string;
   }): Promise<{
@@ -243,6 +247,10 @@ export class LogoDesignEngine {
       styleArchetype = 'Minimal Geometric',
       mood = 'Swiss Editorial',
       lockBrandColors = true,
+      referenceImageDataUrl,
+      referenceImageName,
+      businessIdea,
+      competitors = [],
       skipBilling = false,
       idempotencyKey,
     } = params;
@@ -317,37 +325,51 @@ export class LogoDesignEngine {
 
       try {
         const provider = new GeminiProviderAdapter();
+        const competitorSummary =
+          competitors.length > 0
+            ? competitors
+                .map((c) => `${c.name || 'Rival'}${c.visualTone ? ` (${c.visualTone})` : ''}`)
+                .join(', ')
+            : brief.competitorDifferentiation || 'generic category incumbents';
         const svgPrompt = [
-          `Design 3 distinct, clean, minimalist vector logo icon concepts (64x64 viewBox) for:`,
+          `Design 3 BRAND-NEW, distinct, rich vector logo illustrations (64x64 viewBox) for:`,
           `Brand Name: ${brandName}`,
           `Industry: ${brief.industry}`,
-          `Style Archetype: ${styleArchetype}`,
-          `Visual Mood: ${mood}`,
-          `User Brief: ${userPrompt || styleArchetype}`,
+          `Business Idea & Value Proposition: ${businessIdea || brief.targetAudience}`,
+          `Competitors to Differentiate From: ${competitorSummary}`,
+          `User Creative Brief: ${userPrompt || `${styleArchetype} mark in ${mood} aesthetic`}`,
+          referenceImageName
+            ? `Reference Image Attached (${referenceImageName}): Inspect the attached image visually and translate its key silhouette, motif, or composition energy into original vector logo marks tailored for ${brandName}.`
+            : '',
           `Colors: primary="${primaryHex}", accent="${accentHex}", secondary="${secondaryHex}"`,
+          `Freshness Seed (ensure completely new, non-repetitive geometry): ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           ``,
           `STRICT RULES:`,
-          `1. Each "svgIconInner" must contain ONLY valid SVG elements (<rect>, <circle>, <path>, <line>, <polygon>, <text>) sized cleanly inside a 0..64 x 0..64 coordinate box. Do NOT include outer <svg> tag or scripts.`,
-          `2. Make Concept 1 "geometric" (abstract symbol), Concept 2 "emblem" (badge/seal/frame), Concept 3 "monogram" (using initials "${initialLetters}").`,
+          `1. Each "svgIconInner" must contain ONLY valid SVG elements (<rect>, <circle>, <path>, <line>, <polygon>, <ellipse>, <g>) filling 75-90% of a 0..64 x 0..64 coordinate box (bold strokes 2.5-4, clear silhouette, NO outer <svg> tag, NO background <rect> covering 0..64, NO scripts).`,
+          `2. Make Concept 1 "geometric" (iconic brand illustration), Concept 2 "emblem" (craft badge/seal/crest), Concept 3 "monogram" (creative monogram with "${initialLetters}").`,
           `3. Return ONLY valid JSON array of 3 objects:`,
           `[{ "conceptName": "string", "markStyle": "geometric"|"emblem"|"monogram", "designRationale": "string", "svgIconInner": "string" }]`,
-        ].join('\n');
+        ]
+          .filter(Boolean)
+          .join('\n');
 
         const aiRes = await Promise.race([
           provider.generate({
             model: serverConfig.geminiModel,
             prompt: svgPrompt,
             systemInstruction:
-              'You are a world-class Swiss geometric brand identity designer. Return strictly valid JSON array of 3 clean SVG icon concepts.',
-            temperature: 0.45,
-          }),
+              'You are a world-class brand identity illustrator. Return strictly valid JSON array of 3 bold, original, scalable SVG icon illustrations.',
+            temperature: 0.85,
+            ...(referenceImageDataUrl ? { referenceImageDataUrl } : {}),
+          } as any),
           new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Logo AI generation timed out after 18s')), 18000)
+            setTimeout(() => reject(new Error('Logo AI generation timed out after 22s')), 22000)
           ),
         ]);
 
         if (aiRes.text) {
-          const cleaned = aiRes.text
+          const jsonMatch = aiRes.text.match(/\[[\s\S]*\]/);
+          const cleaned = (jsonMatch ? jsonMatch[0] : aiRes.text)
             .replace(/^```json\s*/i, '')
             .replace(/^```\s*/i, '')
             .replace(/```$/i, '')
@@ -376,11 +398,11 @@ export class LogoDesignEngine {
 
       const wrapIconTo600x400 = (iconInner: string) =>
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
-  <g transform="translate(220, 75) scale(2.5)">
+  <g transform="translate(188, 28) scale(3.5)">
     ${iconInner}
   </g>
-  <text x="300" y="295" font-family="${headingFont}, sans-serif" font-size="34" font-weight="700" letter-spacing="1" fill="${primaryHex}" text-anchor="middle">${brandName}</text>
-  <text x="300" y="328" font-family="${bodyFont}, sans-serif" font-size="13" font-weight="500" letter-spacing="2" fill="${secondaryHex}" text-anchor="middle">${brief.tagline}</text>
+  <text x="300" y="305" font-family="${headingFont}, sans-serif" font-size="36" font-weight="700" letter-spacing="1" fill="${primaryHex}" text-anchor="middle">${brandName}</text>
+  <text x="300" y="340" font-family="${bodyFont}, sans-serif" font-size="14" font-weight="500" letter-spacing="2" fill="${secondaryHex}" text-anchor="middle">${brief.tagline}</text>
 </svg>`;
 
       // Synthesize 3 Distinct Logo Concepts (Gemini AI or Dynamic Brand-Initials Fallback)
@@ -445,7 +467,9 @@ export class LogoDesignEngine {
   <line x1="300" y1="105" x2="300" y2="146" stroke="${accentHex}" stroke-width="4"/>
 </g>`;
 
-      const svgMarkup2 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+      const svgMarkup2 = aiSvgConcepts?.[1]?.svgIconInner
+        ? wrapIconTo600x400(aiSvgConcepts[1].svgIconInner)
+        : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
   ${symbolSvg2}
   <text x="300" y="295" font-family="${headingFont}, sans-serif" font-size="34" font-weight="700" letter-spacing="1.5" fill="${primaryHex}" text-anchor="middle">${brandName}</text>
   <text x="300" y="328" font-family="${bodyFont}, sans-serif" font-size="13" font-weight="500" letter-spacing="2.5" fill="${secondaryHex}" text-anchor="middle">${brief.tagline}</text>

@@ -2850,6 +2850,10 @@ export class BrainWiseApiClient {
       mood?: string;
       lockBrandColors?: boolean;
       brand?: Record<string, unknown>;
+      referenceImageDataUrl?: string;
+      referenceImageName?: string;
+      businessIdea?: string;
+      competitors?: Array<{ name?: string; visualTone?: string }>;
     }
   ): Promise<{
     concepts?: Array<{

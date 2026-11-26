@@ -495,6 +495,8 @@ export const BrandStudioPage: React.FC = () => {
   const [logoVariant, setLogoVariant] = useState<'horizontal' | 'icon' | 'stacked'>('horizontal');
   const [logoRefineInput, setLogoRefineInput] = useState('');
   const [logoRefImage, setLogoRefImage] = useState<{ name: string; dataUrl: string } | null>(null);
+  const [enlargedLogoConcept, setEnlargedLogoConcept] = useState<BrandConcept | null>(null);
+  const [enlargedBackdrop, setEnlargedBackdrop] = useState<'checker' | 'light' | 'dark'>('checker');
 
   const handleSuggestLogoPromptFromBrain = () => {
     const prod = state.brain?.products?.[0]?.name;
@@ -515,27 +517,34 @@ export const BrandStudioPage: React.FC = () => {
   const downloadLogoTransparentPng = (concept: BrandConcept, darkInk = true) => {
     const rawSvg = sanitizeAiSvgMarkup(concept.customSvg, '0 0 120 120');
     const ink = darkInk ? '#171717' : '#FFFFFF';
-    // Strip any opaque full-bleed background rects & resolve currentColor for crisp transparent 2048px PNG
+    // Preserve exact viewBox aspect ratio so landscape (600x400) or square (120x120) logos never squish
+    const vbMatch = rawSvg.match(/viewBox\s*=\s*["']\s*[\d.-]+\s+[\d.-]+\s+([\d.]+)\s+([\d.]+)\s*["']/i);
+    const vbW = vbMatch ? Math.max(1, parseFloat(vbMatch[1])) : 120;
+    const vbH = vbMatch ? Math.max(1, parseFloat(vbMatch[2])) : 120;
+    const canvasW = 2048;
+    const canvasH = Math.max(512, Math.round(canvasW * (vbH / vbW)));
+
     const cleanedSvg = rawSvg
       .replace(/currentColor/g, ink)
       .replace(/<svg\b([^>]*)>/i, (_m, attrs) => {
-        const hasWidth = /\bwidth\s*=/i.test(attrs);
-        const hasHeight = /\bheight\s*=/i.test(attrs);
-        return `<svg${attrs}${hasWidth ? '' : ' width="2048"'}${hasHeight ? '' : ' height="2048"'}>`;
+        const stripped = attrs
+          .replace(/\bwidth\s*=\s*["'][^"']*["']/gi, '')
+          .replace(/\bheight\s*=\s*["'][^"']*["']/gi, '');
+        return `<svg${stripped} width="${canvasW}" height="${canvasH}">`;
       });
     const blob = new Blob([cleanedSvg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const img = new Image();
     img.onload = () => {
-      const size = 2048;
       const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
+      canvas.width = canvasW;
+      canvas.height = canvasH;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.clearRect(0, 0, size, size);
-        const pad = 192;
-        ctx.drawImage(img, pad, pad, size - pad * 2, size - pad * 2);
+        ctx.clearRect(0, 0, canvasW, canvasH);
+        const padX = Math.round(canvasW * 0.06);
+        const padY = Math.round(canvasH * 0.06);
+        ctx.drawImage(img, padX, padY, canvasW - padX * 2, canvasH - padY * 2);
         const pngUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
         const slug = (effectiveBrandName || 'brand')
@@ -543,9 +552,9 @@ export const BrandStudioPage: React.FC = () => {
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, '');
         link.href = pngUrl;
-        link.download = `${slug}-logo-hd-2048px.png`;
+        link.download = `${slug}-logo-hd-${canvasW}x${canvasH}.png`;
         link.click();
-        showToast('Downloaded HD Transparent PNG (2048×2048).');
+        showToast(`Downloaded HD Transparent PNG (${canvasW}×${canvasH}).`);
       }
       URL.revokeObjectURL(url);
     };
@@ -732,6 +741,13 @@ export const BrandStudioPage: React.FC = () => {
         mood: logoMood,
         lockBrandColors: brandLockEnabled,
         brand: { ...state.brand, brandName: effectiveBrandName } as any,
+        referenceImageDataUrl: logoRefImage?.dataUrl,
+        referenceImageName: logoRefImage?.name,
+        businessIdea: state.brain?.valueProposition || state.brain?.brandPositioning,
+        competitors: state.competitors.slice(0, 4).map((c) => ({
+          name: (c.name || (c as any).companyName || '').trim(),
+          visualTone: c.brandPositioningDetail?.visualTone,
+        })),
       });
 
       if (!data || !Array.isArray(data.concepts) || data.concepts.length === 0) {
@@ -2701,6 +2717,7 @@ export const BrandStudioPage: React.FC = () => {
                           onClick={() => {
                             selectBrandConcept(concept.id);
                             setLogoAccent(concept.accentColor);
+                            setEnlargedLogoConcept(concept);
                           }}
                           style={{
                             backgroundImage:
@@ -2708,11 +2725,20 @@ export const BrandStudioPage: React.FC = () => {
                             backgroundSize: '16px 16px',
                             backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
                           }}
-                          className="w-full h-48 rounded-[12px] bg-[#FFFFFF] border border-[#E6E6E2] hover:border-[#252525] flex flex-col items-center justify-center gap-2.5 p-4 transition-colors cursor-pointer"
+                          className="group relative w-full h-52 rounded-[12px] bg-[#FFFFFF] border border-[#E6E6E2] hover:border-[#FF7417] flex flex-col items-center justify-center gap-2 p-3 transition-colors cursor-pointer overflow-hidden"
                         >
-                          {renderLogoMark(concept, concept.accentColor, true, 'w-24 h-24')}
-                          <span className="font-heading font-bold text-sm text-[#171717] text-center line-clamp-1 max-w-full">
-                            {effectiveBrandName}
+                          {/<text\b/i.test(concept.customSvg || '') ? (
+                            renderLogoMark(concept, concept.accentColor, true, 'w-full h-full max-h-[180px]')
+                          ) : (
+                            <>
+                              {renderLogoMark(concept, concept.accentColor, true, 'w-28 h-28')}
+                              <span className="font-heading font-bold text-sm text-[#171717] text-center line-clamp-1 max-w-full">
+                                {effectiveBrandName}
+                              </span>
+                            </>
+                          )}
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-[#171717]/85 text-white text-[10px] font-medium">
+                            Click to enlarge
                           </span>
                         </button>
                         <p className="text-xs text-[#5C5C58] leading-relaxed">
@@ -2816,6 +2842,8 @@ export const BrandStudioPage: React.FC = () => {
             </div>
 
             <div
+              onClick={() => setEnlargedLogoConcept(activeConcept)}
+              title="Click to enlarge logo"
               style={
                 logoLightMode
                   ? {
@@ -2826,30 +2854,42 @@ export const BrandStudioPage: React.FC = () => {
                     }
                   : undefined
               }
-              className={`h-64 rounded-[12px] border flex items-center justify-center p-8 transition-colors ${
+              className={`relative group h-72 rounded-[12px] border flex items-center justify-center p-6 transition-colors cursor-pointer ${
                 logoLightMode
                   ? 'bg-[#FFFFFF] border-[#E6E6E2] text-[#171717]'
                   : 'bg-[#171717] border-[#2C2C2C] text-white bw-dark-ambient-glow'
               }`}
             >
-              <div
-                className={`flex items-center gap-5 ${logoVariant === 'stacked' ? 'flex-col text-center gap-3' : ''}`}
-              >
-                {renderLogoMark(
+              {/<text\b/i.test(activeConcept.customSvg || '') && logoVariant === 'horizontal' ? (
+                renderLogoMark(
                   activeConcept,
                   logoAccent,
                   logoLightMode,
-                  logoVariant === 'icon' ? 'w-40 h-40' : 'w-32 h-32'
-                )}
-                {logoVariant !== 'icon' && (
-                  <div className="min-w-0">
-                    <div className="font-heading text-2xl sm:text-3xl font-bold tracking-tight">
-                      {effectiveBrandName}
+                  'w-full max-w-[540px] h-60'
+                )
+              ) : (
+                <div
+                  className={`flex items-center gap-5 ${logoVariant === 'stacked' ? 'flex-col text-center gap-3' : ''}`}
+                >
+                  {renderLogoMark(
+                    activeConcept,
+                    logoAccent,
+                    logoLightMode,
+                    logoVariant === 'icon' ? 'w-44 h-44' : 'w-36 h-36'
+                  )}
+                  {logoVariant !== 'icon' && !/<text\b/i.test(activeConcept.customSvg || '') && (
+                    <div className="min-w-0">
+                      <div className="font-heading text-2xl sm:text-3xl font-bold tracking-tight">
+                        {effectiveBrandName}
+                      </div>
+                      <div className="text-xs opacity-75 mt-1">{state.brand.tagline}</div>
                     </div>
-                    <div className="text-xs opacity-75 mt-1">{state.brand.tagline}</div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-[#171717]/85 text-white text-[11px] font-medium">
+                Click to enlarge
+              </span>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -2868,14 +2908,23 @@ export const BrandStudioPage: React.FC = () => {
                   />
                 ))}
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => downloadLogoTransparentPng(activeConcept, logoLightMode)}
-              >
-                <Download className="w-3.5 h-3.5 text-[#FF7417]" />
-                Download HD Transparent PNG (2048px)
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setEnlargedLogoConcept(activeConcept)}
+                >
+                  Enlarge Preview
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => downloadLogoTransparentPng(activeConcept, logoLightMode)}
+                >
+                  <Download className="w-3.5 h-3.5 text-[#FF7417]" />
+                  Download HD Transparent PNG (2048px)
+                </Button>
+              </div>
             </div>
 
             {/* Direct Follow-Up AI Refinement Prompt */}
@@ -2907,6 +2956,123 @@ export const BrandStudioPage: React.FC = () => {
               </Button>
             </form>
           </div>
+
+          {/* Enlarged Logo Lightbox Modal */}
+          {enlargedLogoConcept && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#171717]/75 backdrop-blur-xs"
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setEnlargedLogoConcept(null)}
+            >
+              <div
+                className="relative w-full max-w-3xl rounded-[20px] bg-[#FFFFFF] border border-[#E6E6E2] shadow-2xl p-6 space-y-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-mono-num text-[#C44D00] uppercase">
+                      ENLARGED LOGO INSPECTION
+                    </div>
+                    <h3 className="font-heading text-lg font-bold text-[#171717]">
+                      {enlargedLogoConcept.name}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(['checker', 'light', 'dark'] as const).map((bg) => (
+                      <button
+                        key={bg}
+                        type="button"
+                        onClick={() => setEnlargedBackdrop(bg)}
+                        className={`px-2.5 py-1 text-xs rounded-[6px] capitalize cursor-pointer ${
+                          enlargedBackdrop === bg
+                            ? 'bg-[#171717] text-white'
+                            : 'bg-[#F5F5F4] text-[#5C5C58]'
+                        }`}
+                      >
+                        {bg}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setEnlargedLogoConcept(null)}
+                      className="p-1.5 rounded-full text-[#858585] hover:bg-[#F5F5F4] hover:text-[#171717] cursor-pointer"
+                      aria-label="Close enlarged logo preview"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  style={
+                    enlargedBackdrop === 'checker'
+                      ? {
+                          backgroundImage:
+                            'linear-gradient(45deg, #F3F3F0 25%, transparent 25%), linear-gradient(-45deg, #F3F3F0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #F3F3F0 75%), linear-gradient(-45deg, transparent 75%, #F3F3F0 75%)',
+                          backgroundSize: '20px 20px',
+                          backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
+                        }
+                      : undefined
+                  }
+                  className={`h-[360px] rounded-[14px] border flex flex-col items-center justify-center p-8 ${
+                    enlargedBackdrop === 'dark'
+                      ? 'bg-[#171717] border-[#2C2C2C] text-white'
+                      : 'bg-[#FFFFFF] border-[#E6E6E2] text-[#171717]'
+                  }`}
+                >
+                  {/<text\b/i.test(enlargedLogoConcept.customSvg || '') ? (
+                    renderLogoMark(
+                      enlargedLogoConcept,
+                      enlargedLogoConcept.accentColor,
+                      enlargedBackdrop !== 'dark',
+                      'w-full max-w-[600px] h-full'
+                    )
+                  ) : (
+                    <div className="flex flex-col items-center gap-4">
+                      {renderLogoMark(
+                        enlargedLogoConcept,
+                        enlargedLogoConcept.accentColor,
+                        enlargedBackdrop !== 'dark',
+                        'w-48 h-48'
+                      )}
+                      <div className="font-heading text-2xl font-bold">{effectiveBrandName}</div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  <p className="text-xs text-[#5C5C58] max-w-md">{enlargedLogoConcept.rationale}</p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() =>
+                        downloadLogoTransparentPng(
+                          enlargedLogoConcept,
+                          enlargedBackdrop !== 'dark'
+                        )
+                      }
+                    >
+                      <Download className="w-3.5 h-3.5 text-[#FF7417]" />
+                      Download HD Transparent PNG
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        selectBrandConcept(enlargedLogoConcept.id);
+                        setLogoAccent(enlargedLogoConcept.accentColor);
+                        setEnlargedLogoConcept(null);
+                      }}
+                    >
+                      Approve as Master Logo
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </FluidTransition>
       )}
 

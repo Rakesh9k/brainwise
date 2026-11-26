@@ -404,6 +404,10 @@ export class BrandStudioService {
     mood?: string;
     lockBrandColors?: boolean;
     brand?: Record<string, unknown>;
+    referenceImageDataUrl?: string;
+    referenceImageName?: string;
+    businessIdea?: string;
+    competitors?: Array<{ name?: string; visualTone?: string }>;
     idempotencyKey?: string;
   }): Promise<{
     concepts: GeneratedAiLogoConcept[];
@@ -419,6 +423,10 @@ export class BrandStudioService {
       styleArchetype = 'Minimal Geometric',
       mood = 'Swiss Editorial',
       lockBrandColors,
+      referenceImageDataUrl,
+      referenceImageName,
+      businessIdea,
+      competitors,
       idempotencyKey,
     } = params;
 
@@ -431,6 +439,10 @@ export class BrandStudioService {
       styleArchetype,
       mood,
       lockBrandColors,
+      referenceImageDataUrl,
+      referenceImageName,
+      businessIdea,
+      competitors,
       idempotencyKey,
     });
 
