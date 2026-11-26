@@ -560,13 +560,14 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
       );
     };
     const byKey = new Map<string, CompetitorProfileData>();
-    for (const c of state.competitors) {
-      const domainKey = (c.website || '')
+    for (const c of state.competitors || []) {
+      if (!c) continue;
+      const domainKey = String(c.website || '')
         .replace(/^https?:\/\/(www\.)?/i, '')
         .split('/')[0]
         .toLowerCase()
         .trim();
-      const key = domainKey || (c.name || c.id).toLowerCase().trim();
+      const key = domainKey || String(c.name || c.id || '').toLowerCase().trim();
       const existing = byKey.get(key);
       if (!existing || scoreComp(c) > scoreComp(existing)) {
         byKey.set(key, c);
@@ -621,19 +622,22 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
     }> = [];
 
     raw.forEach((r, idx) => {
+      if (!r) return;
       const comp = compMap.get(r.competitorId);
-      const compName = comp?.name || r.competitorName;
-      const dedupeKey = `${compName.toLowerCase()}::${r.complaint.toLowerCase().trim()}`;
+      const compName = String(comp?.name || r.competitorName || 'Competitor');
+      const complaintText = String(r.complaint || '').trim();
+      if (!complaintText) return;
+      const dedupeKey = `${compName.toLowerCase()}::${complaintText.toLowerCase()}`;
       if (seen.has(dedupeKey)) return;
       seen.add(dedupeKey);
-      const topic = classifyComplaintTopic(r.complaint, r.topic);
+      const topic = classifyComplaintTopic(complaintText, r.topic);
       rows.push({
         competitorId: r.competitorId,
         competitorName: compName,
-        competitorDomain: (comp?.website || '').replace(/^https?:\/\/(www\.)?/i, '').split('/')[0],
+        competitorDomain: String(comp?.website || '').replace(/^https?:\/\/(www\.)?/i, '').split('/')[0],
         platform: comp ? inferPlatform(comp, idx) : 'Verified Reviews',
         topic,
-        complaint: r.complaint,
+        complaint: complaintText,
         averageRating: r.averageRating,
         counterPlay: buildCounterPlay(topic),
       });
@@ -717,9 +721,9 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
     const q = search.toLowerCase();
     return (
       !q ||
-      c.name.toLowerCase().includes(q) ||
-      c.category.toLowerCase().includes(q) ||
-      c.positioning.toLowerCase().includes(q)
+      String(c.name || '').toLowerCase().includes(q) ||
+      String(c.category || '').toLowerCase().includes(q) ||
+      String(c.positioning || '').toLowerCase().includes(q)
     );
   });
 
@@ -1053,7 +1057,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                         {c.name}
                       </h3>
                       <div className="text-[11px] font-mono-num text-[#858585] mt-0.5">
-                        {c.website.replace(/^https?:\/\/(www\.)?/i, '').split('/')[0]}
+                        {String(c.website || '').replace(/^https?:\/\/(www\.)?/i, '').split('/')[0] || 'Direct Competitor'}
                       </div>
                     </div>
 
@@ -1099,7 +1103,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                     <div>
                       <div className="font-semibold text-[#242424]">{c.name}</div>
                       <div className="text-xs text-[#686864]">
-                        {c.website.replace('https://', '')}
+                        {String(c.website || '').replace('https://', '')}
                       </div>
                     </div>
                   ),
