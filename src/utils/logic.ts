@@ -10,8 +10,16 @@ import type {
   CompetitorProfileData,
   GrowthGoal,
   GrowthTask,
+  KillSwitchAssumption,
   MarketScenarioPreset,
+  PestleFactorItem,
+  PestleReport,
+  PorterForceItem,
+  PorterForcesReport,
+  PriorityLevel,
   ResearchReport,
+  SwotAnalysisReport,
+  SwotItem,
   TruthCheckResult,
 } from '../types/brainwise';
 import { executeTruthCheck } from './truthCheck';
@@ -2756,4 +2764,258 @@ export function buildCarouselSlideSvgMarkup(
   <text x="96" y="${dims.h - 104}" font-family="Geist, Inter, sans-serif" font-size="26" font-weight="700" fill="${fg}">${escapeXml(brandName)}</text>
   <text x="${dims.w - 96}" y="${dims.h - 104}" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="22" fill="${sub}">SLIDE 0${slide.slideNumber}</text>
 </svg>`;
+}
+
+export function deriveSwotAnalysis(report: ResearchReport): SwotAnalysisReport {
+  if (report.swotAnalysis && report.swotAnalysis.strengths?.length > 0) {
+    return report.swotAnalysis;
+  }
+
+  const strengths: SwotItem[] = [
+    {
+      id: 's-1',
+      category: 'strength',
+      statement: report.validationScorecard?.strategicWedge || report.marketOpportunities[0] || 'Differentiated value proposition with clear focus',
+      detail: report.validationScorecard?.goodNews || 'High product relevance with strong intent from initial target customer archetype.',
+      isAssumption: false,
+      confidence: 88,
+      importance: 'high',
+      counterAction: 'Double down on this wedge in initial marketing copy.',
+    },
+    {
+      id: 's-2',
+      category: 'strength',
+      statement: 'Favorable Unit Economics & Willingness-to-Pay',
+      detail: `Target buyers validate pricing at ${report.pricingAnalysis?.tiers?.[0]?.range || '$20–$50/mo'} with viable gross margins.`,
+      isAssumption: false,
+      confidence: 82,
+      importance: 'high',
+      counterAction: 'Protect gross margin baseline by keeping fulfillment lean.',
+    },
+    {
+      id: 's-3',
+      category: 'strength',
+      statement: 'High Organic Problem Urgency',
+      detail: report.customerPainPoints?.[0]?.title ? `Directly relieves: ${report.customerPainPoints[0].title}` : 'Unlocks high pain reduction compared to current manual alternatives.',
+      isAssumption: false,
+      confidence: 80,
+      importance: 'medium',
+      counterAction: 'Lead with customer pain points in landing page headlines.',
+    },
+  ];
+
+  const weaknesses: SwotItem[] = [
+    {
+      id: 'w-1',
+      category: 'weakness',
+      statement: report.risksAndChallenges?.[0]?.risk || 'Early lack of brand awareness against established category players',
+      detail: report.validationScorecard?.theCatch || 'Customer acquisition costs may spike if initial organic wedge does not convert.',
+      isAssumption: true,
+      confidence: 75,
+      importance: 'high',
+      counterAction: report.risksAndChallenges?.[0]?.mitigation || 'Leverage hyper-targeted niche channels and founder-led content before paid spend.',
+    },
+    {
+      id: 'w-2',
+      category: 'weakness',
+      statement: 'Lean Operational Bandwidth',
+      detail: 'Single founder / small team capacity restricts multi-channel execution simultaneously.',
+      isAssumption: false,
+      confidence: 90,
+      importance: 'medium',
+      counterAction: 'Focus on 1 core acquisition channel and 1 signature hero offering.',
+    },
+  ];
+
+  const opportunities: SwotItem[] = [
+    {
+      id: 'o-1',
+      category: 'opportunity',
+      statement: report.marketOpportunities?.[0] || 'Underserved niche segment overlooked by legacy incumbents',
+      detail: 'Incumbents are slow to personalize and charge high enterprise minimums.',
+      isAssumption: false,
+      confidence: 85,
+      importance: 'high',
+      counterAction: 'Position as the agile, modern alternative with transparent pricing.',
+    },
+    {
+      id: 'o-2',
+      category: 'opportunity',
+      statement: report.marketOpportunities?.[1] || 'Expansion into recurring membership or subscription tier',
+      detail: 'Customers seek reliable continuity rather than repetitive one-off ordering.',
+      isAssumption: true,
+      confidence: 78,
+      importance: 'medium',
+      counterAction: 'Introduce starter trial package that converts to recurring replenishment.',
+    },
+  ];
+
+  const threats: SwotItem[] = [
+    {
+      id: 't-1',
+      category: 'threat',
+      statement: report.risksAndChallenges?.[1]?.risk || 'Aggressive incumbent price discounting or copycat feature launch',
+      detail: 'Established brands have greater capital reserves for customer subsidization.',
+      isAssumption: true,
+      confidence: 72,
+      importance: 'high',
+      counterAction: report.risksAndChallenges?.[1]?.mitigation || 'Compete on specialized customer trust, speed, and craftsmanship rather than race-to-bottom pricing.',
+    },
+    {
+      id: 't-2',
+      category: 'threat',
+      statement: 'Supply Chain or Ad Platform Inflation',
+      detail: 'Rising CAC on Meta/Google and variable logistics costs could compress unit margin.',
+      isAssumption: true,
+      confidence: 68,
+      importance: 'medium',
+      counterAction: 'Build an owned email/SMS audience and community referral engine early.',
+    },
+  ];
+
+  return {
+    workspaceId: report.id,
+    strengths,
+    weaknesses,
+    opportunities,
+    threats,
+    generatedAt: report.createdAt || new Date().toISOString(),
+  };
+}
+
+export function derivePorterForces(report: ResearchReport): PorterForcesReport {
+  if (report.porterForces && report.porterForces.overallThreatScore) {
+    return report.porterForces;
+  }
+
+  const isStrongSignal = report.viabilitySignal === 'Strong Fit';
+  const competitorIntensity = report.competitorLandscapeSummary?.toLowerCase().includes('saturated') ? 4 : isStrongSignal ? 2 : 3;
+
+  const competitiveRivalry: PorterForceItem = {
+    id: 'pf-1',
+    name: 'Competitive Rivalry',
+    intensity: competitorIntensity >= 4 ? 'High' : competitorIntensity === 3 ? 'Medium' : 'Low',
+    score: competitorIntensity,
+    summary: report.competitorLandscapeSummary || 'Established players dominate top search queries, but lack hyper-personalized offerings.',
+    strategicDefense: 'Differentiate with distinct brand personality, speed of delivery, and transparent pricing.',
+  };
+
+  const threatOfNewEntrants: PorterForceItem = {
+    id: 'pf-2',
+    name: 'Threat of New Entrants',
+    intensity: 'Medium',
+    score: 3,
+    summary: 'Low barrier to basic entry, but moderate-to-high moat in customer retention and brand equity.',
+    strategicDefense: 'Build defensibility through proprietary customer data, community loyalty, and superior product experience.',
+  };
+
+  const threatOfSubstitutes: PorterForceItem = {
+    id: 'pf-3',
+    name: 'Threat of Substitutes',
+    intensity: isStrongSignal ? 'Low' : 'Medium',
+    score: isStrongSignal ? 2 : 3,
+    summary: 'Generic alternatives and DIY workarounds exist, but lack the dedicated end-to-end outcome.',
+    strategicDefense: 'Clearly demonstrate ROI or time savings over manual workarounds.',
+  };
+
+  const supplierPower: PorterForceItem = {
+    id: 'pf-4',
+    name: 'Supplier Power',
+    intensity: 'Low',
+    score: 2,
+    summary: 'Multiple commoditized upstream vendors and service providers exist with low switching costs.',
+    strategicDefense: 'Maintain multiple supplier relationships to negotiate volume-based pricing.',
+  };
+
+  const buyerPower: PorterForceItem = {
+    id: 'pf-5',
+    name: 'Buyer Power',
+    intensity: 'Medium',
+    score: 3,
+    summary: 'Buyers have easy access to price comparison, but demonstrate high willingness-to-pay for authentic quality.',
+    strategicDefense: 'Offer a risk-free trial or starter kit to eliminate initial decision friction.',
+  };
+
+  const overallThreatScore = Math.round(
+    ((competitiveRivalry.score + threatOfNewEntrants.score + threatOfSubstitutes.score + supplierPower.score + buyerPower.score) / 25) * 100
+  );
+
+  return {
+    competitiveRivalry,
+    threatOfNewEntrants,
+    threatOfSubstitutes,
+    supplierPower,
+    buyerPower,
+    overallThreatScore,
+    bottomLine: isStrongSignal
+      ? 'Favorable market structure: Low supplier leverage and manageable substitution threat allow strong gross margins.'
+      : 'Competitive pressures require strict discipline on positioning and customer acquisition efficiency.',
+  };
+}
+
+export function derivePestleAnalysis(report: ResearchReport): PestleReport {
+  if (report.pestleAnalysis && report.pestleAnalysis.factors?.length > 0) {
+    return report.pestleAnalysis;
+  }
+
+  const factors: PestleFactorItem[] = [
+    {
+      id: 'pestle-p',
+      category: 'Political',
+      impact: 'Neutral',
+      title: 'Regulatory & Trade Stability',
+      summary: 'Standard local commerce regulations apply with stable domestic policies.',
+      strategicAction: 'Comply with standard e-commerce and commercial registration guidelines.',
+    },
+    {
+      id: 'pestle-e',
+      category: 'Economic',
+      impact: 'Caution',
+      title: 'Discretionary Consumer Spending',
+      summary: 'Inflationary pressure may cause budget scrutiny on non-essential purchases.',
+      strategicAction: 'Emphasize value-per-use and cost-efficiency compared to alternatives.',
+    },
+    {
+      id: 'pestle-s',
+      category: 'Social',
+      impact: 'Favorable',
+      title: 'Consumer Shift Toward Quality & Craftsmanship',
+      summary: 'Strong demographic trend toward premium, transparent, and ethically-sourced brands.',
+      strategicAction: 'Highlight origin transparency and customer stories across brand collateral.',
+    },
+    {
+      id: 'pestle-t',
+      category: 'Technological',
+      impact: 'Favorable',
+      title: 'Low-Cost Digital Infrastructure & Automation',
+      summary: 'Cloud commerce and AI tools significantly lower Day-1 operational overhead.',
+      strategicAction: 'Leverage automated workflows to maintain lean overhead and rapid iteration.',
+    },
+    {
+      id: 'pestle-l',
+      category: 'Legal',
+      impact: 'Neutral',
+      title: 'Consumer Protection & Privacy Standards',
+      summary: 'Compliance with data protection and standard consumer refund mandates required.',
+      strategicAction: 'Publish clear terms of service, privacy policy, and guarantee statements.',
+    },
+    {
+      id: 'pestle-env',
+      category: 'Environmental',
+      impact: 'Favorable',
+      title: 'Sustainable Packaging & Footprint Preference',
+      summary: 'Growing customer expectation for recyclable materials and conscious logistics.',
+      strategicAction: 'Use plastic-free or minimal recyclable packaging as a distinctive marketing hook.',
+    },
+  ];
+
+  const keyWatchouts = [
+    'Monitor discretionary spending trends in primary target metropolitan regions.',
+    'Ensure transparent labeling and return guarantees to comply with e-commerce norms.',
+  ];
+
+  return {
+    factors,
+    keyWatchouts,
+  };
 }

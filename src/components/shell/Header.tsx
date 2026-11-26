@@ -46,6 +46,19 @@ export const Header: React.FC<{
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
+        {/* Stage Indicator Badge */}
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFFFFF] border border-[#EAEAE5] text-xs font-semibold text-[#171717] shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF7417]" />
+          <span className="text-[11px] text-[#686864] font-medium">Stage:</span>
+          <span className="text-[11px] font-bold text-[#FF7417]">
+            {state.brain.stage === 'Idea Stage'
+              ? '1 · Idea & Validation'
+              : state.brain.stage === 'Pre-Launch'
+                ? '2 · Brand & Launch'
+                : '3 · Traction & Scale'}
+          </span>
+        </div>
+
         {/* Compact Tactile Ceramic ⌘K Command Trigger */}
         <button
           type="button"

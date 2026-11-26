@@ -607,6 +607,9 @@ export interface ResearchReport {
   emergingPlayers?: EmergingPlayerProfile[];
   conversationalHistory?: ConversationalResearchMessage[];
   finalizationBlueprint?: FinalizedBusinessBlueprint;
+  swotAnalysis?: SwotAnalysisReport;
+  porterForces?: PorterForcesReport;
+  pestleAnalysis?: PestleReport;
 }
 
 export interface IdeaUnderstandingResult {
@@ -1288,6 +1291,7 @@ export interface SwotItem {
   isAssumption: boolean;
   confidence: number;
   importance: 'high' | 'medium' | 'low';
+  counterAction?: string;
 }
 
 export interface SwotAnalysisReport {
@@ -1298,6 +1302,39 @@ export interface SwotAnalysisReport {
   threats: SwotItem[];
   generatedAt: string;
   contradictionsDetected?: string[];
+}
+
+export interface PorterForceItem {
+  id: string;
+  name: string;
+  intensity: 'Low' | 'Medium' | 'High';
+  score: number; // 1 to 5
+  summary: string;
+  strategicDefense: string;
+}
+
+export interface PorterForcesReport {
+  competitiveRivalry: PorterForceItem;
+  threatOfNewEntrants: PorterForceItem;
+  threatOfSubstitutes: PorterForceItem;
+  supplierPower: PorterForceItem;
+  buyerPower: PorterForceItem;
+  overallThreatScore: number; // 1-100
+  bottomLine: string;
+}
+
+export interface PestleFactorItem {
+  id: string;
+  category: 'Political' | 'Economic' | 'Social' | 'Technological' | 'Legal' | 'Environmental';
+  impact: 'Favorable' | 'Neutral' | 'Caution' | 'Threat';
+  title: string;
+  summary: string;
+  strategicAction: string;
+}
+
+export interface PestleReport {
+  factors: PestleFactorItem[];
+  keyWatchouts: string[];
 }
 
 export interface StrategicRecommendation {

@@ -82,6 +82,7 @@ import {
   type ValidationTabKey,
 } from '../../components/intelligence/ValidationTabNavigation';
 import { KillSwitchesSection } from '../../components/intelligence/KillSwitchesSection';
+import { IdeaValidationFrameworkHub } from '../../components/intelligence/IdeaValidationFrameworkHub';
 
 const RESEARCH_STAGES = [
   'Understanding the idea',
@@ -157,6 +158,7 @@ export const IdeaIntelligencePage: React.FC = () => {
   const [synthesisAttempt, setSynthesisAttempt] = useState(0);
   const [quickIdeaInput, setQuickIdeaInput] = useState('');
   const [activeValidationTab, setActiveValidationTab] = useState<ValidationTabKey>('summary');
+  const [validationViewMode, setValidationViewMode] = useState<'frameworks' | 'dossier'>('frameworks');
   const [isContextDrawerOpen, setIsContextDrawerOpen] = useState(false);
   const [contextGeography, setContextGeography] = useState('India (Tier-1 Metros)');
   const [contextAudience, setContextAudience] = useState('');
@@ -178,6 +180,12 @@ export const IdeaIntelligencePage: React.FC = () => {
         next['00'] = true;
         next['GS'] = true;
         next['01'] = true;
+      } else if (tab === 'signals') {
+        next['GS'] = true;
+      } else if (tab === 'tamsamsom') {
+        next['03'] = true;
+      } else if (tab === 'swot' || tab === 'porter' || tab === 'pestle') {
+        next['00'] = true;
       } else if (tab === 'scores') {
         next['04'] = true;
         next['06'] = true;
@@ -1460,6 +1468,8 @@ export const IdeaIntelligencePage: React.FC = () => {
         <ValidationTabNavigation
           activeTab={activeValidationTab}
           onSelectTab={handleSelectTab}
+          viewMode={validationViewMode}
+          onToggleViewMode={setValidationViewMode}
         />
 
         <div className="flex flex-col xl:flex-row gap-6 items-start">
@@ -1470,61 +1480,144 @@ export const IdeaIntelligencePage: React.FC = () => {
             className="hidden xl:block w-56 shrink-0 sticky top-20 space-y-2 text-xs no-print rounded-[14px] border border-[#E6E6E2]/75 bw-frosted-nav p-3"
           >
             <div className="flex items-center justify-between pb-2 border-b border-[#E6E6E2]">
-              <span className="font-semibold text-[#252525]">Sections (18)</span>
-              <button
-                type="button"
-                onClick={toggleAllReportSections}
-                className="text-[11px] font-medium text-[#C44D00] hover:text-[#FF7417] cursor-pointer"
-              >
-                {allReportSectionsExpanded ? 'Collapse' : 'Expand all'}
-              </button>
+              <span className="font-semibold text-[#252525]">
+                {validationViewMode === 'frameworks' ? 'Frameworks (7)' : 'Sections (18)'}
+              </span>
+              {validationViewMode === 'dossier' && (
+                <button
+                  type="button"
+                  onClick={toggleAllReportSections}
+                  className="text-[11px] font-medium text-[#C44D00] hover:text-[#FF7417] cursor-pointer"
+                >
+                  {allReportSectionsExpanded ? 'Collapse' : 'Expand all'}
+                </button>
+              )}
             </div>
             <nav className="space-y-0.5 max-h-[70vh] overflow-y-auto pr-1">
-              {[
-                ['00', 'Validation Verdict'],
-                ['GS', 'Go & Stop Signals'],
-                ['01', 'Executive Summary'],
-                ['02', 'Market Overview'],
-                ['03', 'TAM / SAM / SOM'],
-                ['04', 'Market Demand'],
-                ['05', 'Customer Segments'],
-                ['06', 'Pain Points'],
-                ['07', 'Competitor Landscape'],
-                ['08', 'Pricing Analysis'],
-                ['09', 'Market Opportunities'],
-                ['10', 'Business Models'],
-                ['11', 'Revenue Potential'],
-                ['12', 'Startup Costs'],
-                ['13', 'Risks & Challenges'],
-                ['KS', 'Kill Switches'],
-                ['14', 'Experiments'],
-                ['15', 'Strategic Verdict'],
-              ].map(([num, label]) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => {
-                    setExpandedSections((prev) => ({ ...prev, [num]: true }));
-                    window.requestAnimationFrame(() => {
+              {validationViewMode === 'frameworks' ? (
+                [
+                  ['verdict', '01', 'Validation Decision'],
+                  ['gostop', '02', 'Go & Stop Signals'],
+                  ['tamsamsom', '03', 'TAM / SAM / SOM'],
+                  ['swot', '04', 'SWOT Analysis'],
+                  ['porter', '05', "Porter's 5 Forces"],
+                  ['pestle', '06', 'PESTLE Macro Scan'],
+                  ['killswitches', '07', 'Kill Switches'],
+                ].map(([anchor, num, label]) => (
+                  <button
+                    key={anchor}
+                    type="button"
+                    onClick={() => {
                       document
-                        .getElementById(`section-${num}`)
+                        .getElementById(`section-${anchor}`)
                         ?.scrollIntoView({ behavior: 'smooth' });
-                    });
-                  }}
-                  className={`w-full text-left px-2 py-1.5 rounded-[7px] transition-colors flex items-center gap-2 cursor-pointer ${
-                    expandedSections[num]
-                      ? 'text-[#252525] font-medium bg-[#FFFFFF]'
-                      : 'text-[#686864] hover:text-[#252525] hover:bg-[#F1F1EF]/70'
-                  }`}
-                >
-                  <span className="font-mono-num text-[10px] text-[#858585] shrink-0">{num}</span>
-                  <span className="truncate">{label}</span>
-                </button>
-              ))}
+                    }}
+                    className="w-full text-left px-2 py-1.5 rounded-[7px] transition-colors flex items-center gap-2 cursor-pointer text-[#686864] hover:text-[#252525] hover:bg-[#F1F1EF]/70"
+                  >
+                    <span className="font-mono-num text-[10px] text-[#858585] shrink-0">{num}</span>
+                    <span className="truncate">{label}</span>
+                  </button>
+                ))
+              ) : (
+                [
+                  ['00', 'Validation Verdict'],
+                  ['GS', 'Go & Stop Signals'],
+                  ['01', 'Executive Summary'],
+                  ['02', 'Market Overview'],
+                  ['03', 'TAM / SAM / SOM'],
+                  ['04', 'Market Demand'],
+                  ['05', 'Customer Segments'],
+                  ['06', 'Pain Points'],
+                  ['07', 'Competitor Landscape'],
+                  ['08', 'Pricing Analysis'],
+                  ['09', 'Market Opportunities'],
+                  ['10', 'Business Models'],
+                  ['11', 'Revenue Potential'],
+                  ['12', 'Startup Costs'],
+                  ['13', 'Risks & Challenges'],
+                  ['KS', 'Kill Switches'],
+                  ['14', 'Experiments'],
+                  ['15', 'Strategic Verdict'],
+                ].map(([num, label]) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => {
+                      setExpandedSections((prev) => ({ ...prev, [num]: true }));
+                      window.requestAnimationFrame(() => {
+                        document
+                          .getElementById(`section-${num}`)
+                          ?.scrollIntoView({ behavior: 'smooth' });
+                      });
+                    }}
+                    className={`w-full text-left px-2 py-1.5 rounded-[7px] transition-colors flex items-center gap-2 cursor-pointer ${
+                      expandedSections[num]
+                        ? 'text-[#252525] font-medium bg-[#FFFFFF]'
+                        : 'text-[#686864] hover:text-[#252525] hover:bg-[#F1F1EF]/70'
+                    }`}
+                  >
+                    <span className="font-mono-num text-[10px] text-[#858585] shrink-0">{num}</span>
+                    <span className="truncate">{label}</span>
+                  </button>
+                ))
+              )}
             </nav>
           </aside>
 
           <div className="flex-1 min-w-0 w-full rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 sm:p-8 bw-surface-raised">
+            {/* View Mode Switcher Header Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 mb-6 rounded-[12px] bg-[#FAF9F8] border border-[#E6E6E2] no-print">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#FF7417] text-white">
+                  {validationViewMode === 'frameworks' ? 'DEAD SIMPLE MODE' : 'DETAILED ARCHIVE'}
+                </span>
+                <span className="text-xs font-semibold text-[#171717]">
+                  {validationViewMode === 'frameworks'
+                    ? 'Interactive Validation Frameworks (Decision, Go/Stop, TAM/SAM, SWOT, Porter 5, PESTLE)'
+                    : 'Comprehensive 15-Section Research Dossier'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setValidationViewMode('frameworks')}
+                  className={`px-3 py-1 rounded-[8px] text-xs font-bold transition-all cursor-pointer ${
+                    validationViewMode === 'frameworks'
+                      ? 'bg-[#171717] text-white shadow-xs'
+                      : 'bg-white text-[#686864] border border-[#E6E6E2] hover:text-[#171717]'
+                  }`}
+                >
+                  Interactive Frameworks
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValidationViewMode('dossier')}
+                  className={`px-3 py-1 rounded-[8px] text-xs font-bold transition-all cursor-pointer ${
+                    validationViewMode === 'dossier'
+                      ? 'bg-[#171717] text-white shadow-xs'
+                      : 'bg-white text-[#686864] border border-[#E6E6E2] hover:text-[#171717]'
+                  }`}
+                >
+                  Full 15-Section Archive
+                </button>
+              </div>
+            </div>
+
+            {validationViewMode === 'frameworks' ? (
+              <IdeaValidationFrameworkHub
+                report={activeReport}
+                onCommitToBrain={() => toggleSaveReportToBrain(activeReport.id)}
+                isCommitted={Boolean(activeReport.savedToBrain)}
+                isDormantBrain={
+                  state.brain.activationState === 'DORMANT_SANDBOX' ||
+                  state.brain.stage === 'Idea Stage'
+                }
+                onNavigateBrandStudio={() => navigate('brand-studio')}
+                onNavigateGrowthDirector={() => navigate('growth-director')}
+                dynamicBands={dynamicBands}
+              />
+            ) : (
+              <>
             {/* Validation Verdict Scorecard — IdeaProof-style hero section */}
             <div id="section-00" className="mb-6">
               <ValidationVerdictScorecard
@@ -2877,6 +2970,8 @@ export const IdeaIntelligencePage: React.FC = () => {
                 </div>
               </div>
             </ResearchReportSection>
+            </>
+            )}
           </div>
         </div>
 
