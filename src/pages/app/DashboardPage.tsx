@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, Brain, Check, FlaskConical, RefreshCw, Sparkles, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { ArrowRight, Brain, Check, Compass, FlaskConical, Plus, RefreshCw, Sparkles, X } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import {
   calculateBrainCompleteness,
@@ -52,6 +53,7 @@ export const DashboardPage: React.FC = () => {
     navigate,
     toggleTaskStatus,
     addTask,
+    addRecommendations,
     updateRecommendationStatus,
     convertEventToExperiment,
     refreshWorkspace,
@@ -61,7 +63,49 @@ export const DashboardPage: React.FC = () => {
   const [feedTab, setFeedTab] = useState<'actions' | 'signals' | 'goals' | 'all'>('actions');
   const [isSyncingBriefing, setIsSyncingBriefing] = useState(false);
   const [syncNonce, setSyncNonce] = useState(0);
+  const [scanningQueue, setScanningQueue] = useState(false);
+  const [quickNoteInput, setQuickNoteInput] = useState('');
+  const [removedStickyIds, setRemovedStickyIds] = useState<string[]>([]);
   const briefingTimerRef = useRef<number | null>(null);
+
+  const handleScanOpportunities = () => {
+    if (scanningQueue) return;
+    setScanningQueue(true);
+    const brand = state.brain.businessName || 'Your Brand';
+    const rival =
+      state.competitors.find((c) => c.name?.trim())?.name || 'category incumbents';
+    const flagship = state.brain.products?.[0]?.name || 'your flagship offer';
+    const audience = (state.brain.targetAudience || 'target buyers').replace(/\.+$/, '');
+    const ts = Date.now();
+    window.setTimeout(() => {
+      addRecommendations([
+        {
+          id: `rec-scan-${ts}-1`,
+          whatToDo: `Launch ${flagship} Comparison & Pricing Transparency Card`,
+          whyToDoIt: `Captures high-intent ${audience} comparing against ${rival}.`,
+          expectedBenefit: '+18–25% conversion lift on warm traffic',
+          difficulty: 'Low',
+          estimatedCost: '₹0 (Organic / Site)',
+          priority: 'high',
+          supportingResearch: `Grounded in ${brand} Business Brain & ${rival} pricing gaps`,
+          status: 'pending',
+        },
+        {
+          id: `rec-scan-${ts}-2`,
+          whatToDo: `Publish 5-Slide Educational Carousel for ${brand}`,
+          whyToDoIt: 'Builds organic trust and addresses top buyer objections.',
+          expectedBenefit: '2x organic saves & DM inquiries',
+          difficulty: 'Low',
+          estimatedCost: 'Brand Studio Credits',
+          priority: 'medium',
+          supportingResearch: 'Aligned with Brand Guidelines daily messaging angles',
+          status: 'pending',
+        },
+      ]);
+      setScanningQueue(false);
+      showToast('Discovered 2 fresh strategic opportunities from your Business Brain.');
+    }, 550);
+  };
 
   const brainComp = calculateBrainCompleteness(state.brain);
   const taskStats = calculateTaskCompletionStats(state.tasks);
@@ -694,85 +738,141 @@ export const DashboardPage: React.FC = () => {
                     }
                   />
                   {pendingRecommendations.length === 0 ? (
-                    <EmptyState
-                      illustration="actions"
-                      overline="Strategic Queue · Caught Up"
-                      mutedPrefix="All opportunities"
-                      title="processed"
-                      description="Review active tasks in Growth Planner or run a new Idea Intelligence dossier to uncover fresh leverage moves."
-                      meta="0 pending · Synced with Business Brain"
-                      actionLabel="Open Growth Planner"
-                      onAction={() => navigate('growth-director')}
-                      secondaryActionLabel="Validate New Idea"
-                      onSecondaryAction={() => navigate('idea-intelligence')}
-                    />
+                    <div className="relative rounded-[18px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 sm:p-8 text-center space-y-5 overflow-hidden bw-surface-raised">
+                      {/* Animated Concentric Radar Ring */}
+                      <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+                        <motion.div
+                          animate={{ scale: [1, 1.25, 1], opacity: [0.45, 0.1, 0.45] }}
+                          transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                          className="absolute inset-0 rounded-full border border-[#FF7417]/50"
+                        />
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+                          className="absolute inset-1.5 rounded-full border border-dashed border-[#D6D6D0]"
+                        >
+                          <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#FF7417]" />
+                        </motion.div>
+                        <div className="w-11 h-11 rounded-full bg-[#FFF0E5] border border-[#FFD3B3] flex items-center justify-center text-[#C44D00]">
+                          <Compass className="w-5 h-5" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 max-w-md mx-auto">
+                        <div className="inline-flex items-center gap-1.5 text-[10px] font-mono-num uppercase tracking-wider text-[#C44D00]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF7417] animate-pulse" />
+                          <span>STRATEGIC QUEUE · READY TO SCAN</span>
+                        </div>
+                        <h3 className="font-heading text-xl font-bold text-[#171717]">
+                          <span className="text-[#858585] font-medium">All opportunities</span> processed
+                        </h3>
+                        <p className="text-xs text-[#5C5C58] leading-relaxed">
+                          Scan your Business Brain &amp; competitor gaps to surface fresh next moves, or jump straight into Growth Planner.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-center gap-2.5">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          loading={scanningQueue}
+                          onClick={handleScanOpportunities}
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {scanningQueue ? 'Scanning Brain…' : 'Scan for New Opportunities'}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate('growth-director')}
+                        >
+                          Open Growth Planner
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate('idea-intelligence')}
+                        >
+                          Validate New Idea
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="border-t border-[#E6E6E2] divide-y divide-[#EFEFEB]">
-                      {pendingRecommendations.slice(0, 3).map((rec) => (
-                        <ContextualCard
-                          key={rec.id}
-                          cardId={`rec-${rec.id}`}
-                          title={rec.whatToDo}
-                          subtitle={`${rec.difficulty} Effort · ${rec.estimatedCost}`}
-                          category="Strategy Opportunity"
-                          route="growth-director"
-                          data={rec}
-                          showActionTrigger={false}
-                        >
-                          <RecommendationActionSurface className="bw-trace-card py-5 px-3 -mx-3 rounded-[14px] space-y-2.5 hover:bg-[#FFFFFF] transition-all cursor-pointer">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono-num text-[#858585]">
-                                <Sparkles className="w-3 h-3 text-[#858585]" />
-                                {rec.difficulty} Effort · {rec.estimatedCost}
-                              </span>
-                              <PriorityBadge priority={rec.priority} />
-                            </div>
-                            <div className={`${typeClass.body} font-semibold text-[#171717]`}>
-                              {rec.whatToDo}
-                            </div>
-                            <p className={`${typeClass.bodySm} text-[#5C5C58]`}>
-                              {rec.expectedBenefit}
-                            </p>
-                            <div className="pt-1 flex flex-wrap items-center justify-between gap-2">
-                              <span className="text-[11px] text-[#858585] truncate max-w-[260px]">
-                                {rec.supportingResearch}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => updateRecommendationStatus(rec.id, 'rejected')}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium text-[#5C5C58] hover:text-[#171717] bg-[#FFFFFF] border border-[#E8E8E4] hover:border-[#D6D6D0] bw-ceramic-control rounded-full transition-colors cursor-pointer"
-                                >
-                                  <X className="w-3 h-3" />
-                                  Dismiss
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    updateRecommendationStatus(rec.id, 'accepted');
-                                    addTask({
-                                      title: rec.whatToDo,
-                                      description: rec.whyToDoIt,
-                                      whyItMatters: rec.expectedBenefit,
-                                      expectedOutcome: rec.expectedBenefit,
-                                      priority: rec.priority,
-                                      estimatedMinutes: 30,
-                                      dueDate: new Date().toISOString().slice(0, 10),
-                                      department: 'Growth Director',
-                                      status: 'pending',
-                                      isTodayPriority: true,
-                                    });
-                                  }}
-                                  className="inline-flex items-center gap-1 px-3.5 py-1.5 text-[11px] font-semibold text-white bg-[#171717] hover:bg-[#252525] rounded-full transition-colors cursor-pointer"
-                                >
-                                  <Check className="w-3 h-3" />
-                                  Accept to Tasks
-                                </button>
-                              </div>
-                            </div>
-                          </RecommendationActionSurface>
-                        </ContextualCard>
-                      ))}
+                      <AnimatePresence>
+                        {pendingRecommendations.slice(0, 3).map((rec) => (
+                          <motion.div
+                            key={rec.id}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <ContextualCard
+                              cardId={`rec-${rec.id}`}
+                              title={rec.whatToDo}
+                              subtitle={`${rec.difficulty} Effort · ${rec.estimatedCost}`}
+                              category="Strategy Opportunity"
+                              route="growth-director"
+                              data={rec}
+                              showActionTrigger={false}
+                            >
+                              <RecommendationActionSurface className="bw-trace-card py-5 px-3 -mx-3 rounded-[14px] space-y-2.5 hover:bg-[#FFFFFF] transition-all cursor-pointer">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <span className="inline-flex items-center gap-1.5 text-[11px] font-mono-num text-[#858585]">
+                                    <Sparkles className="w-3 h-3 text-[#858585]" />
+                                    {rec.difficulty} Effort · {rec.estimatedCost}
+                                  </span>
+                                  <PriorityBadge priority={rec.priority} />
+                                </div>
+                                <div className={`${typeClass.body} font-semibold text-[#171717]`}>
+                                  {rec.whatToDo}
+                                </div>
+                                <p className={`${typeClass.bodySm} text-[#5C5C58]`}>
+                                  {rec.expectedBenefit}
+                                </p>
+                                <div className="pt-1 flex flex-wrap items-center justify-between gap-2">
+                                  <span className="text-[11px] text-[#858585] truncate max-w-[260px]">
+                                    {rec.supportingResearch}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => updateRecommendationStatus(rec.id, 'rejected')}
+                                      className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium text-[#5C5C58] hover:text-[#171717] bg-[#FFFFFF] border border-[#E8E8E4] hover:border-[#D6D6D0] bw-ceramic-control rounded-full transition-colors cursor-pointer"
+                                    >
+                                      <X className="w-3 h-3" />
+                                      Dismiss
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        updateRecommendationStatus(rec.id, 'accepted');
+                                        addTask({
+                                          title: rec.whatToDo,
+                                          description: rec.whyToDoIt,
+                                          whyItMatters: rec.expectedBenefit,
+                                          expectedOutcome: rec.expectedBenefit,
+                                          priority: rec.priority,
+                                          estimatedMinutes: 30,
+                                          dueDate: new Date().toISOString().slice(0, 10),
+                                          department: 'Growth Director',
+                                          status: 'pending',
+                                          isTodayPriority: true,
+                                        });
+                                      }}
+                                      className="inline-flex items-center gap-1 px-3.5 py-1.5 text-[11px] font-semibold text-white bg-[#171717] hover:bg-[#252525] rounded-full transition-colors cursor-pointer"
+                                    >
+                                      <Check className="w-3 h-3" />
+                                      Accept to Tasks
+                                    </button>
+                                  </div>
+                                </div>
+                              </RecommendationActionSurface>
+                            </ContextualCard>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
                     </div>
                   )}
                 </StaggeredLiquidItem>
@@ -780,7 +880,7 @@ export const DashboardPage: React.FC = () => {
                 <StaggeredLiquidItem className="lg:col-span-5 space-y-4">
                   <SectionHeader
                     title="Today’s Priorities"
-                    description="Focused sprint synced with Growth Planner"
+                    description="Interactive sticky-note sprint — click to scratch off or peel away"
                     action={
                       <button
                         type="button"
@@ -791,43 +891,184 @@ export const DashboardPage: React.FC = () => {
                       </button>
                     }
                   />
-                  {todaysPriorities.length === 0 ? (
-                    <EmptyState
-                      illustration="sprint"
-                      size="compact"
-                      overline="Daily Sprint · Standby"
-                      mutedPrefix="No sprint tasks"
-                      title="queued yet"
-                      description="Accept a recommended action or create your first priority inside Growth Planner."
-                      meta="0 active priorities"
-                      actionLabel="Open Growth Planner"
-                      onAction={() => navigate('growth-director')}
-                    />
-                  ) : (
-                    <div className="border-t border-[#E6E6E2] divide-y divide-[#EFEFEB]">
-                      {todaysPriorities.map((task) => (
-                        <ContextualCard
-                          key={task.id}
-                          cardId={`task-${task.id}`}
-                          title={task.title}
-                          subtitle={`${task.department} · Due ${task.dueDate}`}
-                          category="Sprint Priority"
-                          route="growth-director"
-                          data={task}
-                          showActionTrigger={false}
+                  {(() => {
+                    const visibleStickyNotes = todaysPriorities.filter(
+                      (t) => !removedStickyIds.includes(t.id)
+                    );
+                    const noteThemes = [
+                      {
+                        bg: 'bg-[#FFFBEB]',
+                        border: 'border-[#FDE68A]',
+                        pin: 'bg-[#EF4444]',
+                        tilt: '-rotate-[0.6deg]',
+                      },
+                      {
+                        bg: 'bg-[#FFF5EB]',
+                        border: 'border-[#FED7AA]',
+                        pin: 'bg-[#FF7417]',
+                        tilt: 'rotate-[0.5deg]',
+                      },
+                      {
+                        bg: 'bg-[#FEFCE8]',
+                        border: 'border-[#FEF08A]',
+                        pin: 'bg-[#16A34A]',
+                        tilt: '-rotate-[0.4deg]',
+                      },
+                    ];
+
+                    return (
+                      <div className="space-y-3">
+                        {visibleStickyNotes.length === 0 ? (
+                          <EmptyState
+                            illustration="sprint"
+                            size="compact"
+                            overline="Daily Sprint · Clear Board"
+                            mutedPrefix="All sticky notes"
+                            title="cleared!"
+                            description="Pin a new quick note below or accept a recommended action."
+                            meta="0 active sticky notes"
+                            actionLabel="Open Growth Planner"
+                            onAction={() => navigate('growth-director')}
+                          />
+                        ) : (
+                          <AnimatePresence>
+                            {visibleStickyNotes.map((task, idx) => {
+                              const isDone = task.status === 'completed';
+                              const theme = noteThemes[idx % noteThemes.length];
+                              return (
+                                <motion.div
+                                  key={task.id}
+                                  layout
+                                  initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, x: 36, rotate: 5, scale: 0.92 }}
+                                  transition={{ duration: 0.22 }}
+                                  className={`group relative rounded-[14px] border ${theme.bg} ${theme.border} p-4 pt-5 shadow-[0_10px_22px_-16px_rgba(23,23,23,0.35)] hover:shadow-[0_14px_26px_-14px_rgba(23,23,23,0.4)] ${theme.tilt} hover:rotate-0 transition-all`}
+                                >
+                                  {/* Push-Pin / Tape Accent */}
+                                  <span
+                                    aria-hidden="true"
+                                    className={`absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full ${theme.pin} border-2 border-white shadow-sm`}
+                                  />
+
+                                  {/* Animated Scratch-Off SVG Line when Completed */}
+                                  {isDone && (
+                                    <svg
+                                      viewBox="0 0 300 40"
+                                      className="pointer-events-none absolute inset-x-3 top-1/2 -translate-y-1/2 w-[92%] h-10 opacity-75"
+                                      aria-hidden="true"
+                                    >
+                                      <motion.path
+                                        d="M 6 22 Q 80 12, 150 21 T 294 18"
+                                        fill="none"
+                                        stroke="#24724E"
+                                        strokeWidth="3.5"
+                                        strokeLinecap="round"
+                                        initial={{ pathLength: 0 }}
+                                        animate={{ pathLength: 1 }}
+                                        transition={{ duration: 0.35, ease: 'easeOut' }}
+                                      />
+                                    </svg>
+                                  )}
+
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleTaskStatus(task.id)}
+                                      className="flex items-start gap-2.5 text-left flex-1 min-w-0 cursor-pointer"
+                                      title={isDone ? 'Unscratch note' : 'Scratch & complete task'}
+                                    >
+                                      <span
+                                        className={`mt-0.5 w-4 h-4 rounded-[5px] border flex items-center justify-center shrink-0 transition-colors ${
+                                          isDone
+                                            ? 'bg-[#24724E] border-[#24724E] text-white'
+                                            : 'bg-white border-[#D6D6D0] group-hover:border-[#FF7417]'
+                                        }`}
+                                      >
+                                        {isDone && <Check className="w-3 h-3" />}
+                                      </span>
+                                      <div className="min-w-0">
+                                        <div
+                                          className={`text-xs font-bold leading-snug ${
+                                            isDone ? 'text-[#5C5C58]' : 'text-[#171717]'
+                                          }`}
+                                        >
+                                          {task.title}
+                                        </div>
+                                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] text-[#686864]">
+                                          <span className="font-semibold text-[#C44D00]">
+                                            {task.priority.toUpperCase()}
+                                          </span>
+                                          <span>· {task.department}</span>
+                                          {task.estimatedMinutes ? (
+                                            <span>· {task.estimatedMinutes}m</span>
+                                          ) : null}
+                                          {task.dueDate ? <span>· Due {task.dueDate}</span> : null}
+                                        </div>
+                                      </div>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (!isDone) toggleTaskStatus(task.id);
+                                        setRemovedStickyIds((prev) => [...prev, task.id]);
+                                        showToast('Note scratched & peeled off board.');
+                                      }}
+                                      title="Scratch & remove sticky note"
+                                      className="p-1 rounded-full text-[#858585] hover:text-[#171717] hover:bg-black/5 transition-colors cursor-pointer shrink-0"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </AnimatePresence>
+                        )}
+
+                        {/* Quick Pin Note Form */}
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            const text = quickNoteInput.trim();
+                            if (!text) return;
+                            addTask({
+                              title: text,
+                              description: 'Pinned directly from Today’s Priorities sticky board.',
+                              whyItMatters: 'Immediate founder focus action.',
+                              expectedOutcome: 'Completed today',
+                              priority: 'high',
+                              estimatedMinutes: 20,
+                              dueDate: new Date().toISOString().slice(0, 10),
+                              department: 'Growth Director',
+                              status: 'pending',
+                              isTodayPriority: true,
+                            });
+                            setQuickNoteInput('');
+                          }}
+                          className="flex items-center gap-2 pt-1"
                         >
-                          <TaskCompleteRowTransition completed={task.status === 'completed'}>
-                            <TaskCard
-                              task={task}
-                              flat
-                              onToggleComplete={(id) => toggleTaskStatus(id)}
-                              onInspect={() => navigate('growth-director')}
-                            />
-                          </TaskCompleteRowTransition>
-                        </ContextualCard>
-                      ))}
-                    </div>
-                  )}
+                          <input
+                            type="text"
+                            value={quickNoteInput}
+                            onChange={(e) => setQuickNoteInput(e.target.value)}
+                            placeholder="Jot & pin a quick priority note..."
+                            className="flex-1 h-9 px-3 rounded-[10px] border border-[#E6E6E2] bg-[#FFFFFF] text-xs text-[#171717] focus:outline-none focus:border-[#FF7417]"
+                          />
+                          <Button
+                            type="submit"
+                            variant="secondary"
+                            size="sm"
+                            disabled={!quickNoteInput.trim()}
+                          >
+                            <Plus className="w-3.5 h-3.5 text-[#FF7417]" />
+                            Pin
+                          </Button>
+                        </form>
+                      </div>
+                    );
+                  })()}
                 </StaggeredLiquidItem>
               </StaggeredLiquidContainer>
             )}

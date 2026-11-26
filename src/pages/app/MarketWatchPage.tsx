@@ -424,7 +424,7 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
                   <div>
                     • Watch:{' '}
                     {state.competitors[0]
-                      ? `Monitor ${state.competitors[0].name} updates (${state.competitors[0].monitoringFrequency}).`
+                      ? `Monitor ${state.competitors[0].name || (state.competitors[0] as any).companyName || 'tracked rival'} updates (${state.competitors[0].monitoringFrequency || 'Weekly'}).`
                       : 'Add your first rival to enable weekly alerts.'}
                   </div>
                 </div>
