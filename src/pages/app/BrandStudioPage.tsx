@@ -209,6 +209,8 @@ export const BrandStudioPage: React.FC = () => {
   const activeIdeaReport =
     state.reports?.find((r) => r.id === state.activeReportId) || state.reports?.[0] || null;
 
+  const [pillarRotationOffset, setPillarRotationOffset] = useState(0);
+
   // Dynamically derive Brand Guidelines from Finalized Idea + Brand Identity when defaults are generic
   const effectiveGuidelines = React.useMemo(() => {
     const raw = state.brand?.guidelines;
@@ -219,17 +221,35 @@ export const BrandStudioPage: React.FC = () => {
         /Verified Ground Truth|Deterministic Engineering|Customer-Obsessed Clarity/i.test(p)
       );
 
-    const ideaPillar1 =
-      state.brain?.valueProposition ||
-      activeIdeaReport?.ideaSummary ||
-      `${effectiveBrandName} Craft Quality`;
-    const ideaPillar2 =
-      state.brain?.brandPositioning ||
-      state.competitiveStrategy?.whereToDifferentiate ||
-      `Tailored for ${state.brain?.location || 'Local'} Buyers`;
-    const ideaPillar3 = flagshipProduct
-      ? `${flagshipProduct.name} (${flagshipProduct.priceRange || 'Transparent Pricing'})`
-      : `Built for ${state.brain?.targetAudience || 'Modern Customers'}`;
+    const competitorWeakness = state.competitors.find((c) => (c.weaknesses || []).length > 0)?.weaknesses?.[0];
+    const topRival =
+      state.competitors[0]?.name || (state.competitors[0] as any)?.companyName || 'legacy incumbents';
+    const audience = (state.brain?.targetAudience || 'modern buyers').replace(/\.+$/, '');
+    const location = state.brain?.location || 'your market';
+
+    // Pool of grounded messaging angles that rotate automatically every day (and on manual refresh)
+    const dynamicPool = [
+      state.brain?.valueProposition || activeIdeaReport?.ideaSummary || `${effectiveBrandName}: Built for ${audience} with zero compromises.`,
+      state.brain?.brandPositioning || state.competitiveStrategy?.whereToDifferentiate || `Differentiate ${effectiveBrandName} in ${location} through transparent quality and direct-to-customer speed.`,
+      flagshipProduct
+        ? `Lead with ${flagshipProduct.name} (${flagshipProduct.priceRange || 'Transparent Pricing'}) as your frictionless entry offer.`
+        : `Deliver unmistakable value for ${audience} without hidden fees or middleman markups.`,
+      competitorWeakness
+        ? `Turn ${topRival}'s gap ("${competitorWeakness}") into ${effectiveBrandName}'s signature guarantee.`
+        : `Win repeat trust with consistent craft, responsive support, and verifiable proof.`,
+      state.brand?.tagline
+        ? `${effectiveBrandName} — "${state.brand.tagline}" across every customer touchpoint.`
+        : `${effectiveBrandName}: Crafted for ${location} buyers who value quality over generic mass options.`,
+      `Show real behind-the-scenes sourcing & process proof for ${audience} before asking for a high-ticket commitment.`,
+    ].filter((s) => Boolean(s && s.trim().length > 0));
+
+    const dayIndex = Math.floor(Date.now() / 86400000);
+    const startIdx = (dayIndex + pillarRotationOffset) % dynamicPool.length;
+    const dailyPillars = [
+      dynamicPool[startIdx],
+      dynamicPool[(startIdx + 1) % dynamicPool.length],
+      dynamicPool[(startIdx + 2) % dynamicPool.length],
+    ];
 
     return {
       logoUsage:
@@ -245,15 +265,17 @@ export const BrandStudioPage: React.FC = () => {
         state.brand?.brandVoice ||
         raw?.brandVoice ||
         `Clear, warm, and authentic to ${state.brain?.targetAudience || 'your target audience'} — zero generic hype.`,
-      messagingPillars: isGenericBoilerplate
-        ? [
-            ideaPillar1.slice(0, 72),
-            ideaPillar2.slice(0, 72),
-            ideaPillar3.slice(0, 72),
-          ]
-        : rawPillars,
+      messagingPillars:
+        pillarRotationOffset > 0 || isGenericBoilerplate ? dailyPillars : dailyPillars,
     };
   }, [
+    pillarRotationOffset,
+    state.competitors,
+    state.competitiveStrategy?.whereToDifferentiate,
+    state.brain?.location,
+    state.brain?.industry,
+    state.brain?.targetAudience,
+    state.brand?.tagline,
     state.brand?.guidelines,
     state.brand?.visualDirection,
     state.brand?.brandVoice,
@@ -3154,17 +3176,53 @@ export const BrandStudioPage: React.FC = () => {
               </div>
             ))}
           </div>
-          <div className="pt-4 border-t border-[#E6E6E2]">
-            <div className="text-xs font-semibold text-[#242424] mb-2">
-              Core Messaging Pillars (Grounded in Finalized Idea &amp; Positioning)
+          <div className="pt-4 border-t border-[#E6E6E2] space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-[#242424]">
+                  Daily Dynamic Messaging Pillars (Grounded in Business Brain)
+                </span>
+                <span className="text-[10px] font-mono-num px-2 py-0.5 rounded-full bg-[#FFF0E5] text-[#C44D00]">
+                  Updates Daily · {new Date().toISOString().slice(0, 10)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPillarRotationOffset((prev) => prev + 1);
+                  showToast('Rotated fresh daily messaging angles.');
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] border border-[#E6E6E2] bg-[#FAFAF9] hover:bg-[#F1F1EF] text-xs font-medium text-[#242424] cursor-pointer transition-colors"
+              >
+                <RefreshCw className="w-3 h-3 text-[#FF7417]" />
+                <span>Rotate Fresh Angles</span>
+              </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {effectiveGuidelines.messagingPillars.map((m) => (
+              {effectiveGuidelines.messagingPillars.map((m, idx) => (
                 <div
-                  key={m}
-                  className="p-3.5 rounded-[10px] border border-[#E6E6E2] text-xs font-medium text-[#242424]"
+                  key={`${idx}-${m.slice(0, 20)}`}
+                  className="p-3.5 rounded-[10px] border border-[#E6E6E2] bg-[#FAFAF9] flex flex-col justify-between gap-2"
                 >
-                  &ldquo;{m}&rdquo;
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono-num font-semibold text-[#C44D00] uppercase">
+                      {['Angle 01 · Core Hook', 'Angle 02 · Wedge', 'Angle 03 · Proof'][idx] ||
+                        `Angle 0${idx + 1}`}
+                    </span>
+                    <p className="text-xs font-medium text-[#242424] leading-relaxed">
+                      &ldquo;{m}&rdquo;
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(m);
+                      showToast('Copied messaging pillar to clipboard.');
+                    }}
+                    className="self-start text-[11px] font-medium text-[#686864] hover:text-[#171717] cursor-pointer"
+                  >
+                    Copy message
+                  </button>
                 </div>
               ))}
             </div>
