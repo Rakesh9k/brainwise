@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
+import { serverConfig } from '../config/index';
 import { db } from '../db/firestore';
 import type {
   StandardApiError,
@@ -36,6 +37,7 @@ export async function requireWorkspaceMember(
   res: Response,
   next: NextFunction
 ): Promise<void> {
+  try {
   const user = req.user;
   if (!user) {
     const errorEnvelope: StandardApiError = {
@@ -114,6 +116,7 @@ export async function requireWorkspaceMember(
       workspaceId === 'solstice-demo' ||
       workspaceId.startsWith('demo-') ||
       workspaceId.startsWith('ws_') ||
+      workspaceId.startsWith('ws-') ||
       !serverConfig.isProduction
     ) {
       req.workspace = {
@@ -228,6 +231,9 @@ export async function requireWorkspaceMember(
   req.workspace = workspace;
   req.membership = membership;
   next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
