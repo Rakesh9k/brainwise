@@ -2684,21 +2684,76 @@ export const BrandStudioPage: React.FC = () => {
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#E6E6E2]">
               <div className="flex flex-wrap items-center gap-2 text-xs text-[#5C5C58]">
-                <span className="text-[#858585]">Quick directions:</span>
-                {[
-                  'Architectural geometric horizon',
-                  'Bold Swiss monogram stamp',
-                  'Minimal botanical craft seal',
-                ].map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setLogoPrompt(`${chip} for ${effectiveBrandName}`)}
-                    className="px-2.5 py-1 rounded-[7px] bg-[#FAFAF9] hover:bg-[#F1F1EF] border border-[#E6E6E2] text-[11px] text-[#252525] cursor-pointer"
-                  >
-                    {chip}
-                  </button>
-                ))}
+                <span className="text-[#858585]">Brain-tailored directions:</span>
+                {(() => {
+                  const initials =
+                    effectiveBrandName
+                      .split(/\s+/)
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((w) => w[0])
+                      .join('')
+                      .toUpperCase() || 'BW';
+                  const prodLabel = flagshipProduct?.name || state.brain?.industry || effectiveBrandName;
+                  const text = `${state.brain?.industry || ''} ${effectiveBrandName} ${state.brain?.valueProposition || ''}`.toLowerCase();
+                  const isCraftFood = /chocolate|bakery|coffee|food|artisan|craft|organic|botanical|tea|skin|beauty|spice/.test(text);
+                  const isTechB2B = /saas|ai|tech|software|fintech|cloud|data|platform|b2b|agency/.test(text);
+                  const chips = isCraftFood
+                    ? [
+                        {
+                          label: `${prodLabel.slice(0, 26)} craft emblem`,
+                          prompt: `Handcrafted ${recommendedLogoProfile.mood} emblem for ${effectiveBrandName} inspired by ${prodLabel}, featuring organic botanical/craft linework and balanced negative space.`,
+                        },
+                        {
+                          label: `${initials} heritage wax-seal`,
+                          prompt: `Artisanal ${initials} monogram wax-seal crest for ${effectiveBrandName} (${state.brain?.industry || 'craft brand'}), clean scalable silhouette with transparent background.`,
+                        },
+                        {
+                          label: `Stand out vs. ${topCompetitorName.slice(0, 18)}`,
+                          prompt: `Distinctive modern craft illustration for ${effectiveBrandName} differentiating from ${topCompetitorName} with ${recommendedLogoProfile.mood} styling.`,
+                        },
+                      ]
+                    : isTechB2B
+                      ? [
+                          {
+                            label: `${initials} geometric tech mark`,
+                            prompt: `Sharp geometric ${initials} vector symbol for ${effectiveBrandName} (${state.brain?.industry || 'technology'}), built for crisp app icons and dark dashboards.`,
+                          },
+                          {
+                            label: `${prodLabel.slice(0, 24)} workflow icon`,
+                            prompt: `Minimal architectural emblem symbolizing ${prodLabel} for ${effectiveBrandName}, clean vector geometry with transparent background.`,
+                          },
+                          {
+                            label: `Differentiate vs. ${topCompetitorName.slice(0, 18)}`,
+                            prompt: `Modern ${recommendedLogoProfile.mood} logo for ${effectiveBrandName} standing apart from ${topCompetitorName} with confident minimal geometry.`,
+                          },
+                        ]
+                      : [
+                          {
+                            label: `${initials} bespoke monogram`,
+                            prompt: `Refined ${initials} monogram emblem for ${effectiveBrandName} in ${recommendedLogoProfile.mood} aesthetic, tailored to ${state.brain?.targetAudience || 'modern buyers'}.`,
+                          },
+                          {
+                            label: `${prodLabel.slice(0, 24)} signature mark`,
+                            prompt: `Illustrative signature brand mark for ${effectiveBrandName} highlighting ${prodLabel}, clean scalable vector silhouette.`,
+                          },
+                          {
+                            label: `Stand out vs. ${topCompetitorName.slice(0, 18)}`,
+                            prompt: `Original ${recommendedLogoProfile.mood} logo for ${effectiveBrandName} differentiating from ${topCompetitorName}, transparent background.`,
+                          },
+                        ];
+
+                  return chips.map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => setLogoPrompt(chip.prompt)}
+                      className="px-2.5 py-1 rounded-[7px] bg-[#FAFAF9] hover:bg-[#FFF0E5] border border-[#E6E6E2] hover:border-[#FF7417] text-[11px] text-[#252525] cursor-pointer transition-colors"
+                    >
+                      {chip.label}
+                    </button>
+                  ));
+                })()}
               </div>
               <Button
                 variant="primary"
