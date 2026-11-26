@@ -101,13 +101,6 @@ const SOCIAL_FORMATS = [
     folder: 'Social Media' as const,
   },
   {
-    id: 'Campaign' as const,
-    label: 'Story / Reel Cover',
-    ratio: '9:16 (1080×1920)',
-    aspectKey: '9:16' as const,
-    folder: 'Campaigns' as const,
-  },
-  {
     id: 'Facebook Creative' as const,
     label: 'Social Ad / Link Card',
     ratio: '1.91:1 (1200×628)',
@@ -171,6 +164,8 @@ export const BrandStudioPage: React.FC = () => {
     };
   const flagshipProduct = state.brain?.products?.[0];
   const topCompetitor = state.competitors?.[0];
+  const topCompetitorName =
+    topCompetitor?.name || (topCompetitor as any)?.companyName || 'category incumbents';
 
   const effectiveBrandName =
     (state.brand?.brandName && state.brand.brandName !== 'My Venture'
@@ -468,7 +463,7 @@ export const BrandStudioPage: React.FC = () => {
 
   // AI Social Media Studio state (Instagram Post & Multi-Slide Carousel)
   const [socialPlatform, setSocialPlatform] = useState<
-    'Carousel' | 'Instagram Post' | 'Campaign' | 'Facebook Creative'
+    'Carousel' | 'Instagram Post' | 'Facebook Creative'
   >('Carousel');
   const [socialAngle, setSocialAngle] = useState(SOCIAL_ANGLES[0]);
   const [socialSlideCount, setSocialSlideCount] = useState<3 | 5 | 7>(5);
@@ -476,7 +471,7 @@ export const BrandStudioPage: React.FC = () => {
   const [socialPrompt, setSocialPrompt] = useState(
     flagshipProduct
       ? `Show why ${flagshipProduct.name} beats stale shelf alternatives with transparent 48-hour dispatch`
-      : `Explain ${state.brand.brandName}'s differentiated value proposition in crisp slides`
+      : `Explain ${effectiveBrandName}'s differentiated value proposition in crisp slides`
   );
   const [socialGenerating, setSocialGenerating] = useState(false);
   const [regeneratingSlide, setRegeneratingSlide] = useState<number | null>(null);
@@ -490,7 +485,7 @@ export const BrandStudioPage: React.FC = () => {
       angle: 'Educational Carousel',
       prompt: state.brand.tagline,
       slideCount: 5,
-      brandName: state.brand.brandName,
+      brandName: effectiveBrandName,
       tagline: state.brand.tagline,
       positioning: state.brand.positioningStatement,
       accentHex: activeConcept?.accentColor ?? '#FF7417',
@@ -503,7 +498,7 @@ export const BrandStudioPage: React.FC = () => {
   const [collateralPrompt, setCollateralPrompt] = useState(
     flagshipProduct
       ? `Minimal matte sleeve for ${flagshipProduct.name} (${flagshipProduct.priceRange}) highlighting batch freshness`
-      : `Signature ${state.brand.brandName} brand launch collateral`
+      : `Signature ${effectiveBrandName} brand launch collateral`
   );
   const [collateralSurfacePref, setCollateralSurfacePref] = useState<'mixed' | 'light' | 'dark'>(
     'mixed'
@@ -516,7 +511,7 @@ export const BrandStudioPage: React.FC = () => {
       buildLocalBrandAssetVariations({
         category: 'Packaging',
         prompt: state.brand.tagline,
-        brandName: state.brand.brandName,
+        brandName: effectiveBrandName,
         tagline: state.brand.tagline,
         positioning: state.brand.positioningStatement,
         accentHex: activeConcept?.accentColor ?? '#FF7417',
@@ -542,7 +537,6 @@ export const BrandStudioPage: React.FC = () => {
       if (
         pendingCreativeRemix.category === 'Carousel' ||
         pendingCreativeRemix.category === 'Instagram Post' ||
-        pendingCreativeRemix.category === 'Campaign' ||
         pendingCreativeRemix.category === 'Facebook Creative'
       ) {
         setSocialPlatform(pendingCreativeRemix.category);
@@ -755,7 +749,13 @@ export const BrandStudioPage: React.FC = () => {
       };
 
       if (state.activeWorkspaceId) {
-        data = await apiClient.generateAiSocialCreative(state.activeWorkspaceId, socialPayload);
+        if (!apiClient.getAuthTokenSync()) {
+          apiClient.setAuthToken('demo-token');
+        }
+        data = await apiClient.generateAiSocialCreative(state.activeWorkspaceId, {
+          ...socialPayload,
+          brand: { ...socialPayload.brand, brandName: effectiveBrandName },
+        });
       } else {
         const res = await fetch('/api/ai/social-creative', {
           method: 'POST',
@@ -801,10 +801,16 @@ export const BrandStudioPage: React.FC = () => {
         );
       }
       setSocialModelUsed(data.model || 'gemini-4-hydrogen');
-    } catch (err) {
-      setSocialError(
-        err instanceof Error ? err.message : 'Unable to reach AI social creative engine.'
-      );
+    } catch (err: any) {
+      const errMsg =
+        typeof err === 'string'
+          ? err
+          : typeof err?.message === 'string' && err.message !== '[object Object]'
+            ? err.message
+            : typeof err?.error?.message === 'string'
+              ? err.error.message
+              : 'Live AI social endpoint unavailable right now.';
+      setSocialError(errMsg);
     } finally {
       setSocialGenerating(false);
       setRegeneratingSlide(null);
@@ -818,7 +824,7 @@ export const BrandStudioPage: React.FC = () => {
       angle: socialAngle,
       prompt: socialPrompt,
       slideCount: socialSlideCount,
-      brandName: state.brand.brandName,
+      brandName: effectiveBrandName,
       tagline: state.brand.tagline,
       positioning: state.brand.positioningStatement,
       accentHex: activeConcept?.accentColor ?? '#FF7417',
@@ -845,7 +851,7 @@ export const BrandStudioPage: React.FC = () => {
         prompt: collateralPrompt,
         surfaceMode: collateralSurfacePref,
         brand: {
-          brandName: state.brand.brandName,
+          brandName: effectiveBrandName,
           tagline: state.brand.tagline,
           positioningStatement: state.brand.positioningStatement,
           visualDirection: state.brand.visualDirection,
@@ -859,6 +865,9 @@ export const BrandStudioPage: React.FC = () => {
       };
 
       if (state.activeWorkspaceId) {
+        if (!apiClient.getAuthTokenSync()) {
+          apiClient.setAuthToken('demo-token');
+        }
         data = await apiClient.generateAiCollateralVariations(state.activeWorkspaceId, collateralPayload);
       } else {
         const res = await fetch('/api/ai/brand-asset', {
@@ -868,23 +877,31 @@ export const BrandStudioPage: React.FC = () => {
         });
         data = (await res.json()) as any;
         if (!res.ok) {
-          throw new Error(data.error || `AI asset request failed (${res.status}).`);
+          const errMsg =
+            typeof data?.error === 'string'
+              ? data.error
+              : data?.error?.message || `AI asset request failed (${res.status}).`;
+          throw new Error(errMsg);
         }
       }
 
       if (!data || !Array.isArray(data.variations) || data.variations.length === 0) {
-        throw new Error(data?.error || `AI asset request returned no variations.`);
+        const errMsg =
+          typeof data?.error === 'string'
+            ? data.error
+            : data?.error?.message || `AI asset request returned no variations.`;
+        throw new Error(errMsg);
       }
 
       const nextVars: GeneratedCollateralVariation[] = data.variations
         .slice(0, 3)
         .map((v: any, idx: number) => ({
           id: `ai-var-${Date.now()}-${idx}`,
-          title: v.title || `${state.brand.brandName} ${selectedCollateral} v${idx + 1}`,
+          title: v.title || `${effectiveBrandName} ${selectedCollateral} v${idx + 1}`,
           layoutLabel: v.layoutLabel || 'Editorial Composition',
           headlineText: v.headlineText || state.brand.tagline,
           subtext: v.subtext || state.brand.positioningStatement,
-          footerNote: v.footerNote || state.brand.brandName,
+          footerNote: v.footerNote || effectiveBrandName,
           artDirectionNote: v.artDirectionNote || 'Brand-locked architectural grid.',
           darkVariant: Boolean(v.darkVariant),
           svgMotif: sanitizeAiSvgMarkup(v.svgMotif, '0 0 120 48'),
@@ -895,9 +912,15 @@ export const BrandStudioPage: React.FC = () => {
       setCollateralModelUsed(data.model || 'gemini-4-hydrogen');
       showToast(`Generated 3 AI ${selectedCollateral} variations.`);
     } catch (err) {
-      setCollateralError(
-        err instanceof Error ? err.message : 'Unable to reach AI asset generator.'
-      );
+      const msg =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as any).message)
+            : typeof err === 'string'
+              ? err
+              : 'Unable to reach AI asset generator.';
+      setCollateralError(msg);
     } finally {
       setCollateralGenerating(false);
     }
@@ -907,7 +930,7 @@ export const BrandStudioPage: React.FC = () => {
     const localVars = buildLocalBrandAssetVariations({
       category: selectedCollateral,
       prompt: collateralPrompt,
-      brandName: state.brand.brandName,
+      brandName: effectiveBrandName,
       tagline: state.brand.tagline,
       positioning: state.brand.positioningStatement,
       accentHex: activeConcept?.accentColor ?? '#FF7417',
@@ -924,7 +947,7 @@ export const BrandStudioPage: React.FC = () => {
     const fmt = SOCIAL_FORMATS.find((f) => f.id === socialPlatform);
     const svg = buildCarouselSlideSvgMarkup(
       activeSlide,
-      state.brand.brandName,
+      effectiveBrandName,
       activeConcept?.accentColor ?? '#FF7417',
       socialDark,
       fmt?.aspectKey ?? '4:5'
@@ -933,7 +956,7 @@ export const BrandStudioPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${state.brand.brandName.toLowerCase().replace(/\s+/g, '-')}-slide-0${activeSlide.slideNumber}.svg`;
+    a.download = `${effectiveBrandName.toLowerCase().replace(/\s+/g, '-')}-slide-0${activeSlide.slideNumber}.svg`;
     a.click();
     URL.revokeObjectURL(url);
     showToast(`Exported Slide 0${activeSlide.slideNumber} artwork (.svg).`);
@@ -1003,14 +1026,14 @@ export const BrandStudioPage: React.FC = () => {
   const smartSocialStarters = [
     flagshipProduct
       ? `5-slide carousel: Why ${flagshipProduct.name} beats mass-market options`
-      : `5-slide educational carousel introducing ${state.brand.brandName}`,
+      : `5-slide educational carousel introducing ${effectiveBrandName}`,
     topCompetitor
-      ? `Counter-positioning post vs ${topCompetitor.name}'s ${topCompetitor.weaknesses?.[0] || 'pricing gap'}`
+      ? `Counter-positioning post vs ${topCompetitorName}'s ${topCompetitor.weaknesses?.[0] || 'pricing gap'}`
       : 'Founder origin story & craftsmanship breakdown',
     `Launch offer drop: ${state.brain?.primaryGoals?.[0] || 'Claim our flagship starter pack'}`,
   ];
 
-  const brandHandle = `@${state.brand.brandName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'brainwisebrand'}`;
+  const brandHandle = `@${effectiveBrandName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'brainwisebrand'}`;
 
   return (
     <div className="space-y-6">
@@ -2578,7 +2601,7 @@ export const BrandStudioPage: React.FC = () => {
                   style={{ backgroundColor: activeConcept.accentColor }}
                 />
                 <span>
-                  Auto-context: <strong className="text-[#252525]">{state.brand.brandName}</strong>{' '}
+                  Auto-context: <strong className="text-[#252525]">{effectiveBrandName}</strong>{' '}
                   · {state.brand?.typography?.heading || 'Plus Jakarta Sans'}
                 </span>
               </span>
@@ -2595,172 +2618,179 @@ export const BrandStudioPage: React.FC = () => {
           <AnimatePresence mode="wait">
             <MorphingPanel key={studioMode}>
               {studioMode === 'social' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  {/* LEFT: AI Prompt & Direction Controls (No Manual Copy Form Clutter) */}
-                  <div className="lg:col-span-5 rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-4 bw-surface-raised">
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <div className="text-[11px] font-mono-num text-[#C44D00] uppercase">
-                          AI Social Creative Director
-                        </div>
-                        <h2 className="font-heading text-base font-bold text-[#171717]">
-                          Generate Post or Multi-Slide Carousel
-                        </h2>
+                <div className="space-y-8">
+                  {/* CENTRALIZED SMART AI CREATIVE LAUNCHPAD (Idea Intelligence Omnibar Pattern) */}
+                  <div className="max-w-3xl mx-auto rounded-[20px] border border-[#E6E6E2] bg-[#FFFFFF] p-6 sm:p-8 shadow-sm space-y-5 bw-surface-raised">
+                    <div className="text-center space-y-2">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFF0E5] text-[#C44D00] text-[11px] font-mono-num uppercase tracking-wide">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        AI Social Creative Director · {effectiveBrandName}
                       </div>
-                      {socialModelUsed && (
-                        <span className="text-[11px] font-mono-num text-[#858585]">
-                          {socialModelUsed}
-                        </span>
-                      )}
+                      <h2 className="font-heading text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">
+                        What should we create for {effectiveBrandName} today?
+                      </h2>
+                      <p className="text-xs text-[#5C5C58] max-w-xl mx-auto">
+                        Grounded in your Business Brain, competitor gaps, and locked brand tokens. Zero video/reels — crisp static posts and swipeable carousels only.
+                      </p>
                     </div>
 
-                    <div>
-                      <div className="text-xs font-medium text-[#242424] mb-1.5">
-                        Platform &amp; Format
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {SOCIAL_FORMATS.map((sf) => (
-                          <button
-                            key={sf.id}
-                            type="button"
-                            onClick={() => {
-                              setSocialPlatform(sf.id);
-                              if (sf.id !== 'Carousel') {
-                                setActiveSlideIdx(0);
-                              }
-                            }}
-                            className={`p-2.5 rounded-[8px] border text-left text-xs cursor-pointer transition-colors ${
-                              socialPlatform === sf.id
-                                ? 'border-[#FF7417] bg-[#FFF0E5]/55 font-semibold text-[#171717]'
-                                : 'border-[#E6E6E2] bg-[#FAFAF9] text-[#5C5C58] hover:border-[#252525]'
-                            }`}
-                          >
-                            <div>{sf.label}</div>
-                            <div className="text-[10px] font-mono-num opacity-75 mt-0.5">
-                              {sf.ratio}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <Field label="Campaign Goal / Angle" htmlFor="ai-soc-angle">
-                        <Select
-                          id="ai-soc-angle"
-                          value={socialAngle}
-                          onChange={(e) => setSocialAngle(e.target.value)}
+                    {/* 3 Static Format Pills (No Video/Reel) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {SOCIAL_FORMATS.map((sf) => (
+                        <button
+                          key={sf.id}
+                          type="button"
+                          onClick={() => {
+                            setSocialPlatform(sf.id);
+                            if (sf.id !== 'Carousel') {
+                              setActiveSlideIdx(0);
+                            }
+                          }}
+                          className={`p-3 rounded-[10px] border text-left text-xs cursor-pointer transition-all ${
+                            socialPlatform === sf.id
+                              ? 'border-[#FF7417] bg-[#FFF0E5]/60 font-semibold text-[#171717] shadow-xs'
+                              : 'border-[#E6E6E2] bg-[#FAFAF9] text-[#5C5C58] hover:border-[#252525]'
+                          }`}
                         >
-                          {SOCIAL_ANGLES.map((ang) => (
-                            <option key={ang} value={ang}>
-                              {ang}
-                            </option>
-                          ))}
-                        </Select>
-                      </Field>
-
-                      {socialPlatform === 'Carousel' ? (
-                        <div>
-                          <div className="text-xs font-medium text-[#242424] mb-1.5">
-                            Carousel Length
+                          <div className="flex items-center justify-between gap-1">
+                            <span>{sf.label}</span>
                           </div>
-                          <div className="grid grid-cols-3 gap-1.5">
-                            {([3, 5, 7] as const).map((cnt) => (
-                              <button
-                                key={cnt}
-                                type="button"
-                                onClick={() => setSocialSlideCount(cnt)}
-                                className={`h-9 rounded-[8px] border text-xs font-mono-num font-semibold cursor-pointer ${
-                                  socialSlideCount === cnt
-                                    ? 'bg-[#171717] text-white border-[#171717]'
-                                    : 'bg-[#FAFAF9] text-[#5C5C58] border-[#E6E6E2]'
-                                }`}
-                              >
-                                {cnt} slides
-                              </button>
-                            ))}
+                          <div className="text-[10px] font-mono-num opacity-75 mt-0.5">
+                            {sf.ratio}
                           </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="text-xs font-medium text-[#242424] mb-1.5">
-                            Surface Mood
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setSocialDark((d) => !d)}
-                            className="w-full h-9 px-3 rounded-[8px] border border-[#E6E6E2] bg-[#FAFAF9] text-xs font-medium text-[#252525] flex items-center justify-between cursor-pointer"
-                          >
-                            <span>{socialDark ? 'Dark Charcoal Luxe' : 'Swiss White Minimal'}</span>
-                            {socialDark ? (
-                              <Moon className="w-3.5 h-3.5" />
-                            ) : (
-                              <Sun className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
-                      )}
+                        </button>
+                      ))}
                     </div>
 
-                    <Field
-                      label="AI Creative Brief (What should this communicate?)"
-                      htmlFor="ai-soc-prompt"
-                    >
+                    {/* Centralized AI Omnibar Brief */}
+                    <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FAFAF9] p-3.5 space-y-3 focus-within:border-[#FF7417] transition-colors">
                       <Textarea
                         id="ai-soc-prompt"
                         rows={3}
                         value={socialPrompt}
                         onChange={(e) => setSocialPrompt(e.target.value)}
-                        placeholder="Describe your product angle, hook, or offer — AI will write all slides, visual motifs, caption, and hashtags…"
+                        placeholder={`Describe the campaign hook, offer, or customer objection for ${effectiveBrandName} — AI writes every slide, vector motif, caption & hashtags…`}
+                        className="bg-white border-[#E6E6E2]"
                       />
-                    </Field>
 
-                    {/* Business Brain Smart Prompt Starters */}
-                    <div className="space-y-1.5">
-                      <div className="text-[11px] text-[#858585]">
-                        Prompt starters from Business Brain:
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                        <div className="sm:col-span-5">
+                          <Field label="Campaign Goal / Angle" htmlFor="ai-soc-angle">
+                            <Select
+                              id="ai-soc-angle"
+                              value={socialAngle}
+                              onChange={(e) => setSocialAngle(e.target.value)}
+                            >
+                              {SOCIAL_ANGLES.map((ang) => (
+                                <option key={ang} value={ang}>
+                                  {ang}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          {socialPlatform === 'Carousel' ? (
+                            <div>
+                              <div className="text-xs font-medium text-[#242424] mb-1.5">
+                                Slides
+                              </div>
+                              <div className="grid grid-cols-3 gap-1">
+                                {([3, 5, 7] as const).map((cnt) => (
+                                  <button
+                                    key={cnt}
+                                    type="button"
+                                    onClick={() => setSocialSlideCount(cnt)}
+                                    className={`h-9 rounded-[8px] border text-xs font-mono-num font-semibold cursor-pointer ${
+                                      socialSlideCount === cnt
+                                        ? 'bg-[#171717] text-white border-[#171717]'
+                                        : 'bg-[#FFFFFF] text-[#5C5C58] border-[#E6E6E2]'
+                                    }`}
+                                  >
+                                    {cnt}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="text-xs font-medium text-[#242424] mb-1.5">
+                                Surface Mood
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setSocialDark((d) => !d)}
+                                className="w-full h-9 px-2.5 rounded-[8px] border border-[#E6E6E2] bg-[#FFFFFF] text-xs font-medium text-[#252525] flex items-center justify-between cursor-pointer"
+                              >
+                                <span className="truncate">
+                                  {socialDark ? 'Dark Luxe' : 'Swiss Light'}
+                                </span>
+                                {socialDark ? (
+                                  <Moon className="w-3.5 h-3.5 shrink-0" />
+                                ) : (
+                                  <Sun className="w-3.5 h-3.5 shrink-0" />
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="sm:col-span-4">
+                          <Button
+                            variant="primary"
+                            size="md"
+                            className="w-full h-9"
+                            loading={socialGenerating}
+                            disabled={!socialPrompt.trim()}
+                            onClick={() => handleGenerateAiSocial()}
+                          >
+                            {!socialGenerating && <Sparkles className="w-4 h-4" />}
+                            {socialGenerating
+                              ? 'Generating…'
+                              : `Generate ${socialPlatform === 'Carousel' ? `${socialSlideCount}-Slide` : socialPlatform}`}
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-1.5">
+                    </div>
+
+                    {/* Smart Prompt Starters + Auto-Context Bar */}
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <span className="text-[#858585] font-medium">
+                          Smart starters from Business Brain:
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="inline-flex items-center gap-1 font-medium text-[#24724E]">
+                            <Check className="w-3.5 h-3.5" />
+                            Voice &amp; Palette Locked
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSocialDark((d) => !d)}
+                            className="text-[#C44D00] font-medium cursor-pointer"
+                          >
+                            {socialDark ? 'Switch Light' : 'Switch Dark'}
+                          </button>
+                          {socialModelUsed && (
+                            <span className="font-mono-num text-[#858585]">{socialModelUsed}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         {smartSocialStarters.map((starter) => (
                           <button
                             key={starter}
                             type="button"
                             onClick={() => setSocialPrompt(starter)}
-                            className="text-left px-2.5 py-1.5 rounded-[7px] bg-[#FAFAF9] hover:bg-[#FFF0E5]/50 border border-[#E6E6E2] text-[11px] text-[#252525] truncate cursor-pointer transition-colors"
+                            title={starter}
+                            className="text-left px-3 py-2 rounded-[8px] bg-[#FAFAF9] hover:bg-[#FFF0E5]/60 border border-[#E6E6E2] text-[11px] text-[#252525] line-clamp-2 cursor-pointer transition-colors"
                           >
                             {starter}
                           </button>
                         ))}
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-between text-xs p-3 rounded-[8px] bg-[#FAFAF9] border border-[#E6E6E2]">
-                      <span className="inline-flex items-center gap-1.5 font-medium text-[#24724E]">
-                        <Check className="w-3.5 h-3.5" />
-                        Brand Voice &amp; Palette Auto-Injected
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setSocialDark((d) => !d)}
-                        className="text-[#C44D00] font-medium cursor-pointer"
-                      >
-                        {socialDark ? 'Switch Light' : 'Switch Dark'}
-                      </button>
-                    </div>
-
-                    <Button
-                      variant="primary"
-                      size="md"
-                      className="w-full"
-                      loading={socialGenerating}
-                      disabled={!socialPrompt.trim()}
-                      onClick={() => handleGenerateAiSocial()}
-                    >
-                      {!socialGenerating && <Sparkles className="w-4 h-4" />}
-                      {socialGenerating
-                        ? `Generating ${socialPlatform === 'Carousel' ? `${socialSlideCount}-Slide Carousel` : socialPlatform}…`
-                        : `Generate ${socialPlatform === 'Carousel' ? `${socialSlideCount}-Slide Carousel` : socialPlatform} with AI`}
-                    </Button>
 
                     {socialGenerating && (
                       <AiRequestPulse
@@ -2780,7 +2810,7 @@ export const BrandStudioPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* RIGHT: Interactive Instagram Feed / Multi-Slide Carousel Stage */}
+                  {/* FULL-WIDTH INTERACTIVE STAGE & CAPTION STUDIO BELOW */}
                   <LiquidSkeletonReveal
                     loading={socialGenerating || regeneratingSlide !== null}
                     contentKey={`social-${socialPackage.title}-${activeSlideIdx}-${socialPlatform}`}
@@ -2791,18 +2821,16 @@ export const BrandStudioPage: React.FC = () => {
                         aspectClass={
                           socialPlatform === 'Instagram Post'
                             ? 'aspect-square'
-                            : socialPlatform === 'Campaign'
-                              ? 'aspect-[9/14]'
-                              : socialPlatform === 'Facebook Creative'
-                                ? 'aspect-[16/10]'
-                                : 'aspect-[4/5]'
+                            : socialPlatform === 'Facebook Creative'
+                              ? 'aspect-[16/10]'
+                              : 'aspect-[4/5]'
                         }
                       />
                     }
-                    className="lg:col-span-7 space-y-4"
+                    className="max-w-5xl mx-auto"
                   >
-                    <div className="space-y-4">
-                      <div className="rounded-[14px] border border-[#E6E6E2] bg-[#F5F5F4] p-5 sm:p-6 space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      <div className="lg:col-span-7 rounded-[14px] border border-[#E6E6E2] bg-[#F5F5F4] p-5 sm:p-6 space-y-4">
                         {/* Stage Top Bar */}
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex flex-wrap items-center gap-2 text-xs text-[#5C5C58]">
@@ -2882,11 +2910,9 @@ export const BrandStudioPage: React.FC = () => {
                             className={`relative p-6 sm:p-7 flex flex-col justify-between transition-colors ${
                               socialPlatform === 'Instagram Post'
                                 ? 'aspect-square'
-                                : socialPlatform === 'Campaign'
-                                  ? 'aspect-[9/14]'
-                                  : socialPlatform === 'Facebook Creative'
-                                    ? 'aspect-[16/10]'
-                                    : 'aspect-[4/5]'
+                                : socialPlatform === 'Facebook Creative'
+                                  ? 'aspect-[16/10]'
+                                  : 'aspect-[4/5]'
                             } ${
                               socialDark
                                 ? 'bg-[#171717] text-white bw-dark-ambient-glow'
@@ -2944,7 +2970,7 @@ export const BrandStudioPage: React.FC = () => {
                                   !socialDark,
                                   'w-5 h-5'
                                 )}
-                                <span className="font-semibold">{state.brand.brandName}</span>
+                                <span className="font-semibold">{effectiveBrandName}</span>
                               </div>
                               <span className="font-mono-num opacity-65">
                                 {socialPackage.slides.length > 1 &&
@@ -3110,8 +3136,8 @@ export const BrandStudioPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* AI Generated Caption, Hashtags & Save Actions */}
-                      <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-4 bw-surface-raised">
+                      {/* RIGHT COLUMN: AI Generated Caption, Hashtags & Save Actions */}
+                      <div className="lg:col-span-5 rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 space-y-4 bw-surface-raised">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="text-xs font-semibold text-[#171717]">
                             AI-Written Caption &amp; Hashtags
@@ -3138,36 +3164,11 @@ export const BrandStudioPage: React.FC = () => {
                           {socialPackage.hashtags.join('  ')}
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#E6E6E2]">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              addTask({
-                                title: `Publish AI ${socialPlatform}: ${socialPackage.title.slice(0, 36)}`,
-                                description: `Post ${socialPackage.slides.length}-slide ${socialPlatform} generated in Brand Studio.`,
-                                whyItMatters:
-                                  socialPackage.postingRationale ||
-                                  'Executes brand-locked social growth campaign.',
-                                expectedOutcome:
-                                  'Published social creative driving bio link clicks & saves.',
-                                priority: 'high',
-                                estimatedMinutes: 20,
-                                dueDate: new Date().toISOString().slice(0, 10),
-                                department: 'Brand Studio',
-                                status: 'pending',
-                                isTodayPriority: true,
-                              });
-                              navigate('growth-director');
-                            }}
-                          >
-                            <Compass className="w-3.5 h-3.5 text-[#FF7417]" />
-                            Schedule in Growth Planner
-                          </Button>
-
+                        <div className="flex flex-col gap-2.5 pt-3 border-t border-[#E6E6E2]">
                           <Button
                             variant="primary"
                             size="md"
+                            className="w-full"
                             onClick={() => {
                               const fmt = SOCIAL_FORMATS.find((f) => f.id === socialPlatform);
                               addBrandAsset({
@@ -3198,6 +3199,33 @@ export const BrandStudioPage: React.FC = () => {
                               ? `${socialPackage.slides.length}-Slide Carousel`
                               : socialPlatform}{' '}
                             to Asset Library
+                          </Button>
+
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => {
+                              addTask({
+                                title: `Publish AI ${socialPlatform}: ${socialPackage.title.slice(0, 36)}`,
+                                description: `Post ${socialPackage.slides.length}-slide ${socialPlatform} generated in Brand Studio.`,
+                                whyItMatters:
+                                  socialPackage.postingRationale ||
+                                  'Executes brand-locked social growth campaign.',
+                                expectedOutcome:
+                                  'Published social creative driving bio link clicks & saves.',
+                                priority: 'high',
+                                estimatedMinutes: 20,
+                                dueDate: new Date().toISOString().slice(0, 10),
+                                department: 'Brand Studio',
+                                status: 'pending',
+                                isTodayPriority: true,
+                              });
+                              navigate('growth-director');
+                            }}
+                          >
+                            <Compass className="w-3.5 h-3.5 text-[#FF7417]" />
+                            Schedule in Growth Planner
                           </Button>
                         </div>
                       </div>
