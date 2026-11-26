@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Check,
   CheckCircle2,
@@ -386,6 +386,7 @@ export const BrandStudioPage: React.FC = () => {
   // Center Brand Identity Chat state
   const [identityChatInput, setIdentityChatInput] = useState('');
   const [identityChatLoading, setIdentityChatLoading] = useState(false);
+  const [selectedDirection, setSelectedDirection] = useState<string>('Warm Artisan Craft');
   const [identityChatHistory, setIdentityChatHistory] = useState<
     Array<{ role: 'user' | 'assistant'; text: string }>
   >([
@@ -1204,145 +1205,351 @@ export const BrandStudioPage: React.FC = () => {
       {/* A. Brand Identity Home + Inline 11-Step Identity Builder */}
       {tab === 'home' && (
         <FluidTransition key="home" direction="fade" className="space-y-6">
-          <div className="rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 sm:p-6 space-y-5 bw-surface-raised">
-            {/* 1. Competitor Brand Glimpse & Whitespace Suggestion */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-[#E6E6E2]">
-              <div className="p-3.5 rounded-[10px] bg-[#FAF9F6] border border-[#E6E6E2] space-y-1">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#858585]">
-                  Competitor Brand Glimpse
+          <div className="rounded-[16px] border border-[#E6E6E2] bg-[#FFFFFF] p-5 sm:p-6 space-y-6 bw-surface-raised">
+            {/* 1. Competitor Contrast vs. BrainWise White-Space Recommendation */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-5 border-b border-[#EFEFEB]">
+              <div className="p-4 rounded-[12px] bg-[#FAF9F6] border border-[#E6E6E2] space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#686864]">
+                    Competitor Brand Glimpse
+                  </span>
+                  <span className="text-[10px] font-mono-num px-2 py-0.5 rounded-full bg-[#EFEFEB] text-[#5C5C58]">
+                    CATEGORY BASELINE
+                  </span>
                 </div>
-                <p className="text-xs text-[#252525] leading-relaxed">
-                  {(() => {
-                    const peerNames = Array.from(
-                      new Set(
-                        state.competitors
-                          .map((c) => {
-                            const raw = (c.name || (c as any).companyName || '').trim();
-                            if (raw) return raw;
-                            if (c.website) {
-                              return c.website.replace(/^https?:\/\/(www\.)?/i, '').split('/')[0].trim();
-                            }
-                            return '';
-                          })
-                          .filter(Boolean)
-                      )
-                    ).slice(0, 3);
-                    if (peerNames.length > 0) {
-                      return `${peerNames.join(', ')} lean on ${state.competitors[0]?.brandPositioningDetail?.visualTone || 'traditional category styling'} (${state.competitors[0]?.priceRange || 'standard tier'}).`;
-                    }
-                    return `Most peers in ${state.brain.industry || 'your category'} default to generic templates and formal corporate copy.`;
-                  })()}
-                </p>
+                {(() => {
+                  const peerNames = Array.from(
+                    new Set(
+                      state.competitors
+                        .map((c) => {
+                          const raw = (c.name || (c as any).companyName || '').trim();
+                          if (raw) return raw;
+                          if (c.website) {
+                            return c.website.replace(/^https?:\/\/(www\.)?/i, '').split('/')[0].trim();
+                          }
+                          return '';
+                        })
+                        .filter(Boolean)
+                    )
+                  ).slice(0, 3);
+                  return (
+                    <>
+                      {peerNames.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {peerNames.map((p) => (
+                            <span
+                              key={p}
+                              className="px-2 py-0.5 rounded-[6px] bg-white border border-[#E6E6E2] text-[11px] font-medium text-[#242424]"
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-[#5C5C58] leading-relaxed">
+                        {peerNames.length > 0
+                          ? `Lean on ${state.competitors[0]?.brandPositioningDetail?.visualTone || 'traditional category styling'} (${state.competitors[0]?.priceRange || 'standard tier'}).`
+                          : `Most peers in ${state.brain.industry || 'your category'} default to generic templates and formal corporate copy.`}
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
-              <div className="p-3.5 rounded-[10px] bg-[#FFF0E5]/50 border border-[#FFD3B3] space-y-1">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#C44D00]">
-                  BrainWise Recommendation for {effectiveBrandName}
+
+              <div className="p-4 rounded-[12px] bg-gradient-to-br from-[#FFF4EB] to-[#FFFFFF] border border-[#FFD3B3] space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#C44D00] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+                    <span>White-Space for {effectiveBrandName}</span>
+                  </span>
+                  <span className="text-[10px] font-mono-num px-2 py-0.5 rounded-full bg-[#FF7417]/15 text-[#C44D00]">
+                    RECOMMENDED
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-2 py-0.5 rounded-[6px] bg-white border border-[#FFD3B3] text-[11px] font-semibold text-[#C44D00]">
+                    {recommendedLogoProfile.mood}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-[6px] bg-white border border-[#FFD3B3] text-[11px] font-semibold text-[#171717]">
+                    {recommendedLogoProfile.archetype}
+                  </span>
                 </div>
                 <p className="text-xs text-[#252525] leading-relaxed">
-                  Lead with <strong>{recommendedLogoProfile.mood}</strong> styling and{' '}
-                  <strong>{recommendedLogoProfile.archetype}</strong> visual identity to stand apart
-                  for {(state.brain.targetAudience || 'your buyers').replace(/\.+$/, '')}.
+                  Stand apart for {(state.brain.targetAudience || 'your buyers').replace(/\.+$/, '')}.
                 </p>
               </div>
             </div>
 
-            {/* 2. Center Interactive Brand Identity Chat + 3 Quick Directions */}
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="font-heading text-base font-bold text-[#171717]">
-                    Shape &amp; Finalize Your Brand Identity
-                  </h2>
-                  <p className="text-xs text-[#5C5C58]">
-                    Pick a suggested direction or chat below in plain English — preview updates live.
-                  </p>
-                </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => {
-                    updateBrandIdentity({
-                      brandName: effectiveBrandName,
-                      status: 'Finalized',
-                    });
-                    showToast(`Brand Identity finalized & locked for ${effectiveBrandName}!`);
-                  }}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  {state.brand.status === 'Finalized'
-                    ? 'Brand Identity Finalized ✓'
-                    : 'Finalize & Lock Brand Identity'}
-                </Button>
-              </div>
+            {/* 2. Interactive 2-Column Brand Identity Studio (Aesthetic Picker + Live Preview Card) */}
+            {(() => {
+              const directions = [
+                {
+                  label: 'Warm Artisan Craft',
+                  tag: 'Tactile & Heritage',
+                  sub: 'Storytelling serif + craft seal',
+                  swatches: ['#5C3422', '#D97724', '#F7EFE6'],
+                  cardBg: 'from-[#2A1810] to-[#4A2C1D]',
+                  accent: '#F59E0B',
+                  voice: 'Warm, tactile & origin-led',
+                  prompt: `Give ${effectiveBrandName} a warm artisan craft identity with earthy cacao/terracotta tones, storytelling voice, and craft seal logo.`,
+                },
+                {
+                  label: 'Modern Minimalist Luxury',
+                  tag: 'Editorial & Quiet',
+                  sub: 'Monochrome elegance + refined serif',
+                  swatches: ['#171717', '#B89B72', '#FAF9F6'],
+                  cardBg: 'from-[#141414] to-[#262624]',
+                  accent: '#D6B88D',
+                  voice: 'Restrained, confident & bespoke',
+                  prompt: `Position ${effectiveBrandName} as modern minimalist luxury with deep espresso & ivory colors, refined serif typography, and monochrome elegance.`,
+                },
+                {
+                  label: 'Vibrant D2C Everyday',
+                  tag: 'Bold & Approachable',
+                  sub: 'Crisp sans + energetic accent',
+                  swatches: ['#FF7417', '#1E6543', '#FFF6EE'],
+                  cardBg: 'from-[#1C1917] to-[#2D2520]',
+                  accent: '#FF7417',
+                  voice: 'Direct, bright & conversion-ready',
+                  prompt: `Make ${effectiveBrandName} feel vibrant, modern, and D2C-friendly with energetic accent color, crisp sans typography, and approachable voice.`,
+                },
+              ];
+              const activeDir =
+                directions.find((d) => d.label === selectedDirection) || directions[0];
+              const monogram =
+                effectiveBrandName
+                  .split(/\s+/)
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((w) => w[0])
+                  .join('')
+                  .toUpperCase() || 'BW';
 
-              <div className="flex flex-wrap gap-2">
-                {[
-                  {
-                    label: 'Warm Artisan Craft',
-                    prompt: `Give ${effectiveBrandName} a warm artisan craft identity with earthy cacao/terracotta tones, storytelling voice, and craft seal logo.`,
-                  },
-                  {
-                    label: 'Modern Minimalist Luxury',
-                    prompt: `Position ${effectiveBrandName} as modern minimalist luxury with deep espresso & ivory colors, refined serif typography, and monochrome elegance.`,
-                  },
-                  {
-                    label: 'Vibrant D2C Everyday',
-                    prompt: `Make ${effectiveBrandName} feel vibrant, modern, and D2C-friendly with energetic accent color, crisp sans typography, and approachable voice.`,
-                  },
-                ].map((dir) => (
-                  <button
-                    key={dir.label}
-                    type="button"
-                    disabled={identityChatLoading}
-                    onClick={() => handleSendIdentityChat(dir.prompt)}
-                    className="px-3 py-1.5 rounded-full bg-[#FAFAF9] hover:bg-[#FFF0E5] border border-[#E6E6E2] hover:border-[#FF7417] text-xs font-medium text-[#242424] cursor-pointer transition-colors"
-                  >
-                    ✦ {dir.label}
-                  </button>
-                ))}
-              </div>
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  {/* Left 7 Cols: Aesthetic Cards + Interactive Chat Refiner */}
+                  <div className="lg:col-span-7 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2 text-[10px] font-mono-num uppercase tracking-wider text-[#C44D00]">
+                          <span>01 Pick Aesthetic</span>
+                          <span>→</span>
+                          <span>02 Preview Live</span>
+                          <span>→</span>
+                          <span>03 Refine &amp; Lock</span>
+                        </div>
+                        <h2 className="font-heading text-base font-bold text-[#171717] mt-0.5">
+                          Shape &amp; Finalize Your Brand Identity
+                        </h2>
+                      </div>
+                    </div>
 
-              <div className="rounded-[10px] border border-[#E6E6E2] bg-[#FAFAF9] p-3 space-y-2.5 max-h-44 overflow-y-auto">
-                {identityChatHistory.map((m, idx) => (
-                  <div
-                    key={idx}
-                    className={`text-xs leading-relaxed px-3 py-2 rounded-[8px] ${
-                      m.role === 'user'
-                        ? 'bg-[#171717] text-white ml-8'
-                        : 'bg-white border border-[#E6E6E2] text-[#242424] mr-8'
-                    }`}
-                  >
-                    {m.text}
+                    {/* 3 Visual Swatch Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {directions.map((dir) => {
+                        const isSelected = dir.label === selectedDirection;
+                        return (
+                          <motion.button
+                            key={dir.label}
+                            type="button"
+                            disabled={identityChatLoading}
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                              setSelectedDirection(dir.label);
+                              void handleSendIdentityChat(dir.prompt);
+                            }}
+                            className={`text-left rounded-[12px] border p-3.5 transition-all cursor-pointer relative ${
+                              isSelected
+                                ? 'bg-[#FFF9F4] border-[#FF7417] shadow-[0_10px_24px_-14px_rgba(255,116,23,0.45)]'
+                                : 'bg-[#FAFAF9] border-[#E6E6E2] hover:bg-white hover:border-[#D4D4CE]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-2.5">
+                              <div className="flex items-center -space-x-1">
+                                {dir.swatches.map((hex) => (
+                                  <span
+                                    key={hex}
+                                    className="w-4 h-4 rounded-full border border-white shadow-xs"
+                                    style={{ backgroundColor: hex }}
+                                  />
+                                ))}
+                              </div>
+                              {isSelected && (
+                                <span className="w-4 h-4 rounded-full bg-[#FF7417] text-white flex items-center justify-center">
+                                  <Check className="w-2.5 h-2.5" />
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs font-bold text-[#171717] leading-snug">
+                              {dir.label}
+                            </div>
+                            <div className="text-[11px] text-[#686864] mt-0.5">{dir.sub}</div>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Animated Refiner Chat */}
+                    <div className="rounded-[12px] border border-[#E6E6E2] bg-[#FAFAF9] p-3 space-y-2 max-h-44 overflow-y-auto">
+                      {identityChatHistory.map((m, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className={`text-xs leading-relaxed px-3 py-2 rounded-[8px] ${
+                            m.role === 'user'
+                              ? 'bg-[#171717] text-white ml-8'
+                              : 'bg-white border border-[#E6E6E2] text-[#242424] mr-8'
+                          }`}
+                        >
+                          {m.text}
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        void handleSendIdentityChat();
+                      }}
+                      className="flex gap-2"
+                    >
+                      <input
+                        type="text"
+                        value={identityChatInput}
+                        onChange={(e) => setIdentityChatInput(e.target.value)}
+                        placeholder={`Describe how you want ${effectiveBrandName} to feel (colors, vibe, voice)...`}
+                        disabled={identityChatLoading}
+                        className="flex-1 px-3.5 py-2 text-xs rounded-[8px] border border-[#E6E6E2] bg-white focus:outline-none focus:border-[#FF7417]"
+                      />
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="sm"
+                        loading={identityChatLoading}
+                        disabled={!identityChatInput.trim()}
+                      >
+                        {identityChatLoading ? 'Updating…' : 'Update Identity'}
+                      </Button>
+                    </form>
                   </div>
-                ))}
-              </div>
 
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void handleSendIdentityChat();
-                }}
-                className="flex gap-2"
-              >
-                <input
-                  type="text"
-                  value={identityChatInput}
-                  onChange={(e) => setIdentityChatInput(e.target.value)}
-                  placeholder={`Describe how you want ${effectiveBrandName} to feel (colors, vibe, voice)...`}
-                  disabled={identityChatLoading}
-                  className="flex-1 px-3.5 py-2 text-xs rounded-[8px] border border-[#E6E6E2] bg-white focus:outline-none focus:border-[#FF7417]"
-                />
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  loading={identityChatLoading}
-                  disabled={!identityChatInput.trim()}
-                >
-                  {identityChatLoading ? 'Updating…' : 'Update Identity'}
-                </Button>
-              </form>
-            </div>
+                  {/* Right 5 Cols: Live Animated Brand Spec Card */}
+                  <div className="lg:col-span-5">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`${activeDir.label}-${state.brand.status}`}
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                        className={`rounded-[16px] bg-gradient-to-br ${activeDir.cardBg} text-white p-5 space-y-4 border border-white/10 shadow-[0_18px_40px_-20px_rgba(23,23,23,0.65)]`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-11 h-11 rounded-[12px] flex items-center justify-center font-heading font-bold text-sm text-[#171717] shadow-sm"
+                              style={{ backgroundColor: activeDir.accent }}
+                            >
+                              {monogram}
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-mono-num uppercase tracking-wider text-white/65">
+                                LIVE IDENTITY PREVIEW
+                              </div>
+                              <div className="font-heading text-sm font-bold text-white">
+                                {effectiveBrandName}
+                              </div>
+                            </div>
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              state.brand.status === 'Finalized'
+                                ? 'bg-[#24724E] text-white'
+                                : 'bg-white/15 text-white/90'
+                            }`}
+                          >
+                            {state.brand.status === 'Finalized' ? 'Finalized ✓' : activeDir.tag}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5 pt-1">
+                          <div className="text-[10px] font-mono-num uppercase tracking-wider text-white/60">
+                            ACTIVE PALETTE TOKENS
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {activeDir.swatches.map((hex) => (
+                              <div
+                                key={hex}
+                                className="rounded-[8px] bg-white/10 border border-white/10 p-2 flex items-center gap-2"
+                              >
+                                <span
+                                  className="w-4 h-4 rounded-full shrink-0 border border-white/30"
+                                  style={{ backgroundColor: hex }}
+                                />
+                                <span className="text-[10px] font-mono-num text-white/85">
+                                  {hex}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div className="rounded-[8px] bg-white/10 p-2.5">
+                            <div className="text-[9px] font-mono-num uppercase text-white/60">
+                              VISUAL DIRECTION
+                            </div>
+                            <div className="font-medium text-white mt-0.5">
+                              {state.brand.visualDirection || activeDir.label}
+                            </div>
+                          </div>
+                          <div className="rounded-[8px] bg-white/10 p-2.5">
+                            <div className="text-[9px] font-mono-num uppercase text-white/60">
+                              BRAND VOICE
+                            </div>
+                            <div className="font-medium text-white mt-0.5">
+                              {state.brand.brandVoice || activeDir.voice}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 pt-1">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="w-full justify-center"
+                            onClick={() => {
+                              updateBrandIdentity({
+                                brandName: effectiveBrandName,
+                                visualDirection: activeDir.label,
+                                brandVoice: state.brand.brandVoice || activeDir.voice,
+                                status: 'Finalized',
+                              });
+                              showToast(`Brand Identity finalized & locked for ${effectiveBrandName}!`);
+                            }}
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            {state.brand.status === 'Finalized'
+                              ? 'Brand Identity Finalized ✓'
+                              : 'Finalize & Lock Brand Identity'}
+                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => setTab('logos')}
+                            className="w-full py-1.5 text-xs font-medium text-white/85 hover:text-white transition-colors cursor-pointer"
+                          >
+                            Next: Open AI Logo Studio →
+                          </button>
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E6E6E2] bg-[#FFFFFF] px-4 py-3 bw-surface-raised">
