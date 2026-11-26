@@ -494,6 +494,67 @@ export const BrandStudioPage: React.FC = () => {
   const [logoAccent, setLogoAccent] = useState(activeConcept?.accentColor ?? '#FF7417');
   const [logoVariant, setLogoVariant] = useState<'horizontal' | 'icon' | 'stacked'>('horizontal');
   const [logoRefineInput, setLogoRefineInput] = useState('');
+  const [logoRefImage, setLogoRefImage] = useState<{ name: string; dataUrl: string } | null>(null);
+
+  const handleSuggestLogoPromptFromBrain = () => {
+    const prod = state.brain?.products?.[0]?.name;
+    const audience = (state.brain?.targetAudience || '').replace(/\.+$/, '');
+    const visual = state.brand?.visualDirection || recommendedLogoProfile.mood;
+    const parts = [
+      `Clean, scalable brand emblem & illustration for ${effectiveBrandName}`,
+      state.brain?.industry ? `in ${state.brain.industry}` : '',
+      prod ? `featuring subtle visual cues of ${prod}` : '',
+      `with a ${visual} aesthetic`,
+      audience ? `tailored to ${audience}` : '',
+      'balanced negative space, bold crisp silhouette, transparent background.',
+    ].filter(Boolean);
+    setLogoPrompt(parts.join(', '));
+    showToast('Drafted logo illustration prompt from your Business Brain.');
+  };
+
+  const downloadLogoTransparentPng = (concept: BrandConcept, darkInk = true) => {
+    const rawSvg = sanitizeAiSvgMarkup(concept.customSvg, '0 0 120 120');
+    const ink = darkInk ? '#171717' : '#FFFFFF';
+    // Strip any opaque full-bleed background rects & resolve currentColor for crisp transparent 2048px PNG
+    const cleanedSvg = rawSvg
+      .replace(/currentColor/g, ink)
+      .replace(/<svg\b([^>]*)>/i, (_m, attrs) => {
+        const hasWidth = /\bwidth\s*=/i.test(attrs);
+        const hasHeight = /\bheight\s*=/i.test(attrs);
+        return `<svg${attrs}${hasWidth ? '' : ' width="2048"'}${hasHeight ? '' : ' height="2048"'}>`;
+      });
+    const blob = new Blob([cleanedSvg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const size = 2048;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, size, size);
+        const pad = 192;
+        ctx.drawImage(img, pad, pad, size - pad * 2, size - pad * 2);
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        const slug = (effectiveBrandName || 'brand')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        link.href = pngUrl;
+        link.download = `${slug}-logo-hd-2048px.png`;
+        link.click();
+        showToast('Downloaded HD Transparent PNG (2048×2048).');
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      showToast('Could not rasterize SVG logo to PNG.', { tone: 'error' });
+    };
+    img.src = url;
+  };
   const [traitInput, setTraitInput] = useState('');
   const [attributeInput, setAttributeInput] = useState('');
 
@@ -662,8 +723,11 @@ export const BrandStudioPage: React.FC = () => {
         apiClient.setAuthToken('demo-token');
       }
       const targetWsId = state.activeWorkspaceId || 'default';
+      const promptWithRef = logoRefImage
+        ? `${effectivePrompt}. [Visual reference attached: ${logoRefImage.name} — match its silhouette balance, line weight, and focal simplicity.]`
+        : effectivePrompt;
       const data: any = await apiClient.generateAiLogoConcepts(targetWsId, {
-        prompt: effectivePrompt,
+        prompt: promptWithRef,
         styleArchetype: logoArchetype,
         mood: logoMood,
         lockBrandColors: brandLockEnabled,
@@ -2489,55 +2553,72 @@ export const BrandStudioPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-              <div className="lg:col-span-6">
-                <label htmlFor="ai-logo-prompt" className="sr-only">
-                  AI Logo Prompt
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label htmlFor="ai-logo-prompt" className="text-xs font-medium text-[#5C5C58]">
+                  Describe the logo illustration you want (or let AI draft from your Business Brain)
                 </label>
-                <Textarea
-                  id="ai-logo-prompt"
-                  rows={2}
-                  value={logoPrompt}
-                  onChange={(e) => setLogoPrompt(e.target.value)}
-                  placeholder="e.g. Minimalist architectural coffee horizon mark with sharp Swiss lines and warm orange focal point"
-                />
+                <button
+                  type="button"
+                  onClick={handleSuggestLogoPromptFromBrain}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF0E5] hover:bg-[#FFE3CC] border border-[#FFD3B3] text-[11px] font-semibold text-[#C44D00] cursor-pointer transition-colors"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Suggest Prompt from Business Brain</span>
+                </button>
               </div>
-              <div className="lg:col-span-3 space-y-1.5">
-                <label
-                  htmlFor="ai-logo-arch"
-                  className="block text-[11px] font-medium text-[#5C5C58]"
-                >
-                  Style Archetype
-                </label>
-                <Select
-                  id="ai-logo-arch"
-                  value={logoArchetype}
-                  onChange={(e) => setLogoArchetype(e.target.value)}
-                >
-                  {LOGO_ARCHETYPES.map((arch) => (
-                    <option key={arch} value={arch}>
-                      {arch}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="lg:col-span-3 space-y-1.5">
-                <label
-                  htmlFor="ai-logo-mood"
-                  className="block text-[11px] font-medium text-[#5C5C58]"
-                >
-                  Visual Mood
-                </label>
-                <Select
-                  id="ai-logo-mood"
-                  value={logoMood}
-                  onChange={(e) => setLogoMood(e.target.value)}
-                >
-                  <option value="Swiss Editorial">Swiss Editorial</option>
-                  <option value="Warm Tactile Craft">Warm Tactile Craft</option>
-                  <option value="Monochrome Luxury">Monochrome Luxury</option>
-                  <option value="Bold Geometric Tech">Bold Geometric Tech</option>
-                </Select>
+              <Textarea
+                id="ai-logo-prompt"
+                rows={3}
+                value={logoPrompt}
+                onChange={(e) => setLogoPrompt(e.target.value)}
+                placeholder="e.g. Minimalist cacao pod & artisan crest illustration with clean geometric lines and warm terracotta accent, transparent background"
+              />
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-[#E6E6E2] bg-[#FAFAF9] hover:bg-[#F1F1EF] text-xs font-medium text-[#242424] cursor-pointer transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setLogoRefImage({
+                            name: file.name,
+                            dataUrl: String(reader.result || ''),
+                          });
+                          showToast(`Attached reference: ${file.name}`);
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <span>📎 Attach Reference Image</span>
+                  </label>
+                  {logoRefImage && (
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[8px] bg-[#FFF9F4] border border-[#FFD3B3] text-[11px] text-[#242424]">
+                      {logoRefImage.dataUrl && (
+                        <img
+                          src={logoRefImage.dataUrl}
+                          alt={logoRefImage.name}
+                          className="w-5 h-5 rounded object-cover"
+                        />
+                      )}
+                      <span className="max-w-[140px] truncate">{logoRefImage.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setLogoRefImage(null)}
+                        className="text-[#858585] hover:text-[#171717] cursor-pointer"
+                        aria-label="Remove reference image"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -2621,11 +2702,17 @@ export const BrandStudioPage: React.FC = () => {
                             selectBrandConcept(concept.id);
                             setLogoAccent(concept.accentColor);
                           }}
-                          className="w-full h-28 rounded-[10px] bg-[#FAFAF9] border border-[#E6E6E2] hover:border-[#252525] flex items-center justify-center gap-3 px-4 transition-colors cursor-pointer"
+                          style={{
+                            backgroundImage:
+                              'linear-gradient(45deg, #F3F3F0 25%, transparent 25%), linear-gradient(-45deg, #F3F3F0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #F3F3F0 75%), linear-gradient(-45deg, transparent 75%, #F3F3F0 75%)',
+                            backgroundSize: '16px 16px',
+                            backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+                          }}
+                          className="w-full h-48 rounded-[12px] bg-[#FFFFFF] border border-[#E6E6E2] hover:border-[#252525] flex flex-col items-center justify-center gap-2.5 p-4 transition-colors cursor-pointer"
                         >
-                          {renderLogoMark(concept, concept.accentColor, true, 'w-12 h-12')}
-                          <span className="font-heading font-bold text-base text-[#171717] truncate">
-                            {state.brand.brandName.split(' ')[0]}
+                          {renderLogoMark(concept, concept.accentColor, true, 'w-24 h-24')}
+                          <span className="font-heading font-bold text-sm text-[#171717] text-center line-clamp-1 max-w-full">
+                            {effectiveBrandName}
                           </span>
                         </button>
                         <p className="text-xs text-[#5C5C58] leading-relaxed">
@@ -2633,30 +2720,40 @@ export const BrandStudioPage: React.FC = () => {
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-[#E6E6E2]">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            addBrandAsset({
-                              title: `${state.brand.brandName} Logo — ${concept.name}`,
-                              category: 'Logo',
-                              folder: 'Identity',
-                              format: 'Scalable Vector (.svg)',
-                              status: selected ? 'Approved' : 'Draft',
-                              headlineText: state.brand.brandName,
-                              subtext: concept.rationale,
-                              accentHex: concept.accentColor,
-                              darkVariant: !logoLightMode,
-                              aiGenerated: true,
-                              aiPrompt: concept.aiPrompt || logoPrompt,
-                              aiModel: logoSourceModel || 'BrainWise AI',
-                              svgMarkup: sanitizeAiSvgMarkup(concept.customSvg, '0 0 64 64'),
-                            });
-                          }}
-                          className="text-xs font-medium text-[#5C5C58] hover:text-[#252525] cursor-pointer"
-                        >
-                          Save to Library
-                        </button>
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#E6E6E2]">
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => downloadLogoTransparentPng(concept, true)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#171717] hover:text-[#C44D00] cursor-pointer"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>HD PNG</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              addBrandAsset({
+                                title: `${effectiveBrandName} Logo — ${concept.name}`,
+                                category: 'Logo',
+                                folder: 'Identity',
+                                format: 'Scalable Vector (.svg)',
+                                status: selected ? 'Approved' : 'Draft',
+                                headlineText: effectiveBrandName,
+                                subtext: concept.rationale,
+                                accentHex: concept.accentColor,
+                                darkVariant: !logoLightMode,
+                                aiGenerated: true,
+                                aiPrompt: concept.aiPrompt || logoPrompt,
+                                aiModel: logoSourceModel || 'BrainWise AI',
+                                svgMarkup: sanitizeAiSvgMarkup(concept.customSvg, '0 0 120 120'),
+                              });
+                            }}
+                            className="text-xs font-medium text-[#5C5C58] hover:text-[#252525] cursor-pointer"
+                          >
+                            Save
+                          </button>
+                        </div>
                         <Button
                           variant={selected ? 'dark' : 'primary'}
                           size="sm"
@@ -2722,16 +2819,30 @@ export const BrandStudioPage: React.FC = () => {
                 <div
                   className={`flex items-center gap-3.5 ${logoVariant === 'stacked' ? 'flex-col text-center' : ''}`}
                 >
-                  {renderLogoMark(activeConcept, logoAccent, logoLightMode, 'w-14 h-14')}
+                  {renderLogoMark(activeConcept, logoAccent, logoLightMode, 'w-20 h-20')}
                   {logoVariant !== 'icon' && (
                     <div>
                       <div className="font-heading text-xl font-bold tracking-tight">
-                        {state.brand.brandName}
+                        {effectiveBrandName}
                       </div>
                       <div className="text-[11px] opacity-70">{state.brand.tagline}</div>
                     </div>
                   )}
                 </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-[#686864]">
+                  Transparent 2048×2048px PNG export ready for print &amp; web
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => downloadLogoTransparentPng(activeConcept, logoLightMode)}
+                >
+                  <Download className="w-3.5 h-3.5 text-[#FF7417]" />
+                  Download HD Transparent PNG (2048px)
+                </Button>
               </div>
 
               {/* Direct Follow-Up AI Refinement Prompt */}

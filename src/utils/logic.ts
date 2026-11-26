@@ -2493,8 +2493,8 @@ export function buildLocalLogoConcepts(params: {
   return [
     {
       id: `ai-logo-${ts}-1`,
-      name: `${params.styleArchetype} Horizon`,
-      rationale: `Distills "${focus.slice(0, 56)}" into an architectural horizon grid with restrained ${accent} focal geometry.`,
+      name: `${params.styleArchetype} Crest`,
+      rationale: `Distills "${focus.slice(0, 56)}" into a layered architectural crest with ${accent} focal geometry and balanced negative space.`,
       primaryColor: '#171717',
       secondaryColor: '#5C5C58',
       accentColor: accent,
@@ -2505,12 +2505,12 @@ export function buildLocalLogoConcepts(params: {
       markStyle: 'geometric',
       styleTag: params.styleArchetype,
       aiPrompt: focus,
-      customSvg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="8" width="48" height="48" rx="12" stroke="currentColor" stroke-width="2.5"/><path d="M16 40H48" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M22 40C22 29 26.5 23 32 23C37.5 23 42 29 42 40" stroke="${accent}" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="17" r="2.5" fill="${accent}"/></svg>`,
+      customSvg: `<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="14" width="92" height="92" rx="24" stroke="currentColor" stroke-width="4"/><rect x="24" y="24" width="72" height="72" rx="16" stroke="currentColor" stroke-opacity="0.25" stroke-width="2"/><path d="M30 74H90" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M40 74C40 54 48.5 42 60 42C71.5 42 80 54 80 74" stroke="${accent}" stroke-width="5.5" stroke-linecap="round"/><path d="M49 74C49 61 53.8 53 60 53C66.2 53 71 61 71 74" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="33" r="5" fill="${accent}"/></svg>`,
     },
     {
       id: `ai-logo-${ts}-2`,
-      name: 'Precision Monogram Frame',
-      rationale: `High-contrast Swiss monogram built for small-scale packaging stamps, social avatars, and dark headers.`,
+      name: 'Precision Monogram Seal',
+      rationale: `High-contrast editorial monogram framed inside a sculpted bevel, engineered for packaging stamps, avatars, and dark headers.`,
       primaryColor: '#171717',
       secondaryColor: '#5C5C58',
       accentColor: accent,
@@ -2521,12 +2521,12 @@ export function buildLocalLogoConcepts(params: {
       markStyle: 'monogram',
       styleTag: 'Swiss Monogram',
       aiPrompt: focus,
-      customSvg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 14H50V50H14V14Z" stroke="currentColor" stroke-width="2.5"/><path d="M22 44V20L32 33L42 20V44" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="44" y="14" width="6" height="6" fill="${accent}"/></svg>`,
+      customSvg: `<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M60 12L102 36V84L60 108L18 84V36L60 12Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M60 24L91 42V78L60 96L29 78V42L60 24Z" stroke="currentColor" stroke-opacity="0.28" stroke-width="2"/><path d="M40 78V42L60 63L80 42V78" stroke="currentColor" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="83" r="5" fill="${accent}"/></svg>`,
     },
     {
       id: `ai-logo-${ts}-3`,
-      name: 'Orbital Seal Emblem',
-      rationale: `Concentric geometric seal anchoring provenance, craft discipline, and modern digital recognition.`,
+      name: 'Botanical & Orbital Emblem',
+      rationale: `Concentric artisan emblem pairing craft symmetry with a glowing ${accent} centerpiece for premium recognition.`,
       primaryColor: '#171717',
       secondaryColor: '#5C5C58',
       accentColor: accent,
@@ -2537,7 +2537,7 @@ export function buildLocalLogoConcepts(params: {
       markStyle: 'emblem',
       styleTag: 'Modern Emblem',
       aiPrompt: focus,
-      customSvg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="22" stroke="currentColor" stroke-width="2.4"/><circle cx="32" cy="32" r="14" stroke="currentColor" stroke-width="1.6" stroke-dasharray="4 4"/><circle cx="32" cy="32" r="5.5" fill="${accent}"/><path d="M32 10V16M32 48V54M10 32H16M48 32H54" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+      customSvg: `<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="44" stroke="currentColor" stroke-width="4"/><circle cx="60" cy="60" r="33" stroke="currentColor" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="5 5"/><path d="M60 26C69 37 74 48 74 60C74 72 69 83 60 94C51 83 46 72 46 60C46 48 51 37 60 26Z" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/><circle cx="60" cy="60" r="9" fill="${accent}"/><path d="M60 16V24M60 96V104M16 60H24M96 60H104" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg>`,
     },
   ];
 }
