@@ -13,6 +13,7 @@ import {
   Send,
   Loader2,
   Download,
+  RefreshCw,
 } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
 import type { CompetitorProfileData } from '../../types/brainwise';
