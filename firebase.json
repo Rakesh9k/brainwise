@@ -1,6 +1,6 @@
 {
   "apphosting": {
-    "backendId": "mitra-web",
+    "backendId": "brainwise-web",
     "rootDir": "/",
     "ignore": [
       "node_modules",
