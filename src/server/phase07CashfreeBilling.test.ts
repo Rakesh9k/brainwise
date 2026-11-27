@@ -12,6 +12,7 @@ import { CashfreeProvider } from './billing/providers/cashfreeProvider';
 import { orderRepository, type BillingOrderEntity } from './repositories/orderRepository';
 import { subscriptionEngine } from './billing/subscriptionEngine';
 import { creditEngine } from './billing/creditEngine';
+import { billingManager } from './billing/billingManager';
 import { createApp } from './app';
 import { db } from './db/firestore';
 import type { PaymentRecord } from './billing/types';
@@ -277,6 +278,7 @@ test('PHASE 07 — CASHFREE REAL PAYMENT & BILLING IMPLEMENTATION SUITE', async 
       const timestamp = String(Math.floor(Date.now() / 1000));
       // Using app default secret
       const defaultProvider = new CashfreeProvider();
+      billingManager.registerProvider(defaultProvider);
       const signature = defaultProvider.generateWebhookSignature(rawBody, timestamp);
 
       // First webhook delivery
@@ -370,6 +372,7 @@ test('PHASE 07 — CASHFREE REAL PAYMENT & BILLING IMPLEMENTATION SUITE', async 
       const rawBody = JSON.stringify(failPayload);
       const timestamp = String(Math.floor(Date.now() / 1000));
       const defaultProvider = new CashfreeProvider();
+      billingManager.registerProvider(defaultProvider);
       const signature = defaultProvider.generateWebhookSignature(rawBody, timestamp);
 
       const res = await fetch(`${baseUrl}/api/v1/billing/webhook`, {

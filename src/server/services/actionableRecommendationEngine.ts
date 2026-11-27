@@ -3,13 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { businessProfileRepository } from '../repositories/businessProfileRepository';
 import { productRepository } from '../repositories/productRepository';
-import { brandIdentityRepository } from '../repositories/brandIdentityRepository';
 import { taskRepository } from '../repositories/taskRepository';
 import { businessDiagnosisEngine } from './businessDiagnosisEngine';
-import { competitiveStrategyEngine } from './competitiveStrategyEngine';
-import { customerIntelligenceEngine } from './customerIntelligenceEngine';
 import { departmentEventBus } from '../events/eventBus';
 import type { GrowthTaskEntity } from '../types/api';
 
@@ -73,14 +69,10 @@ export class ActionableRecommendationEngine {
     prohibitedDirectives: ProhibitedActionDirective[];
     primaryFocusRecommendation: ActionableRecommendation;
   }> {
-    const profile = await businessProfileRepository.getProfile(workspaceId);
     const diagnosis = await businessDiagnosisEngine.diagnoseBusiness(workspaceId);
     const products = await productRepository.listProducts(workspaceId);
 
-    const businessName = profile?.businessName || 'Business';
-    const subIndustry = (profile?.subIndustry || profile?.category || profile?.industry || '').toLowerCase();
     const primaryConstraint = diagnosis.primaryConstraint;
-    const now = new Date().toISOString();
 
     const prices = products.map((p) => p.price).filter((pr): pr is number => typeof pr === 'number' && pr > 0);
     const avgPrice = prices.length > 0 ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 450;
@@ -255,8 +247,9 @@ export class ActionableRecommendationEngine {
         description: `Deliverable: ${step.deliverable}. Estimated Hours: ${step.estimatedHours}. Budget: ₹${step.estimatedBudget}. Risk: ${step.riskLevel}.`,
         department: step.department as any,
         status: 'todo',
-        priority: rec.priorityTier === 'P0_CRITICAL' ? 'urgent' : 'high',
-        assignedTo: step.department,
+        priority: 'high',
+        assignedUserId: step.department,
+        createdBy: approvedBy,
         dueDate: new Date(Date.now() + step.stepNumber * 7 * 86400000).toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

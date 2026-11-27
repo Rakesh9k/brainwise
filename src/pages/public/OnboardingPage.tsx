@@ -3,9 +3,11 @@ import { motion } from 'motion/react';
 import {
   ArrowLeft,
   ArrowRight,
+  Brain,
   Check,
   CheckCircle2,
   HelpCircle,
+  Lightbulb,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
@@ -65,7 +67,21 @@ const BUSINESS_STAGES: BusinessBrainData['stage'][] = [
 ];
 
 export const OnboardingPage: React.FC = () => {
-  const { completeOnboarding, navigate, prefilledIdeaPrompt } = useBrainWise();
+  const {
+    completeOnboarding,
+    navigate,
+    prefilledIdeaPrompt,
+    setPrefilledIdeaPrompt,
+    showToast,
+  } = useBrainWise();
+
+  // Primary Intent / Starting Stage Mode:
+  // 'idea': Stage 1 first (Idea Validation & Intelligence -> hatches Brain later)
+  // 'business': Stage 2 direct (Established Business -> full Business Brain intake)
+  const [onboardingFocus, setOnboardingFocus] = useState<'idea' | 'business'>('idea');
+  const [ideaSummary, setIdeaSummary] = useState(prefilledIdeaPrompt || '');
+  const [ideaCategory, setIdeaCategory] = useState('Technology startup');
+  const [ideaGeography, setIdeaGeography] = useState('India Tier-1 Metros');
 
   // Onboarding Stage Machine:
   // 1: Stage 1 (Identity & Location)
@@ -399,14 +415,18 @@ export const OnboardingPage: React.FC = () => {
             {isSaving && (
               <span className="text-[11px] font-medium text-[#C44D00] animate-pulse">Saving…</span>
             )}
-            <span className="text-xs text-[#8E8E88]">Stage {stage} of 3</span>
-            <button
-              type="button"
-              onClick={startBrainSynthesis}
-              className="text-xs font-semibold text-[#5C5C58] hover:text-[#252525] cursor-pointer"
-            >
-              Skip to Brain Review →
-            </button>
+            <span className="text-xs text-[#8E8E88]">
+              {onboardingFocus === 'idea' ? 'Stage 1 of 4: Idea Focus' : `Stage ${stage} of 3`}
+            </span>
+            {onboardingFocus === 'business' && (
+              <button
+                type="button"
+                onClick={startBrainSynthesis}
+                className="text-xs font-semibold text-[#5C5C58] hover:text-[#252525] cursor-pointer"
+              >
+                Skip to Brain Review →
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -414,22 +434,156 @@ export const OnboardingPage: React.FC = () => {
       {/* Main Content Area */}
       <div className="max-w-2xl w-full mx-auto my-auto py-4">
         {/* ======================================================== */}
-        {/* STAGE 1: UNDERSTAND THE BUSINESS                         */}
+        {/* STAGE 1: UNDERSTAND THE BUSINESS / VALIDATE NEW IDEA      */}
         {/* ======================================================== */}
         {stage === 1 && (
           <FluidTransition key="stage-1" direction="fade" className="space-y-6">
-            <div>
-              <span className="text-xs font-semibold tracking-wider text-[#C44D00] uppercase">
-                Stage 1 — Business Identity
-              </span>
-              <h1 className={`${typeClass.h2} font-bold text-[#171717] mt-1`}>
-                Let's understand your business.
-              </h1>
-              <p className={`${typeClass.bodySm} text-[#686864] mt-1.5`}>
-                Tell us a little about what you're building. We'll use this to create your
-                personalized Business Brain.
-              </p>
+            {/* Top Stage Mode Switcher */}
+            <div className="p-1 rounded-[12px] bg-[#EFEFEA] flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setOnboardingFocus('idea')}
+                className={`flex-1 py-2 px-3 rounded-[9px] text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  onboardingFocus === 'idea'
+                    ? 'bg-white text-[#171717] shadow-2xs'
+                    : 'text-[#686864] hover:text-[#171717]'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+                <span>Stage 1: Validate a New Idea</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setOnboardingFocus('business')}
+                className={`flex-1 py-2 px-3 rounded-[9px] text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  onboardingFocus === 'business'
+                    ? 'bg-white text-[#171717] shadow-2xs'
+                    : 'text-[#686864] hover:text-[#171717]'
+                }`}
+              >
+                <Brain className="w-3.5 h-3.5 text-[#252525]" />
+                <span>Stage 2 Direct: Existing Business</span>
+              </button>
             </div>
+
+            {onboardingFocus === 'idea' ? (
+              <div className="space-y-6">
+                <div>
+                  <span className="text-xs font-semibold tracking-wider text-[#C44D00] uppercase">
+                    Stage 1 — Idea Validation &amp; Intelligence
+                  </span>
+                  <h1 className={`${typeClass.h2} font-bold text-[#171717] mt-1`}>
+                    Validate your idea with real market intelligence.
+                  </h1>
+                  <p className={`${typeClass.bodySm} text-[#686864] mt-1.5`}>
+                    Stress-test your concept with TAM/SAM/SOM market sizing, customer pain points, and competitor gaps.
+                    Your persistent Business Brain will hatch automatically in Stage 2 once validated.
+                  </p>
+                </div>
+
+                <div className="space-y-4 pt-1">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#252525] mb-1.5">
+                      What is your idea or business hypothesis?
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={ideaSummary}
+                      onChange={(e) => setIdeaSummary(e.target.value)}
+                      placeholder="e.g. A roast-on-demand single-origin coffee subscription delivered in 60 minutes to home espresso enthusiasts..."
+                      className="w-full p-3.5 text-sm border border-[#E6E6E2] rounded-[10px] focus:outline-none focus:border-[#FF7417] leading-relaxed resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[#252525] mb-1.5">
+                      Industry Category
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {BUSINESS_TYPES.slice(0, 6).map((bt) => (
+                        <button
+                          key={bt.id}
+                          type="button"
+                          onClick={() => setIdeaCategory(bt.id)}
+                          className={`p-2.5 rounded-[10px] text-left border text-xs font-medium transition-all cursor-pointer ${
+                            ideaCategory === bt.id
+                              ? 'border-[#FF7417] bg-[#FFFBF7] text-[#C44D00] font-semibold'
+                              : 'border-[#E6E6E2] bg-white text-[#52524E] hover:border-[#D0D0CA]'
+                          }`}
+                        >
+                          {bt.id}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[#252525] mb-1">
+                      Target Geography (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={ideaGeography}
+                      onChange={(e) => setIdeaGeography(e.target.value)}
+                      placeholder="e.g. India Tier-1 Metros or Global"
+                      className="w-full h-10 px-3 text-sm border border-[#E6E6E2] rounded-[10px] focus:outline-none focus:border-[#FF7417]"
+                    />
+                  </div>
+
+                  <div className="p-3.5 rounded-[12px] bg-[#FFF8F2] border border-[#FFD3B3] flex items-start gap-3">
+                    <Sparkles className="w-4 h-4 text-[#C44D00] shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#7A2A00] leading-relaxed">
+                      <strong>Zero Administrative Friction:</strong> We skip business profile forms. You'll enter Idea Intelligence to explore demand and sizing. Once you're confident in the direction, you can graduate the dossier to hatch your <strong>Business Brain</strong> with 1 click.
+                    </p>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cleanPrompt = ideaSummary.trim();
+                        if (cleanPrompt) {
+                          setPrefilledIdeaPrompt(cleanPrompt);
+                        }
+                        completeOnboarding({
+                          personaRole: 'Idea Stage Founder',
+                          primaryGoals: ['Validate an idea', 'Size market TAM/SAM/SOM'],
+                          businessName: cleanPrompt.slice(0, 32).trim()
+                            ? `${cleanPrompt.slice(0, 24).trim()} (Idea)`
+                            : 'Idea Exploration Workspace',
+                          industry: ideaCategory || 'General Consumer & B2B',
+                          stage: 'Idea Stage',
+                          location: ideaGeography || 'Global',
+                          productSummary: cleanPrompt || 'Exploring initial product concepts',
+                          website: '',
+                          targetCustomers: 'Early adopters',
+                          startFreshEmpty: true,
+                          sandboxIdeaMode: true,
+                        });
+                        showToast('🚀 Stage 1 Activated! Your Idea Intelligence workspace is ready.');
+                        navigate('idea-intelligence');
+                      }}
+                      className="h-11 px-6 rounded-[10px] bg-[#FF7417] hover:bg-[#E55F08] text-white text-sm font-semibold flex items-center gap-2 cursor-pointer transition-colors shadow-2xs"
+                    >
+                      <span>Launch Stage 1: Idea Validation</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <span className="text-xs font-semibold tracking-wider text-[#C44D00] uppercase">
+                    Stage 2 Direct — Existing Business Onboarding
+                  </span>
+                  <h1 className={`${typeClass.h2} font-bold text-[#171717] mt-1`}>
+                    Build your persistent Business Brain.
+                  </h1>
+                  <p className={`${typeClass.bodySm} text-[#686864] mt-1.5`}>
+                    Tell us about your active business. We'll extract and organize your ground-truth products, pricing, and audience.
+                  </p>
+                </div>
 
             {stageStep === 1 && (
               <div className="space-y-4 pt-2">
@@ -676,8 +830,10 @@ export const OnboardingPage: React.FC = () => {
                 </div>
               </div>
             )}
-          </FluidTransition>
+          </div>
         )}
+      </FluidTransition>
+    )}
 
         {/* ======================================================== */}
         {/* STAGE 2: UNDERSTAND OBJECTIVES & AUDIENCE               */}

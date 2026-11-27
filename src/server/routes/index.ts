@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Router, type Request, type Response } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { authRoutes } from './v1/authRoutes';
 import { workspaceRoutes } from './v1/workspaceRoutes';
 import { businessProfileRoutes } from './v1/businessProfileRoutes';
@@ -123,6 +123,10 @@ export function createApiRouter(): Router {
   v1.use('/workspaces/:workspaceId/assets', assetRoutes);
   v1.use('/workspaces/:workspaceId/integrations', integrationRoutes);
   v1.use('/workspaces/:workspaceId/billing', billingRoutes);
+  v1.use('/workspaces/:workspaceId/credits', (req: Request, res: Response, next: NextFunction) => {
+    req.url = req.url === '/' || req.url === '' ? '/credits' : (req.url.startsWith('/transactions') ? '/ledger' : req.url);
+    billingRoutes(req, res, next);
+  });
   v1.use('/billing/webhook', billingWebhookRouter);
   v1.use('/billing/webhooks', billingWebhookRouter);
   v1.use('/admin/billing', adminBillingRouter);

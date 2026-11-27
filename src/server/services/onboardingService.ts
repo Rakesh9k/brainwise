@@ -129,7 +129,7 @@ export class OnboardingService {
       normalized = `https://${normalized}`;
     }
 
-    let domain = '';
+    let domain: string;
     try {
       const parsed = new URL(normalized);
       domain = parsed.hostname.replace(/^www\./, '');
@@ -144,7 +144,7 @@ export class OnboardingService {
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(' ');
 
-    let extractedData = {
+    const extractedData = {
       businessName: capitalizedName,
       businessType: 'Technology startup',
       targetAudienceType: 'Modern businesses, professionals, and forward-thinking consumers seeking quality solutions.',

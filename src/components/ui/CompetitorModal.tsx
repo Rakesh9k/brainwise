@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import type { CompetitorProfileData } from '../../types/brainwise';
 import { Button, Field, Input, Select } from './DesignSystem';
@@ -23,7 +23,17 @@ export const AddCompetitorModal: React.FC<{
   onClose: () => void;
   title?: string;
 }> = ({ open, onClose, title = 'Add Competitor & Enable Watchlist' }) => {
-  const { state, addCompetitor } = useBrainWise();
+  const { state, addCompetitor, navigate } = useBrainWise();
+  const isEnterprise =
+    state.subscription?.plan === 'Business Enterprise' ||
+    state.subscription?.plan === 'Venture Team';
+  const isPro =
+    state.isExampleWorkspace ||
+    isEnterprise ||
+    state.subscription?.plan === 'Professional' ||
+    state.subscription?.plan === 'Growth Pro';
+  const maxCompetitors = isEnterprise ? 100 : isPro ? 20 : 5;
+  const isLimitReached = (state.competitors?.length ?? 0) >= maxCompetitors;
   const [entryMode, setEntryMode] = useState<'single' | 'batch'>('single');
   const [name, setName] = useState('');
   const [website, setWebsite] = useState('');
@@ -150,7 +160,7 @@ export const AddCompetitorModal: React.FC<{
         website: cleanWeb,
         category: category.trim() || 'Direct Peer',
         geography: geography.trim() || state.brain.location || 'Global',
-        discoveryMethod: 'Batch URL Import',
+        discoveryMethod: 'Manual Entry',
         positioning: `Profiled competitor inside ${category.trim() || state.brain.industry}.`,
         priceRange: 'Mid-to-Premium tier',
         researchStatus: 'Complete',
@@ -179,12 +189,52 @@ export const AddCompetitorModal: React.FC<{
     onClose();
   };
 
+  if (isLimitReached) {
+    return (
+      <Modal open={open} onClose={onClose} title="Competitor Watchlist Limit Reached">
+        <div className="text-center py-6 px-2 space-y-4">
+          <div className="w-12 h-12 rounded-full bg-[#FFF0E5] text-[#FF7417] mx-auto flex items-center justify-center">
+            <Lock className="w-6 h-6 text-[#FF7417]" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#FFF0E5] text-[#C44D00] text-[10px] font-mono font-bold uppercase tracking-wider">
+              Starter Plan Limit ({maxCompetitors} Competitors)
+            </span>
+            <h3 className="font-heading font-bold text-lg text-[#171717]">
+              Track up to 20 competitors with Professional
+            </h3>
+            <p className="text-xs text-[#5C5C58] max-w-sm mx-auto leading-relaxed">
+              You are currently monitoring {state.competitors.length} competitors. Upgrade to Professional
+              to track up to 20 competitors, unlock automated 48-hour price change alerts, and export
+              white-label positioning decks.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => {
+                onClose();
+                navigate('settings', { settingsTab: 'subscription-billing' });
+              }}
+            >
+              Upgrade to Professional (₹5,599 / mo) →
+            </Button>
+            <Button variant="secondary" size="md" onClick={onClose}>
+              Maybe Later
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={title}
-      subtitle="Unified competitor profile and live Market Watch tracking configuration."
+      subtitle={`Unified competitor profile and live Market Watch tracking (${state.competitors.length} of ${maxCompetitors} tracked on current plan).`}
     >
       <div className="flex items-center gap-1.5 p-1 rounded-[8px] bg-[#F5F5F4] mb-4">
         <button

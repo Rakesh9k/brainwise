@@ -17,7 +17,6 @@ import { promptRegistry } from './promptRegistry';
 import { workflowRegistry } from './workflowRegistry';
 import { aiRequestRepository } from '../repositories/aiRequestRepository';
 import { sharedBusinessContextService } from '../services/sharedBusinessContextService';
-import { memoryService } from '../services/memoryService';
 import { executeTruthCheck } from '../../utils/truthCheck';
 import { departmentEventBus } from '../events/eventBus';
 import { serverConfig } from '../config/index';
@@ -28,7 +27,6 @@ import type {
   AiSource,
   AiWorkflowRequest,
   StructuredAiOutput,
-  AiDepartment,
 } from './types';
 import type {
   CampaignPlan,
@@ -40,7 +38,6 @@ import type {
   AssembledGrowthContext,
   GrowthBottleneckDiagnosis,
 } from '../services/growth/growthTypes';
-import type { GroundedRecommendationItem } from '../services/growth/growthRecommendationEngine';
 
 /**
  * UNIFIED BRAINWISE INTELLIGENCE ORCHESTRATOR
@@ -492,7 +489,7 @@ export class UnifiedAiOrchestrator {
     context: AssembledGrowthContext;
     objectiveOverride?: string;
   }): Promise<CampaignPlan> {
-    const { workspaceId, userId, context, objectiveOverride } = params;
+    const { workspaceId, userId: _userId, context, objectiveOverride } = params;
     const cid = `cmp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
     const provider = modelRouter.getProvider();
 
@@ -613,7 +610,7 @@ export class UnifiedAiOrchestrator {
     context: AssembledGrowthContext;
     targetRole?: string;
   }): Promise<OutreachSequence> {
-    const { workspaceId, context, targetRole = 'Founder / Operating Executive' } = params;
+    const { workspaceId: _workspaceId, context, targetRole = 'Founder / Operating Executive' } = params;
     const sid = `seq_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
     const provider = modelRouter.getProvider();
 
@@ -755,11 +752,15 @@ export class UnifiedAiOrchestrator {
           mitigationStrategy: 'Enforce strict prospect filtering to ensure outreach reaches verified ICP decision-makers.',
         },
         evidenceQuality: 'INDEPENDENTLY_VERIFIED',
+        supportingEvidenceIds: [],
+        rankedScore: 92,
+        createdAt: new Date().toISOString(),
         recommendedChannels: [
           {
             channelName: 'LinkedIn Outbound Outreach',
             strategicFitPercent: 92,
             expectedCac: 650,
+            formatType: 'OUTREACH_COPY',
             timeToFirstCustomerDays: 14,
           },
         ],
@@ -781,11 +782,15 @@ export class UnifiedAiOrchestrator {
           mitigationStrategy: 'A/B test pricing badge copy on 50% of traffic before sitewide rollout.',
         },
         evidenceQuality: 'INDEPENDENTLY_VERIFIED',
+        supportingEvidenceIds: [],
+        rankedScore: 88,
+        createdAt: new Date().toISOString(),
         recommendedChannels: [
           {
             channelName: 'Direct Website Checkout',
             strategicFitPercent: 96,
             expectedCac: 250,
+            formatType: 'SVG_COLLATERAL',
             timeToFirstCustomerDays: 5,
           },
         ],

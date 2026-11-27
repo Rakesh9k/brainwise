@@ -4,16 +4,7 @@
  */
 
 import { businessProfileRepository } from '../repositories/businessProfileRepository';
-import { productRepository } from '../repositories/productRepository';
-import { brandIdentityRepository } from '../repositories/brandIdentityRepository';
-import { memoryRepository } from '../repositories/memoryRepository';
 import { sharedBusinessContextService } from './sharedBusinessContextService';
-import type {
-  FactProvenanceItem,
-  StrategicMemoryItemEntity,
-  RetrievedKnowledgeItem,
-  KnowledgeSourceCitation,
-} from '../types/api';
 
 export type MemoryFactProvenance = 'USER_CONFIRMED' | 'CALCULATION' | 'OBSERVED_EVIDENCE' | 'AI_INFERRED';
 

@@ -13,13 +13,13 @@ export const ApplicationShell: React.FC<{
   children: React.ReactNode;
   rightPanel?: React.ReactNode;
 }> = ({ children, rightPanel }) => {
-  const { state, toast, dismissToast, exitExampleWorkspace } = useBrainWise();
+  const { state, toast, dismissToast, exitExampleWorkspace, navigate } = useBrainWise();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [strategistOpen, setStrategistOpen] = useState(false);
   const compact = Boolean(state.workspacePrefs?.compactDensity);
-  const brandAccent = state.brain?.brandIdentity?.colors?.primary || '#FF7417';
+  const brandAccent = state.brand?.palette?.[0]?.hex || '#FF7417';
 
   return (
     <div
@@ -59,13 +59,23 @@ export const ApplicationShell: React.FC<{
                   Viewing preloaded demonstration data for <strong>Solstice Craft Coffee</strong>. Your personal workspace is kept separate.
                 </span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={exitExampleWorkspace}
-                  className="h-7 px-3 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-medium text-xs shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 focus-ring"
+                  className="h-7 px-3 rounded-full bg-white hover:bg-[#FFF7ED] text-[#C2410C] border border-[#FDBA74] font-medium text-xs shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 focus-ring"
                 >
-                  <span>Return to My Workspace</span>
+                  <span>Exit Demo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    exitExampleWorkspace();
+                    navigate('signup');
+                  }}
+                  className="h-7 px-3.5 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold text-xs shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 focus-ring"
+                >
+                  <span>Claim 150 Free Credits &amp; Sign Up →</span>
                 </button>
               </div>
             </div>

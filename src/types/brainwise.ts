@@ -1096,7 +1096,7 @@ export interface ContextSharingConfig {
 }
 
 export interface SubscriptionState {
-  plan: 'Starter' | 'Growth Pro' | 'Venture Team';
+  plan: 'Starter' | 'Professional' | 'Business Enterprise' | 'Growth Pro' | 'Venture Team';
   billingCycle: 'monthly' | 'annual';
   tier?: string;
   creditsRemaining?: number;

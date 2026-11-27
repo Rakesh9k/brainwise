@@ -1580,7 +1580,7 @@ export const BusinessBrainPage: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <div className="flex -space-x-1.5 overflow-hidden">
             <span className="inline-flex h-6 w-6 rounded-full ring-2 ring-white bg-[#FF7417] text-white font-bold text-[10px] items-center justify-center" title="You (Workspace Owner)">
-              {state.user?.displayName?.charAt(0).toUpperCase() || 'F'}
+              {state.user?.avatarInitials || state.user?.firstName?.charAt(0).toUpperCase() || 'F'}
             </span>
             <span className="inline-flex h-6 w-6 rounded-full ring-2 ring-white bg-[#24724E] text-white font-bold text-[10px] items-center justify-center" title="AI Strategy Co-Pilot">
               AI

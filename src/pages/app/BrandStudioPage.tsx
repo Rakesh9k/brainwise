@@ -871,7 +871,6 @@ export const BrandStudioPage: React.FC = () => {
     setSocialError(null);
 
     try {
-      let data: any;
       const socialPayload = {
         platform: socialPlatform,
         angle: socialAngle,
@@ -897,7 +896,7 @@ export const BrandStudioPage: React.FC = () => {
         apiClient.setAuthToken('demo-token');
       }
       const targetWsId = state.activeWorkspaceId || 'default';
-      data = await apiClient.generateAiSocialCreative(targetWsId, {
+      const data = await apiClient.generateAiSocialCreative(targetWsId, {
         ...socialPayload,
         brand: { ...socialPayload.brand, brandName: effectiveBrandName },
       });
@@ -997,10 +996,27 @@ export const BrandStudioPage: React.FC = () => {
       setCollateralError('Describe the asset or packaging brief you want the AI to design.');
       return;
     }
+
+    const isEnterprise =
+      state.subscription?.plan === 'Business Enterprise' ||
+      state.subscription?.plan === 'Venture Team';
+    const isPro =
+      state.isExampleWorkspace ||
+      isEnterprise ||
+      state.subscription?.plan === 'Professional' ||
+      state.subscription?.plan === 'Growth Pro';
+    const maxAssets = isEnterprise ? 1000 : isPro ? 250 : 50;
+
+    if (state.assets.length >= maxAssets) {
+      const limitMsg = `You have reached your monthly allowance of ${maxAssets} assets on ${state.subscription?.plan || 'Starter'}. Upgrade to Professional to generate up to 250 assets/month.`;
+      setCollateralError(limitMsg);
+      showToast(limitMsg);
+      return;
+    }
+
     setCollateralGenerating(true);
     setCollateralError(null);
     try {
-      let data: any;
       const collateralPayload = {
         category: selectedCollateral,
         prompt: collateralPrompt,
@@ -1022,16 +1038,16 @@ export const BrandStudioPage: React.FC = () => {
       if (!apiClient.getAuthTokenSync()) {
         apiClient.setAuthToken('demo-token');
       }
-      data = await apiClient.generateAiCollateralVariations(
+      const data = await apiClient.generateAiCollateralVariations(
         state.activeWorkspaceId || 'default',
         collateralPayload
       );
 
       if (!data || !Array.isArray(data.variations) || data.variations.length === 0) {
         const errMsg =
-          typeof data?.error === 'string'
-            ? data.error
-            : data?.error?.message || `AI asset request returned no variations.`;
+          typeof (data as any)?.error === 'string'
+            ? (data as any).error
+            : (data as any)?.error?.message || `AI asset request returned no variations.`;
         throw new Error(errMsg);
       }
 

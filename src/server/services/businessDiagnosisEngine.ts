@@ -9,8 +9,6 @@ import { brandIdentityRepository } from '../repositories/brandIdentityRepository
 import { goalRepository } from '../repositories/goalRepository';
 import { audienceSegmentRepository } from '../repositories/audienceSegmentRepository';
 import { sharedBusinessContextService } from './sharedBusinessContextService';
-import { modelRouter } from '../ai/modelRouter';
-import { serverConfig } from '../config/index';
 import type { KnowledgeSourceCitation } from '../types/api';
 
 export type BusinessDiagnosisDimension =
@@ -44,7 +42,7 @@ export interface DimensionDiagnosis {
   name: string;
   score: number; // 0 to 100
   status: 'EXCELLENT' | 'HEALTHY' | 'MODERATE' | 'AT_RISK' | 'CRITICAL';
-  keyMetrics: Record<string, number | string | undefined>;
+  keyMetrics: Record<string, number | string | boolean | undefined>;
   findings: DiagnosticFinding[];
   identifiedVulnerabilities: string[];
   remediationSuggestions: string[];

@@ -31,25 +31,25 @@ interface NavItemDef {
 }
 
 const STAGE_1_ITEMS: NavItemDef[] = [
-  { id: 'dashboard', label: 'Home Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
   { id: 'idea-intelligence', label: 'Idea Validation Hub', icon: <Lightbulb className="w-4 h-4" /> },
-  { id: 'competitive-intelligence', label: 'Competitor Research', icon: <Swords className="w-4 h-4" /> },
+  { id: 'competitive-intelligence', label: 'Competitor Landscape', icon: <Swords className="w-4 h-4" /> },
   { id: 'business-brain', label: 'Business Brain', icon: <Brain className="w-4 h-4" /> },
+  { id: 'dashboard', label: 'Home Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
 ];
 
 const STAGE_2_ITEMS: NavItemDef[] = [
-  { id: 'dashboard', label: 'Home Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+  { id: 'business-brain', label: 'Business Brain (Ground Truth)', icon: <Brain className="w-4 h-4" /> },
   { id: 'brand-studio', label: 'AI Brand Studio', icon: <Palette className="w-4 h-4" /> },
   { id: 'asset-library', label: 'Packaging & Collateral', icon: <FolderKanban className="w-4 h-4" /> },
   { id: 'growth-director', aliases: ['tasks-experiments'], label: '30-Day Launch Roadmap', icon: <Compass className="w-4 h-4" /> },
-  { id: 'business-brain', label: 'Business Brain', icon: <Brain className="w-4 h-4" /> },
+  { id: 'dashboard', label: 'Home Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
 ];
 
 const STAGE_3_ITEMS: NavItemDef[] = [
   { id: 'dashboard', label: 'Daily Briefing (Home)', icon: <LayoutDashboard className="w-4 h-4" /> },
-  { id: 'market-watch', label: 'Market Watch Radar', icon: <Radar className="w-4 h-4" /> },
-  { id: 'brand-studio', label: 'Content & Brand Studio', icon: <Palette className="w-4 h-4" /> },
   { id: 'growth-director', aliases: ['tasks-experiments'], label: 'Growth Planner & Tasks', icon: <Compass className="w-4 h-4" /> },
+  { id: 'brand-studio', label: 'Content & Brand Studio', icon: <Palette className="w-4 h-4" /> },
+  { id: 'market-watch', label: 'Market Watch Radar', icon: <Radar className="w-4 h-4" /> },
   { id: 'business-performance', aliases: ['reports'], label: 'Analytics & Reports', icon: <BarChart3 className="w-4 h-4" /> },
   { id: 'business-brain', label: 'Business Brain', icon: <Brain className="w-4 h-4" /> },
 ];
@@ -147,7 +147,7 @@ export const Sidebar: React.FC<{
     currentStageNum === 1
       ? 'Idea & Validation'
       : currentStageNum === 2
-        ? 'Brand & Launch'
+        ? 'Business Brain & Launch'
         : 'Traction & Scale';
 
   const stageItems =
@@ -338,7 +338,7 @@ export const Sidebar: React.FC<{
                           : 'hover:bg-[#F5F5F4] text-[#40403E]'
                       }`}
                     >
-                      <span>Stage 2: Brand &amp; Launch</span>
+                      <span>Stage 2: Business Brain &amp; Launch</span>
                       {currentStageNum === 2 && navMode === 'stage' && <span>✓</span>}
                     </button>
                     <button
@@ -430,8 +430,19 @@ export const Sidebar: React.FC<{
                       {item.icon}
                     </span>
                     {!isCompact && (
-                      <span className="relative z-10 truncate whitespace-nowrap flex-1 text-left flex items-center justify-between">
-                        <span>{item.label}</span>
+                      <span className="relative z-10 truncate whitespace-nowrap flex-1 text-left flex items-center justify-between gap-1.5">
+                        <span className="truncate">{item.label}</span>
+                        {item.id === 'business-brain' && currentStageNum === 1 && (
+                          <span
+                            className={`text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${
+                              state.brain.activationState === 'DORMANT_SANDBOX'
+                                ? 'bg-[#FFF0E5] text-[#C44D00] border border-[#FFD3B3]'
+                                : 'bg-[#EBF7EE] text-[#24724E]'
+                            }`}
+                          >
+                            {state.brain.activationState === 'DORMANT_SANDBOX' ? 'Stage 2' : 'Active'}
+                          </span>
+                        )}
                       </span>
                     )}
                   </button>

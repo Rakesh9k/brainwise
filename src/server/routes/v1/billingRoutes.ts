@@ -58,7 +58,7 @@ billingRouter.post('/checkout', async (req: Request, res: Response): Promise<voi
       customerName = 'Founder',
       customerPhone,
       customerGstin,
-      returnUrl = 'http://localhost:5173/settings?tab=subscription-billing',
+      returnUrl = 'https://brain-wise.com/settings?tab=subscription-billing',
     } = req.body;
 
     if (!workspaceId) {
@@ -502,8 +502,9 @@ billingRouter.post('/claim-milestone', async (req: Request, res: Response): Prom
       workspaceId,
       amount: milestone.credits,
       pool: 'promotional',
+      transactionType: 'PROMOTIONAL_GRANT',
+      notes: `Milestone Reward: ${milestone.title}`,
       paymentId,
-      description: `Milestone Reward: ${milestone.title}`,
     });
 
     res.json({

@@ -751,7 +751,7 @@ router.get(
     try {
       const workspaceId = req.workspace!.workspaceId;
       const competitors = await competitorRepository.listByWorkspace(workspaceId);
-      const alerts = await businessWatchService.listActiveAlerts(workspaceId);
+      const alerts = await businessWatchService.getActiveAlerts(workspaceId);
 
       res.json({
         success: true,

@@ -242,6 +242,14 @@ export const IdeaIntelligencePage: React.FC = () => {
   const [contextAudience, setContextAudience] = useState('');
   const [contextBudget, setContextBudget] = useState('Bootstrapped (Lean Pilot)');
 
+  const isPaidPro =
+    state.isExampleWorkspace ||
+    state.subscription?.plan === 'Professional' ||
+    state.subscription?.plan === 'Business Enterprise' ||
+    state.subscription?.plan === 'Growth Pro' ||
+    state.subscription?.plan === 'Venture Team' ||
+    (state.subscription?.creditsRemaining ?? 0) > 150;
+
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     '00': true,
     'GS': true,
@@ -558,6 +566,11 @@ export const IdeaIntelligencePage: React.FC = () => {
 
   const handleExportPitchDeckSlides = () => {
     if (!activeReport) return;
+    if (!isPaidPro) {
+      showToast('16:9 Investor Pitch Decks are a Professional plan feature. Upgrade in Settings.');
+      navigate('settings', { settingsTab: 'subscription-billing' });
+      return;
+    }
     const score = activeReport.validationScorecard?.score ?? 85;
     const verdict = activeReport.validationScorecard?.verdictLabel ?? 'GO — High-Margin Wedge';
     const payload = {
@@ -580,6 +593,11 @@ export const IdeaIntelligencePage: React.FC = () => {
   };
 
   const handleExportPdf = () => {
+    if (!isPaidPro) {
+      showToast('White-label executive PDF exports are a Professional plan feature. Upgrade in Settings.');
+      navigate('settings', { settingsTab: 'subscription-billing' });
+      return;
+    }
     // Automatically expand all report sections so the printed PDF contains the full investor dossier
     const allExpanded: Record<string, boolean> = {
       '00': true,
@@ -872,11 +890,13 @@ export const IdeaIntelligencePage: React.FC = () => {
       activeReport.finalizationBlueprint = blueprint;
       graduateIdeaToBrain(activeReport.id);
       setIsFinalizeModalOpen(false);
-      showToast('🎉 Idea Officially Finalized and Graduated to Business Brain!');
+      showToast('🎉 Idea Officially Finalized! Business Brain hatched in Stage 2.');
+      navigate('business-brain');
     } catch {
       graduateIdeaToBrain(activeReport.id);
       setIsFinalizeModalOpen(false);
-      showToast('🎉 Idea Graduated to Business Brain!');
+      showToast('🎉 Idea Graduated! Business Brain hatched in Stage 2.');
+      navigate('business-brain');
     } finally {
       setIsFinalizing(false);
     }
@@ -1526,10 +1546,22 @@ export const IdeaIntelligencePage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsFinalizeModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-[#171717] hover:bg-[#252525] rounded-[8px] cursor-pointer shadow-xs"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-[8px] cursor-pointer shadow-xs transition-all ${
+                state.brain.activationState === 'DORMANT_SANDBOX'
+                  ? 'text-white bg-[#FF7417] hover:bg-[#E55F08]'
+                  : 'text-white bg-[#171717] hover:bg-[#252525]'
+              }`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#4FA87B]" />
-              Finalize Direction
+              {state.brain.activationState === 'DORMANT_SANDBOX' ? (
+                <Sparkles className="w-3.5 h-3.5 text-white" />
+              ) : (
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#4FA87B]" />
+              )}
+              <span>
+                {state.brain.activationState === 'DORMANT_SANDBOX'
+                  ? 'Graduate to Stage 2 Brain'
+                  : 'Finalize Direction'}
+              </span>
             </button>
             <button
               type="button"
@@ -1541,6 +1573,26 @@ export const IdeaIntelligencePage: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Stage 1 to Stage 2 Graduation Notice */}
+        {state.brain.activationState === 'DORMANT_SANDBOX' && (
+          <div className="rounded-[12px] bg-[#FFF8F2] border border-[#FFD3B3] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-[#C44D00] shrink-0" />
+              <div className="text-xs text-[#7A2A00]">
+                <strong>Stage 1: Idea Validation Complete.</strong> Review market demand, sizing, and pricing tiers below. When ready, graduate this dossier to hatch your <strong>Stage 2 Business Brain</strong>.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsFinalizeModalOpen(true)}
+              className="h-8 px-3.5 rounded-[8px] bg-[#FF7417] hover:bg-[#E55F08] text-white text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
+            >
+              <span>Hatch Stage 2 Brain</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* IdeaProof-style Top Diagnostic Tabs (01 / 07) */}
         <ValidationTabNavigation

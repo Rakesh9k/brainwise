@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import fs from 'fs';
+
+// Prioritize .env.local for local developer overrides, then .env
+if (fs.existsSync('.env.local')) {
+  dotenv.config({ path: '.env.local', override: true });
+}
+dotenv.config({ override: true });
 
 export interface ServerConfig {
   port: number;
@@ -44,7 +51,8 @@ export function loadServerConfig(): ServerConfig {
   const rawKey = process.env.GEMINI_API_KEY?.trim() || '';
   const geminiApiKey = rawKey && rawKey !== 'MY_GEMINI_API_KEY' ? rawKey : null;
   const geminiModel = process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash';
-  const tavilyApiKey = process.env.TAVILY_API_KEY?.trim() || null;
+  const rawTavily = process.env.TAVILY_API_KEY?.trim() || '';
+  const tavilyApiKey = rawTavily && rawTavily !== 'NOT_CONFIGURED' ? rawTavily : null;
   const firebaseProjectId =
     process.env.FIREBASE_PROJECT_ID?.trim() ||
     process.env.GOOGLE_CLOUD_PROJECT?.trim() ||

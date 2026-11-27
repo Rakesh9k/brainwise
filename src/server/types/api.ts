@@ -279,6 +279,8 @@ export interface BusinessProfileEntity {
   businessName: string;
   displayName?: string;
   industry?: string;
+  subIndustry?: string;
+  category?: string;
   country?: string;
   tagline: string;
   stage: 'Idea Stage' | 'Pre-Launch' | 'Early Traction' | 'Growing Business' | 'Established';
@@ -690,8 +692,8 @@ export interface GrowthTaskEntity {
   assignedUserId?: string;
   relatedGoalId?: string;
   relatedExperimentId?: string;
-  priority: 'high' | 'medium' | 'low';
-  status: 'pending' | 'in_progress' | 'completed';
+  priority: 'urgent' | 'high' | 'medium' | 'low';
+  status: 'todo' | 'pending' | 'in_progress' | 'completed';
   dueDate: string;
   completedAt?: string;
   notes?: string;

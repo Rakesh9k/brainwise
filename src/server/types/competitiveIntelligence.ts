@@ -622,7 +622,7 @@ export interface PricingGapAnalysis {
 export interface VulnerableSegment {
   segmentId: string;
   competitorName: string;
-  vulnerabilityType: 'DELIVERY_DELAYS' | 'OPAQUE_SOURCING' | 'PRICE_HIKES' | 'CUSTOMER_SUPPORT' | 'PROCUREMENT_FRICTION' | 'PRODUCT_STALENESS';
+  vulnerabilityType: 'DELIVERY_DELAYS' | 'OPAQUE_SOURCING' | 'PRICE_HIKES' | 'CUSTOMER_SUPPORT' | 'PROCUREMENT_FRICTION' | 'PRODUCT_STALENESS' | 'FEATURE_BLOAT';
   evidenceProof: string[];
   affectedAudience: string;
   acquisitionPlaybook: {

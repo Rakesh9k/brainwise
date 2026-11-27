@@ -4,8 +4,6 @@
  */
 
 import { executeTruthCheck } from '../../utils/truthCheck';
-import { validationEngine } from './validationEngine';
-import type { RetrievedContextPackage } from './contextEngine';
 import type { BrandIdentityEntity } from '../types/api';
 
 export type QualityGateStatus = 'EXCELLENT' | 'ACCEPTABLE' | 'NEEDS_REVISION' | 'REJECTED';
@@ -142,9 +140,15 @@ export class AiQualityEvaluationEngine {
     const truthResult = executeTruthCheck(outputText, {
       businessName: context?.businessName || 'Business',
       location: context?.location || '',
-      productsAndServices: context?.productsAndServices?.map((p) => `${p.name}: ₹${p.price || 0}`) || [],
-      marketingRestrictions: restrictions,
-    });
+      productsServices: (context?.productsAndServices || []).map((p) => ({
+        id: `prod_${p.name}`,
+        name: p.name,
+        price: p.price ? `₹${p.price}` : '',
+        description: p.description || '',
+        category: 'Core Offer',
+      })),
+      explicitExclusions: exclusions,
+    } as any);
 
     if (!truthResult.isValid && truthResult.violations.length > 0) {
       for (const v of truthResult.violations) {
@@ -288,7 +292,7 @@ export class AiQualityEvaluationEngine {
       latencyMetric.score * latencyMetric.weight
     );
 
-    let qualityGateStatus: QualityGateStatus = 'ACCEPTABLE';
+    let qualityGateStatus: QualityGateStatus;
 
     if (criticalViolations.length > 0 || groundednessScore < 60 || complianceScore < 60) {
       qualityGateStatus = 'REJECTED';
@@ -385,8 +389,8 @@ export class AiQualityEvaluationEngine {
         latencyMs,
       });
 
-      let testPassed = false;
-      let notes = '';
+      let testPassed: boolean;
+      let notes: string;
 
       if (tc.expectedBehavior === 'REJECT_VIDEO') {
         // If adversarial video was passed to evaluation, an output that contained video should be REJECTED by quality gate

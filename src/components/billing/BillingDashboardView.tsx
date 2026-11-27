@@ -4,14 +4,14 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, CreditCard, Download, Gauge, Plus, RefreshCw, Zap } from 'lucide-react';
+import { Check, CheckCircle2, CreditCard, Download, Gauge, Plus, RefreshCw, Sparkles, Zap } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
 import { apiClient } from '../../services/apiClient';
 import { Button, IntelligenceOrb, StatusBadge } from '../ui/DesignSystem';
-import { ConfirmationDialog, Modal } from '../ui/Overlay';
+import { Modal } from '../ui/Overlay';
 
 export const BillingDashboardView: React.FC = () => {
-  const { state, showToast, navigate } = useBrainWise();
+  const { state, showToast, navigate, updateSubscription } = useBrainWise();
   const workspaceId = state.brain?.businessName
     ? `ws_${state.brain.businessName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
     : 'ws_default';
@@ -32,7 +32,6 @@ export const BillingDashboardView: React.FC = () => {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [claimedMilestones, setClaimedMilestones] = useState<string[]>([]);
-  const [pendingCheckout, setPendingCheckout] = useState<{ planId?: string; planName?: string } | null>(null);
 
   // Post-Payment Unlocked Power Tour State (REC-P0-03)
   const [unlockedModalOpen, setUnlockedModalOpen] = useState(false);
@@ -152,11 +151,18 @@ export const BillingDashboardView: React.FC = () => {
         }
         showToast('Cashfree checkout order created. Awaiting payment completion.');
       } else {
-        showToast(`Successfully upgraded to ${plan.name} (${billingCycle})!`);
+        const targetPlanName = plan.name || (plan.planId === 'professional' ? 'Professional' : plan.planId === 'business' ? 'Business Enterprise' : 'Starter');
+        updateSubscription({
+          plan: targetPlanName as any,
+          billingCycle,
+          tier: plan.planId,
+          creditsRemaining: (state.subscription?.creditsRemaining ?? 0) + (plan.limits?.monthlyCredits || 3000),
+        });
+        showToast(`Successfully upgraded to ${targetPlanName} (${billingCycle})!`);
         setUnlockedPayload({
-          title: `Welcome to ${plan.name}!`,
-          planName: plan.name,
-          creditsAdded: plan.limits?.monthlyCredits || 2500,
+          title: `Welcome to ${targetPlanName}!`,
+          planName: targetPlanName,
+          creditsAdded: plan.limits?.monthlyCredits || 3000,
           features: [
             'Autonomous 7-Department Growth Director unlocked',
             'Deep Competitor Review & White-Space Teardowns enabled',
@@ -332,6 +338,71 @@ export const BillingDashboardView: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Hybrid Deliverables & Resource Capacity Meter */}
+      {(() => {
+        const isEnterprise =
+          subscription?.planId === 'business' || subscription?.planId === 'enterprise';
+        const isPro = isEnterprise || subscription?.planId === 'professional';
+        const maxWorkspaces = isEnterprise ? 10 : isPro ? 3 : 1;
+        const maxCompetitors = isEnterprise ? 100 : isPro ? 20 : 5;
+        const maxAssets = isEnterprise ? 1000 : isPro ? 250 : 50;
+        const maxDossiers = isPro ? 'Unlimited' : '10 / mo';
+
+        return (
+          <div className="p-5 rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] bw-surface-raised space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#F1F1EF]">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#C44D00]">
+                  HYBRID OPERATING MODEL
+                </span>
+                <h3 className="text-base font-heading font-bold text-[#171717]">
+                  Plan Resource Capacities &amp; Utilization
+                </h3>
+              </div>
+              <span className="text-xs text-[#24724E] bg-[#EAF5EF] border border-[#CDE5D7] px-3 py-1 rounded-full font-semibold self-start sm:self-auto">
+                ✓ Fair-Use Generative Quota Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 pt-1">
+              <div className="p-3.5 rounded-[10px] bg-[#FAF9F8] border border-[#EAEAE6]">
+                <div className="text-[10px] font-bold uppercase text-[#858585]">Active Workspaces</div>
+                <div className="text-lg font-bold text-[#171717] mt-1 tabular-nums">
+                  1 <span className="text-xs text-[#858585] font-normal">of {maxWorkspaces} max</span>
+                </div>
+                <div className="text-[10px] text-[#686864] mt-0.5">Isolated venture brains</div>
+              </div>
+
+              <div className="p-3.5 rounded-[10px] bg-[#FAF9F8] border border-[#EAEAE6]">
+                <div className="text-[10px] font-bold uppercase text-[#858585]">Tracked Competitors</div>
+                <div className="text-lg font-bold text-[#171717] mt-1 tabular-nums">
+                  {state.competitors.length}{' '}
+                  <span className="text-xs text-[#858585] font-normal">of {maxCompetitors} max</span>
+                </div>
+                <div className="text-[10px] text-[#686864] mt-0.5">Active signal monitors</div>
+              </div>
+
+              <div className="p-3.5 rounded-[10px] bg-[#FAF9F8] border border-[#EAEAE6]">
+                <div className="text-[10px] font-bold uppercase text-[#858585]">Validation Dossiers</div>
+                <div className="text-lg font-bold text-[#C44D00] mt-1 tabular-nums">
+                  {state.reports.length}{' '}
+                  <span className="text-xs text-[#858585] font-normal">({maxDossiers})</span>
+                </div>
+                <div className="text-[10px] text-[#686864] mt-0.5">15-section market dossiers</div>
+              </div>
+
+              <div className="p-3.5 rounded-[10px] bg-[#FAF9F8] border border-[#EAEAE6]">
+                <div className="text-[10px] font-bold uppercase text-[#858585]">Brand Studio Assets</div>
+                <div className="text-lg font-bold text-[#171717] mt-1 tabular-nums">
+                  12 <span className="text-xs text-[#858585] font-normal">of {maxAssets} / mo</span>
+                </div>
+                <div className="text-[10px] text-[#24724E] mt-0.5 font-medium">SVG vector &amp; carousels</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 2. Interactive Plans Selector */}
       <div className="space-y-4">

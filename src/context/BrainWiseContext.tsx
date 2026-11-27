@@ -688,11 +688,14 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           if (subRes && prev.subscription) {
             const planMap: Record<string, SubscriptionState['plan']> = {
               starter: 'Starter',
-              growth: 'Growth Pro',
-              scale: 'Venture Team',
+              growth: 'Professional',
+              professional: 'Professional',
+              scale: 'Business Enterprise',
+              business: 'Business Enterprise',
+              enterprise: 'Business Enterprise',
             };
             const mappedPlan = subRes.subscription?.planId
-              ? planMap[subRes.subscription.planId]
+              ? planMap[subRes.subscription.planId] || (subRes.subscription.planName as SubscriptionState['plan'])
               : undefined;
             next.subscription = {
               ...prev.subscription,
@@ -831,7 +834,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const brain = state.brain;
       const rivals = state.competitors;
 
-      let fallbackReply = '';
+      let fallbackReply: string;
       if (lower.includes('competit') || lower.includes('rival')) {
         const rivalNames = rivals.map((r) => `${r.name} (${(r as any).tier || r.category || 'Direct'} tier)`).join(', ');
         fallbackReply = `Based on ${brain.businessName}'s persistent Business Brain, our core differentiation against tracked rivals (${rivalNames || 'market peers'}) centers on ${brain.strengths?.slice(0, 2).join(' and ') || 'our unique value proposition'}. While competitors focus on broad aggregation, our verified positioning targets ${brain.targetAudience || 'our core customer segment'} with disciplined unit economics.`;

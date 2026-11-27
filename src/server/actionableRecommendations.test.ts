@@ -111,7 +111,7 @@ describe('PHASE 9: ACTIONABLE RECOMMENDATION ENGINE SUITE', () => {
     const report = await actionableRecommendationEngine.generatePrioritizedRecommendations(wsId);
     const targetRec = report.primaryFocusRecommendation;
 
-    let capturedTaskEvents: any[] = [];
+    const capturedTaskEvents: any[] = [];
     const unsub = departmentEventBus.subscribe('TASK_CREATED', (evt) => {
       capturedTaskEvents.push(evt);
     });

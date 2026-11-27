@@ -9,8 +9,7 @@ import { brandIdentityRepository } from '../repositories/brandIdentityRepository
 import { audienceSegmentRepository } from '../repositories/audienceSegmentRepository';
 import { evidenceLakeRepository } from '../repositories/evidenceLakeRepository';
 import { sharedBusinessContextService } from './sharedBusinessContextService';
-import { customerCohortEngine, type CustomerTransactionRecord } from './analytics/customerCohortEngine';
-import { modelRouter } from '../ai/modelRouter';
+import type { CustomerTransactionRecord } from './analytics/customerCohortEngine';
 import { departmentEventBus } from '../events/eventBus';
 import type { KnowledgeSourceCitation, AudienceSegmentEntity } from '../types/api';
 import type { CustomerObjectionType } from '../types/evidence';
@@ -128,11 +127,6 @@ export class CustomerIntelligenceEngine {
   ): Promise<ICPPersona[]> {
     const profile = await businessProfileRepository.getProfile(workspaceId);
     const products = await productRepository.listProducts(workspaceId);
-    const brand = await brandIdentityRepository.getLatest(workspaceId);
-    const context = await sharedBusinessContextService.getBusinessContext({
-      workspaceId,
-      taskType: 'STRATEGY',
-    });
 
     const prices = products.map((p) => p.price).filter((pr): pr is number => typeof pr === 'number' && pr > 0);
     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -142,7 +136,6 @@ export class CustomerIntelligenceEngine {
 
     const industry = profile?.industry || 'General Business';
     const subIndustry = profile?.subIndustry || profile?.category || industry;
-    const valueProp = profile?.valueProposition || context.businessSummary;
     const isB2B = options?.targetSegment === 'B2B' || profile?.category?.toLowerCase().includes('b2b') || false;
 
     // Check existing personas in profile first
@@ -171,7 +164,7 @@ export class CustomerIntelligenceEngine {
         buyingTriggers: [
           {
             trigger: ep.buyingTriggers?.[0] || 'Experiencing persistent friction with current provider',
-            triggerType: 'PAIN_THRESHOLD' as const,
+            triggerType: 'COMPETITIVE_FRUSTRATION' as const,
           },
         ],
         willingnessToPay: {
@@ -362,8 +355,6 @@ export class CustomerIntelligenceEngine {
     rawFeedback?: Array<{ content: string; source?: string; rating?: number }>
   ): Promise<ObjectionCluster[]> {
     const brand = await brandIdentityRepository.getLatest(workspaceId);
-    const profile = await businessProfileRepository.getProfile(workspaceId);
-    const products = await productRepository.listProducts(workspaceId);
 
     // Collect feedback from argument or EvidenceLake
     const feedbackItems: Array<{ content: string; source: string }> = [];
@@ -374,10 +365,8 @@ export class CustomerIntelligenceEngine {
     } else {
       const evidence = await evidenceLakeRepository.listByWorkspace(workspaceId, { limit: 50 });
       for (const ev of evidence) {
-        if (ev.category === 'CUSTOMER_VOICE' && ev.extractedKeyPoints) {
-          for (const pt of ev.extractedKeyPoints) {
-            feedbackItems.push({ content: pt, source: ev.sourcePlatform || 'EVIDENCE_LAKE' });
-          }
+        if (ev.capability === 'CUSTOMER_VOICE' && ev.rawExcerpt) {
+          feedbackItems.push({ content: ev.rawExcerpt, source: ev.domainOrPlatform || 'EVIDENCE_LAKE' });
         }
       }
     }
@@ -394,7 +383,6 @@ export class CustomerIntelligenceEngine {
 
     const approvedClaims = brand?.approvedClaims || ['Verified Quality', 'Transparent Sourcing'];
     const approvedWords = brand?.wordsToUse || ['Single-Estate', 'Craft', 'Fresh'];
-    const restrictedClaims = brand?.restrictedClaims || [];
 
     const clusters: ObjectionCluster[] = [];
 
@@ -522,7 +510,7 @@ export class CustomerIntelligenceEngine {
         {
           triggerId: `trig_${workspaceId}_3`,
           title: 'Leadership Mandate / Strategic Scale Reset',
-          triggerCategory: 'INTERNAL_MANDATE',
+          triggerCategory: 'BUDGET_CYCLE',
           description: 'New leadership or board mandate to eliminate waste and modernize operational intelligence.',
           marketingAngle: '"Modernize your business operations with deterministic accuracy and verified outcomes."',
           suggestedCampaignType: 'STATIC_CAROUSEL',
@@ -549,7 +537,7 @@ export class CustomerIntelligenceEngine {
     topRiskFactors: string[];
     customerAssessments: CustomerChurnRiskAssessment[];
   } {
-    const { workspaceId, transactions = [], unresolvedComplaints = [], referenceDate = new Date().toISOString() } = params;
+    const { workspaceId: _workspaceId, transactions = [], unresolvedComplaints = [], referenceDate = new Date().toISOString() } = params;
     const refTime = new Date(referenceDate).getTime();
 
     if (transactions.length === 0) {

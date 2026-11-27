@@ -87,7 +87,7 @@ export class ResearchEngine {
     // ---------------------------------------------------------
     if (!serverConfig.isTest && process.env.NODE_ENV !== 'test') {
       try {
-        const geminiResp = await modelRouter.generate({
+        const geminiResp = await modelRouter.getProvider().generate({
           model: serverConfig.geminiModel,
           systemInstruction:
             'You are an objective market research intelligence agent. Find real, empirical industry and market evidence for the user query and cite live sources.',

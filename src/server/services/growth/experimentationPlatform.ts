@@ -4,12 +4,9 @@
  */
 
 import { businessProfileRepository } from '../../repositories/businessProfileRepository';
-import { productRepository } from '../../repositories/productRepository';
 import { brandIdentityRepository } from '../../repositories/brandIdentityRepository';
-import { experimentRepository } from '../../repositories/experimentRepository';
 import { businessDiagnosisEngine } from '../businessDiagnosisEngine';
 import { departmentEventBus } from '../../events/eventBus';
-import type { GrowthExperimentEntity } from '../../types/api';
 
 export interface GroundedHypothesis {
   hypothesisId: string;
@@ -155,9 +152,7 @@ export class ExperimentationPlatform {
     const profile = await businessProfileRepository.getProfile(workspaceId);
     const diagnosis = await businessDiagnosisEngine.diagnoseBusiness(workspaceId);
     const brand = await brandIdentityRepository.getLatest(workspaceId);
-    const products = await productRepository.listProducts(workspaceId);
 
-    const businessName = profile?.businessName || 'Business';
     const primaryConstraint = diagnosis.primaryConstraint;
     const subIndustry = (profile?.subIndustry || profile?.category || profile?.industry || '').toLowerCase();
     const approvedWord = brand?.wordsToUse?.[0] || 'Artisanal';
@@ -429,8 +424,8 @@ export class ExperimentationPlatform {
     const isStatisticallySignificant = pValue < 0.05 && (nA >= minRequiredSample && nB >= minRequiredSample);
     const confidencePercentage = Math.round((1 - Math.min(1, pValue)) * 1000) / 10;
 
-    let decision: StatisticalSignificanceResult['decision'] = 'INCONCLUSIVE_NEUTRAL';
-    let recommendation = '';
+    let decision: StatisticalSignificanceResult['decision'];
+    let recommendation: string;
 
     if (nA < minRequiredSample || nB < minRequiredSample) {
       decision = 'UNDERPOWERED_SAMPLE';

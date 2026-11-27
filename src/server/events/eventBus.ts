@@ -88,6 +88,7 @@ export class DepartmentEventBus {
 
   public async emit(params: {
     workspaceId: string;
+    businessId?: string;
     userId: string;
     eventType: DepartmentEventType;
     resourceId: string;
@@ -95,7 +96,7 @@ export class DepartmentEventBus {
     idempotencyKey?: string;
     metadata?: Record<string, unknown>;
   }): Promise<DepartmentEvent> {
-    const { workspaceId, userId, eventType, resourceId, resourceVersion, idempotencyKey, metadata } = params;
+    const { workspaceId, businessId, userId, eventType, resourceId, resourceVersion, idempotencyKey, metadata } = params;
 
     // 1. Idempotency Check
     const nowMs = Date.now();
@@ -110,7 +111,7 @@ export class DepartmentEventBus {
       console.warn(`[EVENT_BUS] Max dispatch depth reached (${this.activeDispatchDepth}). Suppressing circular event trigger for ${eventType} on ${resourceId}.`);
       const suppressedEvent: DepartmentEvent = {
         eventId: `evt_suppressed_${nowMs}`,
-        businessId: workspaceId,
+        businessId: businessId || workspaceId,
         workspaceId,
         userId,
         eventType,
@@ -128,7 +129,7 @@ export class DepartmentEventBus {
 
     const event: DepartmentEvent = {
       eventId,
-      businessId: workspaceId,
+      businessId: businessId || workspaceId,
       workspaceId,
       userId,
       eventType,

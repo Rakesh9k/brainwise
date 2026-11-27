@@ -472,7 +472,9 @@ export const AssetLibraryPage: React.FC = () => {
       printWin.document.write(catalogHtml);
       printWin.document.close();
       setTimeout(() => {
-        try { printWin.print(); } catch {}
+        try { printWin.print(); } catch {
+          // ignore print errors
+        }
       }, 350);
     } else {
       triggerFileDownload(`brainwise-assets-catalog-${Date.now()}.html`, catalogHtml, 'text/html');
@@ -530,7 +532,9 @@ export const AssetLibraryPage: React.FC = () => {
       printWin.document.write(specHtml);
       printWin.document.close();
       setTimeout(() => {
-        try { printWin.print(); } catch {}
+        try { printWin.print(); } catch {
+          // ignore print errors
+        }
       }, 350);
     } else {
       triggerFileDownload(`${slug}-spec.html`, specHtml, 'text/html');

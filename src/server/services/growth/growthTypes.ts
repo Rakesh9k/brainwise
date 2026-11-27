@@ -62,6 +62,7 @@ export interface GrowthContextUnitEconomics {
 export interface AssembledGrowthContext {
   workspaceId: string;
   businessName: string;
+  industry?: string;
   stage: 'Idea Stage' | 'Pre-Launch' | 'Early Traction' | 'Growing Business' | 'Established';
   businessModel: string;
   targetAudience: string;
@@ -159,6 +160,7 @@ export interface GrowthOpportunityChannelRecommendation {
   strategicFitPercent: number;
   expectedCac: number;
   formatType: 'SVG_COLLATERAL' | 'OUTREACH_COPY' | 'CONTENT_PACK'; // Strict zero video
+  timeToFirstCustomerDays?: number;
 }
 
 export interface GrowthOpportunityDetail {

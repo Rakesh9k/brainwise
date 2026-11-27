@@ -7,8 +7,6 @@ import { businessProfileRepository } from '../repositories/businessProfileReposi
 import { productRepository } from '../repositories/productRepository';
 import { brandIdentityRepository } from '../repositories/brandIdentityRepository';
 import { competitorRepository } from '../repositories/competitorRepository';
-import { competitorSnapshotRepository } from '../repositories/competitorSnapshotRepository';
-import { sharedBusinessContextService } from './sharedBusinessContextService';
 import type {
   BusinessContextAnalysis,
   DiscoveredCompetitor,
@@ -31,7 +29,7 @@ export class CompetitiveStrategyEngine {
    * Generates explainable multi-axis benchmarking records
    */
   public benchmarkCompetitors(
-    context: BusinessContextAnalysis,
+    _context: BusinessContextAnalysis,
     competitors: DiscoveredCompetitor[]
   ): CompetitorBenchmarkingRecord[] {
     return competitors.map((comp, idx) => {
@@ -158,9 +156,7 @@ export class CompetitiveStrategyEngine {
     targetCompetitorId?: string
   ): Promise<FeatureParityMatrix> {
     const profile = await businessProfileRepository.getProfile(workspaceId);
-    const products = await productRepository.listProducts(workspaceId);
     const competitors = await competitorRepository.listByWorkspace(workspaceId);
-    const brand = await brandIdentityRepository.getLatest(workspaceId);
 
     const competitor = targetCompetitorId
       ? competitors.find((c) => c.competitorId === targetCompetitorId) || competitors[0]
@@ -336,7 +332,7 @@ export class CompetitiveStrategyEngine {
 
     const gapPercentage = compAvg > 0 ? Math.round(((userAvg - compAvg) / compAvg) * 100) : 0;
 
-    let pricingPosition: PricingGapAnalysis['pricingPosition'] = 'PARITY_TIER';
+    let pricingPosition: PricingGapAnalysis['pricingPosition'];
     if (gapPercentage <= -25) pricingPosition = 'DISCOUNT_ENTRY';
     else if (gapPercentage <= -10) pricingPosition = 'VALUE_DISRUPTOR';
     else if (gapPercentage <= 15) pricingPosition = 'PARITY_TIER';
@@ -549,8 +545,8 @@ export class CompetitiveStrategyEngine {
    */
   public detectMarketOpportunities(
     context: BusinessContextAnalysis,
-    benchmarks: CompetitorBenchmarkingRecord[],
-    painPoints: CustomerPainPointTheme[]
+    _benchmarks: CompetitorBenchmarkingRecord[],
+    _painPoints: CustomerPainPointTheme[]
   ): MarketOpportunity[] {
     const subIndustry = (context.subIndustry || context.category || context.industry || '').toLowerCase();
 
@@ -628,6 +624,28 @@ export class CompetitiveStrategyEngine {
         suggestedNextAction: 'Publish transparent pricing card on website.',
         priorityRank: 1,
       },
+      {
+        opportunityId: 'opp_gen_retention_02',
+        name: 'Curated Membership & Priority Access Tier',
+        description: 'Introduce a premium recurring membership tier providing guaranteed priority access, customized deliverables, and zero-latency support.',
+        targetCustomer: 'High-LTV repeat customers demanding reliability, high craft, and personal attention.',
+        supportingEvidence: [
+          'Industry data demonstrates that member tiers generate 40%+ higher annualized customer lifetime value compared to transactional purchasing.',
+        ],
+        competitorWeaknessesInvolved: [
+          'Incumbent providers treat all customers as transactional accounts without loyalty recognition.',
+        ],
+        marketDemandSignals: [
+          'Rising demand for personalized, bespoke service arrangements and concierge onboarding.',
+        ],
+        potentialDifferentiation: 'White-glove SLA and dedicated attention with exclusive member packaging.',
+        implementationComplexity: 'MEDIUM',
+        potentialCommercialImpact: 'HIGH',
+        confidenceLevel: 0.88,
+        validationMethod: 'Offer early invite-only access to top historical buyers.',
+        suggestedNextAction: 'Define membership benefits and collateral lockup.',
+        priorityRank: 2,
+      },
     ];
   }
 
@@ -636,7 +654,7 @@ export class CompetitiveStrategyEngine {
    */
   public generateStrategicRecommendations(
     context: BusinessContextAnalysis,
-    opportunities: MarketOpportunity[]
+    _opportunities: MarketOpportunity[]
   ): StrategicRecommendation[] {
     const subIndustry = (context.subIndustry || context.category || context.industry || '').toLowerCase();
 
@@ -696,6 +714,23 @@ export class CompetitiveStrategyEngine {
         immediateNextAction: 'Update landing page headline and hero CTA to reflect 3-minute instant setup.',
         howToValidateSuccess: 'Measure signup conversion rate lift over a 14-day test period.',
       },
+      {
+        recommendationId: 'rec_gen_bundle_02',
+        title: 'Introduce a High-Margin Starter Bundle to Accelerate First Purchase',
+        category: 'PRICING_STRATEGY',
+        whatToDo: 'Package core flagship offerings into a cohesive starter kit with clear comparative value vs purchasing individual units.',
+        whyToDoIt: 'Reduces evaluation fatigue for new buyers while boosting initial average basket size and customer lifetime value.',
+        evidencePoints: [
+          'Benchmark data confirms that packaged starter solutions increase trial conversion by 35% compared to multi-item browsing.',
+        ],
+        expectedImpact: '35% higher checkout completion rate on initial visitor visits.',
+        requiredEffort: 'LOW',
+        risks: ['Must ensure starter pricing maintains healthy gross margins above 60%.'],
+        priority: 'HIGH',
+        confidence: 0.91,
+        immediateNextAction: 'Design starter kit bundle lockup in product catalog.',
+        howToValidateSuccess: 'Track starter bundle checkout conversion and blended AOV over 30 days.',
+      },
     ];
   }
 
@@ -738,7 +773,7 @@ export class CompetitiveStrategyEngine {
       businessModel: 'Commercial',
       targetAudience: 'Consumers',
       marketPositioning: 'Incumbent',
-      classification: (c.tier as any) || 'DIRECT',
+      classification: ((c as any).tier as any) || 'DIRECT',
       relevanceScore: {
         overallScore: 85,
         productSimilarity: 80,

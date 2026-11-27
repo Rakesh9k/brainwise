@@ -871,6 +871,73 @@ Schema for each competitor object:
     ];
   }
 
+    // PERSONAL CARE, SALON, SPA & WELLNESS
+    if (
+      matchesKeywords(ideaLower, ['salon', 'spa', 'hair', 'aesthetic', 'beauty', 'skincare', 'wellness']) ||
+      matchesKeywords(indLower, ['personal care', 'wellness', 'beauty', 'salon'])
+    ) {
+      return [
+        {
+          competitorId: 'comp_bblunt_salon',
+          name: 'BBLUNT Salon',
+          canonicalName: 'bblunt',
+          aliases: ['BBLUNT', 'BBLUNT India'],
+          website: 'https://bblunt.com',
+          headquarters: 'Mumbai, Maharashtra, India',
+          geography: 'Mumbai & Pan-India Metros',
+          businessCategory: 'Premium Hair Care & Aesthetic Salon Chain',
+          productCategory: 'Hair Styling, Treatments, Spa & Professional Products',
+          businessModel: 'Salon Services + Retail D2C Hair Products',
+          targetAudience: 'Urban professionals and style-conscious individuals seeking premium salon services',
+          marketPositioning: 'Bollywood-heritage premier hair and beauty destination known for trendsetting cuts and organic treatments.',
+          classification: 'DIRECT',
+          relevanceScore: this.calculateRelevanceScore({
+            context,
+            productSimilarity: 92,
+            customerOverlap: 90,
+            geographicOverlap: 95,
+            businessModelSimilarity: 88,
+            pricingOverlap: 85,
+            competitiveThreat: 90,
+            reasoning: 'Direct benchmark in premium urban salon and aesthetic hair care in Mumbai.',
+          }),
+          reasonForInclusion: 'Direct competitor in premium salon services with strong brand awareness.',
+          discoverySource: 'BrainWise Industry Knowledge Graph',
+          evidenceIds: ['ev_salon_01'],
+          confidence: 0.94,
+        },
+        {
+          competitorId: 'comp_enrich_salons',
+          name: 'Enrich Salons',
+          canonicalName: 'enrichsalons',
+          aliases: ['Enrich', 'Enrich Beauty & Wellness'],
+          website: 'https://enrichbeauty.com',
+          headquarters: 'Mumbai, Maharashtra, India',
+          geography: 'Mumbai & West India',
+          businessCategory: 'Full-Service Beauty & Wellness Chain',
+          productCategory: 'Hair, Skin, Spa, Nail & Grooming Services',
+          businessModel: 'Service Appointments + Membership Loyalty Program',
+          targetAudience: 'Middle to upper-middle class salongoers seeking consistent, hygienic aesthetic care',
+          marketPositioning: 'Extensive full-service beauty salon chain with standardized service protocols and loyalty rewards.',
+          classification: 'DIRECT',
+          relevanceScore: this.calculateRelevanceScore({
+            context,
+            productSimilarity: 88,
+            customerOverlap: 92,
+            geographicOverlap: 95,
+            businessModelSimilarity: 86,
+            pricingOverlap: 88,
+            competitiveThreat: 88,
+            reasoning: 'Large-scale incumbent chain in Mumbai with established footprint.',
+          }),
+          reasonForInclusion: 'Major category peer in metropolitan personal care and aesthetic services.',
+          discoverySource: 'BrainWise Industry Knowledge Graph',
+          evidenceIds: ['ev_salon_02'],
+          confidence: 0.92,
+        },
+      ];
+    }
+
     // Unlisted, deep-tech or unique sectors return an empty list without inventing fake incumbents
     return [];
   }

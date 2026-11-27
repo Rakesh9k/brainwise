@@ -289,7 +289,7 @@ export class ModelRouter {
       case 'SIMPLE':
         return {
           taskComplexity: 'SIMPLE',
-          preferredModel: 'gemini-2.5-flash',
+          preferredModel: serverConfig.geminiModel || 'gemini-3.8-flash',
           fallbackModel: 'deterministic-intelligence-engine',
           maxTokens: 1024,
           temperature: 0.2,
@@ -299,7 +299,7 @@ export class ModelRouter {
       case 'STANDARD':
         return {
           taskComplexity: 'STANDARD',
-          preferredModel: serverConfig.geminiModel || 'gemini-2.5-flash',
+          preferredModel: serverConfig.geminiModel || 'gemini-3.8-flash',
           fallbackModel: 'deterministic-intelligence-engine',
           maxTokens: 2048,
           temperature: 0.3,
@@ -309,7 +309,7 @@ export class ModelRouter {
       case 'RESEARCH_HEAVY':
         return {
           taskComplexity: 'RESEARCH_HEAVY',
-          preferredModel: serverConfig.geminiModel || 'gemini-2.5-pro',
+          preferredModel: serverConfig.geminiModel || 'gemini-3.8-pro',
           fallbackModel: 'deterministic-intelligence-engine',
           maxTokens: 4096,
           temperature: 0.3,
@@ -320,7 +320,7 @@ export class ModelRouter {
       default:
         return {
           taskComplexity: 'COMPLEX',
-          preferredModel: serverConfig.geminiModel || 'gemini-2.5-pro',
+          preferredModel: serverConfig.geminiModel || 'gemini-3.8-pro',
           fallbackModel: 'deterministic-intelligence-engine',
           maxTokens: 4096,
           temperature: 0.4,
