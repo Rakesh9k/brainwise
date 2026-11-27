@@ -113,26 +113,33 @@ export function validateSafeExternalUrl(urlStr: string): SsrfValidationResult {
     };
   }
 
-  // 5. IP Address validation
-  const ipType = net.isIP(hostname);
+  // 5. IP Address validation (strip brackets from IPv6 hostnames like "[::1]")
+  const cleanHost =
+    hostname.startsWith('[') && hostname.endsWith(']')
+      ? hostname.slice(1, -1)
+      : hostname;
+
+  const ipType = net.isIP(cleanHost);
   if (ipType === 4) {
-    if (isPrivateOrReservedIpv4(hostname)) {
+    if (isPrivateOrReservedIpv4(cleanHost)) {
       return {
         isSafe: false,
-        reason: `Access to private/reserved IPv4 address '${hostname}' is blocked.`,
+        reason: `Access to private/reserved IPv4 address '${cleanHost}' is blocked.`,
       };
     }
   } else if (ipType === 6) {
-    // IPv6 checks (loopback ::1, unique local fc00::/7, link-local fe80::/10)
+    // IPv6 checks (loopback ::1, unique local fc00::/7, link-local fe80::/10, IPv4-mapped ::ffff:)
+    const lowerIpv6 = cleanHost.toLowerCase();
     if (
-      hostname === '::1' ||
-      hostname.startsWith('fc') ||
-      hostname.startsWith('fd') ||
-      hostname.startsWith('fe80')
+      lowerIpv6 === '::1' ||
+      lowerIpv6.startsWith('fc') ||
+      lowerIpv6.startsWith('fd') ||
+      lowerIpv6.startsWith('fe80') ||
+      lowerIpv6.startsWith('::ffff:')
     ) {
       return {
         isSafe: false,
-        reason: `Access to private/reserved IPv6 address '${hostname}' is blocked.`,
+        reason: `Access to private/reserved IPv6 address '${cleanHost}' is blocked.`,
       };
     }
   }

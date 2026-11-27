@@ -567,6 +567,52 @@ export class CreditEngine {
       difference,
     };
   }
+
+  /**
+   * Sweeps and automatically releases credit reservations that have remained in PENDING status
+   * longer than maxAgeMs (default: 15 minutes). Prevents permanent credit lockouts when processes crash.
+   */
+  public async sweepExpiredReservations(
+    workspaceId: string,
+    maxAgeMs = 15 * 60 * 1000
+  ): Promise<{ sweptCount: number; releasedCredits: number }> {
+    const snap = await db
+      .collection<CreditReservationRecord>(
+        `workspaces/${workspaceId}/creditAccount/root/reservations`
+      )
+      .where('status', '==', 'PENDING')
+      .get();
+
+    if (snap.empty) {
+      return { sweptCount: 0, releasedCredits: 0 };
+    }
+
+    const now = Date.now();
+    let sweptCount = 0;
+    let releasedCredits = 0;
+
+    for (const doc of snap.docs) {
+      const res = doc.data();
+      if (!res) continue;
+
+      const createdTime = new Date(res.createdAt).getTime();
+      if (now - createdTime >= maxAgeMs) {
+        try {
+          await this.releaseCredits({
+            workspaceId,
+            reservationId: res.reservationId,
+            reason: `AUTO_EXPIRED_RESERVATION_TIMEOUT: Held for > ${Math.round(maxAgeMs / 60000)} minutes without commit`,
+          });
+          sweptCount++;
+          releasedCredits += res.amount;
+        } catch (err) {
+          console.warn(`[CREDIT_ENGINE] Failed to auto-release expired reservation ${res.reservationId}:`, err);
+        }
+      }
+    }
+
+    return { sweptCount, releasedCredits };
+  }
 }
 
 export const creditEngine = new CreditEngine();

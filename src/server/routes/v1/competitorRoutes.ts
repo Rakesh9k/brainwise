@@ -14,6 +14,7 @@ import { departmentEventBus } from '../../events/eventBus';
 import { creditService } from '../../services/creditService';
 import { validateSafeExternalUrl } from '../../utils/ssrfValidator';
 import { competitiveIntelligenceService } from '../../services/competitiveIntelligenceService';
+import { competitiveStrategyEngine } from '../../services/competitiveStrategyEngine';
 import { db } from '../../db/firestore';
 import type {
   CompetitorEntity,
@@ -598,6 +599,71 @@ router.get('/evidence', async (req: Request, res: Response): Promise<void> => {
       data: claims,
       count: claims.length,
     });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/strategy/feature-parity
+ * Compares user product capabilities against competitors across 5 categories
+ */
+router.get('/strategy/feature-parity', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const competitorId = typeof req.query.competitorId === 'string' ? req.query.competitorId : undefined;
+    const matrix = await competitiveStrategyEngine.generateFeatureParityMatrix(
+      req.workspace!.workspaceId,
+      competitorId
+    );
+    res.json({ success: true, data: matrix });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/strategy/pricing-gap
+ * Mathematical pricing gap analysis against competitor tiers
+ */
+router.get('/strategy/pricing-gap', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const analysis = await competitiveStrategyEngine.analyzePricingGaps(
+      req.workspace!.workspaceId
+    );
+    res.json({ success: true, data: analysis });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/strategy/counter-positioning
+ * Counter-positioning angles and vulnerable competitor segment playbooks
+ */
+router.get('/strategy/counter-positioning', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const angles = await competitiveStrategyEngine.synthesizeCounterPositioningAngles(
+      req.workspace!.workspaceId
+    );
+    const vulnerableSegments = await competitiveStrategyEngine.detectVulnerableSegments(
+      req.workspace!.workspaceId
+    );
+    res.json({ success: true, data: { angles, vulnerableSegments } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/competitors/strategy/comprehensive
+ * Complete competitive strategy dossier (Parity, Pricing, Angles, Benchmarks, Opportunities)
+ */
+router.get('/strategy/comprehensive', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const strategy = await competitiveStrategyEngine.getComprehensiveCompetitiveStrategy(
+      req.workspace!.workspaceId
+    );
+    res.json({ success: true, data: strategy });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

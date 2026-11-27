@@ -505,12 +505,24 @@ export class GrowthDirectorService {
     return growthDepartmentEngines.generateMarketingCampaign(context);
   }
 
+  public async generateMarketingCampaignAi(params: Parameters<typeof growthDepartmentEngines.generateMarketingCampaignAsync>[0]) {
+    return growthDepartmentEngines.generateMarketingCampaignAsync(params);
+  }
+
   public generateOutreachSequence(context: Parameters<typeof growthDepartmentEngines.generateOutreachSequence>[0]) {
     return growthDepartmentEngines.generateOutreachSequence(context);
   }
 
+  public async generateOutreachSequenceAi(params: Parameters<typeof growthDepartmentEngines.generateOutreachSequenceAsync>[0]) {
+    return growthDepartmentEngines.generateOutreachSequenceAsync(params);
+  }
+
   public auditConversionFunnel(context: Parameters<typeof growthDepartmentEngines.auditConversionFunnel>[0]) {
     return growthDepartmentEngines.auditConversionFunnel(context);
+  }
+
+  public async auditConversionFunnelAi(params: Parameters<typeof growthDepartmentEngines.auditConversionFunnelAsync>[0]) {
+    return growthDepartmentEngines.auditConversionFunnelAsync(params);
   }
 
   public generateRetentionInitiatives(context: Parameters<typeof growthDepartmentEngines.generateRetentionInitiatives>[0]) {

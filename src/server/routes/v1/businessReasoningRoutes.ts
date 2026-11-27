@@ -7,6 +7,8 @@ import { Router, type Request, type Response } from 'express';
 import { authenticateToken } from '../../middleware/auth';
 import { requireWorkspaceMember, requireWorkspaceRole } from '../../middleware/workspace';
 import { businessAnalysisService } from '../../services/businessAnalysisService';
+import { businessDiagnosisEngine } from '../../services/businessDiagnosisEngine';
+import { customerIntelligenceEngine } from '../../services/customerIntelligenceEngine';
 import { opportunityScoringService } from '../../services/opportunityScoringService';
 import { strategicReasoningService } from '../../services/strategicReasoningService';
 import { scenarioPlanningService } from '../../services/scenarioPlanningService';
@@ -33,6 +35,63 @@ router.get('/health', async (req: Request, res: Response): Promise<void> => {
       error: {
         code: 'HEALTH_ASSESSMENT_FAILED',
         message: err instanceof Error ? err.message : 'Error',
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/reasoning/comprehensive-diagnosis
+ * Evaluates comprehensive 10-dimensional business health & primary constraint
+ */
+router.get('/comprehensive-diagnosis', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const diagnosis = await businessDiagnosisEngine.diagnoseBusiness(req.workspace!.workspaceId);
+    res.json({ success: true, data: diagnosis });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DIAGNOSIS_FAILED',
+        message: err instanceof Error ? err.message : 'Error diagnosing business',
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/reasoning/primary-constraint
+ * Theory of Constraints binding bottleneck & remediation sprints
+ */
+router.get('/primary-constraint', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const diagnosis = await businessDiagnosisEngine.diagnoseBusiness(req.workspace!.workspaceId);
+    res.json({ success: true, data: diagnosis.primaryConstraint });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'PRIMARY_CONSTRAINT_FAILED',
+        message: err instanceof Error ? err.message : 'Error identifying constraint',
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/reasoning/what-not-to-do
+ * Guardrails preventing premature spend, video waste, and margin erosion
+ */
+router.get('/what-not-to-do', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const diagnosis = await businessDiagnosisEngine.diagnoseBusiness(req.workspace!.workspaceId);
+    res.json({ success: true, data: diagnosis.whatNotToDoDirectives });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'WHAT_NOT_TO_DO_FAILED',
+        message: err instanceof Error ? err.message : 'Error retrieving directives',
       },
     });
   }
@@ -470,5 +529,101 @@ router.patch(
     }
   }
 );
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/reasoning/customer-intelligence
+ * Comprehensive customer intelligence snapshot (Personas, Objections, Triggers, Churn)
+ */
+router.get('/customer-intelligence', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const report = await customerIntelligenceEngine.getComprehensiveCustomerIntelligence(
+      req.workspace!.workspaceId
+    );
+    res.json({ success: true, data: report });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'CUSTOMER_INTELLIGENCE_FAILED',
+        message: err instanceof Error ? err.message : 'Error retrieving customer intelligence',
+      },
+    });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/reasoning/customer-personas/generate
+ * Synthesize or enrich Ideal Customer Profile (ICP) personas
+ */
+router.post(
+  '/customer-personas/generate',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const personas = await customerIntelligenceEngine.generateOrEnrichPersonas(
+        req.workspace!.workspaceId,
+        {
+          targetSegment: req.body.targetSegment,
+          forceRegenerate: req.body.forceRegenerate,
+        }
+      );
+      res.json({ success: true, data: personas });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'PERSONA_GENERATION_FAILED',
+          message: err instanceof Error ? err.message : 'Error generating customer personas',
+        },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/reasoning/objection-playbook
+ * Clusters raw feedback and synthesizes brand-aligned objection handling playbooks
+ */
+router.post('/objection-playbook', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const clusters = await customerIntelligenceEngine.clusterAndSynthesizeObjections(
+      req.workspace!.workspaceId,
+      req.body.feedback
+    );
+    res.json({ success: true, data: clusters });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'OBJECTION_CLUSTERING_FAILED',
+        message: err instanceof Error ? err.message : 'Error synthesizing objections',
+      },
+    });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/reasoning/churn-risk
+ * Predicts customer churn risk with RFM transaction telemetry and friction signals
+ */
+router.post('/churn-risk', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const assessment = customerIntelligenceEngine.predictChurnRisk({
+      workspaceId: req.workspace!.workspaceId,
+      transactions: req.body.transactions,
+      unresolvedComplaints: req.body.unresolvedComplaints,
+      referenceDate: req.body.referenceDate,
+    });
+    res.json({ success: true, data: assessment });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'CHURN_PREDICTION_FAILED',
+        message: err instanceof Error ? err.message : 'Error predicting churn',
+      },
+    });
+  }
+});
 
 export const businessReasoningRoutes = router;

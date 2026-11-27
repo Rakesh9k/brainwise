@@ -570,3 +570,88 @@ export interface CompetitiveAdvisorMessage {
   suggestedFollowUps: string[];
   createdAt: string;
 }
+
+// =============================================================================
+// MODULE 25 — PHASE 5 STRATEGY ENGINE CONTRACTS
+// =============================================================================
+
+export interface FeatureParityItem {
+  capabilityName: string;
+  category: 'CORE_QUALITY' | 'SPEED_FULFILLMENT' | 'CUSTOMER_EXPERIENCE' | 'TRANSPARENCY_TRUST' | 'B2B_CUSTOMIZATION';
+  userStatus: 'SUPPORTED' | 'PARTIAL' | 'UNSUPPORTED';
+  competitorStatus: 'SUPPORTED' | 'PARTIAL' | 'UNSUPPORTED';
+  classification: 'USER_ADVANTAGE' | 'COMPETITOR_ADVANTAGE' | 'TABLE_STAKES_PARITY' | 'WHITESPACE_GAP';
+  userFeatureDetail: string;
+  competitorFeatureDetail: string;
+  strategicSignificance: string;
+}
+
+export interface FeatureParityMatrix {
+  workspaceId: string;
+  competitorId: string;
+  competitorName: string;
+  overallAdvantageRatio: {
+    userAdvantages: number;
+    competitorAdvantages: number;
+    tableStakes: number;
+    whitespaceGaps: number;
+  };
+  features: FeatureParityItem[];
+  strategicTakeaway: string;
+}
+
+export interface PricingTierComparison {
+  competitorName: string;
+  tierName: string;
+  price: number;
+  normalizedMonthlyPrice?: number;
+}
+
+export interface PricingGapAnalysis {
+  workspaceId: string;
+  userAveragePrice: number;
+  userPriceRange: { min: number; max: number };
+  competitorTiers: PricingTierComparison[];
+  competitorAveragePrice: number;
+  gapPercentage: number;
+  pricingPosition: 'DISCOUNT_ENTRY' | 'VALUE_DISRUPTOR' | 'PARITY_TIER' | 'PREMIUM_TIER' | 'LUXURY_TIER';
+  identifiedAnomalies: string[];
+  recommendedPricingAction: string;
+}
+
+export interface VulnerableSegment {
+  segmentId: string;
+  competitorName: string;
+  vulnerabilityType: 'DELIVERY_DELAYS' | 'OPAQUE_SOURCING' | 'PRICE_HIKES' | 'CUSTOMER_SUPPORT' | 'PROCUREMENT_FRICTION' | 'PRODUCT_STALENESS';
+  evidenceProof: string[];
+  affectedAudience: string;
+  acquisitionPlaybook: {
+    playbookTitle: string;
+    hookMessage: string;
+    recommendedChannel: string;
+    suggestedAssetFormat: 'STATIC_CAROUSEL' | 'PRINT_COLLATERAL' | 'OUTREACH_SEQUENCE' | 'RETARGETING_COPY';
+  };
+}
+
+export interface CounterPositioningAngle {
+  angleId: string;
+  angleName: string;
+  incumbentVulnerability: string;
+  contrastStatement: string;
+  targetAudience: string;
+  suggestedCampaignFormat: 'STATIC_CAROUSEL' | 'PRINT_COLLATERAL' | 'OUTREACH_SEQUENCE' | 'RETARGETING_COPY';
+  groundedProofPoint: string;
+}
+
+export interface ComprehensiveCompetitiveStrategy {
+  workspaceId: string;
+  analyzedAt: string;
+  parityMatrix: FeatureParityMatrix;
+  pricingGap: PricingGapAnalysis;
+  vulnerableSegments: VulnerableSegment[];
+  counterPositioningAngles: CounterPositioningAngle[];
+  benchmarks: CompetitorBenchmarkingRecord[];
+  positioningMatrix: PositioningMatrixResult;
+  opportunities: MarketOpportunity[];
+  recommendations: StrategicRecommendation[];
+}

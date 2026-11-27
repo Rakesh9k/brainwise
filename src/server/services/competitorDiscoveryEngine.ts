@@ -30,6 +30,20 @@ function getGeminiClient(): GoogleGenAI | null {
   });
 }
 
+function matchesKeywords(text: string, keywords: string[]): boolean {
+  if (!text) return false;
+  const normalized = text.toLowerCase();
+  return keywords.some((kw) => {
+    const cleanKw = kw.trim().toLowerCase();
+    if (!cleanKw) return false;
+    if (cleanKw.includes(' ') || cleanKw.includes('-')) {
+      return normalized.includes(cleanKw);
+    }
+    const regex = new RegExp(`(^|[^a-z0-9])${cleanKw}([^a-z0-9]|$)`, 'i');
+    return regex.test(normalized);
+  });
+}
+
 export class CompetitorDiscoveryEngine {
   /**
    * Normalizes company name into canonical format for alias resolution & deduplication
@@ -227,7 +241,10 @@ Schema for each competitor object:
     const indLower = context.industry.toLowerCase();
 
     // CHOCOLATE & CONFECTIONERY IN INDIA
-    if (ideaLower.includes('chocolate') || indLower.includes('confectionery') || ideaLower.includes('cacao')) {
+    if (
+      matchesKeywords(ideaLower, ['chocolate', 'chocolates', 'cacao', 'confectionery', 'praline', 'truffle', 'bonbon', 'mithai']) ||
+      matchesKeywords(indLower, ['chocolate', 'confectionery', 'cacao', 'sweet'])
+    ) {
       return [
         {
           competitorId: 'comp_paul_and_mike',
@@ -494,7 +511,11 @@ Schema for each competitor object:
     }
 
     // SPECIALTY COFFEE & BEVERAGE
-    if (ideaLower.includes('coffee') || indLower.includes('coffee') || ideaLower.includes('roast') || indLower.includes('beverage')) {
+    if (
+      matchesKeywords(ideaLower, ['coffee', 'roastery', 'roaster', 'espresso', 'cold brew', 'cafe', 'barista', 'arabica', 'specialty coffee']) ||
+      matchesKeywords(indLower, ['coffee', 'cafe', 'roastery']) ||
+      (matchesKeywords(indLower, ['beverage', 'food & beverage']) && matchesKeywords(ideaLower, ['coffee', 'brew', 'espresso']))
+    ) {
       return [
         {
           competitorId: 'comp_blue_tokai',
@@ -586,8 +607,14 @@ Schema for each competitor object:
       ];
     }
 
-    // SOFTWARE / SAAS / AI / ACCOUNTING
-    if (ideaLower.includes('saas') || ideaLower.includes('software') || ideaLower.includes('ai') || ideaLower.includes('accounting')) {
+    // SME ACCOUNTING, BILLING, TAX & FINTECH SOFTWARE
+    const isAccountingOrFintech =
+      matchesKeywords(ideaLower, ['accounting', 'billing', 'invoicing', 'bookkeeping', 'tax', 'gst', 'cleartax', 'tally', 'zoho books']) ||
+      matchesKeywords(indLower, ['accounting', 'fintech', 'taxation', 'billing']) ||
+      ((matchesKeywords(ideaLower, ['saas', 'software', 'erp', 'crm']) || matchesKeywords(indLower, ['software', 'saas', 'information technology'])) &&
+        matchesKeywords(ideaLower, ['finance', 'financial', 'account', 'invoice', 'ledger', 'tax', 'bookkeeping', 'billing', 'gst']));
+
+    if (isAccountingOrFintech) {
       return [
         {
           competitorId: 'comp_zoho_books',
@@ -709,7 +736,10 @@ Schema for each competitor object:
     }
 
     // RESTAURANT / CLOUD KITCHEN / FOOD DELIVERY
-    if (ideaLower.includes('cloud kitchen') || ideaLower.includes('restaurant') || ideaLower.includes('kitchen') || ideaLower.includes('qsr')) {
+    if (
+      matchesKeywords(ideaLower, ['cloud kitchen', 'restaurant', 'virtual kitchen', 'ghost kitchen', 'qsr', 'eatery', 'bistro', 'food delivery']) ||
+      matchesKeywords(indLower, ['restaurant', 'food service', 'cloud kitchen', 'qsr'])
+    ) {
       return [
         {
           competitorId: 'comp_rebel_foods',
@@ -776,12 +806,8 @@ Schema for each competitor object:
     // Only applied when inquiry explicitly pertains to general retail, e-commerce, or shop operations.
     // Deep tech, transit, unlisted or exploratory concepts return an empty array to prevent generic hallucination.
     if (
-      ideaLower.includes('commerce') ||
-      ideaLower.includes('retail') ||
-      ideaLower.includes('store') ||
-      ideaLower.includes('shop') ||
-      indLower.includes('commerce') ||
-      indLower.includes('retail')
+      matchesKeywords(ideaLower, ['ecommerce', 'e-commerce', 'commerce', 'retail store', 'online shop', 'pos system', 'point of sale']) ||
+      matchesKeywords(indLower, ['ecommerce', 'e-commerce', 'retail', 'commerce'])
     ) {
       return [
         {

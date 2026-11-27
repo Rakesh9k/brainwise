@@ -53,6 +53,7 @@ export interface DepartmentEvent<TMetadata = Record<string, unknown>> {
   eventType: DepartmentEventType;
   resourceId: string;
   resourceVersion?: number | string;
+  idempotencyKey?: string;
   timestamp: string;
   metadata?: TMetadata;
 }
@@ -62,6 +63,10 @@ export type EventHandler = (event: DepartmentEvent) => Promise<void> | void;
 export class DepartmentEventBus {
   private handlers: Map<DepartmentEventType, Set<EventHandler>> = new Map();
   private wildcardHandlers: Set<EventHandler> = new Set();
+  private processedEvents: Map<string, { event: DepartmentEvent; expiresAt: number }> = new Map();
+  private activeDispatchDepth = 0;
+  private readonly MAX_DISPATCH_DEPTH = 5;
+  private readonly IDEMPOTENCY_TTL_MS = 5000; // 5 seconds window for duplicate event suppression
 
   public subscribe(eventType: DepartmentEventType, handler: EventHandler): () => void {
     if (!this.handlers.has(eventType)) {
@@ -87,10 +92,38 @@ export class DepartmentEventBus {
     eventType: DepartmentEventType;
     resourceId: string;
     resourceVersion?: number | string;
+    idempotencyKey?: string;
     metadata?: Record<string, unknown>;
   }): Promise<DepartmentEvent> {
-    const { workspaceId, userId, eventType, resourceId, resourceVersion, metadata } = params;
-    const eventId = `evt_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const { workspaceId, userId, eventType, resourceId, resourceVersion, idempotencyKey, metadata } = params;
+
+    // 1. Idempotency Check
+    const nowMs = Date.now();
+    const resolvedIdemKey = idempotencyKey || `${workspaceId}::${eventType}::${resourceId}::${resourceVersion || ''}`;
+    const cached = this.processedEvents.get(resolvedIdemKey);
+    if (cached && nowMs < cached.expiresAt) {
+      return cached.event;
+    }
+
+    // 2. Cascade Loop Guard
+    if (this.activeDispatchDepth >= this.MAX_DISPATCH_DEPTH) {
+      console.warn(`[EVENT_BUS] Max dispatch depth reached (${this.activeDispatchDepth}). Suppressing circular event trigger for ${eventType} on ${resourceId}.`);
+      const suppressedEvent: DepartmentEvent = {
+        eventId: `evt_suppressed_${nowMs}`,
+        businessId: workspaceId,
+        workspaceId,
+        userId,
+        eventType,
+        resourceId,
+        resourceVersion,
+        idempotencyKey: resolvedIdemKey,
+        timestamp: new Date().toISOString(),
+        metadata,
+      };
+      return suppressedEvent;
+    }
+
+    const eventId = `evt_${nowMs}_${crypto.randomBytes(4).toString('hex')}`;
     const timestamp = new Date().toISOString();
 
     const event: DepartmentEvent = {
@@ -101,11 +134,24 @@ export class DepartmentEventBus {
       eventType,
       resourceId,
       resourceVersion,
+      idempotencyKey: resolvedIdemKey,
       timestamp,
       metadata,
     };
 
-    // 1. Persist event for cross-department audit trail & traceability
+    // Store in idempotency cache
+    this.processedEvents.set(resolvedIdemKey, { event, expiresAt: nowMs + this.IDEMPOTENCY_TTL_MS });
+
+    // Clean up expired entries if cache grows
+    if (this.processedEvents.size > 200) {
+      for (const [key, val] of this.processedEvents.entries()) {
+        if (nowMs >= val.expiresAt) {
+          this.processedEvents.delete(key);
+        }
+      }
+    }
+
+    // 3. Persist event for cross-department audit trail & traceability
     try {
       await db
         .collection<DepartmentEvent>(`workspaces/${workspaceId}/departmentEvents`)
@@ -115,25 +161,30 @@ export class DepartmentEventBus {
       console.warn(`[EVENT_BUS] Failed to persist event ${eventId}:`, err);
     }
 
-    // 2. Dispatch to registered typed listeners
-    const specificHandlers = this.handlers.get(eventType);
-    if (specificHandlers) {
-      for (const handler of specificHandlers) {
-        try {
-          await handler(event);
-        } catch (handlerErr) {
-          console.error(`[EVENT_BUS] Error executing handler for ${eventType}:`, handlerErr);
+    // 4. Dispatch to registered typed listeners with depth tracking
+    this.activeDispatchDepth++;
+    try {
+      const specificHandlers = this.handlers.get(eventType);
+      if (specificHandlers) {
+        for (const handler of specificHandlers) {
+          try {
+            await handler(event);
+          } catch (handlerErr) {
+            console.error(`[EVENT_BUS] Error executing handler for ${eventType}:`, handlerErr);
+          }
         }
       }
-    }
 
-    // 3. Dispatch to wildcard listeners
-    for (const handler of this.wildcardHandlers) {
-      try {
-        await handler(event);
-      } catch (wildcardErr) {
-        console.error(`[EVENT_BUS] Error in wildcard event handler:`, wildcardErr);
+      // 5. Dispatch to wildcard listeners
+      for (const handler of this.wildcardHandlers) {
+        try {
+          await handler(event);
+        } catch (wildcardErr) {
+          console.error(`[EVENT_BUS] Error in wildcard event handler:`, wildcardErr);
+        }
       }
+    } finally {
+      this.activeDispatchDepth--;
     }
 
     return event;
@@ -160,6 +211,8 @@ export class DepartmentEventBus {
   public resetForTesting(): void {
     this.handlers.clear();
     this.wildcardHandlers.clear();
+    this.processedEvents.clear();
+    this.activeDispatchDepth = 0;
   }
 }
 

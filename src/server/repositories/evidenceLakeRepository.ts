@@ -153,6 +153,16 @@ export class EvidenceLakeRepository {
   }
 
   /**
+   * Alias for listAll to conform with standard repository conventions.
+   */
+  public async listByWorkspace(
+    workspaceId: string,
+    options?: { capabilities?: ResearchCapability[]; limit?: number }
+  ): Promise<EvidenceRecord[]> {
+    return this.listAll(workspaceId, options);
+  }
+
+  /**
    * Prunes stale expired records from the evidence lake.
    */
   public async pruneExpired(workspaceId: string): Promise<number> {

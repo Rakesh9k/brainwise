@@ -5,6 +5,7 @@
 
 import { serverConfig } from '../config/index';
 import { evidenceLakeRepository } from '../repositories/evidenceLakeRepository';
+import { modelRouter } from './modelRouter';
 import type { EvidenceRecord, ResearchCapability } from '../types/evidence';
 import type {
   AiSource,
@@ -77,11 +78,67 @@ export class ResearchEngine {
       allowMockInTest,
     } = params;
 
-    // Check if external Tavily or search provider is configured
+    // Check if external search providers are configured
     const sources: AiSource[] = [];
     const now = new Date().toISOString();
 
-    if (serverConfig.tavilyApiKey && !serverConfig.isTest && process.env.NODE_ENV !== 'test') {
+    // ---------------------------------------------------------
+    // LAYER 1: Google Search Grounding with Gemini 2.5 Flash
+    // ---------------------------------------------------------
+    if (!serverConfig.isTest && process.env.NODE_ENV !== 'test') {
+      try {
+        const geminiResp = await modelRouter.generate({
+          model: serverConfig.geminiModel,
+          systemInstruction:
+            'You are an objective market research intelligence agent. Find real, empirical industry and market evidence for the user query and cite live sources.',
+          prompt: `Research query: "${query}". Category: ${category}. Geography: ${geography || 'All'}. Industry: ${industry || 'All'}.`,
+          enableGoogleSearch: true,
+          temperature: 0.1,
+        });
+
+        if (
+          geminiResp.groundingMetadata?.citations &&
+          geminiResp.groundingMetadata.citations.length > 0
+        ) {
+          for (const [idx, cit] of geminiResp.groundingMetadata.citations
+            .slice(0, maxSources)
+            .entries()) {
+            if (cit.url) {
+              const domain = this.extractDomain(cit.url);
+              const sourceType = this.classifySourceType(domain, cit.title || '');
+              sources.push({
+                sourceId: `src_gs_${Date.now()}_${idx}`,
+                requestId,
+                workspaceId,
+                url: cit.url,
+                title: cit.title || `Live Market Evidence (${domain})`,
+                domain,
+                sourceType,
+                retrievedAt: now,
+                evidenceExcerpt: geminiResp.text.substring(0, 350),
+                relevanceScore: 0.92,
+                verificationStatus: 'SUPPORTED',
+                evidenceClassification: 'OBSERVED',
+                geographicScope: geography,
+                isHypothesis: false,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[RESEARCH_ENGINE] Google Search Grounding unavailable, trying next layer:', err);
+      }
+    }
+
+    // ---------------------------------------------------------
+    // LAYER 2: External Tavily Search Provider
+    // ---------------------------------------------------------
+    if (
+      sources.length === 0 &&
+      serverConfig.tavilyApiKey &&
+      !serverConfig.isTest &&
+      process.env.NODE_ENV !== 'test'
+    ) {
       try {
         const tavilyResp = await fetch('https://api.tavily.com/search', {
           method: 'POST',
@@ -125,20 +182,19 @@ export class ResearchEngine {
           }
         }
       } catch (err) {
-        console.warn(
-          'External search provider failed, falling back to deterministic research synthesis:',
-          err
-        );
+        console.warn('[RESEARCH_ENGINE] Tavily search provider failed:', err);
       }
     }
 
-    // Honest handling of missing external search capabilities
+    // ---------------------------------------------------------
+    // LAYER 3: Missing Search Capability & Honest Offline Handling
+    // ---------------------------------------------------------
     if (sources.length === 0) {
       const isTestEnv = serverConfig.isTest || process.env.NODE_ENV === 'test';
       const forceHonestMissing =
         workspaceId.includes('test_provenance') ||
         allowMockInTest === false ||
-        (!serverConfig.tavilyApiKey && !isTestEnv);
+        (!isTestEnv && !serverConfig.tavilyApiKey);
 
       if (forceHonestMissing) {
         const geo = geography || 'target market';
@@ -154,7 +210,7 @@ export class ResearchEngine {
             'External live search provider is unconfigured. All insights represent unverified AI hypotheses and must not be treated as empirical market evidence.',
           ],
           status: 'PROVIDER_UNAVAILABLE',
-          missingCapability: 'EXTERNAL_WEB_SEARCH (Tavily API key unconfigured)',
+          missingCapability: 'EXTERNAL_WEB_SEARCH (Search provider unconfigured or offline)',
           aiHypotheses,
         };
       } else {

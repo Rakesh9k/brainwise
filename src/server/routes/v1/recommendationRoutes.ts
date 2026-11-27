@@ -7,6 +7,7 @@ import { Router, type Request, type Response } from 'express';
 import { authenticateToken } from '../../middleware/auth';
 import { requireWorkspaceMember, requireWorkspaceRole } from '../../middleware/workspace';
 import { recommendationRepository } from '../../repositories/recommendationRepository';
+import { actionableRecommendationEngine } from '../../services/actionableRecommendationEngine';
 import type { RecommendationEntity } from '../../types/api';
 
 const router = Router({ mergeParams: true });
@@ -109,6 +110,42 @@ router.patch(
       success: true,
       data: updated,
     });
+  }
+);
+
+/**
+ * GET /api/v1/workspaces/:workspaceId/recommendations/prioritized
+ * Returns RICE/ICE-scored recommendations with sequenced playbooks and prohibited directives
+ */
+router.get('/prioritized', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const report = await actionableRecommendationEngine.generatePrioritizedRecommendations(
+      req.workspace!.workspaceId
+    );
+    res.json({ success: true, data: report });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/recommendations/:recommendationId/convert-to-tasks
+ * Human approval handoff that creates active tasks from playbook steps
+ */
+router.post(
+  '/:recommendationId/convert-to-tasks',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await actionableRecommendationEngine.approveAndConvertToTasks({
+        workspaceId: req.workspace!.workspaceId,
+        recommendationId: req.params.recommendationId,
+        approvedBy: req.user!.displayName || req.user!.email || 'founder',
+      });
+      res.json({ success: true, data: result });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   }
 );
 

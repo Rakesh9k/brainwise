@@ -182,14 +182,21 @@ export class AiOrchestrationService {
       );
 
       if (!truthCheckResult.isValid && truthCheckResult.violations.length > 0) {
+        const topViolation = truthCheckResult.violations[0];
+        const violationSummary =
+          topViolation?.explanation ||
+          topViolation?.expectedFact ||
+          topViolation?.detectedText ||
+          'Factual inconsistency detected';
+
         // Auto-refund credits on severe truth violation
         await creditService.refundCredits({
           workspaceId,
           reservation,
-          reason: `TruthCheck violation: ${truthCheckResult.violations.map((v) => v.expectedFact).join('; ')}`,
+          reason: `TruthCheck violation: ${truthCheckResult.violations.map((v) => v.explanation || v.expectedFact || v.detectedText).join('; ')}`,
         });
         throw new Error(
-          `TRUTH_CHECK_FAILED: Generated dossier contained unverified facts: ${truthCheckResult.violations[0].expectedFact}`
+          `TRUTH_CHECK_FAILED: Generated dossier contained unverified facts: ${violationSummary}`
         );
       }
 

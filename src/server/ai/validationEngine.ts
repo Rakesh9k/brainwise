@@ -82,7 +82,7 @@ export class ValidationEngine {
           layer: 'BUSINESS_CONTEXT',
           severity: 'ERROR',
           code: 'TRUTH_CHECK_VIOLATION',
-          message: `Fact discrepancy detected: ${v.explanation}. Expected: ${v.expectedFact}`,
+          message: `Fact discrepancy detected: ${v.explanation || v.detectedText || 'Factual inconsistency'}. Expected: ${v.expectedFact || 'Verified business ground truth'}`,
           field: 'businessContext',
         });
       }

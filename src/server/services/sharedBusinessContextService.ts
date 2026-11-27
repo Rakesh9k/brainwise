@@ -24,17 +24,19 @@ import type {
 interface CacheEntry {
   context: AssembledBusinessContext;
   cachedAt: number;
+  profileVersion?: number;
 }
 
 interface DeptCacheEntry {
   response: DepartmentContextResponse;
   cachedAt: number;
+  profileVersion?: number;
 }
 
 export class SharedBusinessContextService {
   private cache = new Map<string, CacheEntry>();
   private departmentCache = new Map<string, DeptCacheEntry>();
-  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly CACHE_TTL_MS = 60 * 1000; // 60 seconds TTL for fast serverless consistency
 
   private cacheKey(workspaceId: string, taskType: string): string {
     return `${workspaceId}__${taskType}`;
@@ -211,8 +213,8 @@ export class SharedBusinessContextService {
       freshness: 'FRESH',
     };
 
-    // Store in cache
-    this.cache.set(key, { context: assembled, cachedAt: now });
+    // Store in cache with active profile version
+    this.cache.set(key, { context: assembled, cachedAt: now, profileVersion: profile?.version || 1 });
 
     return assembled;
   }
@@ -651,7 +653,7 @@ export class SharedBusinessContextService {
     };
 
     // Store in cache
-    this.departmentCache.set(cacheKey, { response, cachedAt: now });
+    this.departmentCache.set(cacheKey, { response, cachedAt: now, profileVersion: profile?.version || 1 });
 
     return response;
   }

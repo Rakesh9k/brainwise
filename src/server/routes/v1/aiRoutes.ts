@@ -33,11 +33,12 @@ router.use(requireWorkspaceMember);
  * Helper to extract verified workspaceId
  */
 function getWorkspaceId(req: Request): string {
-  return (
-    req.workspace?.workspaceId ||
-    (req.params.workspaceId as string) ||
-    (req.body.workspaceId as string)
-  );
+  if (req.workspace?.workspaceId) {
+    return req.workspace.workspaceId;
+  }
+  const paramOrHeader =
+    (req.params.workspaceId as string) || (req.headers['x-workspace-id'] as string);
+  return paramOrHeader || 'default';
 }
 
 /**

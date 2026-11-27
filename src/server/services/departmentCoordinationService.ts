@@ -73,6 +73,26 @@ export class DepartmentCoordinationService {
         return;
       }
     });
+
+    // 4. Competitor Changed / Discovered -> Invalidate context and notify Strategy & Marketing
+    departmentEventBus.subscribe('COMPETITOR_CHANGED', async (evt) => {
+      sharedBusinessContextService.invalidateCache(evt.workspaceId);
+      await this.triggerCrossDepartmentCascadeAlerts({
+        workspaceId: evt.workspaceId,
+        changedFields: ['competitors', 'pricingTiers'],
+        actorId: evt.userId || 'system',
+      });
+    });
+
+    // 5. Target Audience Updated -> Invalidate context and notify Marketing & Sales
+    departmentEventBus.subscribe('TARGET_AUDIENCE_UPDATED', async (evt) => {
+      sharedBusinessContextService.invalidateCache(evt.workspaceId);
+      await this.triggerCrossDepartmentCascadeAlerts({
+        workspaceId: evt.workspaceId,
+        changedFields: ['targetAudience', 'customerPersonas'],
+        actorId: evt.userId || 'system',
+      });
+    });
   }
 
   /**

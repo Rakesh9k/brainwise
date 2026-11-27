@@ -11,6 +11,7 @@ import { experimentRepository } from '../../repositories/experimentRepository';
 import { taskRepository } from '../../repositories/taskRepository';
 import { memoryEngine } from '../../ai/memoryEngine';
 import { departmentEventBus } from '../../events/eventBus';
+import { experimentationPlatform } from '../../services/growth/experimentationPlatform';
 import type { GrowthExperimentEntity, GrowthTaskEntity } from '../../types/api';
 
 const router = Router({ mergeParams: true });
@@ -320,6 +321,95 @@ router.delete(
       success: true,
       data: { deleted: true, experimentId: req.params.experimentId },
     });
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/experiments/hypothesize
+ * Synthesizes grounded growth hypotheses linked to primary constraint diagnosis
+ */
+router.post(
+  '/hypothesize',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const hypotheses = await experimentationPlatform.synthesizeHypotheses(
+        req.workspace!.workspaceId
+      );
+      res.json({ success: true, data: hypotheses });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+);
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/experiments/sample-size
+ * Computes statistical sample size & power calculation based on MDE
+ */
+router.post('/sample-size', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { baselineConversionRate, minimumDetectableEffectPercent, dailyTrafficRate } = req.body;
+    if (typeof baselineConversionRate !== 'number' || typeof minimumDetectableEffectPercent !== 'number') {
+      res.status(400).json({
+        success: false,
+        error: 'baselineConversionRate and minimumDetectableEffectPercent are required numbers',
+      });
+      return;
+    }
+
+    const calc = experimentationPlatform.calculateSampleSize({
+      baselineConversionRate,
+      minimumDetectableEffectPercent,
+      dailyTrafficRate,
+    });
+    res.json({ success: true, data: calc });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/experiments/significance
+ * Computes two-sample z-score, p-value, and confidence intervals
+ */
+router.post('/significance', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { control, challenger, minRequiredSample } = req.body;
+    if (!control || !challenger) {
+      res.status(400).json({ success: false, error: 'control and challenger objects are required' });
+      return;
+    }
+
+    const result = experimentationPlatform.evaluateSignificance({
+      control,
+      challenger,
+      minRequiredSample,
+    });
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/workspaces/:workspaceId/experiments/:experimentId/attribution
+ * Aggregates touchpoint order attribution for experiment variants
+ */
+router.post(
+  '/:experimentId/attribution',
+  requireWorkspaceRole(['owner', 'admin', 'member']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { touchpoints } = req.body;
+      const summary = experimentationPlatform.aggregateAttribution(
+        req.params.experimentId,
+        touchpoints || []
+      );
+      res.json({ success: true, data: summary });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   }
 );
 

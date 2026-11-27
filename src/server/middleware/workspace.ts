@@ -124,14 +124,14 @@ export async function requireWorkspaceMember(
       return;
     }
 
-    // Only allow virtual demo workspace for explicit guest/demo sessions or demo workspace IDs
-    if (
-      user.uid.startsWith('guest_') ||
-      user.uid.startsWith('usr_demo') ||
+    // Only allow virtual demo workspace for explicit demo workspace IDs
+    const isExplicitDemoWorkspace =
       workspaceId === 'default' ||
       workspaceId === 'solstice-demo' ||
-      workspaceId.startsWith('demo-')
-    ) {
+      workspaceId.startsWith('demo-') ||
+      workspaceId.startsWith('ws_demo');
+
+    if (isExplicitDemoWorkspace) {
       req.workspace = {
         workspaceId,
         workspaceSlug: workspaceId,

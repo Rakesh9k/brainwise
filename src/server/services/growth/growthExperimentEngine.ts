@@ -140,3 +140,4 @@ export class GrowthExperimentEngine {
 }
 
 export const growthExperimentEngine = new GrowthExperimentEngine();
+export { experimentationPlatform, ExperimentationPlatform } from './experimentationPlatform';

@@ -5,6 +5,7 @@
 
 import crypto from 'node:crypto';
 import type { AssembledGrowthContext } from './growthTypes';
+import { unifiedAiOrchestrator } from '../../ai/unifiedOrchestrator';
 
 export interface CampaignPlan {
   campaignId: string;
@@ -104,6 +105,38 @@ export class GrowthDepartmentEngines {
         unit: 'clicks',
       },
     };
+  }
+
+  /**
+   * AI-orchestrated Marketing Campaign via UnifiedAiOrchestrator
+   */
+  public async generateMarketingCampaignAsync(params: {
+    workspaceId: string;
+    userId: string;
+    context: AssembledGrowthContext;
+    objectiveOverride?: string;
+  }): Promise<CampaignPlan> {
+    return await unifiedAiOrchestrator.generateMarketingCampaign(params);
+  }
+
+  /**
+   * AI-orchestrated Outreach Sequence via UnifiedAiOrchestrator
+   */
+  public async generateOutreachSequenceAsync(params: {
+    workspaceId: string;
+    context: AssembledGrowthContext;
+    targetRole?: string;
+  }): Promise<OutreachSequence> {
+    return await unifiedAiOrchestrator.generateOutreachSequence(params);
+  }
+
+  /**
+   * AI-orchestrated Conversion Funnel Audit via UnifiedAiOrchestrator
+   */
+  public async auditConversionFunnelAsync(params: {
+    context: AssembledGrowthContext;
+  }): Promise<FunnelAuditFinding[]> {
+    return await unifiedAiOrchestrator.auditConversionFunnel(params);
   }
 
   /**

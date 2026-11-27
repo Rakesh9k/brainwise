@@ -78,6 +78,10 @@ export class ToolPermissionService {
       /output\s+the\s+system\s+prompt/gi,
       /reveal\s+(api\s+keys|credentials|secret)/gi,
       /execute\s+arbitrary\s+(code|sql|shell)/gi,
+      /!\[.*?\]\(https?:\/\/[^\s)]+\)/gi,
+      /```\s*(system|assistant|instruction)[\s\S]*?```/gi,
+      /repeat\s+(all\s+)?(words\s+)?above/gi,
+      /what\s+(are|is)\s+your\s+(original\s+)?(system\s+)?prompt/gi,
     ];
 
     let sanitized = rawContent;

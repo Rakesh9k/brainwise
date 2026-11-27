@@ -79,21 +79,34 @@ export function extractForbiddenPhrases(exclusion: string): string[] {
  * Compiles verified ground truth facts from the BusinessBrain.
  */
 export function extractGroundTruth(brain: BusinessBrainData): GroundTruthFacts {
-  const products = (brain.products || []).map((p) => {
-    const rawPrice = [p.priceRange, (p as any).price].filter(Boolean).join(' ');
+  const rawProducts =
+    brain.products ||
+    (brain as any).productsAndServices ||
+    (brain as any).approvedProducts ||
+    (brain as any).productsSummary ||
+    [];
+
+  const products = (Array.isArray(rawProducts) ? rawProducts : []).map((p: any) => {
+    const rawPrice = [p.priceRange, p.price, p.pricing, p.mrp].filter(Boolean).join(' ');
     return {
-      id: p.id,
-      name: p.name,
-      priceRange: p.priceRange || String((p as any).price || ''),
+      id: p.id || p.productId || p.name || 'prod_unknown',
+      name: p.name || 'Approved Product',
+      priceRange: p.priceRange || String(p.price || p.pricing || p.mrp || ''),
       normalizedPrices: extractNumericPrices(rawPrice),
     };
   });
 
-  const exclusions = brain.strategicMemory?.explicitExclusions || [];
+  const rawExclusions = [
+    ...(brain.strategicMemory?.explicitExclusions || []),
+    ...((brain as any).explicitExclusions || []),
+    ...((brain as any).marketingRestrictions || []),
+    ...((brain as any).exclusions || []),
+  ];
+  const exclusions = Array.from(new Set(rawExclusions.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)));
 
   return {
-    businessName: brain.businessName || '',
-    website: brain.website || '',
+    businessName: brain.businessName || (brain as any).name || '',
+    website: brain.website || (brain as any).url || '',
     location: brain.location || '',
     approvedProducts: products,
     explicitExclusions: exclusions,
@@ -339,11 +352,19 @@ export function executeTruthCheck(content: string, brain: BusinessBrainData): Tr
   // 7. Check Uncited Macro Statistics
   const uncitedStatsPatterns = [
     {
-      pattern: /\b(?:market\s+will\s+reach|market\s+is\s+worth)\s+\$\d+(?:\.\d+)?\s*(?:billion|trillion|B|T)\b(?![^(]*\([^)]*(?:source|report|202\d)[^)]*\))/i,
+      pattern: /(?:^|\s)(?:market\s+will\s+reach|market\s+is\s+worth|market\s+is\s+valued\s+at|valued\s+at|size\s+of)\s+(?:\$|₹|USD\s?|INR\s?)?(\d+(?:\.\d+)?)\s*(?:billion|trillion|crore|B|T)\b(?![^(]*\([^)]*(?:source|report|202\d|statista|gartner|mckinsey|grand view|idc|imarc|ibef)[^)]*\))/i,
       name: 'Uncited macro market-size claim',
     },
     {
-      pattern: /\b(?:growing|surging|exploding)\s+at\s+\d{3,}%\s+(?:cagr|yoy)\b/i,
+      pattern: /(?:^|\s)(?:\$|₹|USD\s?|INR\s?)(\d+(?:\.\d+)?)\s*(?:billion|trillion|crore|B|T)\s+(?:market|industry|opportunity|sector|valuation)\b(?![^(]*\([^)]*(?:source|report|202\d|statista|gartner|mckinsey|grand view|idc|imarc|ibef)[^)]*\))/i,
+      name: 'Uncited sector valuation or opportunity claim',
+    },
+    {
+      pattern: /(?:^|\s)(?:growing|surging|exploding|expanding)\s+at\s+(?:a\s+)?\d+(?:\.\d+)?%\s*(?:cagr|yoy|annually)\b(?![^(]*\([^)]*(?:source|report|202\d|statista|gartner|mckinsey|grand view)[^)]*\))/i,
+      name: 'Uncited compound annual growth rate assertion',
+    },
+    {
+      pattern: /(?:^|\s)\d{3,}%\s*(?:cagr|yoy)\b/i,
       name: 'Implausible triple-digit compound growth assertion',
     },
   ];
@@ -351,17 +372,18 @@ export function executeTruthCheck(content: string, brain: BusinessBrainData): Tr
   for (const { pattern, name } of uncitedStatsPatterns) {
     const match = content.match(pattern);
     if (match) {
+      const detected = match[0].trim();
       violations.push({
         type: 'UNCITED_STATISTIC',
         severity: 'critical',
-        detectedText: match[0],
+        detectedText: detected,
         expectedFact: 'Source-backed industry metrics with disclosed publisher and year',
-        explanation: `Generated text asserts an uncited macro statistic: "${match[0]}".`,
+        explanation: `Generated text asserts an uncited macro statistic: "${detected}".`,
       });
       checkedItems.push({
         factCategory: 'statistics',
         status: 'fail',
-        checkedClaim: match[0],
+        checkedClaim: detected,
         groundTruth: name,
       });
     }

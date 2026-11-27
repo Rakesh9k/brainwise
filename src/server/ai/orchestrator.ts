@@ -439,4 +439,6 @@ export class AiOrchestrator {
   }
 }
 
-export const aiOrchestrator = new AiOrchestrator();
+import { unifiedAiOrchestrator, UnifiedAiOrchestrator } from './unifiedOrchestrator';
+export { UnifiedAiOrchestrator };
+export const aiOrchestrator = unifiedAiOrchestrator;
