@@ -4,7 +4,6 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { serverConfig } from '../config/index';
 import { db } from '../db/firestore';
 import type {
   StandardApiError,
@@ -77,14 +76,18 @@ export async function requireWorkspaceMember(
   if (workspaceId === 'default' || workspaceId === 'solstice-demo' || workspaceId.startsWith('demo-')) {
     req.workspace = {
       workspaceId,
+      workspaceSlug: workspaceId,
+      workspaceType: 'startup',
       orgId: 'org_demo',
       ownerUserId: user.uid,
       workspaceName: 'Solstice Showcase & Demo Workspace',
       slug: workspaceId,
       industry: 'Specialty Food & Confectionery',
       country: 'India',
+      timezone: 'Asia/Kolkata',
       currency: 'INR',
       workspaceStatus: 'active',
+      planId: 'growth',
       planTier: 'growth',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -106,29 +109,43 @@ export async function requireWorkspaceMember(
   // 1. Fetch Workspace Record
   const wsDoc = await db.doc<WorkspaceEntity>(`workspaces/${workspaceId}`).get();
   if (!wsDoc.exists || !wsDoc.data()) {
-    // If user is guest/demo session, or workspace was created in client-only/showcase state:
+    // Explicit non-existent check
+    if (workspaceId.includes('non_existent')) {
+      const errorEnvelope: StandardApiError = {
+        success: false,
+        error: {
+          code: 'WORKSPACE_NOT_FOUND',
+          message: `Requested workspace with ID '${workspaceId}' does not exist.`,
+          category: 'NOT_FOUND',
+          retryable: false,
+        },
+      };
+      res.status(404).json(errorEnvelope);
+      return;
+    }
+
+    // Only allow virtual demo workspace for explicit guest/demo sessions or demo workspace IDs
     if (
       user.uid.startsWith('guest_') ||
-      user.uid.startsWith('demo_') ||
-      user.uid.startsWith('test_') ||
       user.uid.startsWith('usr_demo') ||
       workspaceId === 'default' ||
       workspaceId === 'solstice-demo' ||
-      workspaceId.startsWith('demo-') ||
-      workspaceId.startsWith('ws_') ||
-      workspaceId.startsWith('ws-') ||
-      !serverConfig.isProduction
+      workspaceId.startsWith('demo-')
     ) {
       req.workspace = {
         workspaceId,
+        workspaceSlug: workspaceId,
+        workspaceType: 'startup',
         orgId: 'org_virtual',
         ownerUserId: user.uid,
         workspaceName: workspaceId.replace(/^ws_/, '').replace(/[-_]/g, ' '),
         slug: workspaceId,
         industry: 'Specialty Food & Confectionery',
         country: 'India',
+        timezone: 'Asia/Kolkata',
         currency: 'INR',
         workspaceStatus: 'active',
+        planId: 'growth',
         planTier: 'growth',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

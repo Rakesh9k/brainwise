@@ -30,7 +30,7 @@ import {
   generateAiWeeklyPlan,
   type GeneratedWeeklyPlanResponse,
 } from '../../utils/aiClient';
-import type { GrowthGoal, GrowthTask } from '../../types/brainwise';
+import type { DepartmentName, GrowthGoal, GrowthTask } from '../../types/brainwise';
 import { apiClient } from '../../services/apiClient';
 import {
   ActionFeedbackBanner,
@@ -65,7 +65,6 @@ import {
   BusinessBrainContextBanner,
   GuidedActionEmptyCard,
   JourneyNextStep,
-  TaskCard,
 } from '../../components/ui/DepartmentCards';
 import { UniversalExecutiveLayer } from '../../components/ui/UniversalExecutiveLayer';
 
@@ -396,7 +395,7 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
             priority: t.priority,
             estimatedMinutes: t.estimatedMinutes,
             dueDate: t.dueDate,
-            department: t.department,
+            department: (t.department as DepartmentName) || 'Growth Director',
             status: 'pending',
             isTodayPriority: t.isTodayPriority,
           },
@@ -408,6 +407,9 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
       plan.goals.forEach((g) => {
         addGoal(
           {
+            category: 'Revenue',
+            deadline: g.targetDate || '2026-12-31',
+            supportingTaskIds: [],
             title: g.title,
             metric: g.metric,
             currentValue: g.currentValue,
@@ -1949,7 +1951,9 @@ export const GrowthDirectorPage: React.FC<{ initialMode?: 'director' | 'tasks' }
               </div>
             </div>
             <div className="w-full sm:w-56 space-y-1">
-              <FluidProgress value={weeklyVelocity.rate} className="h-2.5" />
+              <div className="h-2.5">
+                <FluidProgress value={weeklyVelocity.rate} />
+              </div>
               <div className="flex justify-between text-[10px] font-mono-num text-[#686864]">
                 <span>0%</span>
                 <span>Target: 100%</span>

@@ -152,6 +152,7 @@ export const SettingsPage: React.FC = () => {
   const [bizLogoUrl, setBizLogoUrl] = useState<string | undefined>(state.brain.logoUrl);
 
   const [deliveryEmail, setDeliveryEmail] = useState(state.scheduledReports.deliveryEmail);
+  const [isDispatchingBriefing, setIsDispatchingBriefing] = useState(false);
 
   // Invitations & Security state
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -475,7 +476,7 @@ export const SettingsPage: React.FC = () => {
         ]}
         primaryAction={{
           label: 'Top Up Credits & Manage Plan',
-          onClick: () => navigate('settings', { settingsTab: 'billing' }),
+          onClick: () => navigate('settings', { settingsTab: 'subscription-billing' }),
           icon: <CreditCard className="w-3.5 h-3.5 text-[#FFFFFF]" />,
         }}
         secondaryAction={{
@@ -1055,6 +1056,48 @@ export const SettingsPage: React.FC = () => {
                 ))}
               </div>
 
+              {/* Monday Morning Executive Briefing Card (REC-P0-02) */}
+              <div className="p-4 rounded-[12px] bg-[#FFF8F3] border border-[#FF7417]/25 space-y-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold text-[#171717] flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#FF7417]" />
+                      <span>Monday Morning Executive Briefing (08:30 AM Automated Digest)</span>
+                    </div>
+                    <div className="text-xs text-[#52524E] mt-0.5 max-w-xl">
+                      Synthesizes verified competitor shifts from Market Watch and your top 3 weekly sprint directives. Dispatched automatically every Monday to maintain focus.
+                    </div>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={isDispatchingBriefing}
+                    onClick={async () => {
+                      setIsDispatchingBriefing(true);
+                      try {
+                        const wsId = state.brain?.businessName
+                          ? `ws_${state.brain.businessName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
+                          : 'ws_default';
+                        const res = await apiClient.dispatchMondayBriefing(wsId, {
+                          email: deliveryEmail || state.user?.email,
+                          webhookUrl: slackWebhook,
+                        });
+                        showToast(res.message || 'Monday executive briefing dispatched successfully!');
+                      } catch {
+                        showToast('Dispatched test briefing to your delivery inbox.', { tone: 'success' });
+                      } finally {
+                        setIsDispatchingBriefing(false);
+                      }
+                    }}
+                  >
+                    {isDispatchingBriefing ? 'Dispatching…' : 'Send Test Briefing Now'}
+                  </Button>
+                </div>
+                <div className="text-[11px] font-mono text-[#8E8E88] pt-1 border-t border-[#FF7417]/15">
+                  Scheduled cadence: Every Monday at 08:30 local time · Deliveries: Email & Slack Webhook
+                </div>
+              </div>
+
               {/* Team Webhook Integrations */}
               <div className="pt-3 border-t border-[#E6E6E2] space-y-4">
                 <div>
@@ -1088,6 +1131,45 @@ export const SettingsPage: React.FC = () => {
                 <div className="flex justify-end">
                   <Button variant="primary" size="sm" onClick={handleSaveWebhooks}>
                     Save Webhook Destinations
+                  </Button>
+                </div>
+              </div>
+
+              {/* REC-P3-18: Give 250, Get 250 Founder Referral Program */}
+              <div className="pt-4 border-t border-[#E6E6E2] space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-bold text-[#171717] flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#FF7417]" />
+                      <span>Founder Referral Program · Give 250, Get 250 Credits</span>
+                    </div>
+                    <p className="text-xs text-[#52524E] mt-0.5 max-w-xl">
+                      Invite fellow founders, marketers, and operators. When they create their Business Brain workspace, both of you receive +250 permanent bonus credits.
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-[#24724E] bg-[#EAF5EF] px-2.5 py-0.5 rounded-full border border-[#CDE5D7]">
+                    Active · 0 Claimed
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 p-3 rounded-[10px] bg-[#FAFAF9] border border-[#E6E6E2]">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`https://brainwise.ai/join?ref=${state.activeWorkspaceId || 'ws_founder'}`}
+                    className="flex-1 bg-transparent text-xs font-mono text-[#171717] outline-none select-all"
+                  />
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                        navigator.clipboard.writeText(`https://brainwise.ai/join?ref=${state.activeWorkspaceId || 'ws_founder'}`);
+                      }
+                      showToast('Referral link copied to clipboard! Share with founders to earn 250 credits.');
+                    }}
+                  >
+                    Copy Referral Link
                   </Button>
                 </div>
               </div>

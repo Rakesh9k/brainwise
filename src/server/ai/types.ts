@@ -277,6 +277,8 @@ export interface AiProviderRequest {
   prompt: string;
   systemInstruction?: string;
   temperature?: number;
+  maxTokens?: number;
+  jsonMode?: boolean;
   responseSchema?: Record<string, unknown>;
   timeoutMs?: number;
   enableGoogleSearch?: boolean;

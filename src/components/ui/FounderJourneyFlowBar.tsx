@@ -13,7 +13,7 @@ import {
   Sparkles,
   Swords,
 } from 'lucide-react';
-import type { BrainWiseState, NavPageId } from '../../types/brainwise';
+import type { BrainWiseState, AppRoute as NavPageId } from '../../types/brainwise';
 import { calculateBrainCompleteness } from '../../utils/logic';
 
 interface StageChecklistItem {
@@ -76,7 +76,7 @@ export const FounderJourneyFlowBar: React.FC<FounderJourneyFlowBarProps> = ({
     const hasCompetitors = (state.competitors?.length || 0) >= 2;
     const hasMoat = Boolean(
       state.competitiveStrategy?.whereToDifferentiate ||
-        state.competitiveStrategy?.defensibleMoat
+        (state.competitiveStrategy as any)?.defensibleMoat
     );
 
     const hasBrandIdentity = Boolean(

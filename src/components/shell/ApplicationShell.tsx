@@ -19,10 +19,12 @@ export const ApplicationShell: React.FC<{
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [strategistOpen, setStrategistOpen] = useState(false);
   const compact = Boolean(state.workspacePrefs?.compactDensity);
+  const brandAccent = state.brain?.brandIdentity?.colors?.primary || '#FF7417';
 
   return (
     <div
       data-density={compact ? 'compact' : 'comfortable'}
+      style={{ ['--bw-brand-accent' as any]: brandAccent }}
       className="relative min-h-screen flex bg-[#FAFAF9] text-[#252525] overflow-x-clip"
     >
       <TopoGridOverlay

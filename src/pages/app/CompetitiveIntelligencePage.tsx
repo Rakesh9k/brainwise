@@ -107,7 +107,7 @@ const PROFILE_SECTION_GROUPS: Array<{
 ];
 
 export type CompetitiveTabId =
-  'overview' | 'profile' | 'comparison' | 'gaps' | 'strategy' | 'watch';
+  'overview' | 'profile' | 'comparison' | 'gaps' | 'strategy' | 'watch' | 'discovery';
 
 function synthesizeCompetitorProfiles(prompt: string, brain: any): CompetitorProfileData[] {
   const seeds = synthesizeClosestCompetitors(prompt, brain);
@@ -186,7 +186,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
   // Deduplicated, named competitors so Strategy Blueprint & Gap Analysis never render ", , " or "undefined"
   const cleanCompetitors = useMemo(() => {
     const seen = new Set<string>();
-    const out: Competitor[] = [];
+    const out: CompetitorProfileData[] = [];
     for (const c of state.competitors) {
       const domain = (c.website || '')
         .replace(/^https?:\/\/(www\.)?/i, '')
@@ -216,11 +216,11 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
     const topPeers = cleanCompetitors.slice(0, 4);
     const peerNames = topPeers.map((c) => c.name).filter(Boolean).join(', ') || 'category incumbents';
     const allWeaknesses = cleanCompetitors
-      .flatMap((c) => (c.weaknesses || []).map((w) => ({ comp: c.name, text: w })))
+      .flatMap((c) => (c.weaknesses || []).map((w: any) => ({ comp: c.name, text: w })))
       .slice(0, 3);
     const allComplaints = cleanCompetitors
       .flatMap((c) =>
-        (c.customerReviews?.complaints || []).map((q) => ({ comp: c.name, text: q }))
+        (c.customerReviews?.complaints || []).map((q: any) => ({ comp: c.name, text: q }))
       )
       .slice(0, 2);
 
@@ -440,7 +440,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
       const synthesized = synthesizeCompetitorProfiles(promptToUse, state.brain);
       for (const p of synthesized) {
         addCompetitor({
-          name: p.companyName,
+          name: p.companyName || p.name || 'Unnamed Competitor',
           website: p.website,
           category: p.classification === 'DIRECT' ? 'Direct Peer' : p.classification === 'INDIRECT' ? 'Indirect / Substitute' : 'Benchmark',
           geography: p.geographyServed || state.brain.location || 'India',
@@ -467,7 +467,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
           },
           brandPositioningDetail: {
             archetype: 'Category Specialist',
-            tagline: p.uniqueValueProposition,
+            tagline: p.uniqueValueProposition || p.positioning || 'Quality leadership',
             targetBuyer: p.targetSegments?.[0] || 'Target buyers',
             visualTone: 'Craft premium brand aesthetic',
           },
@@ -718,7 +718,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
         platform: comp ? inferPlatform(comp, idx) : 'Verified Reviews',
         topic,
         complaint: complaintText,
-        averageRating: r.averageRating,
+        averageRating: Number(r.averageRating) || 3.5,
         counterPlay: buildCounterPlay(topic),
       });
     });
@@ -2022,7 +2022,7 @@ export const CompetitiveIntelligencePage: React.FC<{ initialTab?: CompetitiveTab
                           {c.websiteAnalysis?.clarityScore ? `${c.websiteAnalysis.clarityScore}/10` : '7.5/10'}
                         </span>
                         <span className="text-[#858585] ml-1.5">
-                          · {c.websiteAnalysis?.primaryCta || c.category || 'Storefront'}
+                          · {c.websiteAnalysis?.primaryCTA || c.category || 'Storefront'}
                         </span>
                       </td>
                     ))}

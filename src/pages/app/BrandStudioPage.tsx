@@ -64,7 +64,6 @@ import {
 } from '../../components/ui/LiquidSkeletons';
 import {
   AssetCard,
-  BrainLineagePopover,
   BusinessBrainContextBanner,
   GuidedActionEmptyCard,
   JourneyNextStep,

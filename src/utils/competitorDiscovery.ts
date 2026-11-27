@@ -592,7 +592,7 @@ export function mapSeedsToCompetitorProfiles(
  */
 export function generateMarketWatchEvents(
   competitors: CompetitorProfileData[],
-  brain: Partial<BusinessBrainData>
+  _brain?: Partial<BusinessBrainData>
 ): MarketEvent[] {
   if (!competitors || competitors.length === 0) return [];
 

@@ -473,6 +473,90 @@ billingRouter.get('/ledger', async (req: Request, res: Response): Promise<void> 
   }
 });
 
+// REC-P1-08: Progressive Milestone Credit Refills
+billingRouter.post('/claim-milestone', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const workspaceId = req.params.workspaceId;
+    const { milestoneKey } = req.body;
+    if (!workspaceId || !milestoneKey) {
+      res.status(400).json({ status: 'error', error: { message: 'milestoneKey is required' } });
+      return;
+    }
+
+    const MILESTONES: Record<string, { credits: number; title: string }> = {
+      verify_facts: { credits: 25, title: 'Verified 3 Ground-Truth Facts' },
+      add_product: { credits: 25, title: 'Documented Flagship Offering' },
+      track_competitor: { credits: 25, title: 'Mapped Category Rivals' },
+      export_os: { credits: 50, title: 'Exported Master Business OS' },
+      invite_collaborator: { credits: 50, title: 'Invited Strategic Collaborator' },
+    };
+
+    const milestone = MILESTONES[milestoneKey];
+    if (!milestone) {
+      res.status(400).json({ status: 'error', error: { message: `Unknown milestone '${milestoneKey}'` } });
+      return;
+    }
+
+    const paymentId = `milestone_${workspaceId}_${milestoneKey}`;
+    const account = await creditEngine.grantCredits({
+      workspaceId,
+      amount: milestone.credits,
+      pool: 'promotional',
+      paymentId,
+      description: `Milestone Reward: ${milestone.title}`,
+    });
+
+    res.json({
+      status: 'success',
+      data: {
+        claimed: true,
+        milestoneKey,
+        creditsGranted: milestone.credits,
+        title: milestone.title,
+        account,
+      },
+    });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ status: 'error', error: { message: errorMsg } });
+  }
+});
+
+// REC-P2-16: 60-Day Subscription Pause Option
+billingRouter.post('/subscription/pause', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const workspaceId = req.params.workspaceId;
+    const { durationDays = 60, reason = 'Seasonal pause' } = req.body;
+
+    const subDoc = db.doc(`workspaces/${workspaceId}/subscriptions/active`);
+    const snap = await subDoc.get();
+    const now = new Date();
+    const resumeDate = new Date(now.getTime() + durationDays * 86400000).toISOString();
+
+    if (snap.exists) {
+      await subDoc.update({
+        status: 'PAUSED',
+        pausedAt: now.toISOString(),
+        resumeDate,
+        pauseReason: reason,
+        updatedAt: now.toISOString(),
+      });
+    }
+
+    res.json({
+      status: 'success',
+      data: {
+        paused: true,
+        resumeDate,
+        message: `Subscription successfully paused for ${durationDays} days. All Business Brain memory and assets are preserved.`,
+      },
+    });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ status: 'error', error: { message: errorMsg } });
+  }
+});
+
 // -------------------------------------------------------------
 // 5. INVOICES
 // -------------------------------------------------------------

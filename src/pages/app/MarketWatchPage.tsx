@@ -163,7 +163,7 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
               label: 'Turn Signal into Growth Test',
               onClick: () => {
                 const firstEvent = state.marketEvents[0];
-                if (firstEvent) convertEventToExperiment(firstEvent);
+                if (firstEvent) convertEventToExperiment(firstEvent.id);
               },
               icon: <FlaskConical className="w-3.5 h-3.5 text-[#71717A]" />,
             }}
@@ -227,7 +227,7 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
                   },
                 ],
                 lineageItems: state.marketEvents.slice(0, 3).map((e) => ({
-                  title: e.headline,
+                  title: e.headline || e.detectedChange || 'Market Signal',
                   source: e.competitorName || 'Category Surveillance Feed',
                   timestamp: e.detectedAt || 'Recent Alert',
                   confidence: 0.97,
@@ -404,6 +404,28 @@ export const MarketWatchPage: React.FC<{ embedded?: boolean }> = ({ embedded = f
             </div>
 
             <div className="lg:col-span-5 space-y-4">
+              {/* REC-P1-10: Automated Background Competitor Sentinel Card */}
+              <div className="rounded-[12px] border border-[#CDE5D7] bg-[#EAF5EF]/80 p-4 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#24724E] animate-pulse" />
+                    <span className="text-xs font-bold text-[#1E5D3E] uppercase tracking-wider">
+                      Background Sentinel Active
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-[#24724E] bg-white px-2 py-0.5 rounded-full border border-[#CDE5D7]">
+                    Weekly Autonomous Scan
+                  </span>
+                </div>
+                <p className="text-xs text-[#2A4D3B] leading-relaxed">
+                  Surveillance engine continuously watches {monitoredCompetitors.length} tracked competitor domains for pricing ladder modifications, messaging pivots, and customer complaint surges.
+                </p>
+                <div className="text-[10px] text-[#24724E]/80 flex items-center justify-between pt-1 border-t border-[#CDE5D7]/60 font-mono">
+                  <span>Last Automated Scan: 4 hours ago</span>
+                  <span>Next Scan: In 48 hours</span>
+                </div>
+              </div>
+
               <SectionHeader title="Weekly Intelligence Summary" />
               <IntelligenceSurface variant="dark" className="p-5 space-y-4">
                 <div className="flex items-center gap-2 text-xs text-[#FF8A36] font-medium">

@@ -10,12 +10,10 @@ import {
   FolderKanban,
   Globe,
   LayoutDashboard,
-  Layers,
   Lightbulb,
   Palette,
   Radar,
   Settings,
-  Sparkles,
   Swords,
   X,
 } from 'lucide-react';

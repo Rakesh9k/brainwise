@@ -332,6 +332,26 @@ export class ModelRouter {
   public getProvider(): AiProvider {
     return this.geminiProvider;
   }
+
+  public async routeAndGenerate(req: {
+    systemPrompt?: string;
+    userPrompt: string;
+    taskComplexity?: ModelRoutingConfig['taskComplexity'] | 'FAST';
+    jsonOutput?: boolean;
+    temperature?: number;
+  }): Promise<AiProviderResponse> {
+    const complexity: ModelRoutingConfig['taskComplexity'] =
+      req.taskComplexity === 'FAST' ? 'SIMPLE' : req.taskComplexity || 'STANDARD';
+    const config = this.routeModel(complexity);
+    return this.geminiProvider.generate({
+      model: config.preferredModel,
+      prompt: req.userPrompt,
+      systemInstruction: req.systemPrompt,
+      temperature: req.temperature ?? config.temperature,
+      maxTokens: config.maxTokens,
+      jsonMode: req.jsonOutput,
+    });
+  }
 }
 
 export const modelRouter = new ModelRouter();

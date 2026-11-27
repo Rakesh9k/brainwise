@@ -378,7 +378,7 @@ export async function generateAiWeeklyPlan(
             title: activeReport.title,
             ideaSummary: activeReport.ideaSummary,
             targetMarket: activeReport.targetMarket,
-            opportunities: activeReport.opportunities?.slice(0, 3),
+            opportunities: (activeReport.structuredOpportunities || (activeReport as any).opportunities)?.slice(0, 3),
           }
         : null,
       detectedLocation,

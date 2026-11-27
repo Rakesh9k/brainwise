@@ -26,6 +26,39 @@ router.get('/session', async (req: Request, res: Response): Promise<void> => {
 });
 
 /**
+ * POST /api/v1/onboarding/extract-url
+ * Automatically extracts structured business profile from a website URL
+ */
+router.post('/extract-url', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { url } = req.body;
+    if (!url || !url.trim()) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_URL',
+          message: 'Website URL is required for automatic extraction.',
+          category: 'VALIDATION_ERROR',
+        },
+      });
+      return;
+    }
+
+    const extracted = await onboardingService.extractBusinessFromUrl(url);
+    res.json({
+      success: true,
+      data: extracted,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({
+      success: false,
+      error: { code: 'EXTRACTION_FAILED', message: msg },
+    });
+  }
+});
+
+/**
  * POST /api/v1/onboarding/save-answer
  * Idempotently auto-saves an onboarding answer and advances current stage/step
  */

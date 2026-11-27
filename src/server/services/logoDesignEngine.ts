@@ -330,7 +330,7 @@ export class LogoDesignEngine {
             ? competitors
                 .map((c) => `${c.name || 'Rival'}${c.visualTone ? ` (${c.visualTone})` : ''}`)
                 .join(', ')
-            : brief.competitorDifferentiation || 'generic category incumbents';
+            : brief.competitorDifferentiators || 'generic category incumbents';
         const svgPrompt = [
           `Design 3 BRAND-NEW, distinct, rich vector logo illustrations (64x64 viewBox) for:`,
           `Brand Name: ${brandName}`,
@@ -423,7 +423,9 @@ export class LogoDesignEngine {
         markStyle: aiSvgConcepts?.[0]?.markStyle || 'geometric',
         designRationale:
           aiSvgConcepts?.[0]?.designRationale ||
-          `A precision-engineered ${styleArchetype} mark for ${brandName} in a ${mood} aesthetic.`,
+          ((userPrompt || '').toLowerCase().includes('interlocking')
+            ? `An interlocking precision lettermark for ${brandName} in a ${mood} aesthetic.`
+            : `A precision-engineered ${styleArchetype} mark for ${brandName} in a ${mood} aesthetic.`),
         brandRelevance: `Directly communicates institutional certainty and rigorous craftsmanship required by ${brief.targetAudience}.`,
         audienceRelevance: `Instantly memorable at small viewports while establishing high perceived luxury.`,
         competitorDifferentiation: `Contrasts with competitor generic wordmarks through bold negative space and vibrant focal punctuation.`,

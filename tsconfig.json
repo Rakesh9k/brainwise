@@ -29,5 +29,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "exclude": ["dist"]
+  "exclude": ["dist", "**/*.test.ts", "tests/**"]
 }

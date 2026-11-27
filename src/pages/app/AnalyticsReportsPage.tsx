@@ -777,7 +777,7 @@ export const AnalyticsReportsPage: React.FC<{ initialTab?: 'overview' | 'reports
                           {
                             series: [
                               { label: 'Sprint Metric', value: 100, detail: narrative.metricsLine },
-                              { label: 'Strategic Pacing', value: 92, detail: narrative.recommendation },
+                              { label: 'Strategic Pacing', value: 92, detail: (narrative as any).recommendation || narrative.priorityAdjustment },
                             ],
                             completionRate: 100,
                           },

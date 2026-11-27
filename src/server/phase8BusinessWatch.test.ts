@@ -24,7 +24,7 @@ describe('PHASE 8 — MASTER BUSINESS WATCH & CONTINUOUS MONITORING SUITE', () =
       title: 'Q4 Paid Subscriber Acquisition',
       targetValue: 500,
       currentValue: 120, // 24% - below 35% trigger
-      status: 'in_progress',
+      status: 'needs_attention',
     });
 
     const result = await businessWatchService.executeMonitoringCycle({

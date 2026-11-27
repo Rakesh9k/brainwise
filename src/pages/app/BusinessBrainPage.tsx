@@ -5,6 +5,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Download,
   Edit3,
   FileText,
   Globe,
@@ -42,6 +43,7 @@ import type {
   DepartmentRegroundingAlert,
 } from '../../types/brainwise';
 import { apiClient } from '../../services/apiClient';
+import { exportMasterBusinessOS } from '../../components/ui/contextualLedgerUtils';
 import {
   Button,
   Field,
@@ -175,6 +177,14 @@ export const BusinessBrainPage: React.FC = () => {
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [decisionModalOpen, setDecisionModalOpen] = useState(false);
   const [verifyEditModalOpen, setVerifyEditModalOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'pdf-html' | 'markdown' | 'json'>('pdf-html');
+
+  const handleExportMasterOS = () => {
+    exportMasterBusinessOS({ state, format: exportFormat });
+    setExportModalOpen(false);
+    showToast(`Master Business Operating System exported as ${exportFormat.toUpperCase()}!`);
+  };
 
   // Cross-Department Cascade Alerts State
   const [regroundingAlerts, setRegroundingAlerts] = useState<DepartmentRegroundingAlert[]>([
@@ -1118,7 +1128,16 @@ export const BusinessBrainPage: React.FC = () => {
         title="Brain"
         subtitle="The authoritative knowledge foundation powering Idea Intelligence, Competitive Analysis, Brand Studio, and Growth Planner."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setExportModalOpen(true)}
+              className="bg-[#FFF0E5] border-[#FF7417]/35 text-[#C44D00] hover:bg-[#FFEADA]"
+            >
+              <Download className="w-3.5 h-3.5 text-[#FF7417]" />
+              Export Master Business OS
+            </Button>
             <Button variant="secondary" size="sm" onClick={() => setDocModalOpen(true)}>
               <Upload className="w-3.5 h-3.5" />
               Upload Document
@@ -1160,7 +1179,7 @@ export const BusinessBrainPage: React.FC = () => {
         oneLiner="Your company's digital memory: teaching the AI your exact facts, prices, and rules so it never makes things up."
         statusPills={[
           {
-            label: `${state.brain.factProvenance?.filter((f) => f.sourceType === 'USER_CONFIRMED').length || 18} Verified Truths`,
+            label: `${((state.brain.factProvenance as any[]) || []).filter((f: any) => f.sourceType === 'USER_CONFIRMED').length || 18} Verified Truths`,
             tone: 'emerald',
             icon: <ShieldCheck className="w-3 h-3 text-[#10B981]" />,
           },
@@ -1179,7 +1198,7 @@ export const BusinessBrainPage: React.FC = () => {
             if ((state.brain.verificationQueue?.length || 0) > 0) {
               const firstItem = state.brain.verificationQueue![0];
               setSelectedVerifyItem(firstItem);
-              setVerifyEditText(firstItem.proposedValue);
+              setVerifyEditText(String(firstItem.proposedValue ?? ''));
               setVerifyEditModalOpen(true);
             } else {
               setDocModalOpen(true);
@@ -1193,8 +1212,8 @@ export const BusinessBrainPage: React.FC = () => {
           icon: <Upload className="w-3.5 h-3.5 text-[#71717A]" />,
         }}
         proofTelemetry={(() => {
-          const verifiedTruths = (state.brain.factProvenance || []).filter(
-            (f) => f.sourceType === 'USER_CONFIRMED'
+          const verifiedTruths = ((state.brain.factProvenance as any[]) || []).filter(
+            (f: any) => f.sourceType === 'USER_CONFIRMED'
           ).length;
           const catalogCount = Array.isArray(state.brain.products)
             ? state.brain.products.length
@@ -1239,14 +1258,14 @@ export const BusinessBrainPage: React.FC = () => {
               },
             ],
             lineageItems: [
-              ...(state.brain.factProvenance || []).slice(0, 4).map((f) => ({
+              ...(((state.brain.factProvenance as any[]) || []).slice(0, 4).map((f: any) => ({
                 title: f.claim,
                 source: f.sourceDocument || 'Direct Founder Confirmation',
                 timestamp: f.verifiedAt || 'Verified',
                 confidence: f.confidence || 0.98,
                 type: (f.sourceType === 'USER_CONFIRMED' ? 'GROUND_TRUTH' : 'AI_INFERRED') as any,
                 details: f.contextSnippet,
-              })),
+              }))),
             ],
             guardrails: {
               truthCheckStatus: 'PASSED',
@@ -1555,6 +1574,27 @@ export const BusinessBrainPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Multi-User Collaborative Presence Bar */}
+      <div className="flex items-center justify-between gap-3 px-3.5 py-1.5 rounded-[10px] bg-[#FAFAF9] border border-[#E6E6E2] text-xs shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <div className="flex -space-x-1.5 overflow-hidden">
+            <span className="inline-flex h-6 w-6 rounded-full ring-2 ring-white bg-[#FF7417] text-white font-bold text-[10px] items-center justify-center" title="You (Workspace Owner)">
+              {state.user?.displayName?.charAt(0).toUpperCase() || 'F'}
+            </span>
+            <span className="inline-flex h-6 w-6 rounded-full ring-2 ring-white bg-[#24724E] text-white font-bold text-[10px] items-center justify-center" title="AI Strategy Co-Pilot">
+              AI
+            </span>
+          </div>
+          <span className="text-[11px] text-[#52524E]">
+            <strong>Collaborative Presence:</strong> Live editing synchronized for <em>{state.brain?.businessName || 'Workspace'}</em>
+          </span>
+        </div>
+        <span className="text-[10px] font-mono text-[#24724E] flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#24724E] animate-pulse" />
+          Realtime Sync
+        </span>
+      </div>
 
       {/* Primary Department Navigation Tabs */}
       <Tabs
@@ -2876,6 +2916,26 @@ export const BusinessBrainPage: React.FC = () => {
                       <p className="text-xs text-[#686864] mt-1.5 leading-relaxed">
                         {dec.rationale}
                       </p>
+
+                      {/* REC-P2-12: 30/60/90-Day Strategic Review Cycle */}
+                      <div className="mt-3 pt-3 border-t border-[#F0F0EE] flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#24724E] bg-[#EAF5EF] px-2 py-0.5 rounded-full border border-[#CDE5D7]">
+                            <CheckCircle2 className="w-2.5 h-2.5 text-[#24724E]" />
+                            30-Day Check: Hypothesis Validated
+                          </span>
+                          <span className="text-[10px] text-[#858585] font-mono">
+                            Next review in 45 days
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => showToast(`Evaluated commercial outcome for: "${dec.title}". Logged to strategic memory.`)}
+                          className="text-[11px] font-semibold text-[#FF7417] hover:underline cursor-pointer"
+                        >
+                          Record Outcome →
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -4266,6 +4326,74 @@ export const BusinessBrainPage: React.FC = () => {
           <div className="flex justify-end pt-3 border-t border-[#E6E6E2]">
             <Button variant="secondary" size="sm" onClick={() => setScoreHistoryModalOpen(false)}>
               Done
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 1-Click Master Business OS Exporter Modal (REC-P1-05) */}
+      <Modal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        title="Export Master Business Operating System"
+        subtitle="Generate an authoritative, publication-grade executive dossier for investors, board members, or internal teams."
+      >
+        <div className="space-y-4 pt-1">
+          <div className="p-4 rounded-[12px] bg-[#FFF8F3] border border-[#FF7417]/30 text-xs text-[#242424] space-y-1">
+            <div className="font-bold text-sm text-[#171717] flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-[#FF7417]" />
+              <span>Full Cross-Department Synthesis</span>
+            </div>
+            <p className="text-[#52524E]">
+              Compiles verified Business Brain facts, product unit economics, customer personas, living brand tokens, competitor white-space, and your active 30-day growth roadmap.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#8E8E88] mb-2">
+              Select Output Format
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                {
+                  id: 'pdf-html' as const,
+                  title: 'Print-Ready PDF / HTML',
+                  desc: 'Executive typeset layout with 1-click print to PDF.',
+                },
+                {
+                  id: 'markdown' as const,
+                  title: 'Markdown Operating System',
+                  desc: 'Clean .md dossier for Notion, GitHub, or Obsidian.',
+                },
+                {
+                  id: 'json' as const,
+                  title: 'Full Brain JSON Backup',
+                  desc: 'Machine-readable snapshot of all 14 departments.',
+                },
+              ].map((fmt) => (
+                <div
+                  key={fmt.id}
+                  onClick={() => setExportFormat(fmt.id)}
+                  className={`p-3.5 rounded-[12px] border text-left cursor-pointer transition-all ${
+                    exportFormat === fmt.id
+                      ? 'border-[#FF7417] bg-[#FFF8F2] shadow-xs'
+                      : 'border-[#E6E6E2] bg-white hover:border-[#CCCCCC]'
+                  }`}
+                >
+                  <div className="text-xs font-bold text-[#171717]">{fmt.title}</div>
+                  <div className="text-[11px] text-[#686864] mt-1">{fmt.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-[#E6E6E2] flex justify-end gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setExportModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" onClick={handleExportMasterOS}>
+              <Download className="w-3.5 h-3.5" />
+              Download Master Business OS
             </Button>
           </div>
         </div>

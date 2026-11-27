@@ -123,6 +123,9 @@ export function createApiRouter(): Router {
   v1.use('/workspaces/:workspaceId/assets', assetRoutes);
   v1.use('/workspaces/:workspaceId/integrations', integrationRoutes);
   v1.use('/workspaces/:workspaceId/billing', billingRoutes);
+  v1.use('/billing/webhook', billingWebhookRouter);
+  v1.use('/billing/webhooks', billingWebhookRouter);
+  v1.use('/admin/billing', adminBillingRouter);
   v1.use('/workspaces/:workspaceId/support', supportRoutes);
   v1.use('/workspaces/:workspaceId/jobs', jobRoutes);
   v1.use('/workspaces', workspaceRoutes);

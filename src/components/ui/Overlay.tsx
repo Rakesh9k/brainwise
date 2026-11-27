@@ -323,6 +323,34 @@ export const GlobalSearchModal: React.FC = () => {
       category: 'Command',
       run: () => navigate('business-brain'),
     },
+    {
+      id: 'cmd-export-os',
+      title: 'Export Master Business OS (PDF/Markdown)',
+      subtitle: 'Generate boardroom-ready executive company dossier',
+      category: 'Command',
+      run: () => navigate('business-brain'),
+    },
+    {
+      id: 'cmd-monday',
+      title: 'Monday Morning Executive Briefing',
+      subtitle: 'Review weekly competitor moves and strategic directives',
+      category: 'Command',
+      run: () => navigate('settings'),
+    },
+    {
+      id: 'cmd-milestones',
+      title: 'Claim Milestone Credit Rewards',
+      subtitle: 'Earn up to +175 promotional credits for profile milestones',
+      category: 'Command',
+      run: () => navigate('settings'),
+    },
+    {
+      id: 'cmd-assets',
+      title: 'Browse Digital Asset Library',
+      subtitle: 'Search and adapt marketing collateral & brand assets',
+      category: 'Command',
+      run: () => navigate('asset-library'),
+    },
   ].filter(
     (cmd) =>
       !query.trim() ||

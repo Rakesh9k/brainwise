@@ -450,7 +450,9 @@ export interface BusinessBrainData {
   weaknesses?: string[];
   primaryGoals: string[];
   products: ProductServiceItem[];
+  productsServices?: ProductServiceItem[];
   personas: CustomerPersona[];
+  customerPersonas?: CustomerPersona[];
   documents: BusinessDocument[];
   decisions: StrategicDecision[];
   history: BusinessHistoryEvent[];
@@ -461,6 +463,8 @@ export interface BusinessBrainData {
   verificationQueue?: VerificationQueueItem[];
   lastUpdated: string;
   provenance?: Record<string, FactProvenanceItem>;
+  factProvenance?: any;
+  multiDocDiscrepancies?: any[];
   strategicMemory?: StrategicMemory;
 }
 
@@ -499,6 +503,7 @@ export interface StopSignalItem {
 
 export interface ValidationScorecard {
   viabilityScore: number; // 0 - 100 e.g. 70
+  score?: number;
   verdictLabel: string; // e.g. "Promising — build only after test 1 passes"
   summaryContext: string;
   goodNews: string;
@@ -532,8 +537,12 @@ export interface ResearchReport {
   geography: string;
   depth: 'Rapid Pulse' | 'Standard Validation' | 'Deep Market Dossier';
   createdAt: string;
+  date?: string;
   overallConfidence: 'High' | 'Moderate' | 'Exploratory';
   viabilitySignal: 'Strong Fit' | 'Promising with Niche Focus' | 'Needs Pivot';
+  viabilityScore?: number;
+  cacLtvRatio?: string;
+  opportunities?: any[];
   savedToBrain: boolean;
   executiveSummary: string;
   validationScorecard?: ValidationScorecard;
@@ -721,12 +730,20 @@ export interface FinalizedBusinessBlueprint {
 export interface CompetitorProfileData {
   id: string;
   name: string;
+  companyName?: string;
   website: string;
   category: string;
+  classification?: string;
   geography: string;
+  geographyServed?: string;
   discoveryMethod: 'AI Market Scan' | 'Manual Entry' | 'Idea Research';
   positioning: string;
+  uniqueValueProposition?: string;
   priceRange: string;
+  pricingTiers?: any;
+  targetSegments?: string[];
+  reviews?: any;
+  products?: any;
   researchStatus: 'Complete' | 'Updating' | 'Queued';
   lastResearched: string;
   threatLevel: PriorityLevel;
@@ -796,6 +813,7 @@ export interface CompetitiveStrategyData {
   whatToAvoid: string;
   targetSegment: string;
   potentialMoat: string;
+  defensibleMoat?: string;
   nextMoves: string[];
   savedToBrain: boolean;
 }
@@ -848,7 +866,9 @@ export interface BrandAsset {
     | 'Instagram Post'
     | 'Carousel'
     | 'Facebook Creative'
-    | 'Campaign';
+    | 'Campaign'
+    | 'Social Post'
+    | 'Pitch Slide';
   folder: 'Identity' | 'Print & Packaging' | 'Social Media' | 'Campaigns' | 'Active' | 'Archived';
   format: string;
   createdAt: string;
@@ -866,10 +886,19 @@ export interface BrandAsset {
   hashtags?: string[];
   tags?: string[];
   artDirectionNote?: string;
+  description?: string;
+  dimensions?: { width: number; height: number } | string;
+  fileFormat?: string;
+  version?: number;
+  previewUrl?: string;
+  fileUrl?: string;
+  fileSize?: string;
+  type?: string;
+  footerNote?: string;
 }
 
 export interface BrandIdentityState {
-  status: 'Approved' | 'In Exploration' | 'Not Started';
+  status: 'Approved' | 'In Exploration' | 'Not Started' | 'Completed' | 'Finalized';
   brandName: string;
   tagline: string;
   industry: string;
@@ -880,8 +909,9 @@ export interface BrandIdentityState {
   visualDirection: string;
   selectedConceptId: string;
   concepts: BrandConcept[];
-  palette: { name: string; hex: string; role: string }[];
+  palette: { name: string; hex: string; role?: string }[];
   typography: { heading: string; body: string; mono: string };
+  brandVoice?: string;
   guidelines: {
     logoUsage: string;
     spacingRule: string;
@@ -909,10 +939,14 @@ export interface MarketEvent {
   detectedAt: string;
   sourceReference: string;
   importance: PriorityLevel;
-  aiInterpretation: string;
-  potentialImpact: string;
-  suggestedAction: string;
-  isRead: boolean;
+  potentialImpact?: 'High' | 'Medium' | 'Low' | string;
+  isAiInferred?: boolean;
+  headline?: string;
+  competitorName?: string;
+  analysis?: string;
+  aiInterpretation?: string;
+  suggestedAction?: string;
+  isRead?: boolean;
   convertedToExperimentId?: string;
 }
 
@@ -931,6 +965,11 @@ export interface GrowthGoal {
   unit: string;
   deadline: string;
   supportingTaskIds: string[];
+  metric?: string;
+  targetDate?: string;
+  currentMetric?: number | string;
+  targetMetric?: number | string;
+  progressPercentage?: number;
 }
 
 export interface GrowthTask {
@@ -1012,6 +1051,8 @@ export interface ScheduledReportConfig {
   monthlyReview: boolean;
   deliveryEmail: string;
   includeCompetitorDiffs: boolean;
+  length?: number;
+  [key: string]: unknown;
 }
 
 export interface MarketScenarioPreset {
@@ -1057,6 +1098,8 @@ export interface ContextSharingConfig {
 export interface SubscriptionState {
   plan: 'Starter' | 'Growth Pro' | 'Venture Team';
   billingCycle: 'monthly' | 'annual';
+  tier?: string;
+  creditsRemaining?: number;
 }
 
 export interface IntegrationItem {
@@ -1072,6 +1115,8 @@ export interface BrainWiseState {
   currentRoute: AnyRoute;
   settingsTab: SettingsTabId;
   user: UserProfile;
+  team?: any;
+  brandProfile?: any;
   onboarding: OnboardingState;
   brain: BusinessBrainData;
   reports: ResearchReport[];

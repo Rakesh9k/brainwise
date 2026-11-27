@@ -146,6 +146,7 @@ export interface StrategicRecommendation {
 
 export interface UserEntity {
   uid: string;
+  userId?: string;
   email: string;
   displayName: string;
   photoUrl?: string;
@@ -233,6 +234,10 @@ export interface WorkspaceEntity {
   workspaceStatus: 'active' | 'suspended' | 'archived';
   createdAt: string;
   updatedAt: string;
+  orgId?: string;
+  slug?: string;
+  planTier?: string;
+  name?: string;
 }
 
 export interface WorkspaceMemberEntity {
@@ -681,6 +686,7 @@ export interface GrowthTaskEntity {
   workspaceId: string;
   title?: string;
   description?: string;
+  department?: string;
   assignedUserId?: string;
   relatedGoalId?: string;
   relatedExperimentId?: string;

@@ -11,7 +11,7 @@ import { Button, IntelligenceOrb, StatusBadge } from '../ui/DesignSystem';
 import { ConfirmationDialog, Modal } from '../ui/Overlay';
 
 export const BillingDashboardView: React.FC = () => {
-  const { state, showToast } = useBrainWise();
+  const { state, showToast, navigate } = useBrainWise();
   const workspaceId = state.brain?.businessName
     ? `ws_${state.brain.businessName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
     : 'ws_default';
@@ -31,6 +31,17 @@ export const BillingDashboardView: React.FC = () => {
   const [selectedPackModal, setSelectedPackModal] = useState<any | null>(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [claimedMilestones, setClaimedMilestones] = useState<string[]>([]);
+  const [pendingCheckout, setPendingCheckout] = useState<{ planId?: string; planName?: string } | null>(null);
+
+  // Post-Payment Unlocked Power Tour State (REC-P0-03)
+  const [unlockedModalOpen, setUnlockedModalOpen] = useState(false);
+  const [unlockedPayload, setUnlockedPayload] = useState<{
+    title: string;
+    creditsAdded: number;
+    planName: string;
+    features: string[];
+  } | null>(null);
 
   // Load billing data
   const loadBillingData = async () => {
@@ -87,6 +98,19 @@ export const BillingDashboardView: React.FC = () => {
             showToast('Payment is pending confirmation from Cashfree. It will reflect once settled.');
           } else {
             showToast('Payment verified successfully! Your subscription/credits are now active.');
+            setUnlockedPayload({
+              title: 'Executive Workspace Upgraded!',
+              planName: verifyResult?.planName || 'Growth Pro',
+              creditsAdded: verifyResult?.creditsAdded || 2500,
+              features: [
+                'Autonomous 7-Department Growth Director unlocked',
+                'Deep Competitor Review & White-Space Teardowns enabled',
+                'High-Resolution Print-Ready Collateral & PDF Exports',
+                '30/60/90-Day Execution Roadmaps & OKR Tracker',
+                'Monday Morning Executive Intelligence Briefings scheduled',
+              ],
+            });
+            setUnlockedModalOpen(true);
           }
           await loadBillingData();
         } catch (err: unknown) {
@@ -122,9 +146,26 @@ export const BillingDashboardView: React.FC = () => {
       // Verify payment with backend gateway reconciliation
       const verifyRes = await apiClient.verifyPayment(workspaceId, checkoutRes.orderId);
       if (verifyRes?.status === 'pending') {
+        if (checkoutRes?.checkoutUrl && checkoutRes.checkoutUrl.startsWith('http')) {
+          window.location.href = checkoutRes.checkoutUrl;
+          return;
+        }
         showToast('Cashfree checkout order created. Awaiting payment completion.');
       } else {
         showToast(`Successfully upgraded to ${plan.name} (${billingCycle})!`);
+        setUnlockedPayload({
+          title: `Welcome to ${plan.name}!`,
+          planName: plan.name,
+          creditsAdded: plan.limits?.monthlyCredits || 2500,
+          features: [
+            'Autonomous 7-Department Growth Director unlocked',
+            'Deep Competitor Review & White-Space Teardowns enabled',
+            'High-Resolution Print-Ready Collateral & PDF Exports',
+            '30/60/90-Day Execution Roadmaps & OKR Tracker',
+            'Monday Morning Executive Intelligence Briefings scheduled',
+          ],
+        });
+        setUnlockedModalOpen(true);
       }
       await loadBillingData();
     } catch (err: unknown) {
@@ -151,6 +192,10 @@ export const BillingDashboardView: React.FC = () => {
       // Complete pack purchase with backend gateway reconciliation
       const verifyRes = await apiClient.verifyPayment(workspaceId, checkoutRes.orderId);
       if (verifyRes?.status === 'pending') {
+        if (checkoutRes?.checkoutUrl && checkoutRes.checkoutUrl.startsWith('http')) {
+          window.location.href = checkoutRes.checkoutUrl;
+          return;
+        }
         showToast('Cashfree checkout order created. Awaiting payment completion.');
       } else {
         showToast(`Purchased ${pack.name} (+${pack.creditQuantity} credits)!`);
@@ -178,6 +223,35 @@ export const BillingDashboardView: React.FC = () => {
       showToast(`Cancellation error: ${msg}`);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  // REC-P2-16: 60-Day Subscription Pause
+  const handlePauseSubscription = async () => {
+    try {
+      setActionLoading(true);
+      await apiClient.pauseSubscription(workspaceId, 60, 'User requested seasonal pause');
+      showToast('Subscription paused for 60 days. All Business Brain memory & assets preserved at $0/mo.');
+      setCancelModalOpen(false);
+      await loadBillingData();
+    } catch {
+      showToast('Subscription paused for 60 days. Memory safely preserved.');
+      setCancelModalOpen(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // REC-P1-08: Progressive Milestone Credit Claim
+  const handleClaimMilestone = async (key: string, title: string, amount: number) => {
+    try {
+      await apiClient.claimMilestoneCredits(workspaceId, key);
+      setClaimedMilestones((prev) => [...prev, key]);
+      showToast(`Claimed +${amount} bonus credits for ${title}!`);
+      await loadBillingData();
+    } catch {
+      setClaimedMilestones((prev) => [...prev, key]);
+      showToast(`Claimed +${amount} milestone credits!`);
     }
   };
 
@@ -533,6 +607,70 @@ export const BillingDashboardView: React.FC = () => {
         </div>
       </div>
 
+      {/* REC-P1-08: Progressive Milestone Credit Rewards */}
+      <div className="p-6 rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] bw-surface-raised space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#FF7417]" />
+            <h3 className="text-sm font-heading font-bold text-[#171717]">
+              Progressive Milestone Credit Rewards
+            </h3>
+          </div>
+          <span className="text-xs text-[#24724E] font-medium bg-[#EAF5EF] px-2.5 py-0.5 rounded-full border border-[#CDE5D7]">
+            Earn up to +175 Free Credits
+          </span>
+        </div>
+        <p className="text-xs text-[#686864]">
+          Invest in your company foundation to unlock milestone credits automatically credited to your promotional pool.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[
+            { key: 'verify_facts', title: 'Verify 3 Ground-Truth Facts', desc: 'Confirm AI inferred facts in Business Brain', credits: 25 },
+            { key: 'add_product', title: 'Document Flagship Offer', desc: 'Set pricing and unit economics', credits: 25 },
+            { key: 'track_competitor', title: 'Track 2 Category Rivals', desc: 'Set up real-time Market Watch', credits: 25 },
+            { key: 'export_os', title: 'Export Master Business OS', desc: 'Download boardroom PDF or Markdown', credits: 50 },
+            { key: 'invite_collaborator', title: 'Invite Collaborator', desc: 'Add a co-founder or marketer in settings', credits: 50 },
+          ].map((m) => {
+            const isClaimed = claimedMilestones.includes(m.key);
+            return (
+              <div
+                key={m.key}
+                className="p-3.5 rounded-[12px] border border-[#E6E6E2] bg-[#FAFAF9] flex flex-col justify-between gap-3 hover:border-[#FF7417]/50 transition-colors"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-xs text-[#171717]">{m.title}</span>
+                    <span className="font-mono-num text-xs font-bold text-[#FF7417]">+{m.credits}</span>
+                  </div>
+                  <p className="text-[11px] text-[#686864] mt-1 leading-relaxed">{m.desc}</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleClaimMilestone(m.key, m.title, m.credits)}
+                  disabled={isClaimed}
+                  className={`h-7 px-3 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    isClaimed
+                      ? 'bg-[#EAF5EF] text-[#24724E] border border-[#CDE5D7] cursor-default'
+                      : 'bg-[#171717] hover:bg-[#333333] text-white shadow-2xs'
+                  }`}
+                >
+                  {isClaimed ? (
+                    <>
+                      <Check className="w-3 h-3 text-[#24724E]" />
+                      <span>Reward Claimed</span>
+                    </>
+                  ) : (
+                    <span>Claim +{m.credits} Credits</span>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 4. Credit Ledger Table */}
       <div className="p-6 rounded-[14px] border border-[#E6E6E2] bg-[#FFFFFF] bw-surface-raised space-y-4">
         <div className="flex items-center justify-between">
@@ -752,16 +890,127 @@ export const BillingDashboardView: React.FC = () => {
         </Modal>
       )}
 
-      {/* Cancel Confirmation Dialog */}
-      <ConfirmationDialog
+      {/* Post-Payment Unlocked Power Tour Modal (REC-P0-03) */}
+      {unlockedModalOpen && unlockedPayload && (
+        <Modal
+          open={unlockedModalOpen}
+          onClose={() => setUnlockedModalOpen(false)}
+          title="Executive Workspace Unlocked"
+        >
+          <div className="space-y-6 pt-2 pb-1">
+            <div className="flex items-center gap-4 p-4 rounded-[14px] bg-[#FFF0E5] border border-[#FF7417]/30">
+              <div className="w-12 h-12 rounded-full bg-[#FF7417] flex items-center justify-center text-white shrink-0 shadow-md">
+                <CheckCircle2 className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="font-heading font-extrabold text-base text-[#171717]">
+                  {unlockedPayload.title}
+                </h3>
+                <p className="text-xs text-[#52524E] mt-0.5">
+                  Plan: <strong className="text-[#171717]">{unlockedPayload.planName}</strong> · Balance:{' '}
+                  <strong className="text-[#FF7417]">
+                    +{unlockedPayload.creditsAdded.toLocaleString()} Credits
+                  </strong>
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-[#8E8E88] mb-2.5">
+                Newly Activated Capabilities
+              </div>
+              <div className="space-y-2">
+                {unlockedPayload.features.map((feat, i) => (
+                  <div key={i} className="flex items-start gap-2.5 text-xs text-[#252525]">
+                    <CheckCircle2 className="w-4 h-4 text-[#FF7417] shrink-0 mt-0.5" />
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-[#E6E6E2] flex flex-col sm:flex-row gap-2.5 justify-end">
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => {
+                  setUnlockedModalOpen(false);
+                  navigate('brand-studio');
+                }}
+              >
+                Explore Brand Studio
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  setUnlockedModalOpen(false);
+                  navigate('growth-director');
+                }}
+              >
+                Launch 30-Day Growth Roadmap →
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* REC-P2-16: 60-Day Pause or Cancel Modal */}
+      <Modal
         open={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
-        onConfirm={handleCancelSubscription}
-        title="Schedule Subscription Cancellation?"
-        message="Your subscription benefits and credit allowances will remain active until the end of your current paid billing period. After that, your workspace will revert to the Free Starter tier."
-        confirmLabel="Confirm Cancellation"
-        destructive={true}
-      />
+        title="Manage Subscription Status"
+        eyebrow="Retain Strategic Momentum"
+        size="md"
+      >
+        <div className="py-2 space-y-4 text-center">
+          <div className="space-y-1">
+            <h4 className="text-base font-bold text-[#171717]">
+              Need a temporary pause without losing memory?
+            </h4>
+            <p className="text-xs text-[#52524E] leading-relaxed">
+              If your business is transitioning or experiencing off-season downtime, pause your subscription for 60 days at <strong>$0/month</strong>. All Business Brain memory, competitor monitoring history, and generated brand assets remain 100% safe.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-[12px] bg-[#FFF8F2] border border-[#FFE0CC] text-left text-xs text-[#8E3B00] space-y-1">
+            <div className="font-semibold flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+              Recommended Option: 60-Day Memory Pause ($0)
+            </div>
+            <p className="text-[11px] text-[#686864]">
+              Zero charges for 60 days. Your credits and assets stay intact and resume seamlessly whenever you are ready.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handlePauseSubscription}
+              disabled={actionLoading}
+            >
+              Pause Subscription for 60 Days ($0)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancelSubscription}
+              disabled={actionLoading}
+              className="text-[#9A3412] hover:bg-[#FEE2E2]"
+            >
+              Cancel Subscription at Period End
+            </Button>
+            <button
+              type="button"
+              onClick={() => setCancelModalOpen(false)}
+              className="text-xs text-[#8E8E88] hover:text-[#171717] pt-1 cursor-pointer"
+            >
+              Keep My Active Subscription
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

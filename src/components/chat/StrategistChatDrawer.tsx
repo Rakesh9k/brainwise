@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   ArrowRight,
-  Bot,
   Check,
   CheckCircle2,
   Clock,

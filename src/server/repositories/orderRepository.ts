@@ -20,18 +20,22 @@ export interface BillingOrderEntity {
   cfOrderId?: string;
   workspaceId: string;
   userId?: string;
-  type: 'subscription' | 'credit_pack';
-  itemReferenceId: string; // planId or packId
+  type?: 'subscription' | 'credit_pack';
+  itemReferenceId?: string; // planId or packId
+  planId?: string;
   billingCycle?: 'monthly' | 'annual';
-  amount: number;
-  baseAmount: number;
-  taxAmount: number;
-  currency: 'INR' | 'USD';
+  amount?: number;
+  baseAmount?: number;
+  taxAmount?: number;
+  amountInr?: number;
+  baseAmountInr?: number;
+  gstAmountInr?: number;
+  currency?: 'INR' | 'USD';
   status: BillingOrderStatus;
-  paymentSessionId: string;
-  checkoutUrl: string;
-  customerEmail: string;
-  customerName: string;
+  paymentSessionId?: string;
+  checkoutUrl?: string;
+  customerEmail?: string;
+  customerName?: string;
   customerPhone?: string;
   customerGstin?: string;
   providerPaymentId?: string;
@@ -39,8 +43,8 @@ export interface BillingOrderEntity {
   paidAt?: string;
   failureReason?: string;
   metadata?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export class OrderRepository {

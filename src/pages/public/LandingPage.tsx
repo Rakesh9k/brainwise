@@ -6,9 +6,8 @@ import {
   useReducedMotion,
   useScroll,
 } from 'motion/react';
-import { ArrowRight, Brain, Check, Menu, Minus, Plus, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Brain, Check, Menu, Minus, Pause, Play, Plus, Sparkles, X } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
-import { BrandLogoMark } from '../../components/ui/DesignSystem';
 import { NeuralConstellationSignature } from '../../components/motion/LiquidMotion';
 import {
   AnimatedCounter,
@@ -572,7 +571,39 @@ export const LandingPage: React.FC = () => {
             const current = journeyStages[journeyStep] || journeyStages[0];
 
             return (
-              <div className="space-y-4 text-left">
+              <div 
+                className="space-y-4 text-left"
+                onMouseEnter={() => setJourneyPaused(true)}
+                onMouseLeave={() => setJourneyPaused(false)}
+              >
+                {/* Control bar & pause state */}
+                <div className="flex items-center justify-between text-xs text-[#858585] px-1 max-w-3xl mx-auto">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#FF7417]" />
+                    <span className="font-mono text-[11px] uppercase tracking-wider font-semibold text-[#52524E]">
+                      {journeyPaused ? 'Tour Paused (Interactive Mode)' : 'Auto-Rotating Preview (3.4s)'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setJourneyPaused((p) => !p)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#E6E6E2] bg-white text-[#52524E] hover:text-[#171717] hover:border-[#D4D4CE] transition-all cursor-pointer text-[11px] font-medium"
+                    aria-label={journeyPaused ? 'Resume auto-rotation' : 'Pause auto-rotation'}
+                  >
+                    {journeyPaused ? (
+                      <>
+                        <Play className="w-3 h-3 text-[#FF7417] fill-[#FF7417]" />
+                        <span>Resume Tour</span>
+                      </>
+                    ) : (
+                      <>
+                        <Pause className="w-3 h-3 text-[#858585]" />
+                        <span>Pause Tour</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
                 {/* Connected Animated Progress Rail (Desktop) */}
                 <div className="hidden sm:block relative max-w-3xl mx-auto px-10 pt-2 pb-1">
                   <div className="relative h-1 rounded-full bg-[#E6E6E2]">
@@ -590,7 +621,10 @@ export const LandingPage: React.FC = () => {
                         <button
                           key={s.num}
                           type="button"
-                          onClick={() => setJourneyStep(idx)}
+                          onClick={() => {
+                            setJourneyStep(idx);
+                            setJourneyPaused(true);
+                          }}
                           aria-label={`Select Step ${s.num}: ${s.title}`}
                           className={`relative w-7 h-7 rounded-full text-[11px] font-mono-num font-bold flex items-center justify-center transition-all cursor-pointer ${
                             isActive
@@ -749,9 +783,9 @@ export const LandingPage: React.FC = () => {
                   <button
                     key={step.id}
                     type="button"
-                    onMouseEnter={() => handleSelectStage(step.id, 1200)}
-                    onFocus={() => handleSelectStage(step.id, 2000)}
-                    onClick={() => handleSelectStage(step.id, 3000)}
+                    onMouseEnter={() => handleSelectStage(step.id, 8000)}
+                    onFocus={() => handleSelectStage(step.id, 8000)}
+                    onClick={() => handleSelectStage(step.id, 15000)}
                     aria-pressed={active}
                     className={`bw-trace-card w-full text-left p-6 rounded-[20px] border transition-all cursor-pointer ${
                       active

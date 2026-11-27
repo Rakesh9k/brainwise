@@ -1049,6 +1049,469 @@ export function exportExecutiveSlides(
 }
 
 /**
+ * 1-Click Master Business Operating System Exporter (REC-P1-05).
+ * Compiles a comprehensive, boardroom-ready executive dossier combining:
+ * 1. Business Brain Ground Truth
+ * 2. Product & Unit Economics Catalog
+ * 3. Customer Personas & Pain Points
+ * 4. Living Brand Guidelines & Hex Tokens
+ * 5. Competitor White-Space & Review Teardowns
+ * 6. 30-Day Growth Roadmap & OKR Sprints
+ */
+export function exportMasterBusinessOS({
+  state,
+  format = 'pdf-html',
+}: {
+  state: any;
+  format?: 'pdf-html' | 'markdown' | 'json';
+}): void {
+  const brain = state.brain || {};
+  const businessName = brain.businessName || 'My Enterprise';
+  const slug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  if (format === 'json') {
+    const backupPayload = {
+      _platform: 'BrainWise Business Intelligence Platform',
+      _version: '2.0.0-enterprise',
+      exportedAt: new Date().toISOString(),
+      businessBrain: brain,
+      brandGuidelines: state.brandGuidelines || {},
+      competitors: state.competitors || [],
+      goals: state.goals || [],
+      tasks: state.tasks || [],
+      experiments: state.experiments || [],
+    };
+    triggerFileDownload(
+      `${slug}-master-business-os.json`,
+      JSON.stringify(backupPayload, null, 2),
+      'application/json'
+    );
+    return;
+  }
+
+  if (format === 'markdown') {
+    const md = `# ${businessName.toUpperCase()} — MASTER BUSINESS OPERATING SYSTEM
+*Generated via BrainWise Business Intelligence Platform on ${dateStr}*
+*Strategic Ground Truth · Provenance Verified · Strict Video Exclusion Enforced*
+
+---
+
+## 1. EXECUTIVE FOUNDATION & STRATEGIC IDENTITY
+- **Company Name:** ${businessName}
+- **Industry & Archetype:** ${brain.industry || 'Modern Business'}
+- **Current Stage:** ${brain.stage || 'Early Traction'}
+- **Geographic Footprint:** ${brain.location || 'Global'}
+- **Core Value Proposition:** ${brain.valueProposition || 'High-reliability, differentiated customer value'}
+- **Tagline:** "${brain.tagline || 'Strategic Excellence Delivered'}"
+- **Pricing Architecture:** ${brain.pricingModel || 'Value-Based Pricing'}
+
+---
+
+## 2. PRODUCT & SERVICE PORTFOLIO
+${
+  Array.isArray(brain.products) && brain.products.length > 0
+    ? brain.products
+        .map(
+          (p: any, i: number) => `### 2.${i + 1} ${p.name || 'Core Product'}
+- **Price Point:** ${p.price || 'Market Rate'}
+- **Gross Margin:** ${p.margin || 'N/A'}
+- **Target Audience:** ${p.targetAudience || 'Core Segment'}
+- **Description:** ${p.description || 'Verified product offering grounded in company catalog.'}
+`
+        )
+        .join('\n')
+    : '*(No products cataloged yet — Add offerings in Business Brain Products tab)*'
+}
+
+---
+
+## 3. TARGET CUSTOMER INTELLIGENCE & PERSONAS
+- **Primary Audience:** ${brain.targetAudience || 'Forward-thinking buyers'}
+- **Identified Customer Pain Points:**
+${
+  Array.isArray(brain.customerPainPoints) && brain.customerPainPoints.length > 0
+    ? brain.customerPainPoints.map((pp: string) => `  - ${pp}`).join('\n')
+    : '  - High friction in legacy solutions\n  - Lack of strategic clarity and reliable support'
+}
+
+---
+
+## 4. AUTHORITATIVE BRAND GUIDELINES & IDENTITY TOKENS
+- **Brand Voice & Personality:** ${state.brandGuidelines?.voice || 'Executive, Authoritative, Concise, Disciplined'}
+- **Color Design Tokens:**
+  - Primary Brand Hex: \`${state.brandGuidelines?.colors?.primary || '#171717'}\`
+  - Secondary Brand Hex: \`${state.brandGuidelines?.colors?.secondary || '#F5F5F4'}\`
+  - Signal Accent Hex: \`${state.brandGuidelines?.colors?.accent || '#FF7417'}\`
+- **Typography Scale:** Strict 1.25 Modular Scale (Base: 16px / Major Third)
+- **Approved Logo Lockups:** Primary Horizontal, Stacked Wordmark, Monochrome Symbol, Favicon.
+
+---
+
+## 5. COMPETITIVE LANDSCAPE & STRATEGIC WHITE-SPACE
+${
+  Array.isArray(state.competitors) && state.competitors.length > 0
+    ? state.competitors
+        .map(
+          (c: any, i: number) => `### 5.${i + 1} ${c.name || 'Rival Competitor'}
+- **Category:** ${c.industry || 'Market Incumbent'}
+- **Monitored Status:** ${c.isMonitored ? 'Active Surveillance Watchlist' : 'Cataloged'}
+- **Strategic Gap:** ${c.strategicGap || 'Vulnerable to transparent pricing and agile personalized execution.'}
+- **Website:** ${c.website || 'N/A'}
+`
+        )
+        .join('\n')
+    : '*(Competitor monitoring initialized)*'
+}
+
+---
+
+## 6. 30-DAY GROWTH ROADMAP & ACTIVE OKR SPRINTS
+- **Primary Strategic Objective:** Accelerate qualified customer acquisition while maintaining gross margins.
+- **Active Focus Sprint Tasks:**
+${
+  Array.isArray(state.tasks) && state.tasks.length > 0
+    ? state.tasks
+        .filter((t: any) => t.status !== 'completed')
+        .slice(0, 5)
+        .map(
+          (t: any, i: number) =>
+            `  ${i + 1}. **[${t.priority?.toUpperCase() || 'HIGH'}]** ${t.title} (${t.estimatedMinutes || 30} mins · ${t.department || 'Growth'})`
+        )
+        .join('\n')
+    : '  1. Complete Business Brain ground truth verification\n  2. Launch contrast campaign against primary competitor'
+}
+
+---
+*BrainWise Master Executive Dossier · Confidential Enterprise Asset*
+`;
+    triggerFileDownload(`${slug}-master-business-os.md`, md, 'text/markdown');
+    return;
+  }
+
+  // Default: pdf-html (Self-contained, high-craft printable executive dossier)
+  const productsList = Array.isArray(brain.products) ? brain.products : [];
+  const competitorsList = Array.isArray(state.competitors) ? state.competitors : [];
+  const tasksList = Array.isArray(state.tasks) ? state.tasks : [];
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>${businessName} — Master Business Operating System</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    :root {
+      --primary: #171717;
+      --accent: #FF7417;
+      --bg: #FFFFFF;
+      --border: #E6E6E2;
+      --muted: #686864;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #F9F9F8;
+      color: #171717;
+      line-height: 1.55;
+      padding: 40px 20px;
+    }
+    .dossier-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+      padding: 60px;
+    }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 24px;
+      margin-bottom: 40px;
+    }
+    .brand-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--primary);
+    }
+    .brand-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .stamp-pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: #FFF0E5;
+      color: var(--accent);
+      border: 1px solid rgba(255,116,23,0.3);
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 36px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+    }
+    p, li {
+      font-size: 14px;
+      color: #333330;
+      margin-bottom: 8px;
+    }
+    ul { list-style: square; padding-left: 20px; }
+    .kv-grid {
+      display: grid;
+      grid-cols: 2;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .kv-card {
+      padding: 14px 18px;
+      border-radius: 10px;
+      background: #FAFAF9;
+      border: 1px solid #EFEFEB;
+    }
+    .kv-label {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .kv-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 2px;
+    }
+    .table-custom {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+    .table-custom th, .table-custom td {
+      text-align: left;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+    }
+    .table-custom th {
+      background: #F4F4F2;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .action-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--accent);
+      color: #FFFFFF;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255,116,23,0.35);
+      z-index: 100;
+    }
+    @media print {
+      body { background: #FFFFFF; padding: 0; }
+      .dossier-wrapper { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+      .action-btn { display: none; }
+      h2 { page-break-after: avoid; }
+      .table-custom { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <button class="action-btn" onclick="window.print()">🖨️ Print or Save as PDF</button>
+
+  <div class="dossier-wrapper">
+    <div class="header-bar">
+      <div>
+        <h1 class="brand-title">${businessName}</h1>
+        <div class="brand-meta">Master Business Operating System · ${brain.industry || 'Enterprise'} · ${dateStr}</div>
+      </div>
+      <div class="stamp-pill">Verified Truth Engine</div>
+    </div>
+
+    <h2>1. Executive Foundation & Ground Truth</h2>
+    <div class="kv-grid">
+      <div class="kv-card">
+        <div class="kv-label">Company Name</div>
+        <div class="kv-value">${businessName}</div>
+      </div>
+      <div class="kv-card">
+        <div class="kv-label">Business Stage</div>
+        <div class="kv-value">${brain.stage || 'Early Traction'}</div>
+      </div>
+      <div class="kv-card">
+        <div class="kv-label">Operating Location</div>
+        <div class="kv-value">${brain.location || 'Global Operations'}</div>
+      </div>
+      <div class="kv-card">
+        <div class="kv-label">Pricing Architecture</div>
+        <div class="kv-value">${brain.pricingModel || 'Value-Based Pricing'}</div>
+      </div>
+    </div>
+    <p><strong>Strategic Value Proposition:</strong> ${brain.valueProposition || 'High-reliability, differentiated customer value anchored in authentic brand execution.'}</p>
+    <p><strong>Official Tagline:</strong> "${brain.tagline || 'Excellence Grounded in Evidence'}"</p>
+
+    <h2>2. Product & Service Portfolio</h2>
+    <table class="table-custom">
+      <thead>
+        <tr>
+          <th>Product / Service</th>
+          <th>Price Point</th>
+          <th>Gross Margin</th>
+          <th>Target Customer Segment</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          productsList.length > 0
+            ? productsList
+                .map(
+                  (p: any) => `
+          <tr>
+            <td><strong>${p.name || 'Core Offer'}</strong><br><small style="color:#666">${p.description || ''}</small></td>
+            <td>${p.price || 'Market Rate'}</td>
+            <td>${p.margin || 'N/A'}</td>
+            <td>${p.targetAudience || 'Primary Segment'}</td>
+          </tr>
+        `
+                )
+                .join('')
+            : `
+          <tr>
+            <td colspan="4" style="text-align: center; color: #888;">Core offerings cataloged in Business Brain</td>
+          </tr>
+        `
+        }
+      </tbody>
+    </table>
+
+    <h2>3. Customer Personas & Pain Points</h2>
+    <p><strong>Primary Target Audience:</strong> ${brain.targetAudience || 'Quality-conscious modern business leaders and consumers'}</p>
+    <div style="margin-top: 10px;">
+      <strong>Core Customer Friction Points Addressed:</strong>
+      <ul>
+        ${
+          Array.isArray(brain.customerPainPoints) && brain.customerPainPoints.length > 0
+            ? brain.customerPainPoints.map((pp: string) => `<li>${pp}</li>`).join('')
+            : '<li>Lack of clear, reliable, and persistent strategic direction</li><li>High agency overhead with inconsistent quality execution</li>'
+        }
+      </ul>
+    </div>
+
+    <h2>4. Brand Guidelines & Identity Tokens</h2>
+    <div class="kv-grid">
+      <div class="kv-card">
+        <div class="kv-label">Brand Voice</div>
+        <div class="kv-value">${state.brandGuidelines?.voice || 'Executive & Authoritative'}</div>
+      </div>
+      <div class="kv-card">
+        <div class="kv-label">Modular Typography</div>
+        <div class="kv-value">1.25 Major Third Scale (Base 16px)</div>
+      </div>
+      <div class="kv-card">
+        <div class="kv-label">Primary Hex Token</div>
+        <div class="kv-value">${state.brandGuidelines?.colors?.primary || '#171717'}</div>
+      </div>
+      <div class="kv-card">
+        <div class="kv-label">Signal Accent Hex</div>
+        <div class="kv-value" style="color: #FF7417;">${state.brandGuidelines?.colors?.accent || '#FF7417'}</div>
+      </div>
+    </div>
+
+    <h2>5. Competitive Surveillance & White Space</h2>
+    <table class="table-custom">
+      <thead>
+        <tr>
+          <th>Competitor</th>
+          <th>Watchlist Status</th>
+          <th>Strategic White-Space Opening</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          competitorsList.length > 0
+            ? competitorsList
+                .map(
+                  (c: any) => `
+          <tr>
+            <td><strong>${c.name}</strong><br><small style="color:#666">${c.industry || 'Incumbent'}</small></td>
+            <td><span style="color:#2563EB; font-weight:600;">${c.isMonitored ? 'Active Radar' : 'Logged'}</span></td>
+            <td>${c.strategicGap || 'Vulnerable to transparent pricing and agile execution.'}</td>
+          </tr>
+        `
+                )
+                .join('')
+            : `
+          <tr>
+            <td colspan="3" style="text-align: center; color: #888;">Active competitor surveillance configured</td>
+          </tr>
+        `
+        }
+      </tbody>
+    </table>
+
+    <h2>6. 30-Day Growth Roadmap & Active Sprint Tasks</h2>
+    <ul>
+      ${
+        tasksList.length > 0
+          ? tasksList
+              .slice(0, 6)
+              .map(
+                (t: any) =>
+                  `<li><strong>[${t.priority?.toUpperCase() || 'HIGH'}]</strong> ${t.title} — <em>${t.department || 'Growth Director'} (${t.estimatedMinutes || 30} mins)</em></li>`
+              )
+              .join('')
+          : '<li>Deploy pricing transparency comparison card against category rivals</li><li>Generate brand identity collateral suite</li>'
+      }
+    </ul>
+
+    <div style="margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between;">
+      <span>BrainWise Business Intelligence Platform · Master Enterprise Dossier</span>
+      <span>Strict Video Exclusion Certified · Level 3 Approval Gate</span>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  triggerFileDownload(`${slug}-master-business-os.html`, html, 'text/html');
+
+  if (typeof window !== 'undefined') {
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.open();
+      printWin.document.write(html);
+      printWin.document.close();
+    }
+  }
+}
+
+/**
  * Generates ARIA attributes for the context menu according to WCAG menu patterns.
  */
 export function buildContextualLedgerAriaProps(cardTitle: string) {

@@ -13,8 +13,6 @@ import {
   Compass,
   FileText,
   Presentation,
-  CheckCircle2,
-  Activity,
 } from 'lucide-react';
 import { Drawer } from './Overlay';
 import { exportExecutivePdf, exportExecutiveSlides } from './contextualLedgerUtils';

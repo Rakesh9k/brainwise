@@ -34,6 +34,7 @@ import type {
   GrowthExperiment,
   GrowthGoal,
   GrowthTask,
+  MarketEvent,
   MarketScenarioPreset,
   ProductServiceItem,
   ResearchReport,
@@ -832,10 +833,10 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       let fallbackReply = '';
       if (lower.includes('competit') || lower.includes('rival')) {
-        const rivalNames = rivals.map((r) => `${r.name} (${r.tier || 'Direct'} tier)`).join(', ');
+        const rivalNames = rivals.map((r) => `${r.name} (${(r as any).tier || r.category || 'Direct'} tier)`).join(', ');
         fallbackReply = `Based on ${brain.businessName}'s persistent Business Brain, our core differentiation against tracked rivals (${rivalNames || 'market peers'}) centers on ${brain.strengths?.slice(0, 2).join(' and ') || 'our unique value proposition'}. While competitors focus on broad aggregation, our verified positioning targets ${brain.targetAudience || 'our core customer segment'} with disciplined unit economics.`;
       } else if (lower.includes('price') || lower.includes('pricing') || lower.includes('tier')) {
-        const prods = (brain.productsServices || []).map((p) => `${p.name} ($${p.price})`).join(', ');
+        const prods = (brain.products || []).map((p: ProductServiceItem) => `${p.name} (${p.priceRange || '$' + (p as any).price || ''})`).join(', ');
         fallbackReply = `Grounded in ${brain.businessName}'s verified product catalog: ${prods || 'our current pricing tiers'}. To optimize margin without risking customer churn, focus promotion on our highest-contribution tier while maintaining disciplined CAC payback.`;
       } else if (lower.includes('growth') || lower.includes('campaign') || lower.includes('scale')) {
         fallbackReply = `For ${brain.businessName}'s current stage (${brain.stage || 'Scaling'}), your primary lever is activating sprint tasks aligned with "${brain.primaryGoals?.[0] || 'customer acquisition'}". I recommend executing multi-frame static carousels and vector collateral rather than premature paid ad expansion until CAC payback stabilizes under 3 months.`;
@@ -2847,10 +2848,10 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const newExp: GrowthExperiment = {
         id: newExpId,
         title: `Counter-Test: ${ev.competitorOrSource} (${ev.category})`,
-        hypothesis: ev.aiInterpretation,
-        objective: ev.suggestedAction,
+        hypothesis: ev.aiInterpretation || ev.detectedChange || 'Test market response',
+        objective: ev.suggestedAction || 'Counter competitor movement',
         targetAudience: prev.brain.targetAudience,
-        action: ev.suggestedAction,
+        action: ev.suggestedAction || 'Deploy counter-marketing or product adjustment',
         successMetric: 'Lift in trial-to-subscriber conversion or qualified leads',
         budget: '$150',
         startDate: new Date().toISOString().slice(0, 10),
@@ -2871,10 +2872,10 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       apiClient
         .createExperiment(state.activeWorkspaceId, {
           title: `Counter-Test: ${ev.competitorOrSource} (${ev.category})`,
-          hypothesis: ev.aiInterpretation,
-          objective: ev.suggestedAction,
+          hypothesis: ev.aiInterpretation || ev.detectedChange || 'Test market response',
+          objective: ev.suggestedAction || 'Counter competitor movement',
           targetAudience: state.brain.targetAudience,
-          action: ev.suggestedAction,
+          action: ev.suggestedAction || 'Deploy counter-marketing or product adjustment',
           successMetric: 'Lift in trial-to-subscriber conversion or qualified leads',
           budget: '$150',
           startDate: new Date().toISOString().slice(0, 10),
@@ -2960,6 +2961,7 @@ export const BrainWiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           detectedChange: f.summary || f.headline,
           sourceReference: f.sourceUrl || f.publisher || 'Verified Google Search Grounding',
           aiInterpretation: f.evidence || f.summary,
+          potentialImpact: f.evidence || f.summary || 'Market positioning opportunity',
           suggestedAction: f.suggestedAction || 'Evaluate response in Growth Planner.',
           isRead: false,
         }));

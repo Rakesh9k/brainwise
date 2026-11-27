@@ -24,8 +24,10 @@ export const AddCompetitorModal: React.FC<{
   title?: string;
 }> = ({ open, onClose, title = 'Add Competitor & Enable Watchlist' }) => {
   const { state, addCompetitor } = useBrainWise();
+  const [entryMode, setEntryMode] = useState<'single' | 'batch'>('single');
   const [name, setName] = useState('');
   const [website, setWebsite] = useState('');
+  const [batchUrls, setBatchUrls] = useState('');
   const [category, setCategory] = useState(state.brain.industry || 'Direct Peer');
   const [geography, setGeography] = useState(state.brain.location || 'Regional');
   const [discoveryMethod, setDiscoveryMethod] =
@@ -124,6 +126,59 @@ export const AddCompetitorModal: React.FC<{
     onClose();
   };
 
+  const handleBatchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const lines = batchUrls
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0)
+      .slice(0, 5);
+
+    if (lines.length === 0) return;
+
+    lines.forEach((url) => {
+      const clean = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+      const parsedName = clean
+        .split('.')[0]
+        .split(/[-_]/)
+        .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+        .join(' ');
+      const cleanWeb = url.startsWith('http') ? url : `https://${url}`;
+
+      addCompetitor({
+        name: parsedName,
+        website: cleanWeb,
+        category: category.trim() || 'Direct Peer',
+        geography: geography.trim() || state.brain.location || 'Global',
+        discoveryMethod: 'Batch URL Import',
+        positioning: `Profiled competitor inside ${category.trim() || state.brain.industry}.`,
+        priceRange: 'Mid-to-Premium tier',
+        researchStatus: 'Complete',
+        lastResearched: new Date().toISOString().slice(0, 10),
+        threatLevel: 'medium',
+        marketShareBand: 'Category peer',
+        xValueScore: 50,
+        yDiffScore: 50,
+        overview: `${parsedName} competes in ${category.trim() || state.brain.industry}.`,
+        productsAndServices: [{ name: 'Core Offer', price: 'Standard', notes: 'Batch ingested' }],
+        pricingModel: { summary: 'Standard pricing structure.', entryPrice: 'Tier 1', flagshipPrice: 'Tier 2', discounts: 'None' },
+        brandPositioningDetail: { archetype: 'Challenger', tagline: 'Peer benchmark.', targetBuyer: state.brain.targetAudience || 'Buyers', visualTone: 'Commercial' },
+        websiteAnalysis: { clarityScore: '7.0 / 10', primaryCTA: 'Visit Site', speedNote: 'Standard', conversionGaps: [] },
+        marketingStrategy: { channels: ['Web', 'Search'], contentCadence: 'Weekly', paidSignals: 'Moderate' },
+        customerReviews: { averageRating: '4.2 / 5', reviewCount: 'Tracked', praisedFor: ['Product quality'], complaints: ['Delivery speed'] },
+        strengths: ['Established category brand'],
+        weaknesses: ['Generic digital footprint'],
+        historicalChanges: [{ date: new Date().toISOString().slice(0, 10), change: 'Added via batch ingestion', source: 'Batch URL Import' }],
+        monitoringEnabled,
+        monitoringFrequency: frequency,
+        monitoredCategories: ['Pricing changes', 'Website changes', 'Product launches'],
+      });
+    });
+
+    setBatchUrls('');
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
@@ -131,6 +186,57 @@ export const AddCompetitorModal: React.FC<{
       title={title}
       subtitle="Unified competitor profile and live Market Watch tracking configuration."
     >
+      <div className="flex items-center gap-1.5 p-1 rounded-[8px] bg-[#F5F5F4] mb-4">
+        <button
+          type="button"
+          onClick={() => setEntryMode('single')}
+          className={`flex-1 py-1 rounded-[6px] text-xs font-semibold transition-all cursor-pointer ${
+            entryMode === 'single'
+              ? 'bg-white text-[#171717] shadow-2xs'
+              : 'text-[#686864] hover:text-[#171717]'
+          }`}
+        >
+          Single Competitor
+        </button>
+        <button
+          type="button"
+          onClick={() => setEntryMode('batch')}
+          className={`flex-1 py-1 rounded-[6px] text-xs font-semibold transition-all cursor-pointer ${
+            entryMode === 'batch'
+              ? 'bg-white text-[#171717] shadow-2xs'
+              : 'text-[#686864] hover:text-[#171717]'
+          }`}
+        >
+          Batch Ingest URLs (Up to 5)
+        </button>
+      </div>
+
+      {entryMode === 'batch' ? (
+        <form onSubmit={handleBatchSubmit} className="space-y-4">
+          <Field label="Competitor URLs (One per line)" htmlFor="batch-comp-urls">
+            <textarea
+              id="batch-comp-urls"
+              rows={4}
+              required
+              value={batchUrls}
+              onChange={(e) => setBatchUrls(e.target.value)}
+              placeholder="https://competitor1.com&#10;https://competitor2.com&#10;https://competitor3.com"
+              className="w-full p-3 text-xs rounded-[8px] border border-[#E6E6E2] bg-[#FFFFFF] font-mono focus:outline-none focus:border-[#FF7417]"
+            />
+          </Field>
+          <p className="text-[11px] text-[#686864]">
+            BrainWise automatically parses domains, normalizes brand names, sets up initial SWOT baselines, and enrolls each rival into your weekly Market Watch feed.
+          </p>
+          <div className="pt-2 flex justify-end gap-2">
+            <Button variant="secondary" size="sm" type="button" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" type="submit">
+              Ingest Batch Rivals
+            </Button>
+          </div>
+        </form>
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field label="Competitor Name" htmlFor="shared-comp-name">
           <Input
@@ -247,6 +353,7 @@ export const AddCompetitorModal: React.FC<{
           </Button>
         </div>
       </form>
+      )}
     </Modal>
   );
 };

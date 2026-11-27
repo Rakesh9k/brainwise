@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
-import { BrandLogoMark, FluidTransition } from '../../components/ui/DesignSystem';
+import { FluidTransition } from '../../components/ui/DesignSystem';
 import { typeClass } from '../../theme/typography';
 
 export const AuthPages: React.FC<{

@@ -37,6 +37,7 @@ import {
   X,
 } from 'lucide-react';
 import { useBrainWise, useWorkspaceBreadcrumbs } from '../../context/BrainWiseContext';
+import { triggerFileDownload } from '../../components/ui/contextualLedgerUtils';
 import { apiClient } from '../../services/apiClient';
 import {
   buildAssetSvgMarkup,
@@ -513,7 +514,7 @@ export const AssetLibraryPage: React.FC = () => {
     <div class="meta-grid">
       <div class="meta-item"><label>Format</label><value>${asset.format || 'Vector SVG / Print PDF'}</value></div>
       <div class="meta-item"><label>Folder</label><value>${asset.folder || 'Active'}</value></div>
-      <div class="meta-item"><label>Dimensions</label><value>${asset.dimensions?.width || 1080} × ${asset.dimensions?.height || 1080} px</value></div>
+      <div class="meta-item"><label>Dimensions</label><value>${typeof asset.dimensions === 'object' && asset.dimensions ? `${asset.dimensions.width} × ${asset.dimensions.height} px` : (asset.dimensions || '1080 × 1080 px')}</value></div>
       <div class="meta-item"><label>Status</label><value>${asset.status || 'Approved'}</value></div>
     </div>
     ${asset.headlineText ? `<div class="content-box"><strong>Primary Copywriting:</strong><br>${asset.headlineText}</div>` : ''}
@@ -1180,7 +1181,7 @@ export const AssetLibraryPage: React.FC = () => {
               timestamp: a.createdAt || 'Current Version',
               confidence: 0.99,
               type: 'GROUND_TRUTH' as any,
-              details: `Dimensions: ${a.dimensions?.width}x${a.dimensions?.height} · Format: ${a.fileFormat}`,
+              details: `Dimensions: ${typeof a.dimensions === 'object' && a.dimensions ? `${a.dimensions.width}x${a.dimensions.height}` : (a.dimensions || '1080x1080')} · Format: ${a.fileFormat || a.format}`,
             })),
             guardrails: {
               truthCheckStatus: 'PASSED',
@@ -2989,7 +2990,7 @@ export const AssetLibraryPage: React.FC = () => {
                       id: design.id,
                       title: design.title,
                       category: channelCat,
-                      folder: recommendChannel === 'Instagram' ? 'Social' : 'Print',
+                      folder: recommendChannel === 'Instagram' ? 'Social Media' : 'Print & Packaging',
                       format: 'Scalable Vector (.svg)',
                       status: 'Draft',
                       headlineText: design.headlineText || design.title,
@@ -3032,7 +3033,7 @@ export const AssetLibraryPage: React.FC = () => {
                               addBrandAsset({
                                 title: design.title,
                                 category: channelCat,
-                                folder: recommendChannel === 'Instagram' ? 'Social' : 'Print',
+                                folder: recommendChannel === 'Instagram' ? 'Social Media' : 'Print & Packaging',
                                 format: 'Scalable Vector (.svg)',
                                 status: 'Draft',
                                 headlineText: design.headlineText,

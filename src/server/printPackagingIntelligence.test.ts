@@ -40,7 +40,7 @@ describe('BRAINWISE PRINT & PACKAGING INTELLIGENCE — PHASE 4 ACCEPTANCE TEST S
     const pkg = await printPackagingService.createPackagingAsset({
       workspaceId: wsId,
       name: 'Wild Rose Folding Outer Carton',
-      packagingType: 'Boxes & Cartons',
+      packagingType: 'Box',
       productId,
       widthMm: 80,
       heightMm: 160,
@@ -56,16 +56,16 @@ describe('BRAINWISE PRINT & PACKAGING INTELLIGENCE — PHASE 4 ACCEPTANCE TEST S
     assert.ok(pkg, 'Packaging asset must be created');
     assert.equal(pkg.workspaceId, wsId);
     assert.equal(pkg.section, 'Print & Packaging');
-    assert.equal(pkg.packagingType, 'Boxes & Cartons');
+    assert.equal(pkg.packagingType, 'Box');
     assert.equal(pkg.productAssociation.productId, productId);
     assert.equal(pkg.productAssociation.productName, 'Wild Rose Rejuvenating Serum');
     assert.equal(pkg.productAssociation.sku, 'SKU-BOT-001');
 
     // Verify dieline generation
-    assert.ok(pkg.productionMetadata.dieline.dielineSvg.includes('<svg'), 'Dieline SVG must be generated');
-    assert.ok(pkg.productionMetadata.dieline.dielineSvg.includes('#FF0000'), 'Dieline must contain red cut line');
-    assert.ok(pkg.productionMetadata.dieline.dielineSvg.includes('#00FF00'), 'Dieline must contain green crease line');
-    assert.ok(pkg.productionMetadata.dieline.dielineSvg.includes('#FF00FF'), 'Dieline must contain magenta bleed line');
+    assert.ok(pkg.productionMetadata.dieline?.dielineSvg?.includes('<svg'), 'Dieline SVG must be generated');
+    assert.ok(pkg.productionMetadata.dieline?.dielineSvg?.includes('#FF0000'), 'Dieline must contain red cut line');
+    assert.ok(pkg.productionMetadata.dieline?.dielineSvg?.includes('#00FF00'), 'Dieline must contain green crease line');
+    assert.ok(pkg.productionMetadata.dieline?.dielineSvg?.includes('#FF00FF'), 'Dieline must contain magenta bleed line');
 
     // 3. Verify cross-registration in brandAssetRepository
     const damAsset = await brandAssetRepository.getById(wsId, pkg.assetId);
@@ -131,7 +131,7 @@ describe('BRAINWISE PRINT & PACKAGING INTELLIGENCE — PHASE 4 ACCEPTANCE TEST S
     const badPkg = await printPackagingService.createPackagingAsset({
       workspaceId: wsId,
       name: 'Uncalibrated Draft Box',
-      packagingType: 'Boxes & Cartons',
+      packagingType: 'Box',
       productId,
       widthMm: 80,
       heightMm: 160,

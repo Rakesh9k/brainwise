@@ -17,6 +17,7 @@ import { db } from '../../db/firestore';
 import { GeminiProviderAdapter } from '../../ai/modelRouter';
 import { serverConfig } from '../../config/index';
 import { executeTruthCheck } from '../../../utils/truthCheck';
+import type { BusinessBrainData } from '../../../types/brainwise';
 import { sharedBusinessContextService } from '../../services/sharedBusinessContextService';
 import { memoryService } from '../../services/memoryService';
 import { growthRadarService } from '../../services/growthRadarService';
@@ -761,11 +762,36 @@ router.post('/weekly-plan', async (req: Request, res: Response): Promise<void> =
 
     // Truth & Strict Video Exclusion guardrail
     const serialized = JSON.stringify(plan);
-    const truthResult = executeTruthCheck(serialized, {
-      verifiedPrices: [],
-      forbiddenClaims: ['ai video', 'video reel', 'tiktok video', 'ffmpeg'],
-    });
-    if (!truthResult.passed) {
+    const mockBrainForTruth: BusinessBrainData = {
+      businessName: 'Business',
+      tagline: '',
+      industry: 'General',
+      stage: 'Growing Business',
+      location: 'India',
+      website: '',
+      foundedYear: '2024',
+      overviewSummary: '',
+      targetAudience: '',
+      brandPositioning: '',
+      businessModel: '',
+      revenueModel: '',
+      valueProposition: '',
+      primaryGoals: [],
+      products: [],
+      personas: [],
+      documents: [],
+      decisions: [],
+      history: [],
+      lastUpdated: new Date().toISOString(),
+      strategicMemory: {
+        explicitExclusions: ['ai video', 'video reel', 'tiktok video', 'ffmpeg'],
+        usedAngles: [],
+        fatiguedThemes: [],
+        lastUpdated: new Date().toISOString(),
+      },
+    };
+    const truthResult = executeTruthCheck(serialized, mockBrainForTruth);
+    if (!truthResult.isValid) {
       plan = buildFallbackPlan();
     }
 

@@ -2069,7 +2069,7 @@ export function buildDynamicDossier(params: {
             supportingEvidence: 'Specialty culinary subscription boxes retain 62%+ of subscribers beyond month 6 when unboxing storytelling is exceptional.',
             targetCustomers: 'Dark chocolate connoisseurs, third-wave coffee drinkers, and culinary home experimenters',
             competitorsAddressing: ['Supermarket luxury bars', 'Specialty importers'],
-            entryBarriers: 'Low-Medium',
+            entryBarriers: 'Moderate',
             capitalRequirements: isIndianContext ? '₹80k e-commerce platform & thermal test packs' : '$1,200 store setup & initial thermal shippers',
             potentialEconomics: {
               marginPotential: '74% Gross Margin after insulated packaging',

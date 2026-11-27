@@ -314,7 +314,7 @@ export const GoStopSignalsSection: React.FC<GoStopSignalsSectionProps> = ({ repo
                             </div>
                             <div className="text-[11px] text-[#171717] bg-white/80 rounded-[8px] p-2.5 border border-[#CDE5D7]">
                               <strong className="text-[#1E6543]">Tactical Play:</strong> Anchor your
-                              landing hero and Week-1 outreach around this {sig.tag.toLowerCase()}{' '}
+                              landing hero and Week-1 outreach around this {sig.tag?.toLowerCase() || 'signal'}{' '}
                               advantage to accelerate early signups.
                             </div>
                           </div>
@@ -454,7 +454,7 @@ export const GoStopSignalsSection: React.FC<GoStopSignalsSectionProps> = ({ repo
                             <div className="text-[11px] text-[#171717] bg-white/85 rounded-[8px] p-2.5 border border-[#FECACA]">
                               <strong className="text-[#BC3E3E]">Mitigation Trigger:</strong> Run a
                               14-day pre-launch Kill Switch test before committing fixed capital to
-                              this {sig.tag.toLowerCase()} vector.
+                              this {sig.tag?.toLowerCase() || 'risk'} vector.
                             </div>
                           </div>
                         </motion.div>

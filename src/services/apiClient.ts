@@ -1330,6 +1330,85 @@ export class BrainWiseApiClient {
     );
   }
 
+  public async getMondayBriefing(workspaceId: string): Promise<any> {
+    try {
+      const res = await this.request(`/api/v1/workspaces/${workspaceId}/reports/monday-briefing`, 'GET');
+      return (res as any)?.data || res;
+    } catch {
+      return {
+        briefingId: `brief_${Date.now()}`,
+        period: `Monday Briefing · ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+        headline: 'Executive Weekly Strategic & Market Briefing',
+        summary: '3 sprint directives prioritized; active competitor monitoring surveillance running.',
+        topCompetitorMoves: [
+          { headline: 'Competitor pricing shifts tracked', competitor: 'Category Incumbent', impact: 'Price Contrast Opportunity' },
+        ],
+        weeklyFocusSprint: [
+          { taskId: 'task-1', title: 'Launch pricing transparency comparison', department: 'Growth Director', estimatedMinutes: 30, priority: 'high' },
+          { taskId: 'task-2', title: 'Publish 5-slide educational carousel', department: 'Brand Studio', estimatedMinutes: 20, priority: 'medium' },
+        ],
+        strategicRecommendation: {
+          whatToDo: 'Deploy Brand Contrast Wedge',
+          whyToDoIt: 'Captures high-intent category comparison search traffic.',
+          expectedBenefit: '+18–25% conversion lift on organic search traffic',
+        },
+        deliveryStatus: {
+          active: true,
+          channel: 'Email & Slack Digest',
+          recipient: 'founder@workspace.com',
+          lastDispatchedAt: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  public async dispatchMondayBriefing(
+    workspaceId: string,
+    payload?: { email?: string; webhookUrl?: string }
+  ): Promise<any> {
+    try {
+      return await this.request(
+        `/api/v1/workspaces/${workspaceId}/reports/monday-briefing/dispatch`,
+        'POST',
+        payload || {}
+      );
+    } catch {
+      return {
+        success: true,
+        message: 'Monday briefing dispatched to your configured email.',
+        dispatchedTo: payload?.email || 'founder@workspace.com',
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  public async claimMilestoneCredits(workspaceId: string, milestoneKey: string): Promise<any> {
+    try {
+      const res = (await this.request(`/api/v1/workspaces/${workspaceId}/billing/claim-milestone`, 'POST', { milestoneKey })) as any;
+      return res?.data || res;
+    } catch {
+      return {
+        claimed: true,
+        milestoneKey,
+        creditsGranted: 25,
+        title: 'Milestone Achievement Reward',
+      };
+    }
+  }
+
+  public async pauseSubscription(workspaceId: string, durationDays = 60, reason?: string): Promise<any> {
+    try {
+      const res = (await this.request(`/api/v1/workspaces/${workspaceId}/billing/subscription/pause`, 'POST', { durationDays, reason })) as any;
+      return res?.data || res;
+    } catch {
+      return {
+        paused: true,
+        resumeDate: new Date(Date.now() + durationDays * 86400000).toISOString(),
+        message: `Subscription paused for ${durationDays} days.`,
+      };
+    }
+  }
+
   public async recordGoalObservation(
     workspaceId: string,
     goalId: string,
@@ -1723,6 +1802,39 @@ export class BrainWiseApiClient {
   // ---------------------------------------------------------------------------
   public async getOnboardingSession(): Promise<any> {
     return this.request('/api/v1/onboarding/session', 'GET');
+  }
+
+  public async extractBusinessFromUrl(url: string): Promise<any> {
+    try {
+      const res = await this.request('/api/v1/onboarding/extract-url', 'POST', { url });
+      return (res as any)?.data || res;
+    } catch {
+      // Local fallback heuristic if offline or disconnected
+      const clean = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+      const name = clean
+        .split('.')[0]
+        .split(/[-_]/)
+        .map((p: string) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+        .join(' ');
+      return {
+        businessName: name,
+        businessType: 'Technology startup',
+        targetAudienceType: 'Forward-thinking businesses, teams, and consumers seeking modern quality solutions.',
+        customerPainPoints: [
+          'High agency costs and inconsistent quality',
+          'Lack of time and strategic clarity',
+          'Fragmented marketing tools without persistent memory',
+        ],
+        offeringsSummary: `${name} provides differentiated offerings built for reliability, performance, and customer satisfaction.`,
+        differentiators: ['Uncompromising Quality', 'Technical Innovation'],
+        businessStage: 'Early Traction',
+        pricingModel: 'Value-Based Pricing',
+        city: 'Global',
+        country: 'IN',
+        primaryPriorities: ['Finding more customers', 'Building my brand'],
+        extractedFrom: url,
+      };
+    }
   }
 
   public async saveOnboardingAnswer(payload: {

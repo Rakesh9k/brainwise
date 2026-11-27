@@ -4,8 +4,8 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   ArrowUpRight,
   Check,
+  Code2,
   Copy,
-  Download,
   FileSpreadsheet,
   FileText,
   MoreHorizontal,
@@ -345,6 +345,31 @@ export const ContextualActionLedgerProvider: React.FC<{ children: React.ReactNod
                       </div>
                       <span className="text-[10px] font-mono-num px-1.5 py-0.5 rounded bg-[#F1F1EF] text-[#858585] border border-[#E6E6E2] shrink-0">
                         CSV
+                      </span>
+                    </button>
+
+                    {/* 4. Export Telemetry (JSON) */}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleExportJson}
+                      className="w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-[10px] text-[#252525] hover:text-[#171717] hover:bg-[#F5F5F3] active:bg-[#ECECE9] transition-colors cursor-pointer group text-left"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-[8px] bg-[#F5F5F4] group-hover:bg-[#FFFFFF] border border-[#EFEFEB] flex items-center justify-center text-[#5C5C58] group-hover:text-[#0284C7] shrink-0 transition-colors">
+                          <Code2 className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-[#171717] leading-tight">
+                            Export Raw Telemetry
+                          </div>
+                          <div className="text-[10px] text-[#858585] truncate leading-tight">
+                            Structured JSON format
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono-num px-1.5 py-0.5 rounded bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD] shrink-0">
+                        JSON
                       </span>
                     </button>
 

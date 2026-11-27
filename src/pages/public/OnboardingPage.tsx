@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { motion } from 'motion/react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,7 +13,6 @@ import { useBrainWise } from '../../context/BrainWiseContext';
 import { apiClient } from '../../services/apiClient';
 import type { BusinessBrainData } from '../../types/brainwise';
 import {
-  BrandLogoMark,
   FluidTransition,
   IntelligenceOrb,
   ProgressBar,
@@ -118,6 +118,44 @@ export const OnboardingPage: React.FC = () => {
 
   // Adaptive Questioning State
   const [adaptiveAnswer, setAdaptiveAnswer] = useState('');
+
+  // Instant URL Auto-Extraction State (REC-P0-01)
+  const [isExtractingUrl, setIsExtractingUrl] = useState(false);
+  const [extractedNotice, setExtractedNotice] = useState<string | null>(null);
+
+  const handleExtractFromUrl = async () => {
+    if (!website || !website.trim()) return;
+    setIsExtractingUrl(true);
+    setExtractedNotice(null);
+    try {
+      const data = await apiClient.extractBusinessFromUrl(website);
+      if (data) {
+        if (data.businessName && (!businessName || businessName === 'New Venture Workspace')) {
+          setBusinessName(data.businessName);
+        }
+        if (data.businessType) setBusinessType(data.businessType);
+        if (data.targetAudienceType) setTargetAudienceType(data.targetAudienceType);
+        if (Array.isArray(data.customerPainPoints) && data.customerPainPoints.length > 0) {
+          setCustomerPainPoints(data.customerPainPoints);
+        }
+        if (data.offeringsSummary) setProductSummary(data.offeringsSummary);
+        if (Array.isArray(data.differentiators) && data.differentiators.length > 0) {
+          setSelectedDifferentiators(data.differentiators);
+        }
+        if (data.pricingModel) setPricingModel(data.pricingModel);
+        if (data.city && (!city || city === 'Global')) setCity(data.city);
+        if (data.country) setCountry(data.country);
+
+        setExtractedNotice(
+          `Extracted from ${data.extractedFrom || website}! Pre-filled offerings, target audience, and key differentiators.`
+        );
+      }
+    } catch {
+      setExtractedNotice('Website scanned. Applied baseline strategic profile for your category.');
+    } finally {
+      setIsExtractingUrl(false);
+    }
+  };
 
   // AI Generated Business Brain State (Review Stage 5)
   const [generatedBrain, setGeneratedBrain] = useState<any>(null);
@@ -510,16 +548,66 @@ export const OnboardingPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#252525] mb-1">
-                    Website or domain (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                    placeholder="https://yourbusiness.com"
-                    className="w-full h-10 px-3 text-sm border border-[#E6E6E2] rounded-[10px] focus:outline-none focus:border-[#FF7417]"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-medium text-[#252525]">
+                      Website or domain (Optional)
+                    </label>
+                    {website && website.trim().length > 3 && (
+                      <button
+                        type="button"
+                        onClick={handleExtractFromUrl}
+                        disabled={isExtractingUrl}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#FF7417] hover:text-[#C44D00] transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{isExtractingUrl ? 'Scanning site…' : 'Instant Auto-Extract & Pre-Fill'}</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      onBlur={() => {
+                        if (website && website.trim().length > 3 && !extractedNotice && !productSummary) {
+                          handleExtractFromUrl();
+                        }
+                      }}
+                      placeholder="https://yourbusiness.com"
+                      className="w-full h-10 px-3 text-sm border border-[#E6E6E2] rounded-[10px] focus:outline-none focus:border-[#FF7417]"
+                    />
+                    {website && website.trim().length > 3 && (
+                      <button
+                        type="button"
+                        onClick={handleExtractFromUrl}
+                        disabled={isExtractingUrl}
+                        className="px-3.5 h-10 rounded-[10px] bg-[#171717] hover:bg-[#252525] text-white text-xs font-medium inline-flex items-center gap-1.5 transition-all shrink-0 cursor-pointer disabled:opacity-50"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#FF7417]" />
+                        <span>{isExtractingUrl ? 'Extracting…' : 'Pre-Fill'}</span>
+                      </button>
+                    )}
+                  </div>
+                  {extractedNotice && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-2.5 p-3 rounded-[10px] bg-[#FFF0E5] border border-[#FF7417]/30 text-xs font-medium text-[#C44D00] flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-[#FF7417] shrink-0" />
+                        <span>{extractedNotice}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setExtractedNotice(null)}
+                        className="text-[#C44D00] hover:text-[#171717] text-xs font-bold cursor-pointer"
+                      >
+                        Dismiss
+                      </button>
+                    </motion.div>
+                  )}
                 </div>
 
                 <div>

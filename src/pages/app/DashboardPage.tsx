@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowRight, Brain, Check, Compass, FlaskConical, Plus, RefreshCw, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Brain, Check, Compass, FlaskConical, Plus, RefreshCw, Sparkles, Trophy, X } from 'lucide-react';
 import { useBrainWise } from '../../context/BrainWiseContext';
+import { Modal } from '../../components/ui/Overlay';
 import {
   calculateBrainCompleteness,
   calculateGoalProgress,
@@ -35,12 +36,10 @@ import {
 import {
   InsightSavedBeacon,
   RecommendationActionSurface,
-  TaskCompleteRowTransition,
 } from '../../components/motion/LiquidMotion';
 import {
   BrainLineagePopover,
   JourneyNextStep,
-  TaskCard,
 } from '../../components/ui/DepartmentCards';
 import { ContextualCard } from '../../components/ui/ContextualActionLedger';
 import { UniversalExecutiveLayer } from '../../components/ui/UniversalExecutiveLayer';
@@ -66,6 +65,8 @@ export const DashboardPage: React.FC = () => {
   const [scanningQueue, setScanningQueue] = useState(false);
   const [quickNoteInput, setQuickNoteInput] = useState('');
   const [removedStickyIds, setRemovedStickyIds] = useState<string[]>([]);
+  const [sprintVictoryOpen, setSprintVictoryOpen] = useState(false);
+  const [sprintVictoryDismissed, setSprintVictoryDismissed] = useState(false);
   const briefingTimerRef = useRef<number | null>(null);
 
   const handleScanOpportunities = () => {
@@ -76,11 +77,9 @@ export const DashboardPage: React.FC = () => {
       state.competitors.find((c) => c.name?.trim())?.name || 'category incumbents';
     const flagship = state.brain.products?.[0]?.name || 'your flagship offer';
     const audience = (state.brain.targetAudience || 'target buyers').replace(/\.+$/, '');
-    const ts = Date.now();
     window.setTimeout(() => {
       addRecommendations([
         {
-          id: `rec-scan-${ts}-1`,
           whatToDo: `Launch ${flagship} Comparison & Pricing Transparency Card`,
           whyToDoIt: `Captures high-intent ${audience} comparing against ${rival}.`,
           expectedBenefit: '+18–25% conversion lift on warm traffic',
@@ -88,10 +87,8 @@ export const DashboardPage: React.FC = () => {
           estimatedCost: '₹0 (Organic / Site)',
           priority: 'high',
           supportingResearch: `Grounded in ${brand} Business Brain & ${rival} pricing gaps`,
-          status: 'pending',
         },
         {
-          id: `rec-scan-${ts}-2`,
           whatToDo: `Publish 5-Slide Educational Carousel for ${brand}`,
           whyToDoIt: 'Builds organic trust and addresses top buyer objections.',
           expectedBenefit: '2x organic saves & DM inquiries',
@@ -99,7 +96,6 @@ export const DashboardPage: React.FC = () => {
           estimatedCost: 'Brand Studio Credits',
           priority: 'medium',
           supportingResearch: 'Aligned with Brand Guidelines daily messaging angles',
-          status: 'pending',
         },
       ]);
       setScanningQueue(false);
@@ -114,6 +110,12 @@ export const DashboardPage: React.FC = () => {
   const executionPulseSeries: GrowthTrendSeriesMap = useMemo(() => {
     return deriveExecutionPulseSeries(state);
   }, [state]);
+
+  useEffect(() => {
+    if (taskStats.total > 0 && taskStats.completed === taskStats.total && !sprintVictoryDismissed) {
+      setSprintVictoryOpen(true);
+    }
+  }, [taskStats.completed, taskStats.total, sprintVictoryDismissed]);
 
   useEffect(() => {
     return () => {
@@ -1379,6 +1381,75 @@ export const DashboardPage: React.FC = () => {
           </StaggeredLiquidItem>
         </StaggeredLiquidContainer>
       )}
+
+      {/* REC-P1-07: Daily Focus Sprint Victory Celebration Modal */}
+      <Modal
+        open={sprintVictoryOpen}
+        onClose={() => {
+          setSprintVictoryOpen(false);
+          setSprintVictoryDismissed(true);
+        }}
+        title="Daily Sprint Completed!"
+        eyebrow="Sprint Victory · 100% Execution"
+        maxWidth="max-w-md"
+      >
+        <div className="p-2 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-[#EAF5EF] border border-[#CDE5D7] flex items-center justify-center mx-auto text-[#24724E] shadow-sm animate-bounce">
+            <Trophy className="w-8 h-8 text-[#24724E]" />
+          </div>
+
+          <div className="space-y-1">
+            <h4 className="text-lg font-bold text-[#171717]">
+              Outstanding Momentum!
+            </h4>
+            <p className="text-xs text-[#52524E] max-w-sm mx-auto leading-relaxed">
+              All prioritized focus actions for <strong>{state.brain.businessName || 'your business'}</strong> have been completed today.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5 p-3.5 rounded-[12px] bg-[#FAFAF9] border border-[#E6E6E2] text-left">
+            <div>
+              <span className="text-[10px] font-semibold text-[#858585] uppercase tracking-wider block">Strategic Lift</span>
+              <span className="text-sm font-bold text-[#24724E] font-mono-num flex items-center gap-1">
+                +2.5% Intelligence
+              </span>
+              <span className="text-[10px] text-[#686864]">Brand alignment verified</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-semibold text-[#858585] uppercase tracking-wider block">Agency Saved</span>
+              <span className="text-sm font-bold text-[#171717] font-mono-num">
+                ₹12,500 (~$150)
+              </span>
+              <span className="text-[10px] text-[#686864]">In-house execution</span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSprintVictoryOpen(false);
+                setSprintVictoryDismissed(true);
+                navigate('growth-director');
+              }}
+              className="w-full sm:w-auto h-9 px-4 rounded-full bg-[#FF7417] hover:bg-[#E05D00] text-white font-medium text-xs shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <span>Plan Tomorrow's Roadmap</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSprintVictoryOpen(false);
+                setSprintVictoryDismissed(true);
+              }}
+              className="w-full sm:w-auto h-9 px-4 rounded-full bg-white hover:bg-[#F5F5F4] border border-[#E6E6E2] text-[#242424] font-medium text-xs transition-colors cursor-pointer"
+            >
+              Close & Enjoy Victory
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
